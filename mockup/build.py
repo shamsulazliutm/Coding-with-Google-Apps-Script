@@ -29,12 +29,14 @@ listing=tabs('act','')+'''<div class="cont"><div style="display:flex;gap:10px;ma
 <table><tr><th>ID</th><th>Pelajar</th><th>Fakulti</th><th>Peringkat</th><th>Dikemas kini</th><th></th></tr>
 <tr><td>G4-001</td><td>Ahmad bin Ali</td><td>FAI</td><td>Bootcamp</td><td>12 Jun 2026</td><td>Edit</td></tr>
 <tr><td>G4-002</td><td>Nur Aina</td><td>FC</td><td>Permohonan</td><td>10 Jun 2026</td><td>Edit</td></tr></table></div>'''
-uin='<span>pic.fai@utm.my</span><span class="badge">PIC · FAI</span><button class="btn o">Log Keluar</button>'
+pin='<div class="prof"><div class="av">AA</div><div><b>Ahmad bin Ali</b><small>pic.fai@utm.my</small></div></div>'
+pout='<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>'
+uin='<span class="badge">PIC · FAI</span><button class="btn o">Log Keluar</button>'
 uout='<span>Paparan awam</span><button class="btn">Log Masuk</button>'
-def out(n,title,user,body,act):
-    s=t.replace('__TITLE__',title).replace('__USER__',user).replace('__BODY__',body)
+def out(n,title,user,body,act,prof=''):
+    s=t.replace('__PROF__',prof).replace('__TITLE__',title).replace('__USER__',user).replace('__BODY__',body)
     s=s.replace('item __'+act,'item act').replace('item __D','item').replace('item __K','item')
     open(n,'w').write(s)
-out('dash.html','Dashboard KPI',uout,dash,'D')
-out('kai4_form.html','KAI 4 · Premium Gig Academy (GiGAUTM Ascend)',uin,form,'K')
-out('kai4_list.html','KAI 4 · Premium Gig Academy (GiGAUTM Ascend)',uin,listing,'K')
+out('dash.html','Dashboard KPI',uout,dash,'D',pout)
+out('kai4_form.html','KAI 4 · Premium Gig Academy (GiGAUTM Ascend)',uin,form,'K',pin)
+out('kai4_list.html','KAI 4 · Premium Gig Academy (GiGAUTM Ascend)',uin,listing,'K',pin)
