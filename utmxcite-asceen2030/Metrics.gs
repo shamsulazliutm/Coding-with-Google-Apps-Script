@@ -187,6 +187,25 @@ var MEASURES = {
     };
   },
 
+  // CKAI 7: anugerah dan pengiktirafan inovasi / keusahawanan yang diterima pada tahun itu.
+  award: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
+    var order = ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'];
+    var byLevel = countBy_(inYear, function (r) { return r.peringkat; }).sort(function (a, b) { return order.indexOf(a.label) - order.indexOf(b.label); });
+    return {
+      value: inYear.length,
+      secondary: [
+        { label: 'Peringkat kebangsaan / antarabangsa', value: inYear.filter(function (r) { return r.peringkat === 'Kebangsaan' || r.peringkat === 'Antarabangsa'; }).length },
+        { label: 'Pingat emas / johan', value: inYear.filter(function (r) { return r.pingat === 'Emas' || r.pingat === 'Johan'; }).length }
+      ],
+      breakdown: [
+        { title: 'Mengikut peringkat', items: byLevel },
+        { title: 'Mengikut kategori', items: countBy_(inYear, function (r) { return r.kategori; }) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
   // KAI 3: ruang ditawarkan kepada pelajar untuk disewa (kumulatif); penggunaan = disewa / ditawarkan.
   kai3: function (kpi, rows, year) {
     var offered = rows.filter(function (r) {

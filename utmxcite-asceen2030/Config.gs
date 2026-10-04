@@ -432,6 +432,28 @@ var KPIS = [
       F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
+  },
+  {
+    id: 'CKAI7', prefix: 'AN', sheet: 'CKAI7_Anugerah', group: 'Center', entry: 'faculty',
+    title: 'CKAI 7 · Anugerah & pengiktirafan inovasi dan keusahawanan', short: 'Anugerah & Pengiktirafan',
+    unit: 'anugerah / pengiktirafan', measure: 'award', jenis: 'minimum',
+    listColumns: ['id', 'nama_anugerah', 'kategori', 'peringkat', 'fakulti', 'tarikh'],
+    statusField: 'peringkat',
+    rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pencapaian' }),
+      F_('nama_anugerah', 'Nama anugerah / pengiktirafan', 'text', { required: true }),
+      F_('kategori', 'Kategori', 'select', { required: true, options: ['Inovasi', 'Keusahawanan'] }),
+      F_('peringkat', 'Peringkat', 'select', { required: true, options: ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'] }),
+      F_('pingat', 'Pingat / kedudukan', 'select', { options: ['Emas', 'Perak', 'Gangsa', 'Johan', 'Naib Johan', 'Tempat Ketiga', 'Anugerah Khas', 'Penghargaan / Pengiktirafan'] }),
+      F_('tarikh', 'Tarikh diterima', 'date', { required: true }),
+      F_('pemberi', 'Penganjur / pemberi anugerah', 'text'),
+      F_('penerima_jenis', 'Jenis penerima', 'select', { required: true, sec: 'Penerima', options: ['Pelajar', 'Pasukan pelajar', 'Staf', 'Syarikat / Startup'] }),
+      F_('nama_penerima', 'Nama penerima', 'text', { required: true }),
+      F_('no_matrik', 'No. matrik (jika pelajar)', 'text'),
+      F_('lampiran', 'Pautan lampiran bukti (sijil / berita)', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
   }
 ];
 
@@ -473,7 +495,7 @@ function buildTargetSeed_() {
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
-  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6'].forEach(function (k) {
+  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
   });
   return rows;

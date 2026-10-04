@@ -259,7 +259,7 @@
     var statusField = k.statusField && fieldDef(k, k.statusField);
     var h = '<div class="bar-top">' +
       '<input type="text" id="q" placeholder="🔍 Cari…" value="' + esc(f.q || '') + '" aria-label="Cari" data-input="q">' +
-      (statusField ? '<select data-change="fstatus" aria-label="Tapis status"><option value="">Status: Semua</option>' +
+      (statusField ? '<select data-change="fstatus" aria-label="Tapis ' + esc(statusField.label) + '"><option value="">' + esc(statusField.label) + ': Semua</option>' +
         statusField.options.map(function (o) { return '<option' + (f.status === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' : '') +
       (isAdmin() && k.entry === 'faculty' ? '<select data-change="ffak" aria-label="Tapis fakulti"><option value="">Fakulti: Semua</option>' +
         S.session.faculties.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (f.fakulti === x.kod ? ' selected' : '') + '>' + esc(x.kod) + '</option>'; }).join('') + '</select>' : '') +

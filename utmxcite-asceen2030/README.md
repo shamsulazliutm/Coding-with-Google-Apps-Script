@@ -1,6 +1,6 @@
 # UTMXCITE 4 ASCEEN 2030 Report
 
-Aplikasi web Google Apps Script (GAS) + Google Sheets untuk melaporkan 7 KPI UTMXCITE di bawah **DS 04 · Pekerjaan Premium Tier 1** (KAI 1-6 dan DKAI 1), serta 6 **CKAI** (Center Key Amal Indicator).
+Aplikasi web Google Apps Script (GAS) + Google Sheets untuk melaporkan 7 KPI UTMXCITE di bawah **DS 04 · Pekerjaan Premium Tier 1** (KAI 1-6 dan DKAI 1), serta 7 **CKAI** (Center Key Amal Indicator).
 Rujukan sebenar: Dokumen Pelan Tindakan UTMXCITE (PDF).
 
 - **Dashboard awam** (tanpa log masuk): kemajuan 7 KPI, data agregat sahaja.
@@ -35,7 +35,7 @@ Sasaran tahunan, sasaran suku tahun (kumulatif) dan bajet disimpan dalam tab **S
 
 ## CKAI (Center Key Amal Indicator)
 
-Enam ukuran peringkat pusat, dipaparkan dalam kumpulan **Center (CKAI)** pada dashboard. Semuanya sasaran **minimum** dan **belum ditetapkan**: isi melalui menu Admin → Sasaran (sehingga itu kad menunjukkan "Tiada sasaran").
+Tujuh ukuran peringkat pusat, dipaparkan dalam kumpulan **Center (CKAI)** pada dashboard. Semuanya sasaran **minimum** dan **belum ditetapkan**: isi melalui menu Admin → Sasaran (sehingga itu kad menunjukkan "Tiada sasaran").
 
 | CKAI | Ukuran | Unit rekod | Dikira | Penginput |
 |---|---|---|---|---|
@@ -45,9 +45,10 @@ Enam ukuran peringkat pusat, dipaparkan dalam kumpulan **Center (CKAI)** pada da
 | 4 | Pendapatan usahawan pelajar | Satu baris sebulan bagi setiap perniagaan | Jumlah RM bagi bulan dalam tahun itu | PIC fakulti dan Admin |
 | 5 | Bilangan penggunaan Makerspace | Satu baris sebulan (jumlah bulanan) | Jumlah penggunaan bagi bulan dalam tahun itu | Admin |
 | 6 | Pendapatan sewaan inkubator | Satu baris sebulan bagi setiap penyewa | Jumlah RM berstatus **Dibayar** (belum bayar / tertunggak dipaparkan berasingan) | Admin |
+| 7 | Anugerah & pengiktirafan inovasi dan keusahawanan | Satu anugerah / pengiktirafan | Bilangan yang diterima pada tahun tarikh diterima (dipecahkan mengikut peringkat Fakulti / Universiti / Kebangsaan / Antarabangsa) | PIC fakulti (pencapaian fakulti sendiri) dan Admin |
 
 Dashboard awam hanya menunjukkan jumlah agregat (kiraan atau jumlah RM), tanpa nama pelajar, perniagaan atau penyewa.
-**PIC diberi akses CKAI 1, 2 dan 4** dengan menambah `CKAI1,CKAI2,CKAI4` pada lajur `kpi_akses` (tab `Pengguna` atau menu Urus Pengguna). CKAI 3, 5 dan 6 hanya untuk Admin.
+**PIC diberi akses CKAI 1, 2, 4 dan 7** dengan menambah `CKAI1,CKAI2,CKAI4,CKAI7` pada lajur `kpi_akses` (tab `Pengguna` atau menu Urus Pengguna). CKAI 3, 5 dan 6 hanya untuk Admin.
 
 ## Pemasangan
 

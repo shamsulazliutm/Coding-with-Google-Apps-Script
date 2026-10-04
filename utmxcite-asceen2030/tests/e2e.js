@@ -61,9 +61,9 @@ function buildHtml() {
   const text = async (sel) => (await page.locator(sel).innerText());
 
   console.log('Pelayar (Chromium)');
-  await step('dashboard awam dimuatkan tanpa log masuk (13 kad: 7 KPI + 6 CKAI)', async () => {
+  await step('dashboard awam dimuatkan tanpa log masuk (14 kad: 7 KPI + 7 CKAI)', async () => {
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 13);
+    assert.strictEqual(await page.locator('.kcard').count(), 14);
     assert.ok((await text('.cont')).toUpperCase().includes('CENTER (CKAI)'));
     assert.ok((await text('.side')).includes('Pengunjung'));
     assert.ok(!(await text('.side')).includes('Urus Pengguna'));
@@ -95,7 +95,7 @@ function buildHtml() {
     await page.click('button:has-text("Sahkan")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
     assert.ok((await text('.side')).includes('Urus Pengguna'));
-    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 13);
+    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 14);
     await page.screenshot({ path: path.join(out, '2-dashboard-admin.png') });
   });
   await step('OTP salah menunjukkan ralat', async () => {
