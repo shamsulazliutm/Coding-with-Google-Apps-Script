@@ -1,0 +1,590 @@
+<script>
+(function () {
+  'use strict';
+
+  var APP_NAME = 'UTMXCITE 4 ASCEEN 2030 Report';
+  var S = {
+    token: null, session: null,
+    view: { name: 'dashboard' },
+    year: null, dash: null,
+    list: null, listFilters: {}, editing: null,
+    users: null, targets: null, audit: null,
+    navOpen: false, login: null, busy: false
+  };
+
+  // ------------------------------------------------------------------ utiliti
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function store(op, key, val) {
+    try {
+      if (op === 'get') return window.sessionStorage.getItem(key);
+      if (op === 'set') window.sessionStorage.setItem(key, val);
+      if (op === 'del') window.sessionStorage.removeItem(key);
+    } catch (e) { /* storan tidak tersedia: guna memori sahaja */ }
+    return null;
+  }
+  function toast(msg, bad) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.className = 'show' + (bad ? ' bad' : '');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.className = ''; }, 3800);
+  }
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return new Promise(function (resolve, reject) {
+      var run = google.script.run
+        .withSuccessHandler(function (r) {
+          if (r && r.ok) return resolve(r.data);
+          var e = new Error((r && r.error) || 'Ralat tidak diketahui.');
+          e.fields = r && r.fields; e.auth = r && r.auth;
+          reject(e);
+        })
+        .withFailureHandler(function (err) { reject(new Error((err && err.message) || 'Ralat rangkaian. Cuba lagi.')); });
+      run[fn].apply(run, args);
+    });
+  }
+  function authFail(e) {
+    if (e && e.auth) {
+      S.token = null; S.session = null; store('del', 'utmx_token');
+      S.view = { name: 'dashboard' };
+      toast(e.message, true);
+      render();
+      return true;
+    }
+    return false;
+  }
+  function fmtNum(n) { return (Math.round(n * 10) / 10).toString(); }
+  function initials(name, email) {
+    var s = (name || email || '?').trim().split(/\s+/);
+    return ((s[0] || '?').charAt(0) + (s.length > 1 ? s[s.length - 1].charAt(0) : '')).toUpperCase();
+  }
+  function kpiById(id) {
+    var k = (S.session && S.session.kpis || []).filter(function (x) { return x.id === id; });
+    return k[0] || null;
+  }
+  function isAdmin() { return S.session && S.session.user.peranan === 'Admin'; }
+
+  // Dialog pengesahan dalam halaman (window.confirm mungkin disekat dalam iframe kotak pasir).
+  function askConfirm(message, okLabel) {
+    return new Promise(function (resolve) {
+      var box = $('#confirm');
+      box.innerHTML = '<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="ctitle"><div class="dlg">' +
+        '<h2 id="ctitle">Pengesahan</h2><p>' + esc(message) + '</p>' +
+        '<div class="acts"><button class="btn d" id="cyes">' + esc(okLabel || 'Ya, teruskan') + '</button><button class="btn o" id="cno">Batal</button></div></div></div>';
+      function done(v) { box.innerHTML = ''; document.removeEventListener('keydown', onKey, true); resolve(v); }
+      function onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); done(false); } }
+      document.addEventListener('keydown', onKey, true);
+      $('#cyes').addEventListener('click', function () { done(true); });
+      $('#cno').addEventListener('click', function () { done(false); });
+      $('#cno').focus();
+    });
+  }
+
+  // ------------------------------------------------------------------ rangka
+  function render() {
+    var app = $('#app');
+    var u = S.session && S.session.user;
+    app.innerHTML =
+      '<div class="shell">' +
+      '<aside class="side' + (S.navOpen ? ' open' : '') + '" id="side" aria-label="Menu utama">' + renderSide(u) + '</aside>' +
+      '<div class="scrim' + (S.navOpen ? ' open' : '') + '" data-action="closenav"></div>' +
+      '<div class="main">' +
+      '<header class="top"><div style="display:flex;gap:10px;align-items:center">' +
+      '<button class="burger" data-action="togglenav" aria-label="Buka menu">☰</button><h1>' + esc(pageTitle()) + '</h1></div>' +
+      '<div class="user">' + (u
+        ? '<span class="badge">' + esc(u.peranan) + (u.peranan === 'PIC' ? ' · ' + esc(u.fakulti) : '') + '</span>' +
+          '<button class="btn o" data-action="logout">Log Keluar</button>'
+        : '<span class="em">Paparan awam</span><button class="btn" data-action="login">Log Masuk</button>') +
+      '</div></header>' +
+      '<div id="tabs"></div><main class="cont" id="content"></main></div></div>' +
+      '<div id="modal"></div><div id="confirm"></div>';
+    renderView();
+    renderModal();
+  }
+
+  function renderSide(u) {
+    var h = '<div class="brand">' + esc(APP_NAME) + '<small>DS04 · Pekerjaan Premium Tier 1</small></div>';
+    h += u
+      ? '<div class="prof"><div class="av">' + esc(initials(u.nama, u.emel)) + '</div><div><b>' + esc(u.nama || u.emel) + '</b><small>' + esc(u.emel) + '</small></div></div>'
+      : '<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>';
+    h += navBtn('dashboard', '▦', 'Dashboard', S.view.name === 'dashboard');
+    if (u) {
+      ['Growth', 'Transform', 'Internal'].forEach(function (g) {
+        var ks = S.session.kpis.filter(function (k) { return k.group === g; });
+        if (!ks.length) return;
+        h += '<div class="sec">' + g + '</div>';
+        ks.forEach(function (k) {
+          h += navBtn('kpi:' + k.id, '◆', k.title.replace(/ · .*/, '') + ' · ' + k.short, S.view.name === 'kpi' && S.view.id === k.id);
+        });
+      });
+      if (isAdmin()) {
+        h += '<div class="sec">Admin</div>' +
+          navBtn('users', '☺', 'Urus Pengguna', S.view.name === 'users') +
+          navBtn('targets', '◎', 'Sasaran', S.view.name === 'targets') +
+          navBtn('audit', '☰', 'Log Audit', S.view.name === 'audit');
+      }
+    }
+    return h;
+  }
+  function navBtn(target, icon, label, act) {
+    return '<button class="nav' + (act ? ' act' : '') + '" data-nav="' + esc(target) + '"' + (act ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + icon + '</span>' + esc(label) + '</button>';
+  }
+  function pageTitle() {
+    var v = S.view;
+    if (v.name === 'dashboard') return 'Dashboard KPI';
+    if (v.name === 'kpi') { var k = kpiById(v.id); return k ? k.title : 'KPI'; }
+    return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit' }[v.name] || APP_NAME;
+  }
+  function renderView() {
+    $('#tabs').innerHTML = '';
+    var v = S.view;
+    if (v.name === 'dashboard') return renderDashboard();
+    if (!S.session) { S.view = { name: 'dashboard' }; return renderDashboard(); }
+    if (v.name === 'kpi') return renderKpi();
+    if (v.name === 'users') return renderUsers();
+    if (v.name === 'targets') return renderTargets();
+    if (v.name === 'audit') return renderAudit();
+  }
+
+  // ------------------------------------------------------------------ dashboard
+  function loadDashboard(year) {
+    $('#content').innerHTML = '<p class="boot">Memuatkan dashboard…</p>';
+    call('api_dashboard', year || S.year || '').then(function (d) {
+      S.dash = d; S.year = d.year;
+      if (S.view.name === 'dashboard') renderDashboard();
+    }).catch(function (e) { $('#content').innerHTML = '<p class="boot">' + esc(e.message) + '</p>'; });
+  }
+
+  function statusChip(s) {
+    var cls = s === 'Melebihi sasaran' || s === 'Selesai' ? 'over' : s === 'Capai sasaran' ? 'meet' : s === 'Di bawah sasaran' ? 'below' : 'none';
+    return '<span class="chip ' + cls + '">' + esc(s) + '</span>';
+  }
+  function fmtVal(c, v) { return c.jenis === 'kemajuan' ? fmtNum(v) + '%' : fmtNum(v); }
+
+  function progressBar(pct) {
+    if (pct === null || pct === undefined) return '<div class="track" aria-hidden="true"></div>';
+    var scale = Math.max(pct, 100);
+    var fill = Math.min(pct, 100) / scale * 100;
+    var over = pct > 100 ? (pct - 100) / scale * 100 : 0;
+    return '<div class="track" role="progressbar" aria-valuenow="' + esc(pct) + '" aria-valuemin="0" aria-valuemax="100">' +
+      '<div class="f" style="width:' + fill.toFixed(1) + '%"></div>' +
+      (over ? '<div class="x" style="left:' + fill.toFixed(1) + '%;width:' + over.toFixed(1) + '%"></div><div class="tick" style="left:' + fill.toFixed(1) + '%"></div>' : '') +
+      '</div>';
+  }
+
+  function renderCard(c) {
+    var h = '<article class="kcard"><span class="tag ' + esc(c.group) + '">' + esc(c.group) + '</span>' +
+      '<div class="t">' + esc(c.title) + '</div>' +
+      '<div class="v">' + esc(fmtVal(c, c.value)) + (c.target !== '' ? ' <small>/ ' + esc(fmtVal(c, c.target)) + (c.jenis === 'kemajuan' ? '' : ' minimum') + '</small>' : '') + '</div>' +
+      progressBar(c.pct) +
+      '<div class="chips">' + statusChip(c.status) + (c.pct !== null ? '<span class="sec2"><b>' + esc(fmtNum(c.pct)) + '%</b> daripada sasaran ' + esc(S.year) + '</span>' : '') + '</div>';
+    if (c.quarter) {
+      h += '<div class="sec2">Sasaran suku tahun Q' + c.quarter + ': <b>' + (c.quarterTarget === '' ? 'N/A' : esc(fmtVal(c, c.quarterTarget))) + '</b> ' +
+        (c.quarterTarget === '' ? '' : statusChip(c.quarterStatus)) + '</div>';
+    }
+    (c.secondary || []).forEach(function (s) { h += '<div class="sec2">' + esc(s.label) + ': <b>' + esc(s.value) + '</b></div>'; });
+    (c.warnings || []).forEach(function (w) { h += '<div class="warn">' + esc(w) + '</div>'; });
+    if (c.secondaryTargets) h += '<div class="sec2">' + esc(c.secondaryTargets) + '</div>';
+    if (c.breakdown && c.breakdown.some(function (b) { return b.items.length; })) {
+      h += '<details class="bd"><summary>Butiran</summary>';
+      c.breakdown.forEach(function (b) {
+        if (!b.items.length) return;
+        h += '<h4>' + esc(b.title) + '</h4>';
+        var max = Math.max.apply(null, b.items.map(function (i) { return Math.max(i.value, i.target || 0); }).concat([1]));
+        b.items.forEach(function (i) {
+          h += '<div class="bi"><span class="l" title="' + esc(i.label) + '">' + esc(i.label) + '</span>' +
+            '<span class="mini"><i style="width:' + Math.min(100, i.value / max * 100).toFixed(0) + '%"></i></span>' +
+            '<span class="n">' + esc(fmtNum(i.value)) + (i.target ? ' / ' + esc(i.target) : '') + '</span></div>';
+        });
+      });
+      h += '</details>';
+    }
+    return h + '</article>';
+  }
+
+  function renderDashboard() {
+    var el = $('#content');
+    var d = S.dash;
+    if (!d) { loadDashboard(); return; }
+    var h = (!S.session ? '<div class="pub">Paparan awam · hanya data ringkasan ditunjukkan. Log masuk diperlukan untuk mengemas kini data.</div>' : '');
+    h += '<div class="bar-top"><label for="yr" style="margin:0">Tahun</label><select id="yr" data-change="year">' +
+      d.years.map(function (y) { return '<option' + (y === d.year ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
+      '<span class="grow sec2">Dikemas kini: ' + esc(String(d.generatedAt).replace('T', ' ')) + '</span></div>';
+    h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
+      '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div></div>';
+    ['Growth', 'Transform', 'Internal'].forEach(function (g) {
+      var cs = d.kpis.filter(function (c) { return c.group === g; });
+      if (!cs.length) return;
+      h += '<div class="grp">' + g + '</div><div class="grid">' + cs.map(renderCard).join('') + '</div>';
+    });
+    el.innerHTML = h;
+  }
+
+  // ------------------------------------------------------------------ KPI: senarai & borang
+  function renderKpi() {
+    var k = kpiById(S.view.id);
+    if (!k) { $('#content').innerHTML = '<p class="boot">Anda tiada akses kepada KPI ini.</p>'; return; }
+    var tab = S.view.tab || 'list';
+    $('#tabs').innerHTML = '<div class="tabs" role="tablist">' +
+      '<button class="tab' + (tab === 'list' ? ' act' : '') + '" role="tab" data-action="tab" data-tab="list">▤ Senarai</button>' +
+      '<button class="tab' + (tab === 'form' ? ' act' : '') + '" role="tab" data-action="tab" data-tab="form">＋ ' + (S.editing ? 'Edit Rekod' : 'Masuk Data') + '</button></div>';
+    if (tab === 'list') return renderList(k);
+    return renderForm(k);
+  }
+
+  function loadList(k) {
+    call('api_list', S.token, k.id, S.listFilters).then(function (r) {
+      S.list = r; if (S.view.name === 'kpi' && S.view.id === k.id && (S.view.tab || 'list') === 'list') renderList(k);
+    }).catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+  }
+
+  function fieldDef(k, key) { for (var i = 0; i < k.fields.length; i++) if (k.fields[i].key === key) return k.fields[i]; return null; }
+  function colLabel(k, key) { if (key === 'id') return 'ID'; var f = fieldDef(k, key); return f ? f.label : key; }
+
+  function renderList(k) {
+    var el = $('#content');
+    var f = S.listFilters;
+    var statusField = k.statusField && fieldDef(k, k.statusField);
+    var h = '<div class="bar-top">' +
+      '<input type="text" id="q" placeholder="🔍 Cari…" value="' + esc(f.q || '') + '" aria-label="Cari" data-input="q">' +
+      (statusField ? '<select data-change="fstatus" aria-label="Tapis status"><option value="">Status: Semua</option>' +
+        statusField.options.map(function (o) { return '<option' + (f.status === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' : '') +
+      (isAdmin() && k.entry === 'faculty' ? '<select data-change="ffak" aria-label="Tapis fakulti"><option value="">Fakulti: Semua</option>' +
+        S.session.faculties.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (f.fakulti === x.kod ? ' selected' : '') + '>' + esc(x.kod) + '</option>'; }).join('') + '</select>' : '') +
+      '<span class="grow"></span><button class="btn" data-action="new">＋ Rekod baharu</button></div>';
+    if (!S.list) { el.innerHTML = h + '<p class="boot">Memuatkan…</p>'; loadList(k); return; }
+    h += '<div class="panel"><table><thead><tr>' + k.listColumns.map(function (c) { return '<th>' + esc(colLabel(k, c)) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
+    if (!S.list.rows.length) h += '<tr><td class="empty" colspan="' + (k.listColumns.length + 1) + '">Tiada rekod.</td></tr>';
+    S.list.rows.forEach(function (r) {
+      h += '<tr>' + k.listColumns.map(function (c) { return '<td>' + esc(String(r[c] === undefined ? '' : r[c]).replace(/^'/, '')) + '</td>'; }).join('') +
+        '<td class="act"><button class="btn o sm" data-action="edit" data-id="' + esc(r.id) + '">Edit</button>' +
+        (S.list.canDelete ? ' <button class="btn d sm" data-action="del" data-id="' + esc(r.id) + '">Padam</button>' : '') + '</td></tr>';
+    });
+    el.innerHTML = h + '</tbody></table></div>';
+  }
+
+  function inputFor(k, fd, val) {
+    var id = 'f_' + fd.key, v = val === undefined || val === null ? '' : String(val).replace(/^'/, '');
+    var req = fd.required ? ' required' : '';
+    var user = S.session.user;
+    switch (fd.type) {
+      case 'select':
+        return '<select id="' + id + '" name="' + fd.key + '"><option value="">— pilih —</option>' +
+          fd.options.map(function (o) { return '<option' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+      case 'yesno':
+        return '<select id="' + id + '" name="' + fd.key + '"><option value="">— pilih —</option>' +
+          ['Ya', 'Tidak'].map(function (o) { return '<option' + (v === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>';
+      case 'faculty':
+        var locked = fd.key === 'fakulti' && !isAdmin() && k.entry === 'faculty';
+        var list = S.session.faculties.filter(function (x) { return fd.key !== 'fakulti' || !k.facultyWhitelist || k.facultyWhitelist.indexOf(x.kod) >= 0; });
+        if (locked) v = user.fakulti;
+        return '<select id="' + id + '" name="' + fd.key + '"' + (locked ? ' disabled' : '') + '><option value="">— pilih —</option>' +
+          list.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (v === x.kod ? ' selected' : '') + '>' + esc(x.kod + ' · ' + x.nama) + '</option>'; }).join('') + '</select>' +
+          (locked ? '<div class="hint">Dikunci mengikut fakulti anda.</div>' : '');
+      case 'textarea':
+        return '<textarea id="' + id + '" name="' + fd.key + '" maxlength="2000">' + esc(v) + '</textarea>';
+      case 'number':
+        return '<input type="number" step="any" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '"' +
+          (fd.min !== undefined ? ' min="' + fd.min + '"' : '') + (fd.max !== undefined ? ' max="' + fd.max + '"' : '') + '>';
+      case 'date':
+        return '<input type="date" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '">';
+      case 'email':
+        return '<input type="email" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '" maxlength="254">';
+      case 'url':
+        return '<input type="url" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '" placeholder="https://" maxlength="500">';
+      default:
+        return '<input type="text" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '" maxlength="300">';
+    }
+  }
+
+  function renderForm(k) {
+    var rec = S.editing || {};
+    var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
+    k.fields.forEach(function (fd) {
+      if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
+      h += '<div class="' + (fd.full ? 'full' : '') + '" data-field="' + fd.key + '"><label for="f_' + fd.key + '">' + esc(fd.label) + (fd.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
+        inputFor(k, fd, rec[fd.key]) + '<div class="err" role="alert"></div></div>';
+    });
+    h += '</div><div class="acts"><button class="btn" type="submit" id="savebtn">Simpan</button>' +
+      '<button class="btn o" type="button" data-action="cancelform">Batal</button></div></form>';
+    $('#content').innerHTML = h;
+  }
+
+  function collectForm(k) {
+    var rec = {};
+    if (S.editing) rec.id = S.editing.id;
+    k.fields.forEach(function (fd) {
+      var el = document.getElementById('f_' + fd.key);
+      if (!el) return;
+      if (el.disabled && fd.key === 'fakulti') { rec[fd.key] = S.session.user.fakulti; return; }
+      rec[fd.key] = el.value;
+    });
+    return rec;
+  }
+  function showFieldErrors(fields) {
+    $$('[data-field]').forEach(function (w) { w.classList.remove('invalid'); $('.err', w).textContent = ''; });
+    var first = null;
+    Object.keys(fields || {}).forEach(function (key) {
+      var w = $('[data-field="' + key + '"]');
+      if (!w) return;
+      w.classList.add('invalid'); $('.err', w).textContent = fields[key];
+      if (!first) first = w;
+    });
+    if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+
+  function submitForm() {
+    var k = kpiById(S.view.id); if (!k || S.busy) return;
+    var btn = $('#savebtn'); S.busy = true; btn.disabled = true; btn.textContent = 'Menyimpan…';
+    call('api_save', S.token, k.id, collectForm(k)).then(function (r) {
+      toast('Rekod ' + r.id + ' disimpan.');
+      S.editing = null; S.list = null; S.view = { name: 'kpi', id: k.id, tab: 'list' };
+      render();
+    }).catch(function (e) {
+      if (authFail(e)) return;
+      showFieldErrors(e.fields); toast(e.message, true);
+    }).then(function () { S.busy = false; var b = $('#savebtn'); if (b) { b.disabled = false; b.textContent = 'Simpan'; } });
+  }
+
+  // ------------------------------------------------------------------ Admin: pengguna
+  function renderUsers() {
+    var el = $('#content');
+    if (!S.users) {
+      el.innerHTML = '<p class="boot">Memuatkan…</p>';
+      call('api_listUsers', S.token).then(function (r) { S.users = r; if (S.view.name === 'users') renderUsers(); })
+        .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+      return;
+    }
+    var facs = S.session.faculties;
+    var h = '<div class="form" style="margin-bottom:16px"><form id="uform" novalidate><div class="fgrid">' +
+      '<div data-field="emel"><label for="u_emel">E-mel <span class="req">*</span></label><input type="email" id="u_emel" maxlength="254"><div class="err" role="alert"></div></div>' +
+      '<div data-field="nama"><label for="u_nama">Nama</label><input type="text" id="u_nama" maxlength="120"><div class="err" role="alert"></div></div>' +
+      '<div data-field="peranan"><label for="u_peranan">Peranan</label><select id="u_peranan"><option>PIC</option><option>Admin</option></select><div class="err" role="alert"></div></div>' +
+      '<div data-field="fakulti"><label for="u_fakulti">Fakulti</label><select id="u_fakulti">' +
+      facs.map(function (x) { return '<option value="' + esc(x.kod) + '">' + esc(x.kod + ' · ' + x.nama) + '</option>'; }).join('') + '</select><div class="err" role="alert"></div></div>' +
+      '<div data-field="kpi_akses"><label for="u_akses">Akses KPI (PIC)</label><input type="text" id="u_akses" placeholder="KAI1,KAI4,KAI6"><div class="hint">KPI fakulti sahaja: KAI1, KAI4, KAI6. Admin mengakses semua.</div><div class="err" role="alert"></div></div>' +
+      '<div data-field="aktif"><label for="u_aktif">Aktif</label><select id="u_aktif"><option>Ya</option><option>Tidak</option></select><div class="err" role="alert"></div></div>' +
+      '</div><div class="acts"><button class="btn" type="submit">Simpan pengguna</button><button class="btn o" type="button" data-action="uclear">Kosongkan</button></div></form></div>';
+    h += '<div class="panel"><table><thead><tr><th>E-mel</th><th>Nama</th><th>Peranan</th><th>Fakulti</th><th>Akses KPI</th><th>Aktif</th><th></th></tr></thead><tbody>';
+    S.users.forEach(function (u) {
+      h += '<tr><td>' + esc(u.emel) + '</td><td>' + esc(u.nama) + '</td><td>' + esc(u.peranan) + '</td><td>' + esc(u.fakulti) + '</td><td>' + esc(u.kpi_akses) + '</td><td>' + esc(u.aktif) + '</td>' +
+        '<td class="act"><button class="btn o sm" data-action="uedit" data-email="' + esc(u.emel) + '">Edit</button> ' +
+        '<button class="btn d sm" data-action="udel" data-email="' + esc(u.emel) + '">Padam</button></td></tr>';
+    });
+    el.innerHTML = h + '</tbody></table></div>';
+  }
+
+  // ------------------------------------------------------------------ Admin: sasaran
+  function renderTargets() {
+    var el = $('#content');
+    if (!S.targets) {
+      el.innerHTML = '<p class="boot">Memuatkan…</p>';
+      call('api_listTargets', S.token).then(function (r) { S.targets = r; if (S.view.name === 'targets') renderTargets(); })
+        .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+      return;
+    }
+    var h = '<div class="pub">Semua sasaran ialah <b>minimum</b> (boleh dilebihi), kecuali KAI 2 dan DKAI 1 yang berakhir pada 100%. Sasaran suku tahun (Q1-Q4) bersifat kumulatif dan boleh dikosongkan (N/A).</div>' +
+      '<div class="panel"><table><thead><tr><th>KPI</th><th>Tahun</th><th>Sasaran</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Bajet (RM)</th><th>Catatan</th><th></th></tr></thead><tbody>';
+    S.targets.forEach(function (t, i) {
+      function inp(k, w) { return '<input type="number" step="any" min="0" style="width:' + w + 'px" data-t="' + i + '" data-k="' + k + '" value="' + esc(t[k]) + '" aria-label="' + k + ' ' + esc(t.kpi) + ' ' + esc(t.tahun) + '">'; }
+      h += '<tr><td>' + esc(t.kpi) + '</td><td>' + esc(t.tahun) + '</td><td>' + inp('sasaran', 70) + '</td>' +
+        '<td>' + inp('q1', 60) + '</td><td>' + inp('q2', 60) + '</td><td>' + inp('q3', 60) + '</td><td>' + inp('q4', 60) + '</td>' +
+        '<td>' + inp('bajet_rm', 90) + '</td><td><input type="text" style="min-width:160px" data-t="' + i + '" data-k="catatan" value="' + esc(String(t.catatan || '').replace(/^\'/, '')) + '" aria-label="Catatan"></td>' +
+        '<td class="act"><button class="btn sm" data-action="tsave" data-i="' + i + '">Simpan</button></td></tr>';
+    });
+    el.innerHTML = h + '</tbody></table></div>';
+  }
+
+  // ------------------------------------------------------------------ Admin: audit
+  function renderAudit() {
+    var el = $('#content');
+    if (!S.audit) {
+      el.innerHTML = '<p class="boot">Memuatkan…</p>';
+      call('api_listAudit', S.token, 200).then(function (r) { S.audit = r; if (S.view.name === 'audit') renderAudit(); })
+        .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+      return;
+    }
+    var h = '<div class="panel"><table><thead><tr><th>Masa</th><th>Pengguna</th><th>Tindakan</th><th>KPI</th><th>Rekod</th><th>Ringkasan</th></tr></thead><tbody>';
+    if (!S.audit.length) h += '<tr><td class="empty" colspan="6">Tiada log.</td></tr>';
+    S.audit.forEach(function (a) {
+      h += '<tr><td>' + esc(String(a.masa).replace('T', ' ')) + '</td><td>' + esc(a.emel) + '</td><td>' + esc(a.tindakan) + '</td><td>' + esc(a.kpi) + '</td><td>' + esc(a.rekod_id) + '</td><td>' + esc(String(a.ringkasan).replace(/^'/, '')) + '</td></tr>';
+    });
+    el.innerHTML = h + '</tbody></table></div>';
+  }
+
+  // ------------------------------------------------------------------ log masuk (OTP)
+  function renderModal() {
+    var m = $('#modal');
+    if (!S.login) { m.innerHTML = ''; return; }
+    var L = S.login;
+    m.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ltitle"><div class="dlg">' +
+      '<h2 id="ltitle">Log Masuk</h2>' +
+      (L.step === 'email'
+        ? '<p>Masukkan e-mel berdaftar anda. Kod OTP 6 digit akan dihantar ke e-mel itu.</p>' +
+          '<form id="lform"><label for="l_emel">E-mel</label><input type="email" id="l_emel" autocomplete="email" required value="' + esc(L.email || '') + '">' +
+          '<div class="err" role="alert">' + esc(L.error || '') + '</div>' +
+          '<div class="acts"><button class="btn" type="submit"' + (L.busy ? ' disabled' : '') + '>' + (L.busy ? 'Menghantar…' : 'Hantar OTP') + '</button><button class="btn o" type="button" data-action="lclose">Batal</button></div></form>'
+        : '<p>' + esc(L.message || 'Kod OTP telah dihantar.') + '<br><b>' + esc(L.email) + '</b></p>' +
+          '<form id="lform"><label for="l_code">Kod OTP</label><input type="text" id="l_code" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>' +
+          '<div class="err" role="alert">' + esc(L.error || '') + '</div>' +
+          '<div class="acts"><button class="btn" type="submit"' + (L.busy ? ' disabled' : '') + '>' + (L.busy ? 'Mengesahkan…' : 'Sahkan') + '</button>' +
+          '<button class="btn o" type="button" data-action="lback">Tukar e-mel</button></div></form>') +
+      '</div></div>';
+    var inp = $('#l_emel') || $('#l_code'); if (inp) inp.focus();
+  }
+
+  function submitLogin() {
+    var L = S.login; if (!L || L.busy) return;
+    L.error = ''; L.busy = true;
+    if (L.step === 'email') {
+      L.email = $('#l_emel').value.trim();
+      renderModal();
+      call('api_requestOtp', L.email).then(function (r) {
+        L.step = 'code'; L.message = r.message; L.busy = false; renderModal();
+      }).catch(function (e) { L.busy = false; L.error = e.message; renderModal(); });
+    } else {
+      var code = $('#l_code').value.trim();
+      renderModal();
+      call('api_verifyOtp', L.email, code).then(function (r) {
+        S.token = r.token; store('set', 'utmx_token', r.token);
+        S.login = null;
+        return call('api_session', S.token);
+      }).then(function (sess) {
+        S.session = sess; S.view = { name: 'dashboard' }; S.dash = null;
+        toast('Selamat datang, ' + (sess.user.nama || sess.user.emel) + '.');
+        render();
+      }).catch(function (e) { L.busy = false; L.error = e.message; renderModal(); });
+    }
+  }
+
+  function doLogout() {
+    var t = S.token;
+    S.token = null; S.session = null; store('del', 'utmx_token');
+    S.view = { name: 'dashboard' }; S.list = S.users = S.targets = S.audit = null; S.editing = null; S.dash = null;
+    if (t) call('api_logout', t).catch(function () {});
+    toast('Anda telah log keluar.');
+    render();
+  }
+
+  // ------------------------------------------------------------------ navigasi
+  function go(target) {
+    S.navOpen = false; S.editing = null; S.list = null; S.listFilters = {};
+    if (target === 'dashboard') S.view = { name: 'dashboard' };
+    else if (target.indexOf('kpi:') === 0) S.view = { name: 'kpi', id: target.slice(4), tab: 'list' };
+    else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; }
+    render(); window.scrollTo(0, 0);
+  }
+
+  // ------------------------------------------------------------------ peristiwa
+  document.addEventListener('click', function (ev) {
+    var nav = ev.target.closest('[data-nav]');
+    if (nav) { go(nav.getAttribute('data-nav')); return; }
+    var a = ev.target.closest('[data-action]');
+    if (!a) return;
+    var act = a.getAttribute('data-action');
+    var k = S.view.name === 'kpi' ? kpiById(S.view.id) : null;
+    switch (act) {
+      case 'togglenav': S.navOpen = !S.navOpen; $('#side').classList.toggle('open', S.navOpen); $('.scrim').classList.toggle('open', S.navOpen); break;
+      case 'closenav': S.navOpen = false; $('#side').classList.remove('open'); $('.scrim').classList.remove('open'); break;
+      case 'login': S.login = { step: 'email' }; renderModal(); break;
+      case 'lclose': S.login = null; renderModal(); break;
+      case 'lback': S.login = { step: 'email', email: S.login.email }; renderModal(); break;
+      case 'logout': doLogout(); break;
+      case 'tab': S.view.tab = a.getAttribute('data-tab'); if (S.view.tab === 'list') S.editing = null; renderKpi(); break;
+      case 'new': S.editing = null; S.view.tab = 'form'; renderKpi(); break;
+      case 'cancelform': S.editing = null; S.view.tab = 'list'; renderKpi(); break;
+      case 'edit':
+        S.editing = (S.list.rows.filter(function (r) { return r.id === a.getAttribute('data-id'); })[0]) || null;
+        S.view.tab = 'form'; renderKpi(); window.scrollTo(0, 0); break;
+      case 'del':
+        if (k) {
+          var rid = a.getAttribute('data-id');
+          askConfirm('Padam rekod ' + rid + '? Tindakan ini tidak boleh dibatalkan.', 'Ya, padam').then(function (yes) {
+            if (!yes) return;
+            call('api_delete', S.token, k.id, rid).then(function () { toast('Rekod dipadam.'); S.list = null; renderList(k); })
+              .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+          });
+        }
+        break;
+      case 'uedit':
+        var u = S.users.filter(function (x) { return x.emel === a.getAttribute('data-email'); })[0];
+        if (u) {
+          $('#u_emel').value = u.emel; $('#u_nama').value = u.nama; $('#u_peranan').value = u.peranan;
+          $('#u_fakulti').value = u.fakulti; $('#u_akses').value = u.kpi_akses; $('#u_aktif').value = u.aktif;
+          window.scrollTo(0, 0);
+        }
+        break;
+      case 'uclear': $('#uform').reset(); break;
+      case 'udel':
+        var em = a.getAttribute('data-email');
+        askConfirm('Padam pengguna ' + em + '?', 'Ya, padam').then(function (yes) {
+          if (!yes) return;
+          call('api_deleteUser', S.token, em).then(function () { toast('Pengguna dipadam.'); S.users = null; renderUsers(); })
+            .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+        });
+        break;
+      case 'tsave':
+        var i = parseInt(a.getAttribute('data-i'), 10), t = S.targets[i], row = { kpi: t.kpi, tahun: t.tahun };
+        $$('[data-t="' + i + '"]').forEach(function (inp) { row[inp.getAttribute('data-k')] = inp.value; });
+        call('api_saveTarget', S.token, row).then(function () { toast('Sasaran ' + t.kpi + ' ' + t.tahun + ' disimpan.'); S.dash = null; S.targets = null; renderTargets(); })
+          .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+        break;
+    }
+  });
+
+  document.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var id = ev.target.id;
+    if (id === 'kform') submitForm();
+    else if (id === 'lform') submitLogin();
+    else if (id === 'uform') {
+      var rec = { emel: $('#u_emel').value, nama: $('#u_nama').value, peranan: $('#u_peranan').value, fakulti: $('#u_fakulti').value, kpi_akses: $('#u_akses').value, aktif: $('#u_aktif').value };
+      call('api_saveUser', S.token, rec).then(function () { toast('Pengguna disimpan.'); S.users = null; renderUsers(); })
+        .catch(function (e) { if (authFail(e)) return; showFieldErrors(e.fields); toast(e.message, true); });
+    }
+  });
+
+  document.addEventListener('change', function (ev) {
+    var c = ev.target.getAttribute && ev.target.getAttribute('data-change');
+    if (!c) return;
+    if (c === 'year') { S.dash = null; loadDashboard(parseInt(ev.target.value, 10)); }
+    if (c === 'fstatus') { S.listFilters.status = ev.target.value; S.list = null; renderKpi(); }
+    if (c === 'ffak') { S.listFilters.fakulti = ev.target.value; S.list = null; renderKpi(); }
+  });
+
+  var qTimer = null;
+  document.addEventListener('input', function (ev) {
+    if (ev.target.getAttribute && ev.target.getAttribute('data-input') === 'q') {
+      var val = ev.target.value;
+      clearTimeout(qTimer);
+      qTimer = setTimeout(function () {
+        S.listFilters.q = val; S.list = null; var k = kpiById(S.view.id);
+        if (k) { call('api_list', S.token, k.id, S.listFilters).then(function (r) { S.list = r; var el = $('#q'); var pos = el ? el.selectionStart : 0; renderList(k); el = $('#q'); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }); }
+      }, 300);
+    }
+  });
+
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') {
+      if (S.login) { S.login = null; renderModal(); }
+      else if (S.navOpen) { S.navOpen = false; render(); }
+    }
+  });
+
+  // ------------------------------------------------------------------ mula
+  function boot() {
+    var t = store('get', 'utmx_token');
+    if (!t) { render(); return; }
+    S.token = t;
+    call('api_session', t).then(function (sess) { S.session = sess; render(); })
+      .catch(function () { S.token = null; store('del', 'utmx_token'); render(); });
+  }
+  boot();
+})();
+</script>

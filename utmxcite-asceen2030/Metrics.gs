@@ -1,0 +1,234 @@
+/**
+ * Pengiraan dashboard. Semua sasaran ialah MINIMUM (boleh dilebihi) kecuali KPI berjenis "kemajuan"
+ * (KAI 2, DKAI 1) yang berakhir pada 100%. Dashboard awam hanya menerima data agregat (tiada data peribadi).
+ */
+
+function num_(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+function round1_(n) { return Math.round(n * 10) / 10; }
+
+function countBy_(rows, keyFn) {
+  var m = {}, order = [];
+  rows.forEach(function (r) {
+    var k = keyFn(r);
+    if (k === '' || k === undefined || k === null) k = '(tiada)';
+    if (!(k in m)) { m[k] = 0; order.push(k); }
+    m[k] += 1;
+  });
+  return order.map(function (k) { return { label: k, value: m[k] }; });
+}
+
+function sortDesc_(items) { return items.sort(function (a, b) { return b.value - a.value; }); }
+
+function perFacultyItems_(kpi, rows, faculties) {
+  var counts = {};
+  rows.forEach(function (r) { counts[r.fakulti] = (counts[r.fakulti] || 0) + 1; });
+  var codes = kpi.facultyWhitelist ? kpi.facultyWhitelist.slice() : Object.keys(counts);
+  if (!kpi.facultyWhitelist && kpi.perFacultyTarget) {
+    faculties.forEach(function (f) { if (f.kod !== 'UTMXCITE' && codes.indexOf(f.kod) < 0) codes.push(f.kod); });
+  }
+  return codes.map(function (c) {
+    var it = { label: c, value: counts[c] || 0 };
+    if (kpi.perFacultyTarget) it.target = kpi.perFacultyTarget;
+    return it;
+  });
+}
+
+function countedInYear_(rows, statuses, dateField, year) {
+  return rows.filter(function (r) {
+    return statuses.indexOf(r.status) >= 0 && yearOf_(r[dateField]) === year;
+  });
+}
+
+var MEASURES = {
+  // KAI 1: inkubator aktif = didaftarkan DAN (dalam pembangunan atau beroperasi); sasaran minimum 20 setiap tahun.
+  kai1: function (kpi, rows, year, ctx) {
+    var active = rows.filter(function (r) {
+      if (r.didaftarkan !== 'Ya') return false;
+      var reg = yearOf_(r.tarikh_pendaftaran), off = yearOf_(r.tarikh_tidak_aktif);
+      if (!reg || reg > year) return false;
+      if (off && off <= year) return false;
+      if (r.status === 'Dalam pembangunan' || r.status === 'Beroperasi') return true;
+      return r.status === 'Tidak aktif' && !!off && off > year;
+    });
+    var oper = active.filter(function (r) { return r.status === 'Beroperasi'; }).length;
+    var jenis = countBy_(active, function (r) { return r.jenis; });
+    jenis.forEach(function (it) {
+      if (it.label === 'Inkubator Fakulti') it.target = 13;
+      if (it.label === 'Co-working / Ruang Individu') it.target = 10;
+    });
+    return {
+      value: active.length,
+      secondary: [{ label: 'Sudah beroperasi', value: oper }],
+      breakdown: [
+        { title: 'Mengikut aliran', items: countBy_(active, function (r) { return r.aliran; }) },
+        { title: 'Mengikut jenis (sasaran dalaman 13 + 10)', items: jenis },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(active, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
+  // Kemajuan berpemberat (KAI 2, DKAI 1): jumlah (peratus siap x pemberat) / 100.
+  progress: function (kpi, rows) {
+    var sum = 0, weight = 0, done = 0;
+    rows.forEach(function (r) {
+      sum += num_(r.peratus_siap) * num_(r.pemberat) / 100;
+      weight += num_(r.pemberat);
+      if (r.status === 'Siap') done += 1;
+    });
+    var warnings = [];
+    if (rows.length && Math.abs(weight - 100) > 0.01) warnings.push('Jumlah pemberat milestone ialah ' + round1_(weight) + '% (sepatutnya 100%).');
+    return {
+      value: Math.min(100, round1_(sum)),
+      secondary: [{ label: 'Milestone siap', value: done + ' / ' + rows.length }],
+      warnings: warnings,
+      breakdown: [{
+        title: 'Kemajuan milestone (%)',
+        items: rows.map(function (r) { return { label: (r.fasa || r.peringkat || '') + ' - ' + r.nama_milestone + ' (' + num_(r.pemberat) + '%)', value: num_(r.peratus_siap), target: 100 }; })
+      }]
+    };
+  },
+
+  // KAI 3: ruang ditawarkan kepada pelajar untuk disewa (kumulatif); penggunaan = disewa / ditawarkan.
+  kai3: function (kpi, rows, year) {
+    var offered = rows.filter(function (r) {
+      return (r.status === 'Ditawarkan' || r.status === 'Disewa') && yearOf_(r.tarikh_ditawarkan) && yearOf_(r.tarikh_ditawarkan) <= year;
+    });
+    var rented = offered.filter(function (r) { return r.status === 'Disewa'; });
+    var rate = offered.length ? round1_(rented.length / offered.length * 100) : 0;
+    var order = ['Dikenal pasti', 'Spesifikasi disediakan', 'Dalam perolehan', 'Siap', 'Ditawarkan', 'Disewa', 'Tidak aktif'];
+    var pipe = countBy_(rows, function (r) { return r.status; }).sort(function (a, b) { return order.indexOf(a.label) - order.indexOf(b.label); });
+    return {
+      value: offered.length,
+      secondary: [{ label: 'Disewa pelajar', value: rented.length }, { label: 'Kadar penggunaan', value: rate + '%' }],
+      breakdown: [
+        { title: 'Ruang ditawarkan mengikut jenis', items: countBy_(offered, function (r) { return r.jenis_ruang; }) },
+        { title: 'Ruang ditawarkan mengikut kolej / fakulti', items: sortDesc_(countBy_(offered, function (r) { return r.kolej_fakulti; })) },
+        { title: 'Saluran paip semua ruang (mengikut status)', items: pipe }
+      ]
+    };
+  },
+
+  // KAI 4: pelajar mendaftar dalam GiGAUTM Ascend pada tahun itu.
+  kai4: function (kpi, rows, year, ctx) {
+    var counted = countedInYear_(rows, ['Mendaftar', 'Tamat'], 'tarikh_daftar', year);
+    return {
+      value: counted.length,
+      secondary: [
+        { label: 'Bootcamp tamat', value: counted.filter(function (r) { return r.bootcamp_status === 'Tamat'; }).length },
+        { label: 'Gig diperoleh', value: counted.filter(function (r) { return r.gig_diperoleh === 'Ya'; }).length }
+      ],
+      breakdown: [
+        { title: 'Pelajar mendaftar mengikut fakulti (cadangan minimum 2 setiap fakulti)', items: perFacultyItems_(kpi, counted, ctx.faculties) },
+        { title: 'Semua permohonan mengikut status (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
+      ]
+    };
+  },
+
+  // KAI 5: pelajar mendaftar dalam F-SIP pada tahun itu.
+  kai5: function (kpi, rows, year) {
+    var counted = countedInYear_(rows, ['Mendaftar', 'Tamat'], 'tarikh_daftar', year);
+    return {
+      value: counted.length,
+      secondary: [{ label: 'Kertas konsep diluluskan', value: rows.filter(function (r) { return r.kertas_konsep_status === 'Diluluskan'; }).length }],
+      breakdown: [
+        { title: 'Pelajar mendaftar mengikut fakulti', items: sortDesc_(countBy_(counted, function (r) { return r.fakulti; })) },
+        { title: 'Semua pelajar mengikut status (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
+      ]
+    };
+  },
+
+  // KAI 6: pelajar dilatih membentuk startup AI pada tahun itu; minimum 5 setiap fakulti (FAI, FC, FKE, MJIIT).
+  kai6: function (kpi, rows, year, ctx) {
+    var counted = countedInYear_(rows, ['Dalam latihan', 'Tamat latihan'], 'tarikh_mula_latihan', year);
+    var startups = {};
+    counted.forEach(function (r) { if (r.nama_startup) startups[String(r.nama_startup).toLowerCase()] = 1; });
+    return {
+      value: counted.length,
+      secondary: [
+        { label: 'Startup AI (unik)', value: Object.keys(startups).length },
+        { label: 'Top 5 Global Outreach', value: counted.filter(function (r) { return r.top5 === 'Ya'; }).length },
+        { label: 'Startup ditubuhkan', value: counted.filter(function (r) { return r.startup_ditubuhkan === 'Ya'; }).length }
+      ],
+      breakdown: [
+        { title: 'Mengikut fakulti (minimum 5 setiap fakulti)', items: perFacultyItems_(kpi, counted, ctx.faculties) },
+        { title: 'Semua pelajar mengikut status (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
+      ]
+    };
+  }
+};
+
+function readTargets_() {
+  var out = {};
+  readTable_(SHEETS.TARGETS, { tahun: 'number', sasaran: 'number', q1: 'number', q2: 'number', q3: 'number', q4: 'number' }).rows.forEach(function (r) {
+    if (!r.kpi || r.tahun === '') return;
+    out[r.kpi] = out[r.kpi] || {};
+    out[r.kpi][r.tahun] = { sasaran: r.sasaran, q: [r.q1, r.q2, r.q3, r.q4], jenis: r.jenis, bajet: r.bajet_rm, catatan: r.catatan };
+  });
+  return out;
+}
+
+function statusFor_(kpi, value, target) {
+  if (target === '' || target === undefined || target === null) return 'Tiada sasaran';
+  if (kpi.jenis === 'kemajuan') {
+    if (value >= 100) return 'Selesai';
+    return value >= target ? 'Capai sasaran' : 'Di bawah sasaran';
+  }
+  if (value > target) return 'Melebihi sasaran';
+  return value === target ? 'Capai sasaran' : 'Di bawah sasaran';
+}
+
+function currentQuarter_() {
+  return Math.ceil(parseInt(Utilities.formatDate(new Date(), APP.TZ, 'M'), 10) / 3);
+}
+
+function buildKpiCard_(kpi, rows, year, targets, ctx) {
+  var m = MEASURES[kpi.measure](kpi, rows, year, ctx);
+  var t = (targets[kpi.id] || {})[year] || null;
+  var target = t && t.sasaran !== '' ? t.sasaran : '';
+  var card = {
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, unit: kpi.unit, jenis: kpi.jenis,
+    value: m.value, target: target,
+    pct: target !== '' && target > 0 ? round1_(m.value / target * 100) : null,
+    status: statusFor_(kpi, m.value, target),
+    secondary: m.secondary || [], breakdown: m.breakdown || [], warnings: m.warnings || [],
+    note: t ? t.catatan : ''
+  };
+  var nowYear = yearOf_(todayIso_());
+  if (t && year === nowYear) {
+    var q = currentQuarter_();
+    var qt = t.q[q - 1];
+    card.quarter = q;
+    card.quarterTarget = qt === '' || qt === undefined ? '' : qt;
+    card.quarterStatus = card.quarterTarget === '' ? 'Tiada sasaran suku tahun' : statusFor_(kpi, m.value, card.quarterTarget);
+  }
+  if (kpi.id === 'KAI6') card.secondaryTargets = 'Sasaran sekunder startup AI 2026: Q1 0, Q2 1, Q3 2, Q4 3';
+  return card;
+}
+
+function computeDashboard_(year) {
+  var targets = readTargets_();
+  var ctx = { faculties: listFaculties_() };
+  var cards = KPIS.map(function (kpi) {
+    var rows = readTable_(kpi.sheet, typesFor_(kpi)).rows;
+    return buildKpiCard_(kpi, rows, year, targets, ctx);
+  });
+  var meet = cards.filter(function (c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }).length;
+  return {
+    year: year, years: APP.YEARS, generatedAt: nowIso_(),
+    ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)', owner: 'Pengarah UTMXCITE' },
+    summary: { total: cards.length, meet: meet },
+    kpis: cards
+  };
+}
+
+/** Dashboard awam dengan cache pendek. Tidak memerlukan log masuk. */
+function getDashboard_(yearIn) {
+  var year = parseInt(yearIn, 10);
+  if (APP.YEARS.indexOf(year) < 0) year = Math.min(Math.max(yearOf_(todayIso_()), APP.YEARS[0]), APP.YEARS[APP.YEARS.length - 1]);
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('dash:' + year);
+  if (hit) return JSON.parse(hit);
+  var d = computeDashboard_(year);
+  try { cache.put('dash:' + year, JSON.stringify(d), APP.DASH_CACHE_TTL); } catch (e) { /* terlalu besar: abaikan cache */ }
+  return d;
+}

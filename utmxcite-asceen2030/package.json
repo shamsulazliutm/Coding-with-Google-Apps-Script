@@ -1,0 +1,9 @@
+{
+  "name": "utmxcite-asceen2030-report",
+  "private": true,
+  "description": "UTMXCITE 4 ASCEEN 2030 Report - Google Apps Script web app",
+  "scripts": {
+    "test": "node tests/run.js",
+    "test:e2e": "node tests/e2e.js"
+  }
+}
