@@ -109,19 +109,24 @@ var MEASURES = {
   },
 
 
-  // CKAI 1 dan 2: program yang SELESAI pada tahun itu (mengikut tarikh tamat).
+  // CKAI 1 dan 2: program yang SELESAI pada tahun itu (mengikut tarikh tamat), termasuk penyertaan, kos dan pendapatan.
   program: function (kpi, rows, year) {
     var done = rows.filter(function (r) { return r.status === 'Selesai' && yearOf_(r.tarikh_tamat) === year; });
     var upcoming = rows.filter(function (r) { return (r.status === 'Dirancang' || r.status === 'Sedang berjalan') && yearOf_(r.tarikh_mula) === year; });
+    var cost = sumOf_(done, 'bajet_rm'), income = sumOf_(done, 'pendapatan_rm');
     return {
       value: done.length,
       secondary: [
         { label: 'Jumlah peserta', value: sumOf_(done, 'bil_peserta') },
+        { label: 'Daripada itu pelajar', value: sumOf_(done, 'bil_pelajar') },
+        { label: 'Kos penganjuran', value: rm_(cost) },
+        { label: 'Pendapatan', value: rm_(income) },
         { label: 'Dirancang / sedang berjalan', value: upcoming.length }
       ],
       breakdown: [
         { title: 'Program selesai mengikut fakulti / penganjur', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) },
-        { title: 'Mengikut kategori', items: sortDesc_(countBy_(done, function (r) { return r.kategori; })) }
+        { title: 'Mengikut kategori', items: sortDesc_(countBy_(done, function (r) { return r.kategori; })) },
+        { title: 'Peserta mengikut fakulti / penganjur', items: sortDesc_(sumBy_(done, function (r) { return r.fakulti; }, function (r) { return num_(r.bil_peserta); })) }
       ]
     };
   },

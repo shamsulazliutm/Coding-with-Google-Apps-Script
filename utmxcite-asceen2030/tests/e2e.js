@@ -279,6 +279,42 @@ function buildHtml() {
     const all = await page.locator('.cont').innerText();
     ['Ali Bin Abu', '900101145678', 'A24CS0001', 'sijil-anugerah'].forEach(x => assert.ok(!all.includes(x), 'bocor dalam dashboard: ' + x));
   });
+  await step('CKAI 2: daftar program inovasi (tarikh, tempat, penyertaan, kos, pendapatan) dan dashboard menjumlahkannya', async () => {
+    await page.click('.nav:has-text("CKAI 2")');
+    await page.waitForSelector('table');
+    await page.click('[data-action="new"]');
+    await page.waitForSelector('#f_nama_program');
+    await page.selectOption('#f_fakulti', 'FC');
+    await page.fill('#f_nama_program', 'Hackathon Inovasi 2026');
+    await page.selectOption('#f_kategori', 'Hackathon / Pertandingan');
+    await page.selectOption('#f_status', 'Selesai');
+    // program Selesai: medan wajib ditandakan
+    await page.click('#savebtn');
+    await page.waitForSelector('[data-field="lokasi"].invalid .err:has-text("Wajib diisi")');
+    await page.fill('#f_tarikh_mula', '2026-05-10');
+    await page.fill('#f_tarikh_tamat', '2026-05-09'); // salah: tamat sebelum mula
+    await page.fill('#f_lokasi', 'Dewan Utama');
+    await page.fill('#f_bil_peserta', '50');
+    await page.fill('#f_bil_pelajar', '40');
+    await page.fill('#f_bil_staf', '15'); // 40 + 15 > 50: salah
+    await page.fill('#f_bajet_rm', '1500');
+    await page.fill('#f_pendapatan_rm', '0');
+    await page.click('#savebtn');
+    await page.waitForSelector('[data-field="tarikh_tamat"].invalid .err:has-text("sebelum tarikh mula")');
+    await page.waitForSelector('[data-field="bil_peserta"].invalid .err:has-text("kurang daripada")');
+    await page.fill('#f_tarikh_tamat', '2026-05-11');
+    await page.fill('#f_bil_staf', '10');
+    await page.screenshot({ path: path.join(out, '12-borang-program.png'), fullPage: true });
+    await page.click('#savebtn');
+    await page.waitForSelector('td:has-text("Hackathon Inovasi 2026")');
+    const row = await text('tbody tr');
+    ['Dewan Utama', '50', '1500', 'Selesai'].forEach(x => assert.ok(row.includes(x), 'lajur senarai tiada: ' + x + ' => ' + row));
+    await page.click('.nav:has-text("Dashboard")');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 2 · Bilangan program inovasi"))');
+    await card.waitFor();
+    const ct = await card.innerText();
+    ['Jumlah peserta: 50', 'Daripada itu pelajar: 40', 'Kos penganjuran: RM 1,500.00', 'Pendapatan: RM 0.00'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
+  });
   await step('paparan telefon: menu boleh dibuka dan dashboard tidak melimpah mendatar', async () => {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 800 } });
     const mp = await mobile.newPage();

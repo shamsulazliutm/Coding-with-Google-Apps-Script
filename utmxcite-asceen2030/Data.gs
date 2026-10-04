@@ -146,6 +146,7 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
       });
     }
   });
+  if (kpi.validate) kpi.validate(clean, errors);
   return { clean: clean, errors: errors };
 }
 

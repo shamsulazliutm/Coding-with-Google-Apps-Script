@@ -316,7 +316,7 @@ test('Admin memberi PIC akses CKAI 1, 2 dan 4 (bukan CKAI 3, 5, 6)', () => {
   fail(g.api_save(ckaiPic, 'CKAI6', { tempoh: '2026-01' }), /Akses ditolak/);
 });
 test('CKAI 1: fakulti merekod program sendiri; hanya program Selesai dikira pada tahun tamat', () => {
-  const base = { nama_program: 'Bengkel Pitching', kategori: 'Bengkel', tarikh_mula: '2026-03-01', bil_peserta: 40 };
+  const base = { nama_program: 'Bengkel Pitching', kategori: 'Bengkel', tarikh_mula: '2026-03-01', lokasi: 'Dewan Besar', bil_peserta: 40, bajet_rm: 1200, pendapatan_rm: 300 };
   fail(g.api_save(ckaiPic, 'CKAI1', Object.assign({ fakulti: 'FKE', status: 'Selesai' }, base)), /betulkan/); // tarikh tamat wajib
   const a = ok(g.api_save(ckaiPic, 'CKAI1', Object.assign({ fakulti: 'FC', status: 'Selesai', tarikh_tamat: '2026-03-02' }, base)));
   assert.strictEqual(a.fakulti, 'FKE'); // dipaksa kepada fakulti PIC
@@ -330,10 +330,53 @@ test('CKAI 1: fakulti merekod program sendiri; hanya program Selesai dikira pada
   assert.strictEqual(ok(g.api_list(ckaiPic, 'CKAI1', {})).rows.length, 2);
 });
 test('CKAI 2: program inovasi dikira berasingan daripada CKAI 1', () => {
-  ok(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'Hackathon', kategori: 'Hackathon / Pertandingan', status: 'Selesai', tarikh_tamat: '2026-04-12', bil_peserta: 100 }));
+  ok(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'Hackathon', kategori: 'Hackathon / Pertandingan', status: 'Selesai', tarikh_mula: '2026-04-10', tarikh_tamat: '2026-04-12', lokasi: 'Makerspace', bil_peserta: 100, bajet_rm: 5000, pendapatan_rm: 0 }));
   fail(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'X', kategori: 'Bengkel Pitching', status: 'Dirancang' }), /betulkan/); // kategori tidak sah
   assert.strictEqual(card(dash(2026), 'CKAI2').value, 1);
   assert.strictEqual(card(dash(2026), 'CKAI1').value, 1);
+});
+test('Program: tarikh, tempat, penyertaan, kos dan pendapatan wajib bagi program Selesai (0 dibenarkan); peraturan silang', () => {
+  const done = { fakulti: 'FKE', nama_program: 'Program Penuh', kategori: 'Bengkel', status: 'Selesai' };
+  const r = g.api_save(ckaiPic, 'CKAI2', done);
+  fail(r, /betulkan/);
+  ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'].forEach(k => assert.ok(r.fields[k], 'wajib bagi Selesai: ' + k));
+  // program belum selesai tidak dipaksa isi semua medan
+  ok(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, done, { status: 'Dirancang', nama_program: 'Masih dirancang' })));
+  const full = Object.assign({}, done, { tarikh_mula: '2026-05-10', tarikh_tamat: '2026-05-11', lokasi: 'Dewan A', bil_peserta: 50, bajet_rm: 0, pendapatan_rm: 0 });
+  ok(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { nama_program: 'Kos dan pendapatan sifar' }))); // 0 sah
+  const r1 = g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { tarikh_tamat: '2026-05-09' })); fail(r1, /betulkan/); assert.match(r1.fields.tarikh_tamat, /sebelum tarikh mula/);
+  const r2 = g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { bil_pelajar: 30, bil_staf: 15, bil_luar: 10 })); fail(r2, /betulkan/); assert.match(r2.fields.bil_peserta, /kurang daripada/);
+  const r3 = g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { bil_peserta: '', bil_pelajar: 5 })); fail(r3, /betulkan/); assert.ok(r3.fields.bil_peserta);
+  fail(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { skor_kepuasan: 6 })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { bajet_rm: -1 })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { sumber_pendapatan: 'Rompak' })), /betulkan/);
+});
+test('Program: kos penganjuran, pendapatan dan penyertaan dijumlah pada dashboard (program Selesai dalam tahun sahaja)', () => {
+  const mk = (n, over) => ok(g.api_save(adminToken, 'CKAI2', Object.assign({ fakulti: 'FC', nama_program: n, kategori: 'Bengkel', status: 'Selesai', tarikh_mula: '2028-02-01', tarikh_tamat: '2028-02-02', lokasi: 'Dewan', bil_peserta: 60, bil_pelajar: 40, bil_staf: 10, bil_luar: 10, bajet_rm: 2500.25, pendapatan_rm: 800 }, over)));
+  mk('P1'); mk('P2', { bajet_rm: 1000, pendapatan_rm: 200.5, bil_peserta: 40, bil_pelajar: 40, bil_staf: 0, bil_luar: 0 });
+  mk('P3 dibatalkan', { status: 'Dibatalkan', tarikh_tamat: '' });
+  mk('P4 tahun lain', { tarikh_mula: '2029-01-01', tarikh_tamat: '2029-01-02', bajet_rm: 9999 });
+  const c = card(dash(2028), 'CKAI2');
+  const sec = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
+  assert.strictEqual(c.value, 2);
+  assert.strictEqual(sec['Jumlah peserta'], 100); assert.strictEqual(sec['Daripada itu pelajar'], 80);
+  assert.strictEqual(sec['Kos penganjuran'], 'RM 3,500.25'); assert.strictEqual(sec['Pendapatan'], 'RM 1,000.50');
+  assert.strictEqual(c.breakdown[2].items[0].value, 100);
+  assert.ok(!JSON.stringify(dash(2028)).includes('P1')); // nama program tidak dipaparkan kepada awam
+});
+test('Program: laporan PDF pilihan; boleh dimuat naik dan dimuat turun oleh PIC fakulti sendiri sahaja', () => {
+  const pdf = Buffer.from('%PDF-1.4\n%laporan program\n%%EOF').toString('base64');
+  const up = ok(g.api_uploadFile(ckaiPic, 'CKAI2', 'laporan', { name: 'laporan-hackathon.pdf', data: pdf }));
+  const rec = ok(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'Dengan laporan', kategori: 'Bengkel', status: 'Dirancang', laporan: { id: up.id, name: up.name } }));
+  assert.strictEqual(JSON.parse(rec.laporan).name, 'laporan-hackathon.pdf');
+  assert.strictEqual(ok(g.api_downloadFile(ckaiPic, 'CKAI2', rec.id, 'laporan')).base64, pdf);
+  fail(g.api_downloadFile(ckaiPicFc, 'CKAI2', rec.id, 'laporan'), /Akses ditolak/); // PIC FC tiada akses CKAI 2
+  ok(g.api_saveUser(adminToken, { emel: 'pic.fc.inovasi@utm.my', nama: 'PIC FC Inovasi', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI2', aktif: 'Ya' }));
+  const fcInov = login('pic.fc.inovasi@utm.my');
+  fail(g.api_downloadFile(fcInov, 'CKAI2', rec.id, 'laporan'), /fakulti lain/); // ada akses CKAI 2 tetapi fakulti berbeza
+  assert.strictEqual(ok(g.api_list(fcInov, 'CKAI2', { q: 'Dengan laporan' })).rows.length, 0);
+  fail(g.api_uploadFile(ckaiPic, 'CKAI2', 'bajet_rm', { name: 'x.pdf', data: pdf }), /tidak sah/);
+  fail(g.api_uploadFile(ckaiPic, 'CKAI3', 'lampiran', { name: 'x.pdf', data: pdf }), /Akses ditolak/);
 });
 test('CKAI 3 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
   const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_matrik: 'S1', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Berdaftar' };

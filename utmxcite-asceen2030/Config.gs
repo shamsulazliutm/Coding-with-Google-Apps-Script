@@ -71,25 +71,52 @@ function F_(key, label, type, o) {
 }
 
 
-/** Medan program (CKAI 1 dan CKAI 2): satu rekod = satu program. */
+/**
+ * Medan program (CKAI 1 dan CKAI 2): satu rekod = satu program.
+ * Medan wajib bagi program Selesai: tarikh mula/tamat, tempat, jumlah peserta, kos penganjuran dan pendapatan (boleh 0).
+ */
 function programFields_(kategori) {
   return [
     F_('fakulti', 'Fakulti / penganjur', 'faculty', { required: true, sec: 'Program' }),
     F_('nama_program', 'Nama program', 'text', { required: true }),
     F_('kategori', 'Kategori', 'select', { required: true, options: kategori }),
     F_('tahap', 'Peringkat', 'select', { options: ['Fakulti', 'Pusat (UTMXCITE)', 'Universiti', 'Kebangsaan', 'Antarabangsa'] }),
-    F_('penganjur', 'Penganjur / kerjasama', 'text'),
-    F_('lokasi', 'Lokasi', 'text'),
-    F_('status', 'Status', 'select', { required: true, sec: 'Jadual & penyertaan', options: ['Dirancang', 'Sedang berjalan', 'Selesai', 'Dibatalkan'] }),
+    F_('penganjur', 'Penganjur / rakan kerjasama', 'text'),
+    F_('pegawai', 'Pegawai / pengarah program', 'text'),
+    F_('objektif', 'Objektif program', 'textarea', { full: true }),
+    F_('status', 'Status', 'select', { required: true, sec: 'Tarikh & tempat', options: ['Dirancang', 'Sedang berjalan', 'Selesai', 'Dibatalkan'] }),
     F_('tarikh_mula', 'Tarikh mula', 'date'),
     F_('tarikh_tamat', 'Tarikh tamat', 'date'),
-    F_('bil_peserta', 'Bilangan peserta', 'number', { min: 0 }),
-    F_('bil_pelajar', 'Daripada itu pelajar', 'number', { min: 0 }),
-    F_('bajet_rm', 'Perbelanjaan (RM)', 'number', { min: 0 }),
-    F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+    F_('lokasi', 'Tempat', 'text'),
+    F_('bil_peserta', 'Jumlah peserta', 'number', { min: 0, sec: 'Penyertaan' }),
+    F_('bil_pelajar', 'Daripada itu: pelajar', 'number', { min: 0 }),
+    F_('bil_staf', 'Daripada itu: staf UTM', 'number', { min: 0 }),
+    F_('bil_luar', 'Daripada itu: luar UTM (industri / komuniti / lain-lain)', 'number', { min: 0 }),
+    F_('skor_kepuasan', 'Skor kepuasan peserta (0-5)', 'number', { min: 0, max: 5 }),
+    F_('bajet_rm', 'Kos penganjuran (RM)', 'number', { min: 0, sec: 'Kewangan' }),
+    F_('sumber_peruntukan', 'Sumber peruntukan', 'select', { options: ['Peruntukan fakulti', 'Peruntukan UTMXCITE (Pusat)', 'Penajaan / sponsor', 'Yuran penyertaan', 'Geran', 'Lain-lain'] }),
+    F_('pendapatan_rm', 'Pendapatan (RM)', 'number', { min: 0 }),
+    F_('sumber_pendapatan', 'Sumber pendapatan', 'select', { options: ['Yuran penyertaan', 'Penajaan / sponsor', 'Jualan produk / tiket', 'Geran', 'Lain-lain'] }),
+    F_('bil_output', 'Bilangan hasil (projek / prototaip / idea / startup)', 'number', { min: 0, sec: 'Hasil & pengurusan' }),
+    F_('laporan', 'Laporan program (PDF, maksimum 5 MB)', 'file', { full: true }),
+    F_('lampiran', 'Pautan lampiran / berita', 'url'),
     F_('catatan', 'Catatan', 'textarea', { full: true })
   ];
 }
+
+/** Peraturan program: tarikh tamat tidak sebelum mula; pecahan peserta tidak melebihi jumlah. */
+function programValidate_(c, errors) {
+  if (c.tarikh_mula && c.tarikh_tamat && c.tarikh_tamat < c.tarikh_mula && !errors.tarikh_tamat) {
+    errors.tarikh_tamat = 'Tarikh tamat tidak boleh sebelum tarikh mula.';
+  }
+  var parts = (Number(c.bil_pelajar) || 0) + (Number(c.bil_staf) || 0) + (Number(c.bil_luar) || 0);
+  if (parts > 0 && c.bil_peserta === '' && !errors.bil_peserta) errors.bil_peserta = 'Isi jumlah peserta.';
+  else if (c.bil_peserta !== '' && parts > c.bil_peserta && !errors.bil_peserta) {
+    errors.bil_peserta = 'Jumlah peserta (' + c.bil_peserta + ') kurang daripada pelajar + staf + luar UTM (' + parts + ').';
+  }
+}
+
+var PROGRAM_DONE_REQUIRE = ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'];
 
 // ---------------------------------------------------------------------------
 // Definisi KPI. entry: 'faculty' = PIC fakulti + Admin; 'admin' = Admin sahaja.
@@ -348,18 +375,20 @@ var KPIS = [
     id: 'CKAI1', prefix: 'PK', sheet: 'CKAI1_Program_Keusahawanan', group: 'Center', entry: 'faculty',
     title: 'CKAI 1 · Bilangan program keusahawanan', short: 'Program Keusahawanan',
     unit: 'program selesai', measure: 'program', jenis: 'minimum',
-    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'status'],
+    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm', 'status'],
     statusField: 'status',
-    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: ['tarikh_tamat'] }],
+    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: PROGRAM_DONE_REQUIRE }],
+    validate: programValidate_,
     fields: programFields_(['Bengkel', 'Kursus / Latihan', 'Bootcamp', 'Pertandingan', 'Seminar / Forum', 'Mentoring', 'Lain-lain'])
   },
   {
     id: 'CKAI2', prefix: 'PI', sheet: 'CKAI2_Program_Inovasi', group: 'Center', entry: 'faculty',
     title: 'CKAI 2 · Bilangan program inovasi', short: 'Program Inovasi',
     unit: 'program selesai', measure: 'program', jenis: 'minimum',
-    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'status'],
+    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm', 'status'],
     statusField: 'status',
-    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: ['tarikh_tamat'] }],
+    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: PROGRAM_DONE_REQUIRE }],
+    validate: programValidate_,
     fields: programFields_(['Bengkel', 'Hackathon / Pertandingan', 'Pameran / Showcase', 'Latihan Teknikal', 'Seminar / Forum', 'Lain-lain'])
   },
   {
