@@ -14,7 +14,7 @@ Rujukan sebenar: Dokumen Pelan Tindakan UTMXCITE (PDF).
 |---|---|---|
 | **KAI · Peringkat Universiti** | KAI 1 hingga KAI 6 | Growth (KAI 1-3), Transform (KAI 4-6) |
 | **DKAI · Peringkat Jabatan (JTNC HEPA)** | DKAI 1 | Department |
-| **CKAI · Peringkat Pusat (UTMXCITE)** | CKAI 1 hingga CKAI 7 | Center |
+| **CKAI · Peringkat Pusat (UTMXCITE)** | CKAI 1 hingga CKAI 8 (empat subproses) | Center |
 
 Dashboard dan sidebar dikelompokkan mengikut tiga peringkat ini.
 
@@ -92,7 +92,7 @@ Boleh disunting terus dalam Sheet (drop-down disediakan bagi `peranan` dan `akti
 - Fail disimpan dalam folder Drive **peribadi** "UTMXCITE ASCEEN2030 - Lampiran" milik pemilik skrip dan **tidak dikongsi**. Fail hanya boleh dimuat turun melalui aplikasi selepas semakan akses: PIC bagi fakulti sendiri, Admin bagi semua. Setiap muat naik dan muat turun direkod dalam `Log_Audit`.
 - Satu rekod hanya boleh merujuk fail yang baru dimuat naik oleh pengguna itu sendiri melalui aplikasi (tidak boleh merujuk fail Drive sembarangan). Fail yang diganti atau yang rekodnya dipadam dibuang ke tong sampah Drive.
 - Manifest meminta skop `https://www.googleapis.com/auth/drive` (diperlukan oleh `DriveApp`). Skop ini luas, jadi gunakan akaun pemilik skrip yang sesuai dan jangan kongsi projek Apps Script dengan orang yang tidak perlu.
-- **No. KP dan no. matrik pelajar** (CKAI 8, juga KAI 4 hingga 6 dan CKAI 3) ialah data peribadi (PDPA 2010). Ia hanya dipaparkan kepada Admin dan PIC fakulti berkenaan, tidak dipaparkan dalam jadual senarai (hanya nama), tidak dimasukkan dalam `Log_Audit`, dan tidak pernah muncul pada dashboard awam. Dalam Google Sheet, no. KP disimpan sebagai teks biasa, jadi **hadkan akses kepada Sheet** (jangan kongsi) dan tetapkan tempoh simpanan mengikut dasar universiti.
+- **No. KP dan no. matrik pelajar** (no. KP hanya dalam CKAI 8; no. matrik juga dalam KAI 4 hingga 6, CKAI 1 dan CKAI 5) ialah data peribadi (PDPA 2010). Ia hanya dipaparkan kepada Admin dan PIC fakulti berkenaan, tidak dipaparkan dalam jadual senarai (hanya nama), tidak dimasukkan dalam `Log_Audit`, dan tidak pernah muncul pada dashboard awam. Dalam Google Sheet, no. KP disimpan sebagai teks biasa, jadi **hadkan akses kepada Sheet** (jangan kongsi) dan tetapkan tempoh simpanan mengikut dasar universiti.
 
 ## Logo
 
