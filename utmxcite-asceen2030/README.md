@@ -45,27 +45,29 @@ Sasaran tahunan, sasaran suku tahun (kumulatif) dan bajet disimpan dalam tab **S
 
 ## CKAI (Center Key Amal Indicator)
 
-Lapan ukuran peringkat pusat, dipaparkan dalam bahagian **CKAI · Peringkat Pusat (UTMXCITE)** pada dashboard. Semuanya sasaran **minimum** dan **belum ditetapkan**: isi melalui menu Admin → Sasaran (sehingga itu kad menunjukkan "Tiada sasaran").
+Lapan ukuran peringkat pusat, disusun mengikut **aliran proses UTMXCITE** dan dipaparkan dalam bahagian **CKAI · Peringkat Pusat (UTMXCITE)** dengan empat subproses. Semuanya sasaran **minimum** dan **belum ditetapkan**: isi melalui menu Admin → Sasaran (sehingga itu kad menunjukkan "Tiada sasaran").
 
-| CKAI | Ukuran | Unit rekod | Dikira | Penginput |
-|---|---|---|---|---|
-| 1 | Bilangan program keusahawanan | Satu program | Program berstatus **Selesai** pada tahun tarikh tamat | PIC fakulti (fakulti sendiri) dan Admin |
-| 2 | Bilangan program inovasi | Satu program | Sama seperti CKAI 1 | PIC fakulti dan Admin |
-| 3 | Bilangan pendaftaran SSU (Sistem Syarikat Universiti) | Satu syarikat / perniagaan pelajar | Pendaftaran pada tahun tarikh daftar | Admin |
-| 4 | Pendapatan usahawan pelajar | Satu baris sebulan bagi setiap perniagaan | Jumlah RM bagi bulan dalam tahun itu | PIC fakulti dan Admin |
-| 5 | Bilangan penggunaan Makerspace | Satu baris sebulan (jumlah bulanan) | Jumlah penggunaan bagi bulan dalam tahun itu | Admin |
-| 6 | Pendapatan sewaan inkubator | Satu baris sebulan bagi setiap penyewa | Jumlah RM berstatus **Dibayar** (belum bayar / tertunggak dipaparkan berasingan) | Admin |
-| 7 | Anugerah & pengiktirafan inovasi dan keusahawanan | Satu anugerah / pengiktirafan | Bilangan yang diterima pada tahun tarikh (dipecahkan mengikut peringkat, kategori, program dan fakulti) | PIC fakulti (pencapaian fakulti sendiri) dan Admin (pencapaian pusat: Fakulti = UTMXCITE) |
-| 8 | Bilangan inovasi pelajar yang dihasilkan | Satu projek inovasi pelajar | **OD:** projek yang **telah menyertai pertandingan**, sekurang-kurangnya peringkat Fakulti, pada tahun tarikh pertandingan (status "Telah menyertai"; "Akan menyertai" dipaparkan berasingan sebagai dirancang) | PIC fakulti (fakulti sendiri) dan Admin |
+| Subproses | CKAI | Ukuran | Unit rekod | Dikira | Penginput |
+|---|---|---|---|---|---|
+| **1 · Pendaftaran** | CKAI 1 | Bilangan pendaftaran SSU (Sistem Syarikat Universiti) | Satu syarikat / perniagaan pelajar | Pendaftaran pada tahun tarikh daftar | Admin |
+| **2 · Pembangunan** | CKAI 2 | Bilangan program keusahawanan | Satu program | Program berstatus **Selesai** pada tahun tarikh tamat | PIC fakulti dan Admin |
+| | CKAI 3 | Bilangan program inovasi | Satu program | Sama seperti CKAI 2 | PIC fakulti dan Admin |
+| | CKAI 4 | Bilangan penggunaan Makerspace (pembangunan prototaip) | Satu baris sebulan | Jumlah penggunaan bagi bulan dalam tahun itu | Admin |
+| **3 · Hasil** | CKAI 5 | Bilangan inovasi pelajar yang dihasilkan | Satu projek inovasi | Projek yang **telah menyertai pertandingan** (sekurang-kurangnya peringkat Fakulti) pada tahun tarikh pertandingan | PIC fakulti dan Admin |
+| | CKAI 6 | Pendapatan usahawan pelajar | Satu baris sebulan bagi setiap perniagaan | Jumlah RM bagi bulan dalam tahun itu | PIC fakulti dan Admin |
+| | CKAI 7 | Pendapatan sewaan inkubator | Satu baris sebulan bagi setiap penyewa | Jumlah RM berstatus **Dibayar** (belum bayar / tertunggak dipaparkan berasingan) | Admin |
+| **4 · Pengiktirafan** | CKAI 8 | Anugerah & pengiktirafan inovasi dan keusahawanan | Satu anugerah / pengiktirafan | Bilangan yang diterima pada tahun tarikh (dipecahkan mengikut peringkat, kategori, program dan fakulti) | PIC fakulti (fakulti sendiri) dan Admin (pencapaian pusat: Fakulti = UTMXCITE) |
 
-Dashboard awam hanya menunjukkan jumlah agregat (kiraan atau jumlah RM), tanpa nama pelajar, perniagaan atau penyewa.
+Dashboard awam hanya menunjukkan jumlah agregat (kiraan atau jumlah RM), tanpa nama pelajar, projek, perniagaan atau penyewa.
+**PIC diberi akses** dengan menambah kod pada lajur `kpi_akses` (tab `Pengguna` atau menu Urus Pengguna): `CKAI2,CKAI3,CKAI5,CKAI6,CKAI8` (semua CKAI yang boleh diisi fakulti). CKAI 1, 4 dan 7 hanya untuk Admin.
 
-**CKAI 1 dan 2 · daftar program (borang sama):** nama program, kategori, peringkat, penganjur / rakan kerjasama, pegawai program, objektif; **tarikh mula dan tamat**, **tempat**; **penyertaan** (jumlah peserta, dan daripada itu pelajar / staf UTM / luar UTM, serta skor kepuasan 0-5); **kewangan** (**kos penganjuran**, sumber peruntukan, **pendapatan**, sumber pendapatan); bilangan hasil (projek / prototaip / idea / startup), laporan program (PDF, pilihan), pautan dan catatan. Bagi program berstatus **Selesai**, tarikh mula dan tamat, tempat, jumlah peserta, kos dan pendapatan wajib diisi (0 dibenarkan). Tarikh tamat tidak boleh sebelum tarikh mula, dan pelajar + staf + luar UTM tidak boleh melebihi jumlah peserta. Kad dashboard menjumlahkan peserta, kos dan pendapatan bagi program yang selesai pada tahun dipilih.
+**CKAI 2 dan 3 · daftar program (borang sama):** nama program, kategori, peringkat, penganjur / rakan kerjasama, pegawai program, objektif; **tarikh mula dan tamat**, **tempat**; **penyertaan** (jumlah peserta, dan daripada itu pelajar / staf UTM / luar UTM, serta skor kepuasan 0-5); **kewangan** (**kos penganjuran**, sumber peruntukan, **pendapatan**, sumber pendapatan); bilangan hasil (projek / prototaip / idea / startup), laporan program (PDF, pilihan), pautan dan catatan. Bagi program berstatus **Selesai**, tarikh mula dan tamat, tempat, jumlah peserta, kos dan pendapatan wajib diisi (0 dibenarkan). Tarikh tamat tidak boleh sebelum tarikh mula, dan pelajar + staf + luar UTM tidak boleh melebihi jumlah peserta. Kad dashboard menjumlahkan peserta, kos dan pendapatan bagi program yang selesai pada tahun dipilih.
 
-**CKAI 8 · medan borang:** tajuk inovasi, jenis, bidang, penerangan, tahap kesediaan teknologi (TRL), status harta intelek; pasukan, mentor / penyelia, pelajar (nama dan no. matrik, **tanpa no. KP**); pertandingan (status penyertaan, nama, penganjur, **peringkat** Fakulti / Universiti / Kebangsaan / Antarabangsa, tarikh, tempat); **anugerah (pilihan, jika menang)**: pingat / kedudukan, nama anugerah, nilai hadiah, sijil PDF; dan **peningkatan ke peringkat lebih tinggi**: status (Belum dinilai, Calon peningkatan, Sedang disokong, Telah dibawa ke peringkat lebih tinggi, Tidak diteruskan), peringkat sasaran, pertandingan seterusnya, tarikh dan sokongan diperlukan. Senarai boleh ditapis mengikut peringkat dan status peningkatan, jadi XCITE dapat mengenal pasti projek untuk dibawa naik. Kad dashboard menunjukkan bilangan inovasi, pelajar terlibat, yang memenang, peringkat Universiti ke atas, dan calon peningkatan.
+**CKAI 5 · medan borang:** tajuk inovasi, jenis, bidang, penerangan, tahap kesediaan teknologi (TRL), status harta intelek; pasukan, mentor / penyelia, pelajar (nama dan no. matrik, **tanpa no. KP**); pertandingan (status penyertaan, nama, penganjur, **peringkat** Fakulti / Universiti / Kebangsaan / Antarabangsa, tarikh, tempat); **anugerah (pilihan, jika menang)**: pingat / kedudukan, nama anugerah, nilai hadiah, sijil PDF; dan **peningkatan ke peringkat lebih tinggi**: status (Belum dinilai, Calon peningkatan, Sedang disokong, Telah dibawa ke peringkat lebih tinggi, Tidak diteruskan), peringkat sasaran, pertandingan seterusnya, tarikh dan sokongan diperlukan. Senarai boleh ditapis mengikut peringkat dan status peningkatan, jadi XCITE dapat mengenal pasti projek untuk dibawa naik.
 
-**CKAI 7 · medan borang:** nama anugerah, tarikh, agensi / badan penganugerah, peringkat (Fakulti / Universiti / Kebangsaan / Antarabangsa), kategori (Inovasi / Keusahawanan), program (UTM Launchpad, Makerspace, GiGAUTM Ascend, F-SIP, UTM AI Start Up, program fakulti, atau Lain-lain + nama), nama mentor / fasilitator, **pelajar (nama, no. matrik, no. KP; tambah seberapa banyak yang perlu)** dan **sijil PDF**. Medan tambahan: pingat / kedudukan, nilai hadiah (RM), lokasi / negara, nama pasukan, produk / projek / syarikat, pautan berita dan catatan.
-**PIC diberi akses CKAI 1, 2, 4, 7 dan 8** dengan menambah `CKAI1,CKAI2,CKAI4,CKAI7,CKAI8` pada lajur `kpi_akses` (tab `Pengguna` atau menu Urus Pengguna). CKAI 3, 5 dan 6 hanya untuk Admin.
+**CKAI 8 · medan borang:** nama anugerah, tarikh, agensi / badan penganugerah, peringkat (Fakulti / Universiti / Kebangsaan / Antarabangsa), kategori (Inovasi / Keusahawanan), program (UTM Launchpad, Makerspace, GiGAUTM Ascend, F-SIP, UTM AI Start Up, program fakulti, atau Lain-lain + nama), nama mentor / fasilitator, **pelajar (nama, no. matrik, no. KP; tambah seberapa banyak yang perlu)** dan **sijil PDF**. Medan tambahan: pingat / kedudukan, nilai hadiah (RM), lokasi / negara, nama pasukan, produk / projek / syarikat, pautan berita dan catatan.
+
+Tab Sheet dinamakan mengikut nombor: `CKAI1_SSU`, `CKAI2_Program_Keusahawanan`, `CKAI3_Program_Inovasi`, `CKAI4_Makerspace`, `CKAI5_Inovasi_Pelajar`, `CKAI6_Pendapatan_Pelajar`, `CKAI7_Sewaan_Inkubator`, `CKAI8_Anugerah`.
 
 ## Pemasangan
 
@@ -90,7 +92,7 @@ Boleh disunting terus dalam Sheet (drop-down disediakan bagi `peranan` dan `akti
 - Fail disimpan dalam folder Drive **peribadi** "UTMXCITE ASCEEN2030 - Lampiran" milik pemilik skrip dan **tidak dikongsi**. Fail hanya boleh dimuat turun melalui aplikasi selepas semakan akses: PIC bagi fakulti sendiri, Admin bagi semua. Setiap muat naik dan muat turun direkod dalam `Log_Audit`.
 - Satu rekod hanya boleh merujuk fail yang baru dimuat naik oleh pengguna itu sendiri melalui aplikasi (tidak boleh merujuk fail Drive sembarangan). Fail yang diganti atau yang rekodnya dipadam dibuang ke tong sampah Drive.
 - Manifest meminta skop `https://www.googleapis.com/auth/drive` (diperlukan oleh `DriveApp`). Skop ini luas, jadi gunakan akaun pemilik skrip yang sesuai dan jangan kongsi projek Apps Script dengan orang yang tidak perlu.
-- **No. KP dan no. matrik pelajar** (CKAI 7, juga KAI 4 hingga 6 dan CKAI 3) ialah data peribadi (PDPA 2010). Ia hanya dipaparkan kepada Admin dan PIC fakulti berkenaan, tidak dipaparkan dalam jadual senarai (hanya nama), tidak dimasukkan dalam `Log_Audit`, dan tidak pernah muncul pada dashboard awam. Dalam Google Sheet, no. KP disimpan sebagai teks biasa, jadi **hadkan akses kepada Sheet** (jangan kongsi) dan tetapkan tempoh simpanan mengikut dasar universiti.
+- **No. KP dan no. matrik pelajar** (CKAI 8, juga KAI 4 hingga 6 dan CKAI 3) ialah data peribadi (PDPA 2010). Ia hanya dipaparkan kepada Admin dan PIC fakulti berkenaan, tidak dipaparkan dalam jadual senarai (hanya nama), tidak dimasukkan dalam `Log_Audit`, dan tidak pernah muncul pada dashboard awam. Dalam Google Sheet, no. KP disimpan sebagai teks biasa, jadi **hadkan akses kepada Sheet** (jangan kongsi) dan tetapkan tempoh simpanan mengikut dasar universiti.
 
 ## Logo
 

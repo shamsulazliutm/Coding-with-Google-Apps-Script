@@ -56,6 +56,14 @@ var FACULTY_SEED = [
 
 var YES_NO = ['Ya', 'Tidak'];
 
+/** Aliran proses CKAI (subproses) mengikut urutan kerja UTMXCITE. Setiap CKAI mempunyai `stage`. */
+var CKAI_STAGES = [
+  { id: 'pendaftaran', label: '1 · Pendaftaran' },
+  { id: 'pembangunan', label: '2 · Pembangunan' },
+  { id: 'hasil', label: '3 · Hasil' },
+  { id: 'pengiktirafan', label: '4 · Pengiktirafan' }
+];
+
 /** Tiga peringkat penunjuk. Setiap KPI tergolong dalam satu peringkat mengikut awalan ID (KAI / DKAI / CKAI). */
 var LEVELS = [
   { id: 'KAI', label: 'KAI · Peringkat Universiti' },
@@ -370,30 +378,10 @@ var KPIS = [
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
   },
-  // ------------------------------------------------------------------ CKAI (Center Key Amal Indicator)
+  // ------------------------------------------------------------------ CKAI (Center Key Amal Indicator), mengikut aliran proses UTMXCITE
   {
-    id: 'CKAI1', prefix: 'PK', sheet: 'CKAI1_Program_Keusahawanan', group: 'Center', entry: 'faculty',
-    title: 'CKAI 1 · Bilangan program keusahawanan', short: 'Program Keusahawanan',
-    unit: 'program selesai', measure: 'program', jenis: 'minimum',
-    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm', 'status'],
-    statusField: 'status',
-    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: PROGRAM_DONE_REQUIRE }],
-    validate: programValidate_,
-    fields: programFields_(['Bengkel', 'Kursus / Latihan', 'Bootcamp', 'Pertandingan', 'Seminar / Forum', 'Mentoring', 'Lain-lain'])
-  },
-  {
-    id: 'CKAI2', prefix: 'PI', sheet: 'CKAI2_Program_Inovasi', group: 'Center', entry: 'faculty',
-    title: 'CKAI 2 · Bilangan program inovasi', short: 'Program Inovasi',
-    unit: 'program selesai', measure: 'program', jenis: 'minimum',
-    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm', 'status'],
-    statusField: 'status',
-    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: PROGRAM_DONE_REQUIRE }],
-    validate: programValidate_,
-    fields: programFields_(['Bengkel', 'Hackathon / Pertandingan', 'Pameran / Showcase', 'Latihan Teknikal', 'Seminar / Forum', 'Lain-lain'])
-  },
-  {
-    id: 'CKAI3', prefix: 'SS', sheet: 'CKAI3_SSU', group: 'Center', entry: 'admin',
-    title: 'CKAI 3 · Bilangan pendaftaran SSU (Sistem Syarikat Universiti)', short: 'Pendaftaran SSU',
+    id: 'CKAI1', prefix: 'SS', sheet: 'CKAI1_SSU', stage: 'pendaftaran', group: 'Center', entry: 'admin',
+    title: 'CKAI 1 · Bilangan pendaftaran SSU (Sistem Syarikat Universiti)', short: 'Pendaftaran SSU',
     unit: 'pendaftaran SSU', measure: 'ssu', jenis: 'minimum',
     listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
@@ -414,28 +402,28 @@ var KPIS = [
     ]
   },
   {
-    id: 'CKAI4', prefix: 'PP', sheet: 'CKAI4_Pendapatan_Pelajar', group: 'Center', entry: 'faculty',
-    title: 'CKAI 4 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
-    unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
-    statusField: 'jenis_pendapatan',
-    rules: [],
-    fields: [
-      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
-      F_('tempoh', 'Bulan', 'month', { required: true }),
-      F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true }),
-      F_('nama_pelajar', 'Nama pelajar', 'text'),
-      F_('no_matrik', 'No. matrik', 'text'),
-      F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
-      F_('jenis_pendapatan', 'Jenis pendapatan', 'select', { required: true, options: ['Jualan produk', 'Perkhidmatan / Gig', 'Geran / Pembiayaan', 'Lain-lain'] }),
-      F_('pendapatan_rm', 'Pendapatan (RM)', 'number', { required: true, min: 0 }),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
-    ]
+    id: 'CKAI2', prefix: 'PK', sheet: 'CKAI2_Program_Keusahawanan', stage: 'pembangunan', group: 'Center', entry: 'faculty',
+    title: 'CKAI 2 · Bilangan program keusahawanan', short: 'Program Keusahawanan',
+    unit: 'program selesai', measure: 'program', jenis: 'minimum',
+    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm', 'status'],
+    statusField: 'status',
+    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: PROGRAM_DONE_REQUIRE }],
+    validate: programValidate_,
+    fields: programFields_(['Bengkel', 'Kursus / Latihan', 'Bootcamp', 'Pertandingan', 'Seminar / Forum', 'Mentoring', 'Lain-lain'])
   },
   {
-    id: 'CKAI5', prefix: 'MS', sheet: 'CKAI5_Makerspace', group: 'Center', entry: 'admin',
-    title: 'CKAI 5 · Bilangan penggunaan Makerspace', short: 'Penggunaan Makerspace',
+    id: 'CKAI3', prefix: 'PI', sheet: 'CKAI3_Program_Inovasi', stage: 'pembangunan', group: 'Center', entry: 'faculty',
+    title: 'CKAI 3 · Bilangan program inovasi', short: 'Program Inovasi',
+    unit: 'program selesai', measure: 'program', jenis: 'minimum',
+    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm', 'status'],
+    statusField: 'status',
+    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: PROGRAM_DONE_REQUIRE }],
+    validate: programValidate_,
+    fields: programFields_(['Bengkel', 'Hackathon / Pertandingan', 'Pameran / Showcase', 'Latihan Teknikal', 'Seminar / Forum', 'Lain-lain'])
+  },
+  {
+    id: 'CKAI4', prefix: 'MS', sheet: 'CKAI4_Makerspace', stage: 'pembangunan', group: 'Center', entry: 'admin',
+    title: 'CKAI 4 · Bilangan penggunaan Makerspace (pembangunan prototaip)', short: 'Penggunaan Makerspace',
     unit: 'penggunaan', measure: 'makerspace', jenis: 'minimum',
     listColumns: ['id', 'tempoh', 'bil_penggunaan', 'bil_pengguna_unik', 'jam_penggunaan'],
     statusField: null,
@@ -451,55 +439,8 @@ var KPIS = [
     ]
   },
   {
-    id: 'CKAI6', prefix: 'SI', sheet: 'CKAI6_Sewaan_Inkubator', group: 'Center', entry: 'admin',
-    title: 'CKAI 6 · Pendapatan sewaan inkubator', short: 'Sewaan Inkubator',
-    unit: 'RM sewaan diterima', measure: 'rent', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'tempoh', 'inkubator', 'penyewa', 'jumlah_rm', 'status_bayaran'],
-    statusField: 'status_bayaran',
-    rules: [{ when: { field: 'status_bayaran', in: ['Dibayar'] }, require: ['tarikh_bayar'] }],
-    fields: [
-      F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Sewaan bulanan' }),
-      F_('inkubator', 'Inkubator / ruang', 'text', { required: true }),
-      F_('penyewa', 'Penyewa (syarikat / pasukan)', 'text', { required: true }),
-      F_('jumlah_rm', 'Jumlah sewa (RM)', 'number', { required: true, min: 0 }),
-      F_('status_bayaran', 'Status bayaran', 'select', { required: true, options: ['Dibayar', 'Belum dibayar', 'Tertunggak'] }),
-      F_('tarikh_bayar', 'Tarikh bayaran', 'date'),
-      F_('no_resit', 'No. resit / rujukan', 'text'),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
-    ]
-  },
-  {
-    id: 'CKAI7', prefix: 'AN', sheet: 'CKAI7_Anugerah', group: 'Center', entry: 'faculty',
-    title: 'CKAI 7 · Anugerah & pengiktirafan inovasi dan keusahawanan', short: 'Anugerah & Pengiktirafan',
-    unit: 'anugerah / pengiktirafan', measure: 'award', jenis: 'minimum',
-    listColumns: ['id', 'nama_anugerah', 'agensi', 'peringkat', 'program', 'fakulti', 'tarikh', 'pelajar', 'sijil'],
-    statusField: 'peringkat',
-    rules: [{ when: { field: 'program', in: ['Lain-lain'] }, require: ['program_lain'] }],
-    fields: [
-      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Anugerah / pengiktirafan' }),
-      F_('nama_anugerah', 'Nama anugerah / pengiktirafan', 'text', { required: true }),
-      F_('tarikh', 'Tarikh', 'date', { required: true }),
-      F_('agensi', 'Agensi / badan penganugerah', 'text', { required: true }),
-      F_('peringkat', 'Peringkat', 'select', { required: true, options: ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'] }),
-      F_('kategori', 'Kategori', 'select', { required: true, options: ['Inovasi', 'Keusahawanan'] }),
-      F_('pingat', 'Pingat / kedudukan', 'select', { options: ['Emas', 'Perak', 'Gangsa', 'Johan', 'Naib Johan', 'Tempat Ketiga', 'Anugerah Khas', 'Penghargaan / Pengiktirafan'] }),
-      F_('nilai_hadiah_rm', 'Nilai hadiah / geran (RM)', 'number', { min: 0 }),
-      F_('lokasi', 'Lokasi / negara', 'text'),
-      F_('program', 'Program', 'select', { required: true, sec: 'Program & projek', options: ['UTM Launchpad', 'UTM Makerspace', 'GiGAUTM Ascend (GiGA)', 'F-SIP', 'UTM AI Start Up', 'Program Keusahawanan Fakulti', 'Program Inovasi Fakulti', 'Lain-lain'] }),
-      F_('program_lain', 'Nama program (jika Lain-lain)', 'text'),
-      F_('nama_pasukan', 'Nama pasukan', 'text'),
-      F_('produk_projek', 'Nama produk / projek / syarikat', 'text'),
-      F_('mentor', 'Nama mentor / fasilitator', 'text', { required: true, sec: 'Mentor & pelajar' }),
-      F_('pelajar', 'Pelajar (nama, no. matrik, no. KP)', 'people', { required: true, full: true }),
-      F_('sijil', 'Sijil (PDF, maksimum 5 MB)', 'file', { required: true, full: true, sec: 'Bukti' }),
-      F_('pautan_media', 'Pautan berita / media', 'url'),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
-    ]
-  },
-  {
-    id: 'CKAI8', prefix: 'IN', sheet: 'CKAI8_Inovasi_Pelajar', group: 'Center', entry: 'faculty',
-    title: 'CKAI 8 · Bilangan inovasi pelajar yang dihasilkan', short: 'Inovasi Pelajar',
+    id: 'CKAI5', prefix: 'IN', sheet: 'CKAI5_Inovasi_Pelajar', stage: 'hasil', group: 'Center', entry: 'faculty',
+    title: 'CKAI 5 · Bilangan inovasi pelajar yang dihasilkan', short: 'Inovasi Pelajar',
     unit: 'inovasi menyertai pertandingan', measure: 'innovation', jenis: 'minimum',
     // OD: projek inovasi pelajar yang TELAH menyertai pertandingan, sekurang-kurangnya peringkat Fakulti.
     listColumns: ['id', 'tajuk_inovasi', 'fakulti', 'nama_pertandingan', 'peringkat', 'tarikh', 'pingat', 'status_peningkatan'],
@@ -534,6 +475,73 @@ var KPIS = [
       F_('tarikh_seterusnya', 'Tarikh seterusnya', 'date'),
       F_('sokongan_diperlukan', 'Sokongan diperlukan (pembiayaan, mentor, IP, prototaip, dll.)', 'textarea', { full: true }),
       F_('pautan_demo', 'Pautan video / demo / poster', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
+  },
+  {
+    id: 'CKAI6', prefix: 'PP', sheet: 'CKAI6_Pendapatan_Pelajar', stage: 'hasil', group: 'Center', entry: 'faculty',
+    title: 'CKAI 6 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
+    unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
+    listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
+    statusField: 'jenis_pendapatan',
+    rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
+      F_('tempoh', 'Bulan', 'month', { required: true }),
+      F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true }),
+      F_('nama_pelajar', 'Nama pelajar', 'text'),
+      F_('no_matrik', 'No. matrik', 'text'),
+      F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
+      F_('jenis_pendapatan', 'Jenis pendapatan', 'select', { required: true, options: ['Jualan produk', 'Perkhidmatan / Gig', 'Geran / Pembiayaan', 'Lain-lain'] }),
+      F_('pendapatan_rm', 'Pendapatan (RM)', 'number', { required: true, min: 0 }),
+      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
+  },
+  {
+    id: 'CKAI7', prefix: 'SI', sheet: 'CKAI7_Sewaan_Inkubator', stage: 'hasil', group: 'Center', entry: 'admin',
+    title: 'CKAI 7 · Pendapatan sewaan inkubator', short: 'Sewaan Inkubator',
+    unit: 'RM sewaan diterima', measure: 'rent', jenis: 'minimum', valueFormat: 'rm',
+    listColumns: ['id', 'tempoh', 'inkubator', 'penyewa', 'jumlah_rm', 'status_bayaran'],
+    statusField: 'status_bayaran',
+    rules: [{ when: { field: 'status_bayaran', in: ['Dibayar'] }, require: ['tarikh_bayar'] }],
+    fields: [
+      F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Sewaan bulanan' }),
+      F_('inkubator', 'Inkubator / ruang', 'text', { required: true }),
+      F_('penyewa', 'Penyewa (syarikat / pasukan)', 'text', { required: true }),
+      F_('jumlah_rm', 'Jumlah sewa (RM)', 'number', { required: true, min: 0 }),
+      F_('status_bayaran', 'Status bayaran', 'select', { required: true, options: ['Dibayar', 'Belum dibayar', 'Tertunggak'] }),
+      F_('tarikh_bayar', 'Tarikh bayaran', 'date'),
+      F_('no_resit', 'No. resit / rujukan', 'text'),
+      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
+  },
+  {
+    id: 'CKAI8', prefix: 'AN', sheet: 'CKAI8_Anugerah', stage: 'pengiktirafan', group: 'Center', entry: 'faculty',
+    title: 'CKAI 8 · Anugerah & pengiktirafan inovasi dan keusahawanan', short: 'Anugerah & Pengiktirafan',
+    unit: 'anugerah / pengiktirafan', measure: 'award', jenis: 'minimum',
+    listColumns: ['id', 'nama_anugerah', 'agensi', 'peringkat', 'program', 'fakulti', 'tarikh', 'pelajar', 'sijil'],
+    statusField: 'peringkat',
+    rules: [{ when: { field: 'program', in: ['Lain-lain'] }, require: ['program_lain'] }],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Anugerah / pengiktirafan' }),
+      F_('nama_anugerah', 'Nama anugerah / pengiktirafan', 'text', { required: true }),
+      F_('tarikh', 'Tarikh', 'date', { required: true }),
+      F_('agensi', 'Agensi / badan penganugerah', 'text', { required: true }),
+      F_('peringkat', 'Peringkat', 'select', { required: true, options: ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'] }),
+      F_('kategori', 'Kategori', 'select', { required: true, options: ['Inovasi', 'Keusahawanan'] }),
+      F_('pingat', 'Pingat / kedudukan', 'select', { options: ['Emas', 'Perak', 'Gangsa', 'Johan', 'Naib Johan', 'Tempat Ketiga', 'Anugerah Khas', 'Penghargaan / Pengiktirafan'] }),
+      F_('nilai_hadiah_rm', 'Nilai hadiah / geran (RM)', 'number', { min: 0 }),
+      F_('lokasi', 'Lokasi / negara', 'text'),
+      F_('program', 'Program', 'select', { required: true, sec: 'Program & projek', options: ['UTM Launchpad', 'UTM Makerspace', 'GiGAUTM Ascend (GiGA)', 'F-SIP', 'UTM AI Start Up', 'Program Keusahawanan Fakulti', 'Program Inovasi Fakulti', 'Lain-lain'] }),
+      F_('program_lain', 'Nama program (jika Lain-lain)', 'text'),
+      F_('nama_pasukan', 'Nama pasukan', 'text'),
+      F_('produk_projek', 'Nama produk / projek / syarikat', 'text'),
+      F_('mentor', 'Nama mentor / fasilitator', 'text', { required: true, sec: 'Mentor & pelajar' }),
+      F_('pelajar', 'Pelajar (nama, no. matrik, no. KP)', 'people', { required: true, full: true }),
+      F_('sijil', 'Sijil (PDF, maksimum 5 MB)', 'file', { required: true, full: true, sec: 'Bukti' }),
+      F_('pautan_media', 'Pautan berita / media', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
   }

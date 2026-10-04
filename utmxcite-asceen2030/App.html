@@ -122,7 +122,13 @@
         var ks = S.session.kpis.filter(function (k) { return k.level === lv.id; });
         if (!ks.length) return;
         h += '<div class="sec">' + esc(lv.label) + '</div>';
+        var lastStage = null;
         ks.forEach(function (k) {
+          if (k.stage && k.stage !== lastStage) {
+            lastStage = k.stage;
+            var st = (S.session.stages || []).filter(function (x) { return x.id === k.stage; })[0];
+            if (st) h += '<div class="stagelbl">' + esc(st.label) + '</div>';
+          }
           h += navBtn('kpi:' + k.id, '◆', k.title.replace(/ · .*/, '') + ' · ' + k.short, S.view.name === 'kpi' && S.view.id === k.id);
         });
       });
@@ -226,7 +232,15 @@
     d.levels.forEach(function (lv) {
       var cs = d.kpis.filter(function (c) { return c.level === lv.id; });
       if (!cs.length) return;
-      h += '<div class="grp">' + esc(lv.label) + '</div><div class="grid">' + cs.map(renderCard).join('') + '</div>';
+      h += '<div class="grp">' + esc(lv.label) + '</div>';
+      if (cs.some(function (c) { return c.stage; })) {
+        (d.stages || []).forEach(function (st) {
+          var sc = cs.filter(function (c) { return c.stage === st.id; });
+          if (sc.length) h += '<div class="sub">' + esc(st.label) + '</div><div class="grid">' + sc.map(renderCard).join('') + '</div>';
+        });
+      } else {
+        h += '<div class="grid">' + cs.map(renderCard).join('') + '</div>';
+      }
     });
     el.innerHTML = h;
   }

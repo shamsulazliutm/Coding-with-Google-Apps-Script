@@ -200,6 +200,21 @@ test('dashboard awam tanpa log masuk: 7 KPI + 8 CKAI', () => {
   deepEq(d.kpis.map(k => k.level), ['KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
   deepEq(d.levels.map(l => l.label), ['KAI · Peringkat Universiti', 'DKAI · Peringkat Jabatan (JTNC HEPA)', 'CKAI · Peringkat Pusat (UTMXCITE)']);
   assert.ok(!JSON.stringify(d).includes('Internal'));
+  // CKAI mengikut aliran proses UTMXCITE: Pendaftaran > Pembangunan > Hasil > Pengiktirafan
+  deepEq(d.stages.map(x => x.label), ['1 · Pendaftaran', '2 · Pembangunan', '3 · Hasil', '4 · Pengiktirafan']);
+  deepEq(d.kpis.filter(k => k.level === 'CKAI').map(k => k.id + ':' + k.stage),
+    ['CKAI1:pendaftaran', 'CKAI2:pembangunan', 'CKAI3:pembangunan', 'CKAI4:pembangunan', 'CKAI5:hasil', 'CKAI6:hasil', 'CKAI7:hasil', 'CKAI8:pengiktirafan']);
+  deepEq(d.kpis.filter(k => k.level !== 'CKAI').map(k => k.stage), [null, null, null, null, null, null, null]);
+  const titles = Object.fromEntries(d.kpis.map(k => [k.id, k.title]));
+  assert.match(titles.CKAI1, /pendaftaran SSU/); assert.match(titles.CKAI4, /Makerspace/); assert.match(titles.CKAI8, /Anugerah/);
+  const order = d.kpis.filter(k => k.level === 'CKAI').map(k => k.stage);
+  deepEq(order, order.slice().sort((a, b) => ['pendaftaran', 'pembangunan', 'hasil', 'pengiktirafan'].indexOf(a) - ['pendaftaran', 'pembangunan', 'hasil', 'pengiktirafan'].indexOf(b)));
+  deepEq(ok(g.api_session(adminToken)).stages.map(x => x.id), ['pendaftaran', 'pembangunan', 'hasil', 'pengiktirafan']);
+  // tab Sheet baharu mengikut nombor baharu
+  const names = env.spreadsheets[env.props.SHEET_ID].sheets.map(x => x.name);
+  ['CKAI1_SSU', 'CKAI2_Program_Keusahawanan', 'CKAI3_Program_Inovasi', 'CKAI4_Makerspace', 'CKAI5_Inovasi_Pelajar', 'CKAI6_Pendapatan_Pelajar', 'CKAI7_Sewaan_Inkubator', 'CKAI8_Anugerah']
+    .forEach(n => assert.ok(names.includes(n), 'tab tiada: ' + n));
+  assert.ok(!names.some(n => /^CKAI\d_/.test(n) && ['CKAI1_Program_Keusahawanan', 'CKAI3_SSU', 'CKAI7_Anugerah', 'CKAI8_Inovasi_Pelajar'].includes(n)), 'tab lama masih wujud');
 });
 test('KAI1: aktif = didaftarkan + dalam pembangunan/beroperasi (2 daripada 3), sasaran 20', () => {
   const c = card(dash(2026), 'KAI1');
@@ -303,60 +318,60 @@ test('tahun tidak sah jatuh balik kepada tahun semasa', () => { assert.strictEqu
 
 console.log('CKAI (Center Key Amal Indicator)');
 let ckaiPic, ckaiPicFc;
-test('Admin memberi PIC akses CKAI 1, 2 dan 4 (bukan CKAI 3, 5, 6)', () => {
-  ok(g.api_saveUser(adminToken, { emel: 'pic.ckai.fke@utm.my', nama: 'PIC FKE', peranan: 'PIC', fakulti: 'FKE', kpi_akses: 'CKAI1,CKAI2,CKAI4', aktif: 'Ya' }));
-  ok(g.api_saveUser(adminToken, { emel: 'pic.ckai.fc@utm.my', nama: 'PIC FC', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI1,CKAI4', aktif: 'Ya' }));
-  fail(g.api_saveUser(adminToken, { emel: 'pic.salah@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI3', aktif: 'Ya' }), /tidak sah/);
-  fail(g.api_saveUser(adminToken, { emel: 'pic.salah@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI5', aktif: 'Ya' }), /tidak sah/);
+test('Admin memberi PIC akses CKAI 2, 2 dan 4 (bukan CKAI 1, 5, 6)', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'pic.ckai.fke@utm.my', nama: 'PIC FKE', peranan: 'PIC', fakulti: 'FKE', kpi_akses: 'CKAI2,CKAI3,CKAI6', aktif: 'Ya' }));
+  ok(g.api_saveUser(adminToken, { emel: 'pic.ckai.fc@utm.my', nama: 'PIC FC', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI2,CKAI6', aktif: 'Ya' }));
+  fail(g.api_saveUser(adminToken, { emel: 'pic.salah@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI1', aktif: 'Ya' }), /tidak sah/);
+  fail(g.api_saveUser(adminToken, { emel: 'pic.salah@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI4', aktif: 'Ya' }), /tidak sah/);
   ckaiPic = login('pic.ckai.fke@utm.my');
   ckaiPicFc = login('pic.ckai.fc@utm.my');
-  deepEq(ok(g.api_session(ckaiPic)).kpis.map(k => k.id), ['CKAI1', 'CKAI2', 'CKAI4']);
-  fail(g.api_list(ckaiPic, 'CKAI3', {}), /Akses ditolak/);
-  fail(g.api_save(ckaiPic, 'CKAI5', { tempoh: '2026-01', bil_penggunaan: 5 }), /Akses ditolak/);
-  fail(g.api_save(ckaiPic, 'CKAI6', { tempoh: '2026-01' }), /Akses ditolak/);
+  deepEq(ok(g.api_session(ckaiPic)).kpis.map(k => k.id), ['CKAI2', 'CKAI3', 'CKAI6']);
+  fail(g.api_list(ckaiPic, 'CKAI1', {}), /Akses ditolak/);
+  fail(g.api_save(ckaiPic, 'CKAI4', { tempoh: '2026-01', bil_penggunaan: 5 }), /Akses ditolak/);
+  fail(g.api_save(ckaiPic, 'CKAI7', { tempoh: '2026-01' }), /Akses ditolak/);
 });
-test('CKAI 1: fakulti merekod program sendiri; hanya program Selesai dikira pada tahun tamat', () => {
+test('CKAI 2: fakulti merekod program sendiri; hanya program Selesai dikira pada tahun tamat', () => {
   const base = { nama_program: 'Bengkel Pitching', kategori: 'Bengkel', tarikh_mula: '2026-03-01', lokasi: 'Dewan Besar', bil_peserta: 40, bajet_rm: 1200, pendapatan_rm: 300 };
-  fail(g.api_save(ckaiPic, 'CKAI1', Object.assign({ fakulti: 'FKE', status: 'Selesai' }, base)), /betulkan/); // tarikh tamat wajib
-  const a = ok(g.api_save(ckaiPic, 'CKAI1', Object.assign({ fakulti: 'FC', status: 'Selesai', tarikh_tamat: '2026-03-02' }, base)));
+  fail(g.api_save(ckaiPic, 'CKAI2', Object.assign({ fakulti: 'FKE', status: 'Selesai' }, base)), /betulkan/); // tarikh tamat wajib
+  const a = ok(g.api_save(ckaiPic, 'CKAI2', Object.assign({ fakulti: 'FC', status: 'Selesai', tarikh_tamat: '2026-03-02' }, base)));
   assert.strictEqual(a.fakulti, 'FKE'); // dipaksa kepada fakulti PIC
-  ok(g.api_save(ckaiPic, 'CKAI1', Object.assign({}, base, { fakulti: 'FKE', status: 'Dirancang', nama_program: 'Akan datang' })));
-  ok(g.api_save(adminToken, 'CKAI1', Object.assign({}, base, { fakulti: 'UTMXCITE', status: 'Selesai', tarikh_tamat: '2027-01-10', nama_program: 'Program 2027' })));
-  const c = card(dash(2026), 'CKAI1');
+  ok(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, base, { fakulti: 'FKE', status: 'Dirancang', nama_program: 'Akan datang' })));
+  ok(g.api_save(adminToken, 'CKAI2', Object.assign({}, base, { fakulti: 'UTMXCITE', status: 'Selesai', tarikh_tamat: '2027-01-10', nama_program: 'Program 2027' })));
+  const c = card(dash(2026), 'CKAI2');
   assert.strictEqual(c.value, 1); assert.strictEqual(c.status, 'Tiada sasaran');
   assert.strictEqual(c.secondary[0].value, 40);
-  assert.strictEqual(card(dash(2027), 'CKAI1').value, 1);
-  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI1', {})).rows.length, 0); // PIC FC tidak nampak rekod FKE
-  assert.strictEqual(ok(g.api_list(ckaiPic, 'CKAI1', {})).rows.length, 2);
+  assert.strictEqual(card(dash(2027), 'CKAI2').value, 1);
+  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI2', {})).rows.length, 0); // PIC FC tidak nampak rekod FKE
+  assert.strictEqual(ok(g.api_list(ckaiPic, 'CKAI2', {})).rows.length, 2);
 });
-test('CKAI 2: program inovasi dikira berasingan daripada CKAI 1', () => {
-  ok(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'Hackathon', kategori: 'Hackathon / Pertandingan', status: 'Selesai', tarikh_mula: '2026-04-10', tarikh_tamat: '2026-04-12', lokasi: 'Makerspace', bil_peserta: 100, bajet_rm: 5000, pendapatan_rm: 0 }));
-  fail(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'X', kategori: 'Bengkel Pitching', status: 'Dirancang' }), /betulkan/); // kategori tidak sah
+test('CKAI 3: program inovasi dikira berasingan daripada CKAI 2', () => {
+  ok(g.api_save(ckaiPic, 'CKAI3', { fakulti: 'FKE', nama_program: 'Hackathon', kategori: 'Hackathon / Pertandingan', status: 'Selesai', tarikh_mula: '2026-04-10', tarikh_tamat: '2026-04-12', lokasi: 'Makerspace', bil_peserta: 100, bajet_rm: 5000, pendapatan_rm: 0 }));
+  fail(g.api_save(ckaiPic, 'CKAI3', { fakulti: 'FKE', nama_program: 'X', kategori: 'Bengkel Pitching', status: 'Dirancang' }), /betulkan/); // kategori tidak sah
+  assert.strictEqual(card(dash(2026), 'CKAI3').value, 1);
   assert.strictEqual(card(dash(2026), 'CKAI2').value, 1);
-  assert.strictEqual(card(dash(2026), 'CKAI1').value, 1);
 });
 test('Program: tarikh, tempat, penyertaan, kos dan pendapatan wajib bagi program Selesai (0 dibenarkan); peraturan silang', () => {
   const done = { fakulti: 'FKE', nama_program: 'Program Penuh', kategori: 'Bengkel', status: 'Selesai' };
-  const r = g.api_save(ckaiPic, 'CKAI2', done);
+  const r = g.api_save(ckaiPic, 'CKAI3', done);
   fail(r, /betulkan/);
   ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'].forEach(k => assert.ok(r.fields[k], 'wajib bagi Selesai: ' + k));
   // program belum selesai tidak dipaksa isi semua medan
-  ok(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, done, { status: 'Dirancang', nama_program: 'Masih dirancang' })));
+  ok(g.api_save(ckaiPic, 'CKAI3', Object.assign({}, done, { status: 'Dirancang', nama_program: 'Masih dirancang' })));
   const full = Object.assign({}, done, { tarikh_mula: '2026-05-10', tarikh_tamat: '2026-05-11', lokasi: 'Dewan A', bil_peserta: 50, bajet_rm: 0, pendapatan_rm: 0 });
-  ok(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { nama_program: 'Kos dan pendapatan sifar' }))); // 0 sah
-  const r1 = g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { tarikh_tamat: '2026-05-09' })); fail(r1, /betulkan/); assert.match(r1.fields.tarikh_tamat, /sebelum tarikh mula/);
-  const r2 = g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { bil_pelajar: 30, bil_staf: 15, bil_luar: 10 })); fail(r2, /betulkan/); assert.match(r2.fields.bil_peserta, /kurang daripada/);
-  const r3 = g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { bil_peserta: '', bil_pelajar: 5 })); fail(r3, /betulkan/); assert.ok(r3.fields.bil_peserta);
-  fail(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { skor_kepuasan: 6 })), /betulkan/);
-  fail(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { bajet_rm: -1 })), /betulkan/);
-  fail(g.api_save(ckaiPic, 'CKAI2', Object.assign({}, full, { sumber_pendapatan: 'Rompak' })), /betulkan/);
+  ok(g.api_save(ckaiPic, 'CKAI3', Object.assign({}, full, { nama_program: 'Kos dan pendapatan sifar' }))); // 0 sah
+  const r1 = g.api_save(ckaiPic, 'CKAI3', Object.assign({}, full, { tarikh_tamat: '2026-05-09' })); fail(r1, /betulkan/); assert.match(r1.fields.tarikh_tamat, /sebelum tarikh mula/);
+  const r2 = g.api_save(ckaiPic, 'CKAI3', Object.assign({}, full, { bil_pelajar: 30, bil_staf: 15, bil_luar: 10 })); fail(r2, /betulkan/); assert.match(r2.fields.bil_peserta, /kurang daripada/);
+  const r3 = g.api_save(ckaiPic, 'CKAI3', Object.assign({}, full, { bil_peserta: '', bil_pelajar: 5 })); fail(r3, /betulkan/); assert.ok(r3.fields.bil_peserta);
+  fail(g.api_save(ckaiPic, 'CKAI3', Object.assign({}, full, { skor_kepuasan: 6 })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI3', Object.assign({}, full, { bajet_rm: -1 })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI3', Object.assign({}, full, { sumber_pendapatan: 'Rompak' })), /betulkan/);
 });
 test('Program: kos penganjuran, pendapatan dan penyertaan dijumlah pada dashboard (program Selesai dalam tahun sahaja)', () => {
-  const mk = (n, over) => ok(g.api_save(adminToken, 'CKAI2', Object.assign({ fakulti: 'FC', nama_program: n, kategori: 'Bengkel', status: 'Selesai', tarikh_mula: '2028-02-01', tarikh_tamat: '2028-02-02', lokasi: 'Dewan', bil_peserta: 60, bil_pelajar: 40, bil_staf: 10, bil_luar: 10, bajet_rm: 2500.25, pendapatan_rm: 800 }, over)));
+  const mk = (n, over) => ok(g.api_save(adminToken, 'CKAI3', Object.assign({ fakulti: 'FC', nama_program: n, kategori: 'Bengkel', status: 'Selesai', tarikh_mula: '2028-02-01', tarikh_tamat: '2028-02-02', lokasi: 'Dewan', bil_peserta: 60, bil_pelajar: 40, bil_staf: 10, bil_luar: 10, bajet_rm: 2500.25, pendapatan_rm: 800 }, over)));
   mk('P1'); mk('P2', { bajet_rm: 1000, pendapatan_rm: 200.5, bil_peserta: 40, bil_pelajar: 40, bil_staf: 0, bil_luar: 0 });
   mk('P3 dibatalkan', { status: 'Dibatalkan', tarikh_tamat: '' });
   mk('P4 tahun lain', { tarikh_mula: '2029-01-01', tarikh_tamat: '2029-01-02', bajet_rm: 9999 });
-  const c = card(dash(2028), 'CKAI2');
+  const c = card(dash(2028), 'CKAI3');
   const sec = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
   assert.strictEqual(c.value, 2);
   assert.strictEqual(sec['Jumlah peserta'], 100); assert.strictEqual(sec['Daripada itu pelajar'], 80);
@@ -366,59 +381,59 @@ test('Program: kos penganjuran, pendapatan dan penyertaan dijumlah pada dashboar
 });
 test('Program: laporan PDF pilihan; boleh dimuat naik dan dimuat turun oleh PIC fakulti sendiri sahaja', () => {
   const pdf = Buffer.from('%PDF-1.4\n%laporan program\n%%EOF').toString('base64');
-  const up = ok(g.api_uploadFile(ckaiPic, 'CKAI2', 'laporan', { name: 'laporan-hackathon.pdf', data: pdf }));
-  const rec = ok(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'Dengan laporan', kategori: 'Bengkel', status: 'Dirancang', laporan: { id: up.id, name: up.name } }));
+  const up = ok(g.api_uploadFile(ckaiPic, 'CKAI3', 'laporan', { name: 'laporan-hackathon.pdf', data: pdf }));
+  const rec = ok(g.api_save(ckaiPic, 'CKAI3', { fakulti: 'FKE', nama_program: 'Dengan laporan', kategori: 'Bengkel', status: 'Dirancang', laporan: { id: up.id, name: up.name } }));
   assert.strictEqual(JSON.parse(rec.laporan).name, 'laporan-hackathon.pdf');
-  assert.strictEqual(ok(g.api_downloadFile(ckaiPic, 'CKAI2', rec.id, 'laporan')).base64, pdf);
-  fail(g.api_downloadFile(ckaiPicFc, 'CKAI2', rec.id, 'laporan'), /Akses ditolak/); // PIC FC tiada akses CKAI 2
-  ok(g.api_saveUser(adminToken, { emel: 'pic.fc.inovasi@utm.my', nama: 'PIC FC Inovasi', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI2', aktif: 'Ya' }));
+  assert.strictEqual(ok(g.api_downloadFile(ckaiPic, 'CKAI3', rec.id, 'laporan')).base64, pdf);
+  fail(g.api_downloadFile(ckaiPicFc, 'CKAI3', rec.id, 'laporan'), /Akses ditolak/); // PIC FC tiada akses CKAI 3
+  ok(g.api_saveUser(adminToken, { emel: 'pic.fc.inovasi@utm.my', nama: 'PIC FC Inovasi', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI3', aktif: 'Ya' }));
   const fcInov = login('pic.fc.inovasi@utm.my');
-  fail(g.api_downloadFile(fcInov, 'CKAI2', rec.id, 'laporan'), /fakulti lain/); // ada akses CKAI 2 tetapi fakulti berbeza
-  assert.strictEqual(ok(g.api_list(fcInov, 'CKAI2', { q: 'Dengan laporan' })).rows.length, 0);
-  fail(g.api_uploadFile(ckaiPic, 'CKAI2', 'bajet_rm', { name: 'x.pdf', data: pdf }), /tidak sah/);
-  fail(g.api_uploadFile(ckaiPic, 'CKAI3', 'lampiran', { name: 'x.pdf', data: pdf }), /Akses ditolak/);
+  fail(g.api_downloadFile(fcInov, 'CKAI3', rec.id, 'laporan'), /fakulti lain/); // ada akses CKAI 3 tetapi fakulti berbeza
+  assert.strictEqual(ok(g.api_list(fcInov, 'CKAI3', { q: 'Dengan laporan' })).rows.length, 0);
+  fail(g.api_uploadFile(ckaiPic, 'CKAI3', 'bajet_rm', { name: 'x.pdf', data: pdf }), /tidak sah/);
+  fail(g.api_uploadFile(ckaiPic, 'CKAI1', 'lampiran', { name: 'x.pdf', data: pdf }), /Akses ditolak/);
 });
-test('CKAI 3 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
+test('CKAI 1 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
   const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_matrik: 'S1', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Berdaftar' };
-  ok(g.api_save(adminToken, 'CKAI3', r));
-  ok(g.api_save(adminToken, 'CKAI3', Object.assign({}, r, { nama_syarikat: 'Syarikat B', no_ssu: 'SSU-002', status: 'Tidak aktif' })));
-  ok(g.api_save(adminToken, 'CKAI3', Object.assign({}, r, { nama_syarikat: 'Syarikat C', no_ssu: 'SSU-003', tarikh_daftar: '2027-01-01' })));
-  fail(g.api_save(adminToken, 'CKAI3', Object.assign({}, r, { no_ssu: '' })), /betulkan/);
-  const c = card(dash(2026), 'CKAI3');
+  ok(g.api_save(adminToken, 'CKAI1', r));
+  ok(g.api_save(adminToken, 'CKAI1', Object.assign({}, r, { nama_syarikat: 'Syarikat B', no_ssu: 'SSU-002', status: 'Tidak aktif' })));
+  ok(g.api_save(adminToken, 'CKAI1', Object.assign({}, r, { nama_syarikat: 'Syarikat C', no_ssu: 'SSU-003', tarikh_daftar: '2027-01-01' })));
+  fail(g.api_save(adminToken, 'CKAI1', Object.assign({}, r, { no_ssu: '' })), /betulkan/);
+  const c = card(dash(2026), 'CKAI1');
   assert.strictEqual(c.value, 2); assert.strictEqual(c.secondary[0].value, 1);
-  assert.strictEqual(card(dash(2027), 'CKAI3').value, 1);
+  assert.strictEqual(card(dash(2027), 'CKAI1').value, 1);
   assert.match(c.title, /Sistem Syarikat Universiti/);
 });
-test('CKAI 4: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan disahkan', () => {
+test('CKAI 6: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan disahkan', () => {
   const r = { nama_perniagaan: 'Kedai A', jenis_pendapatan: 'Jualan produk' };
-  ok(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: '2026-03', pendapatan_rm: 1500.5 }, r)));
-  ok(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: '2026-04', pendapatan_rm: 2000 }, r)));
-  ok(g.api_save(ckaiPicFc, 'CKAI4', Object.assign({ fakulti: 'FC', tempoh: '2026-04', pendapatan_rm: 499.5, nama_perniagaan: 'Gig B', jenis_pendapatan: 'Perkhidmatan / Gig' })));
-  ok(g.api_save(adminToken, 'CKAI4', Object.assign({ fakulti: 'FC', tempoh: '2027-01', pendapatan_rm: 100 }, r)));
-  ['2026-13', '2026-00', '26-03', '2026-3', 'bukan-bulan'].forEach(b => fail(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: b, pendapatan_rm: 1 }, r)), /betulkan/));
-  fail(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: '2026-05', pendapatan_rm: -5 }, r)), /betulkan/);
-  const c = card(dash(2026), 'CKAI4');
+  ok(g.api_save(ckaiPic, 'CKAI6', Object.assign({ fakulti: 'FKE', tempoh: '2026-03', pendapatan_rm: 1500.5 }, r)));
+  ok(g.api_save(ckaiPic, 'CKAI6', Object.assign({ fakulti: 'FKE', tempoh: '2026-04', pendapatan_rm: 2000 }, r)));
+  ok(g.api_save(ckaiPicFc, 'CKAI6', Object.assign({ fakulti: 'FC', tempoh: '2026-04', pendapatan_rm: 499.5, nama_perniagaan: 'Gig B', jenis_pendapatan: 'Perkhidmatan / Gig' })));
+  ok(g.api_save(adminToken, 'CKAI6', Object.assign({ fakulti: 'FC', tempoh: '2027-01', pendapatan_rm: 100 }, r)));
+  ['2026-13', '2026-00', '26-03', '2026-3', 'bukan-bulan'].forEach(b => fail(g.api_save(ckaiPic, 'CKAI6', Object.assign({ fakulti: 'FKE', tempoh: b, pendapatan_rm: 1 }, r)), /betulkan/));
+  fail(g.api_save(ckaiPic, 'CKAI6', Object.assign({ fakulti: 'FKE', tempoh: '2026-05', pendapatan_rm: -5 }, r)), /betulkan/);
+  const c = card(dash(2026), 'CKAI6');
   assert.strictEqual(c.value, 4000); assert.strictEqual(c.format, 'rm');
   assert.strictEqual(c.secondary[0].value, 2); // dua perniagaan unik
-  assert.strictEqual(card(dash(2027), 'CKAI4').value, 100);
-  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI4', {})).rows.length, 2); // PIC FC hanya nampak rekod FC (2026-04 dan 2027-01), bukan FKE
-  assert.ok(ok(g.api_list(ckaiPicFc, 'CKAI4', {})).rows.every(r => r.fakulti === 'FC'));
+  assert.strictEqual(card(dash(2027), 'CKAI6').value, 100);
+  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI6', {})).rows.length, 2); // PIC FC hanya nampak rekod FC (2026-04 dan 2027-01), bukan FKE
+  assert.ok(ok(g.api_list(ckaiPicFc, 'CKAI6', {})).rows.every(r => r.fakulti === 'FC'));
   const byFak = c.breakdown[0].items; assert.strictEqual(byFak[0].label, 'FKE'); assert.strictEqual(byFak[0].value, 3500.5);
 });
-test('CKAI 5 (Makerspace): jumlah penggunaan bulanan, Admin sahaja', () => {
-  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2026-01', bil_penggunaan: 120, jam_penggunaan: 300 }));
-  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2026-02', bil_penggunaan: 80, jam_penggunaan: 150.5 }));
-  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2027-01', bil_penggunaan: 10 }));
-  const c = card(dash(2026), 'CKAI5');
+test('CKAI 4 (Makerspace): jumlah penggunaan bulanan, Admin sahaja', () => {
+  ok(g.api_save(adminToken, 'CKAI4', { tempoh: '2026-01', bil_penggunaan: 120, jam_penggunaan: 300 }));
+  ok(g.api_save(adminToken, 'CKAI4', { tempoh: '2026-02', bil_penggunaan: 80, jam_penggunaan: 150.5 }));
+  ok(g.api_save(adminToken, 'CKAI4', { tempoh: '2027-01', bil_penggunaan: 10 }));
+  const c = card(dash(2026), 'CKAI4');
   assert.strictEqual(c.value, 200); assert.strictEqual(c.secondary[0].value, 2); assert.strictEqual(c.secondary[1].value, 100);
   deepEq(c.breakdown[0].items.map(i => i.label), ['2026-01', '2026-02']); // tertib bulan
 });
-test('CKAI 6 (sewaan inkubator): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
+test('CKAI 7 (sewaan inkubator): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
   const r = { tempoh: '2026-03', inkubator: 'Launchpad FC', penyewa: 'Syarikat A', jumlah_rm: 500 };
-  fail(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar' }, r)), /betulkan/); // tarikh bayar wajib
-  ok(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar', tarikh_bayar: '2026-03-05' }, r)));
-  ok(g.api_save(adminToken, 'CKAI6', Object.assign({}, r, { tempoh: '2026-04', jumlah_rm: 700, status_bayaran: 'Tertunggak' })));
-  const c = card(dash(2026), 'CKAI6');
+  fail(g.api_save(adminToken, 'CKAI7', Object.assign({ status_bayaran: 'Dibayar' }, r)), /betulkan/); // tarikh bayar wajib
+  ok(g.api_save(adminToken, 'CKAI7', Object.assign({ status_bayaran: 'Dibayar', tarikh_bayar: '2026-03-05' }, r)));
+  ok(g.api_save(adminToken, 'CKAI7', Object.assign({}, r, { tempoh: '2026-04', jumlah_rm: 700, status_bayaran: 'Tertunggak' })));
+  const c = card(dash(2026), 'CKAI7');
   assert.strictEqual(c.value, 500); assert.strictEqual(c.secondary[0].value, 'RM 700.00'); assert.strictEqual(c.secondary[1].value, 1);
 });
 const PDF = (extra = '') => Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\n' + extra + '\n%%EOF').toString('base64');
@@ -428,41 +443,41 @@ const award = (over = {}) => Object.assign({
   program: 'GiGAUTM Ascend (GiGA)', mentor: 'Dr. Mentor', pingat: 'Emas',
   pelajar: [{ nama: 'Ali Anugerah', matrik: 'A24FM0001', nokp: '900101-14-5678' }, { nama: 'Siti Anugerah', matrik: 'A24FM0002', nokp: '010203-10-1234' }]
 }, over);
-test('CKAI 7: akses PIC fakulti dan muat naik sijil PDF (hanya PDF sebenar, maksimum 5 MB)', () => {
-  ok(g.api_saveUser(adminToken, { emel: 'pic.anugerah@utm.my', nama: 'PIC FM', peranan: 'PIC', fakulti: 'FM', kpi_akses: 'CKAI7', aktif: 'Ya' }));
-  ok(g.api_saveUser(adminToken, { emel: 'pic.anugerah2@utm.my', nama: 'PIC FS', peranan: 'PIC', fakulti: 'FS', kpi_akses: 'CKAI7', aktif: 'Ya' }));
+test('CKAI 8: akses PIC fakulti dan muat naik sijil PDF (hanya PDF sebenar, maksimum 5 MB)', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'pic.anugerah@utm.my', nama: 'PIC FM', peranan: 'PIC', fakulti: 'FM', kpi_akses: 'CKAI8', aktif: 'Ya' }));
+  ok(g.api_saveUser(adminToken, { emel: 'pic.anugerah2@utm.my', nama: 'PIC FS', peranan: 'PIC', fakulti: 'FS', kpi_akses: 'CKAI8', aktif: 'Ya' }));
   awardPic = login('pic.anugerah@utm.my'); awardPicFc = login('pic.anugerah2@utm.my');
-  deepEq(ok(g.api_session(awardPic)).kpis.map(k => k.id), ['CKAI7']);
-  fail(g.api_uploadFile(ckaiPic, 'CKAI7', 'sijil', { name: 'a.pdf', data: PDF() }), /Akses ditolak/); // PIC tanpa akses CKAI 7
-  fail(g.api_uploadFile(awardPic, 'CKAI7', 'nama_anugerah', { name: 'a.pdf', data: PDF() }), /tidak sah/); // bukan medan fail
-  fail(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: 'sijil.pdf', data: Buffer.from('ini bukan pdf').toString('base64') }), /format PDF/);
-  fail(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: 'sijil.pdf', data: Buffer.from('<html><script>x</script>').toString('base64') }), /format PDF/);
-  fail(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: 'besar.pdf', data: PDF('x'.repeat(5 * 1024 * 1024 + 10)) }), /terlalu besar/);
-  fail(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: 'kosong.pdf', data: '' }), /Tiada fail/);
-  const up = ok(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: '../../etc/sijil <b>.pdf', data: PDF() }));
+  deepEq(ok(g.api_session(awardPic)).kpis.map(k => k.id), ['CKAI8']);
+  fail(g.api_uploadFile(ckaiPic, 'CKAI8', 'sijil', { name: 'a.pdf', data: PDF() }), /Akses ditolak/); // PIC tanpa akses CKAI 8
+  fail(g.api_uploadFile(awardPic, 'CKAI8', 'nama_anugerah', { name: 'a.pdf', data: PDF() }), /tidak sah/); // bukan medan fail
+  fail(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: 'sijil.pdf', data: Buffer.from('ini bukan pdf').toString('base64') }), /format PDF/);
+  fail(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: 'sijil.pdf', data: Buffer.from('<html><script>x</script>').toString('base64') }), /format PDF/);
+  fail(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: 'besar.pdf', data: PDF('x'.repeat(5 * 1024 * 1024 + 10)) }), /terlalu besar/);
+  fail(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: 'kosong.pdf', data: '' }), /Tiada fail/);
+  const up = ok(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: '../../etc/sijil <b>.pdf', data: PDF() }));
   assert.ok(up.id && !/[\/<>]/.test(up.name), 'nama fail dibersihkan: ' + up.name);
   assert.ok(up.name.endsWith('.pdf'));
 });
-test('CKAI 7: pengesahan medan (pelajar berbilang, no. KP, sijil wajib, program Lain-lain)', () => {
-  const up = () => { const r = ok(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: 'sijil.pdf', data: PDF('a' + Math.random()) })); return { id: r.id, name: r.name }; };
+test('CKAI 8: pengesahan medan (pelajar berbilang, no. KP, sijil wajib, program Lain-lain)', () => {
+  const up = () => { const r = ok(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: 'sijil.pdf', data: PDF('a' + Math.random()) })); return { id: r.id, name: r.name }; };
   const good = award({ sijil: up() });
-  fail(g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { sijil: undefined })), /betulkan/);
-  const r1 = g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { pelajar: [] })); fail(r1, /betulkan/); assert.match(r1.fields.pelajar, /wajib/);
-  const r1b = g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { pelajar: 'bukan-senarai' })); fail(r1b, /betulkan/); assert.match(r1b.fields.pelajar, /sekurang-kurangnya seorang/);
-  const r2 = g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { pelajar: [{ nama: 'A', matrik: 'M1', nokp: '900101-14-5678' }, { nama: '', matrik: '', nokp: '123' }] }));
+  fail(g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { sijil: undefined })), /betulkan/);
+  const r1 = g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { pelajar: [] })); fail(r1, /betulkan/); assert.match(r1.fields.pelajar, /wajib/);
+  const r1b = g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { pelajar: 'bukan-senarai' })); fail(r1b, /betulkan/); assert.match(r1b.fields.pelajar, /sekurang-kurangnya seorang/);
+  const r2 = g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { pelajar: [{ nama: 'A', matrik: 'M1', nokp: '900101-14-5678' }, { nama: '', matrik: '', nokp: '123' }] }));
   fail(r2, /betulkan/); assert.match(r2.fields.pelajar, /Pelajar 2: nama, no. matrik, no. KP \/ pasport tidak sah/);
-  fail(g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { mentor: '' })), /betulkan/);
-  fail(g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { agensi: '' })), /betulkan/);
-  fail(g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { program: 'Lain-lain' })), /betulkan/); // program_lain wajib
-  ok(g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { program: 'Lain-lain', program_lain: 'Hackathon Kampus' })));
-  fail(g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { peringkat: 'Daerah' })), /betulkan/);
-  fail(g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { tarikh: '2026-02-30' })), /betulkan/);
-  const r31 = g.api_save(awardPic, 'CKAI7', Object.assign({}, good, { pelajar: Array.from({ length: 31 }, (_, i) => ({ nama: 'P' + i, matrik: 'M' + i, nokp: '900101145678' })) }));
+  fail(g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { mentor: '' })), /betulkan/);
+  fail(g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { agensi: '' })), /betulkan/);
+  fail(g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { program: 'Lain-lain' })), /betulkan/); // program_lain wajib
+  ok(g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { program: 'Lain-lain', program_lain: 'Hackathon Kampus' })));
+  fail(g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { peringkat: 'Daerah' })), /betulkan/);
+  fail(g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { tarikh: '2026-02-30' })), /betulkan/);
+  const r31 = g.api_save(awardPic, 'CKAI8', Object.assign({}, good, { pelajar: Array.from({ length: 31 }, (_, i) => ({ nama: 'P' + i, matrik: 'M' + i, nokp: '900101145678' })) }));
   fail(r31, /betulkan/); assert.match(r31.fields.pelajar, /Maksimum 30/);
 });
-test('CKAI 7: sijil mesti hasil muat naik sendiri; fail Drive sembarangan dan milik pengguna lain ditolak', () => {
-  const mine = ok(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: 'saya.pdf', data: PDF('mine') }));
-  const theirs = ok(g.api_uploadFile(awardPicFc, 'CKAI7', 'sijil', { name: 'mereka.pdf', data: PDF('theirs') }));
+test('CKAI 8: sijil mesti hasil muat naik sendiri; fail Drive sembarangan dan milik pengguna lain ditolak', () => {
+  const mine = ok(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: 'saya.pdf', data: PDF('mine') }));
+  const theirs = ok(g.api_uploadFile(awardPicFc, 'CKAI8', 'sijil', { name: 'mereka.pdf', data: PDF('theirs') }));
   const secret = g.DriveApp._outside.createFile(g.Utilities.newBlob([37, 80, 68, 70, 45, 65], 'application/pdf', 'rahsia.pdf')); // fail lain milik pemilik skrip
   const reasons = [
     { id: secret.getId(), name: 'rahsia.pdf' },           // fail di luar folder lampiran
@@ -470,59 +485,59 @@ test('CKAI 7: sijil mesti hasil muat naik sendiri; fail Drive sembarangan dan mi
     { id: 'tidak-wujud-1234567', name: 'x.pdf' },         // ID rekaan
     { id: '../../x', name: 'x.pdf' }                      // format ID tidak sah
   ];
-  reasons.forEach(sj => { const r = g.api_save(awardPic, 'CKAI7', award({ sijil: sj })); fail(r, /betulkan/); assert.ok(r.fields.sijil, 'sijil patut ditolak: ' + sj.id); });
-  awardRec = ok(g.api_save(awardPic, 'CKAI7', award({ sijil: { id: mine.id, name: 'tipu-nama.pdf' } })));
+  reasons.forEach(sj => { const r = g.api_save(awardPic, 'CKAI8', award({ sijil: sj })); fail(r, /betulkan/); assert.ok(r.fields.sijil, 'sijil patut ditolak: ' + sj.id); });
+  awardRec = ok(g.api_save(awardPic, 'CKAI8', award({ sijil: { id: mine.id, name: 'tipu-nama.pdf' } })));
   assert.strictEqual(awardRec.fakulti, 'FM');
   assert.strictEqual(JSON.parse(awardRec.sijil).name, 'saya.pdf'); // nama diambil daripada muat naik sebenar, bukan daripada klien
   assert.strictEqual(JSON.parse(awardRec.pelajar)[0].nokp, '900101145678'); // sengkang dibuang
 });
-test('CKAI 7: muat turun hanya oleh PIC fakulti yang sama atau Admin; kandungan sama dan fail luar folder tidak boleh dimuat turun', () => {
-  const d = ok(g.api_downloadFile(awardPic, 'CKAI7', awardRec.id, 'sijil'));
+test('CKAI 8: muat turun hanya oleh PIC fakulti yang sama atau Admin; kandungan sama dan fail luar folder tidak boleh dimuat turun', () => {
+  const d = ok(g.api_downloadFile(awardPic, 'CKAI8', awardRec.id, 'sijil'));
   assert.strictEqual(d.base64, PDF('mine')); assert.strictEqual(d.mime, 'application/pdf'); assert.strictEqual(d.name, 'saya.pdf');
-  fail(g.api_downloadFile(awardPicFc, 'CKAI7', awardRec.id, 'sijil'), /fakulti lain/);
-  fail(g.api_downloadFile(ckaiPic, 'CKAI7', awardRec.id, 'sijil'), /Akses ditolak/);
-  fail(g.api_downloadFile('', 'CKAI7', awardRec.id, 'sijil'), /Sesi tamat/);
-  ok(g.api_downloadFile(adminToken, 'CKAI7', awardRec.id, 'sijil'));
-  fail(g.api_downloadFile(awardPic, 'CKAI7', awardRec.id, 'nama_anugerah'), /tidak sah/);
-  fail(g.api_downloadFile(awardPic, 'CKAI7', 'AN-999', 'sijil'), /tidak dijumpai/);
+  fail(g.api_downloadFile(awardPicFc, 'CKAI8', awardRec.id, 'sijil'), /fakulti lain/);
+  fail(g.api_downloadFile(ckaiPic, 'CKAI8', awardRec.id, 'sijil'), /Akses ditolak/);
+  fail(g.api_downloadFile('', 'CKAI8', awardRec.id, 'sijil'), /Sesi tamat/);
+  ok(g.api_downloadFile(adminToken, 'CKAI8', awardRec.id, 'sijil'));
+  fail(g.api_downloadFile(awardPic, 'CKAI8', awardRec.id, 'nama_anugerah'), /tidak sah/);
+  fail(g.api_downloadFile(awardPic, 'CKAI8', 'AN-999', 'sijil'), /tidak dijumpai/);
   // rekod dirosakkan terus dalam Sheet supaya merujuk fail di luar folder: mesti tetap ditolak
   const secret = g.DriveApp._outside.createFile(g.Utilities.newBlob([37, 80, 68, 70, 45, 66], 'application/pdf', 'rahsia2.pdf'));
-  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI7_Anugerah');
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI8_Anugerah');
   const col = sh.data[0].indexOf('sijil'), idCol = sh.data[0].indexOf('id');
   const rowIdx = sh.data.findIndex(r => r[idCol] === awardRec.id);
   assert.ok(rowIdx > 0);
   sh.data[rowIdx][col] = JSON.stringify({ id: secret.getId(), name: 'rahsia2.pdf' });
-  fail(g.api_downloadFile(awardPic, 'CKAI7', awardRec.id, 'sijil'), /Fail tidak sah/);
+  fail(g.api_downloadFile(awardPic, 'CKAI8', awardRec.id, 'sijil'), /Fail tidak sah/);
   sh.data[rowIdx][col] = awardRec.sijil; // pulihkan
 });
-test('CKAI 7: senarai ikut fakulti; kemas kini menggantikan sijil (lama dibuang); padam membuang fail; audit tanpa data peribadi', () => {
-  assert.strictEqual(ok(g.api_list(awardPic, 'CKAI7', {})).rows.length, 2); // FM sahaja (rekod 'Lain-lain' + rekod ini)
-  assert.strictEqual(ok(g.api_list(awardPicFc, 'CKAI7', {})).rows.length, 0);
+test('CKAI 8: senarai ikut fakulti; kemas kini menggantikan sijil (lama dibuang); padam membuang fail; audit tanpa data peribadi', () => {
+  assert.strictEqual(ok(g.api_list(awardPic, 'CKAI8', {})).rows.length, 2); // FM sahaja (rekod 'Lain-lain' + rekod ini)
+  assert.strictEqual(ok(g.api_list(awardPicFc, 'CKAI8', {})).rows.length, 0);
   const oldId = JSON.parse(awardRec.sijil).id;
-  const nu = ok(g.api_uploadFile(awardPic, 'CKAI7', 'sijil', { name: 'baru.pdf', data: PDF('baru') }));
-  const upd = ok(g.api_save(awardPic, 'CKAI7', Object.assign(award(), { id: awardRec.id, nama_anugerah: 'Dikemas kini', sijil: { id: nu.id, name: 'baru.pdf' } })));
+  const nu = ok(g.api_uploadFile(awardPic, 'CKAI8', 'sijil', { name: 'baru.pdf', data: PDF('baru') }));
+  const upd = ok(g.api_save(awardPic, 'CKAI8', Object.assign(award(), { id: awardRec.id, nama_anugerah: 'Dikemas kini', sijil: { id: nu.id, name: 'baru.pdf' } })));
   assert.strictEqual(g.DriveApp._files[oldId].trashed, true);
   assert.strictEqual(g.DriveApp._files[nu.id].trashed, false);
   // sijil tidak diubah: rujukan sama diterima tanpa muat naik semula
-  ok(g.api_save(awardPic, 'CKAI7', Object.assign(award(), { id: awardRec.id, sijil: JSON.parse(upd.sijil) })));
-  fail(g.api_delete(awardPic, 'CKAI7', awardRec.id), /Admin sahaja/);
-  ok(g.api_delete(adminToken, 'CKAI7', awardRec.id));
+  ok(g.api_save(awardPic, 'CKAI8', Object.assign(award(), { id: awardRec.id, sijil: JSON.parse(upd.sijil) })));
+  fail(g.api_delete(awardPic, 'CKAI8', awardRec.id), /Admin sahaja/);
+  ok(g.api_delete(adminToken, 'CKAI8', awardRec.id));
   assert.strictEqual(g.DriveApp._files[nu.id].trashed, true);
   const log = JSON.stringify(ok(g.api_listAudit(adminToken, 200)));
   ['900101145678', '010203101234', 'Ali Anugerah', 'A24FM0001'].forEach(x => assert.ok(!log.includes(x), 'audit mengandungi data peribadi: ' + x));
   assert.ok(log.includes('MUAT_NAIK') && log.includes('MUAT_TURUN'));
 });
-test('CKAI 7: dashboard mengira anugerah mengikut tarikh; paparan awam tiada nama, matrik, no. KP atau fail', () => {
-  const up = (n) => { const r = ok(g.api_uploadFile(adminToken, 'CKAI7', 'sijil', { name: n + '.pdf', data: PDF(n) })); return { id: r.id, name: r.name }; };
-  ok(g.api_save(adminToken, 'CKAI7', award({ fakulti: 'FC', peringkat: 'Antarabangsa', kategori: 'Keusahawanan', pingat: 'Perak', nama_anugerah: 'Pertandingan Global', sijil: up('a'), pelajar: [{ nama: 'Rahsia Pelajar', matrik: 'RHS001', nokp: '880808-08-8888' }] })));
-  ok(g.api_save(adminToken, 'CKAI7', award({ fakulti: 'FC', tarikh: '2027-02-01', sijil: up('b') })));
-  const c = card(dash(2026), 'CKAI7');
+test('CKAI 8: dashboard mengira anugerah mengikut tarikh; paparan awam tiada nama, matrik, no. KP atau fail', () => {
+  const up = (n) => { const r = ok(g.api_uploadFile(adminToken, 'CKAI8', 'sijil', { name: n + '.pdf', data: PDF(n) })); return { id: r.id, name: r.name }; };
+  ok(g.api_save(adminToken, 'CKAI8', award({ fakulti: 'FC', peringkat: 'Antarabangsa', kategori: 'Keusahawanan', pingat: 'Perak', nama_anugerah: 'Pertandingan Global', sijil: up('a'), pelajar: [{ nama: 'Rahsia Pelajar', matrik: 'RHS001', nokp: '880808-08-8888' }] })));
+  ok(g.api_save(adminToken, 'CKAI8', award({ fakulti: 'FC', tarikh: '2027-02-01', sijil: up('b') })));
+  const c = card(dash(2026), 'CKAI8');
   assert.ok(c.value >= 2);
   assert.ok(c.secondary.some(x => x.label === 'Pelajar penerima' && x.value >= 3));
   assert.ok(c.breakdown.some(b => b.title === 'Mengikut program'));
   const sj = JSON.stringify(dash(2026));
   ['Rahsia Pelajar', 'RHS001', '880808088888', 'Ali Anugerah', 'A24FM0001', 'Kementerian', '"id":"FILE'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
-  assert.strictEqual(card(dash(2027), 'CKAI7').value, 1);
+  assert.strictEqual(card(dash(2027), 'CKAI8').value, 1);
 });
 test('susunan lajur Sheet tidak penting: tab Pengguna dan KPI ditulis mengikut nama tajuk', () => {
   const ss = env.spreadsheets[env.props.SHEET_ID];
@@ -553,36 +568,36 @@ const inno = (over = {}) => Object.assign({
   pelajar: [{ nama: 'Ali Inovator', matrik: 'A24IN0001' }, { nama: 'Siti Inovator', matrik: 'A24IN0002' }],
   status_penyertaan: 'Telah menyertai', nama_pertandingan: 'Pertandingan Inovasi Fakulti', peringkat: 'Fakulti', tarikh: '2026-04-15'
 }, over);
-test('CKAI 8: akses PIC fakulti; OD = projek yang telah menyertai pertandingan sekurang-kurangnya peringkat Fakulti', () => {
-  ok(g.api_saveUser(adminToken, { emel: 'pic.inovasi@utm.my', nama: 'PIC FM', peranan: 'PIC', fakulti: 'FM', kpi_akses: 'CKAI8', aktif: 'Ya' }));
-  ok(g.api_saveUser(adminToken, { emel: 'pic.inovasi2@utm.my', nama: 'PIC FS', peranan: 'PIC', fakulti: 'FS', kpi_akses: 'CKAI8', aktif: 'Ya' }));
+test('CKAI 5: akses PIC fakulti; OD = projek yang telah menyertai pertandingan sekurang-kurangnya peringkat Fakulti', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'pic.inovasi@utm.my', nama: 'PIC FM', peranan: 'PIC', fakulti: 'FM', kpi_akses: 'CKAI5', aktif: 'Ya' }));
+  ok(g.api_saveUser(adminToken, { emel: 'pic.inovasi2@utm.my', nama: 'PIC FS', peranan: 'PIC', fakulti: 'FS', kpi_akses: 'CKAI5', aktif: 'Ya' }));
   innoPic = login('pic.inovasi@utm.my'); innoPicFc = login('pic.inovasi2@utm.my');
-  deepEq(ok(g.api_session(innoPic)).kpis.map(k => k.id), ['CKAI8']);
-  const a = ok(g.api_save(innoPic, 'CKAI8', inno({ fakulti: 'FKE' })));
+  deepEq(ok(g.api_session(innoPic)).kpis.map(k => k.id), ['CKAI5']);
+  const a = ok(g.api_save(innoPic, 'CKAI5', inno({ fakulti: 'FKE' })));
   assert.strictEqual(a.fakulti, 'FM'); // dipaksa kepada fakulti PIC
-  assert.strictEqual(JSON.parse(a.pelajar)[0].nokp, ''); // no. KP tidak diperlukan bagi CKAI 8
-  fail(g.api_save(innoPic, 'CKAI8', inno({ peringkat: 'Dalam kelas' })), /betulkan/); // peringkat paling rendah ialah Fakulti
-  fail(g.api_save(innoPic, 'CKAI8', inno({ nama_pertandingan: '' })), /betulkan/);
-  fail(g.api_save(innoPic, 'CKAI8', inno({ tarikh: '' })), /betulkan/);
-  fail(g.api_save(innoPic, 'CKAI8', inno({ mentor: '' })), /betulkan/);
-  fail(g.api_save(innoPic, 'CKAI8', inno({ pelajar: [] })), /betulkan/);
-  const r = g.api_save(innoPic, 'CKAI8', inno({ pelajar: [{ nama: '', matrik: 'X' }] })); fail(r, /betulkan/); assert.match(r.fields.pelajar, /Pelajar 1: nama/);
+  assert.strictEqual(JSON.parse(a.pelajar)[0].nokp, ''); // no. KP tidak diperlukan bagi CKAI 5
+  fail(g.api_save(innoPic, 'CKAI5', inno({ peringkat: 'Dalam kelas' })), /betulkan/); // peringkat paling rendah ialah Fakulti
+  fail(g.api_save(innoPic, 'CKAI5', inno({ nama_pertandingan: '' })), /betulkan/);
+  fail(g.api_save(innoPic, 'CKAI5', inno({ tarikh: '' })), /betulkan/);
+  fail(g.api_save(innoPic, 'CKAI5', inno({ mentor: '' })), /betulkan/);
+  fail(g.api_save(innoPic, 'CKAI5', inno({ pelajar: [] })), /betulkan/);
+  const r = g.api_save(innoPic, 'CKAI5', inno({ pelajar: [{ nama: '', matrik: 'X' }] })); fail(r, /betulkan/); assert.match(r.fields.pelajar, /Pelajar 1: nama/);
   assert.ok(!/KP/.test(r.fields.pelajar), 'no. KP tidak boleh diminta');
-  assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI8', {})).rows.length, 0);
+  assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI5', {})).rows.length, 0);
 });
-test('CKAI 8: anugerah pilihan; peringkat sasaran wajib apabila calon peningkatan', () => {
-  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Tanpa anugerah' }))); // tiada pingat/anugerah: sah
-  const r = g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Calon naik', status_peningkatan: 'Calon peningkatan' }));
+test('CKAI 5: anugerah pilihan; peringkat sasaran wajib apabila calon peningkatan', () => {
+  ok(g.api_save(innoPic, 'CKAI5', inno({ tajuk_inovasi: 'Tanpa anugerah' }))); // tiada pingat/anugerah: sah
+  const r = g.api_save(innoPic, 'CKAI5', inno({ tajuk_inovasi: 'Calon naik', status_peningkatan: 'Calon peningkatan' }));
   fail(r, /betulkan/); assert.ok(r.fields.peringkat_sasaran);
-  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Calon naik', status_peningkatan: 'Calon peningkatan', peringkat_sasaran: 'Kebangsaan', pertandingan_seterusnya: 'MTE 2026', sokongan_diperlukan: 'Pembiayaan prototaip RM5,000' })));
-  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Menang', pingat: 'Emas', nama_anugerah: 'Anugerah Inovasi Fakulti', peringkat: 'Universiti', nilai_hadiah_rm: 500 })));
-  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Sudah naik', peringkat: 'Kebangsaan', status_peningkatan: 'Telah dibawa ke peringkat lebih tinggi', peringkat_sasaran: 'Antarabangsa' })));
-  fail(g.api_save(innoPic, 'CKAI8', inno({ pingat: 'Platinum' })), /betulkan/);
+  ok(g.api_save(innoPic, 'CKAI5', inno({ tajuk_inovasi: 'Calon naik', status_peningkatan: 'Calon peningkatan', peringkat_sasaran: 'Kebangsaan', pertandingan_seterusnya: 'MTE 2026', sokongan_diperlukan: 'Pembiayaan prototaip RM5,000' })));
+  ok(g.api_save(innoPic, 'CKAI5', inno({ tajuk_inovasi: 'Menang', pingat: 'Emas', nama_anugerah: 'Anugerah Inovasi Fakulti', peringkat: 'Universiti', nilai_hadiah_rm: 500 })));
+  ok(g.api_save(innoPic, 'CKAI5', inno({ tajuk_inovasi: 'Sudah naik', peringkat: 'Kebangsaan', status_peningkatan: 'Telah dibawa ke peringkat lebih tinggi', peringkat_sasaran: 'Antarabangsa' })));
+  fail(g.api_save(innoPic, 'CKAI5', inno({ pingat: 'Platinum' })), /betulkan/);
 });
-test('CKAI 8: hanya inovasi yang TELAH menyertai pertandingan dalam tahun itu dikira; penapis peringkat dan status peningkatan', () => {
-  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Akan menyertai', status_penyertaan: 'Akan menyertai', tarikh: '2026-09-01' })));
-  ok(g.api_save(adminToken, 'CKAI8', inno({ fakulti: 'FC', tajuk_inovasi: 'Tahun lain', tarikh: '2027-03-01' })));
-  const c = card(dash(2026), 'CKAI8');
+test('CKAI 5: hanya inovasi yang TELAH menyertai pertandingan dalam tahun itu dikira; penapis peringkat dan status peningkatan', () => {
+  ok(g.api_save(innoPic, 'CKAI5', inno({ tajuk_inovasi: 'Akan menyertai', status_penyertaan: 'Akan menyertai', tarikh: '2026-09-01' })));
+  ok(g.api_save(adminToken, 'CKAI5', inno({ fakulti: 'FC', tajuk_inovasi: 'Tahun lain', tarikh: '2027-03-01' })));
+  const c = card(dash(2026), 'CKAI5');
   const sec = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
   assert.strictEqual(c.value, 5); // Tanpa anugerah, Calon naik, Menang, Sudah naik + rekod pertama (FM)
   assert.strictEqual(sec['Memenang anugerah / pingat'], 1);
@@ -592,31 +607,31 @@ test('CKAI 8: hanya inovasi yang TELAH menyertai pertandingan dalam tahun itu di
   assert.strictEqual(sec['Akan menyertai (dirancang)'], 1);
   assert.strictEqual(sec['Pelajar terlibat'], 10);
   deepEq(c.breakdown[0].items.map(i => i.label), ['Fakulti', 'Universiti', 'Kebangsaan']);
-  assert.strictEqual(card(dash(2027), 'CKAI8').value, 1);
+  assert.strictEqual(card(dash(2027), 'CKAI5').value, 1);
   assert.strictEqual(c.status, 'Tiada sasaran');
   // penapis: status peningkatan (pipeline XCITE) dan peringkat
-  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI8', { status2: 'Calon peningkatan' })).rows.length, 1);
-  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI8', { status: 'Kebangsaan' })).rows.length, 1);
-  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI8', { status: 'Kebangsaan', status2: 'Calon peningkatan' })).rows.length, 0);
-  assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI8', { status2: 'Calon peningkatan' })).rows.length, 0); // fakulti lain tidak nampak
+  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI5', { status2: 'Calon peningkatan' })).rows.length, 1);
+  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI5', { status: 'Kebangsaan' })).rows.length, 1);
+  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI5', { status: 'Kebangsaan', status2: 'Calon peningkatan' })).rows.length, 0);
+  assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI5', { status2: 'Calon peningkatan' })).rows.length, 0); // fakulti lain tidak nampak
 });
-test('CKAI 8: sijil anugerah PDF pilihan; paparan awam tiada tajuk, pelajar atau mentor', () => {
+test('CKAI 5: sijil anugerah PDF pilihan; paparan awam tiada tajuk, pelajar atau mentor', () => {
   const pdf = Buffer.from('%PDF-1.4\n%sijil inovasi\n%%EOF').toString('base64');
-  const up = ok(g.api_uploadFile(innoPic, 'CKAI8', 'sijil', { name: 'sijil-inovasi.pdf', data: pdf }));
-  const rec = ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Dengan sijil', pingat: 'Perak', sijil: { id: up.id, name: up.name } })));
-  assert.strictEqual(ok(g.api_downloadFile(innoPic, 'CKAI8', rec.id, 'sijil')).base64, pdf);
-  fail(g.api_downloadFile(innoPicFc, 'CKAI8', rec.id, 'sijil'), /fakulti lain/);
+  const up = ok(g.api_uploadFile(innoPic, 'CKAI5', 'sijil', { name: 'sijil-inovasi.pdf', data: pdf }));
+  const rec = ok(g.api_save(innoPic, 'CKAI5', inno({ tajuk_inovasi: 'Dengan sijil', pingat: 'Perak', sijil: { id: up.id, name: up.name } })));
+  assert.strictEqual(ok(g.api_downloadFile(innoPic, 'CKAI5', rec.id, 'sijil')).base64, pdf);
+  fail(g.api_downloadFile(innoPicFc, 'CKAI5', rec.id, 'sijil'), /fakulti lain/);
   const sj = JSON.stringify(dash(2026));
   ['Sistem Pintar', 'Ali Inovator', 'A24IN0001', 'Dr. Penyelia', 'Pembiayaan prototaip', 'Calon naik', 'sijil-inovasi'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
 });
 test('sasaran CKAI diisi Admin: status dan peratus dikira (boleh melebihi 100%)', () => {
   assert.ok(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length >= 40);
-  ok(g.api_saveTarget(adminToken, { kpi: 'CKAI4', tahun: 2026, sasaran: 3000 }));
-  const c = card(dash(2026), 'CKAI4');
+  ok(g.api_saveTarget(adminToken, { kpi: 'CKAI6', tahun: 2026, sasaran: 3000 }));
+  const c = card(dash(2026), 'CKAI6');
   assert.strictEqual(c.status, 'Melebihi sasaran'); assert.ok(Math.abs(c.pct - 133.3) < 0.1);
-  ok(g.api_saveTarget(adminToken, { kpi: 'CKAI1', tahun: 2026, sasaran: 5 }));
-  assert.strictEqual(card(dash(2026), 'CKAI1').status, 'Di bawah sasaran');
-  assert.strictEqual(card(dash(2026), 'CKAI1').quarterStatus, 'Tiada sasaran suku tahun');
+  ok(g.api_saveTarget(adminToken, { kpi: 'CKAI2', tahun: 2026, sasaran: 5 }));
+  assert.strictEqual(card(dash(2026), 'CKAI2').status, 'Di bawah sasaran');
+  assert.strictEqual(card(dash(2026), 'CKAI2').quarterStatus, 'Tiada sasaran suku tahun');
 });
 test('dashboard awam CKAI tidak mendedahkan nama pelajar, perniagaan atau penyewa', () => {
   const sj = JSON.stringify(dash(2026));

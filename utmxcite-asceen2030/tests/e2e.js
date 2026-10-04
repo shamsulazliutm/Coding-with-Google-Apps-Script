@@ -67,6 +67,7 @@ function buildHtml() {
     assert.strictEqual(await page.locator('.kcard').count(), 15);
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.toUpperCase());
     deepEq(heads, ['KAI · PERINGKAT UNIVERSITI', 'DKAI · PERINGKAT JABATAN (JTNC HEPA)', 'CKAI · PERINGKAT PUSAT (UTMXCITE)']);
+    deepEq((await page.locator('.sub').allInnerTexts()).map(t => t.toUpperCase()), ['1 · PENDAFTARAN', '2 · PEMBANGUNAN', '3 · HASIL', '4 · PENGIKTIRAFAN']);
     assert.strictEqual(await page.locator('.tag', { hasText: 'Department' }).count(), 1);
     assert.strictEqual(await page.locator('.tag', { hasText: 'Internal' }).count(), 0);
     assert.ok((await text('.side')).includes('Pengunjung'));
@@ -201,8 +202,8 @@ function buildHtml() {
     await page.click('#cyes');
     await page.waitForFunction((n) => document.querySelectorAll('tbody tr').length === n, before - 1);
   });
-  await step('Admin merekod pendapatan CKAI 4 (input bulan) dan dashboard memaparkan RM', async () => {
-    await page.click('.nav:has-text("CKAI 4")');
+  await step('Admin merekod pendapatan CKAI 6 (input bulan) dan dashboard memaparkan RM', async () => {
+    await page.click('.nav:has-text("CKAI 6")');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_tempoh');
@@ -215,14 +216,14 @@ function buildHtml() {
     await page.click('#savebtn');
     await page.waitForSelector('td:has-text("Kedai E2E")');
     await page.click('.nav:has-text("Dashboard")');
-    const card = page.locator('.kcard:has(.t:text-is("CKAI 4 · Pendapatan usahawan pelajar"))');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 6 · Pendapatan usahawan pelajar"))');
     await card.waitFor();
     assert.ok((await card.innerText()).includes('RM 1,500.50'), await card.innerText());
     assert.ok((await card.innerText()).includes('Tiada sasaran'));
     await page.screenshot({ path: path.join(out, '9-dashboard-ckai.png'), fullPage: true });
   });
-  await step('CKAI 7: borang anugerah dengan pelajar berbilang dan muat naik sijil PDF', async () => {
-    await page.click('.nav:has-text("CKAI 7")');
+  await step('CKAI 8: borang anugerah dengan pelajar berbilang dan muat naik sijil PDF', async () => {
+    await page.click('.nav:has-text("CKAI 8")');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_nama_anugerah');
@@ -260,7 +261,7 @@ function buildHtml() {
     assert.ok(!(await text('table')).includes('900101'), 'no. KP tidak boleh dipaparkan dalam jadual');
     await page.screenshot({ path: path.join(out, '11-senarai-ckai7.png') });
   });
-  await step('CKAI 7: muat turun sijil dan edit mengekalkan pelajar dan fail', async () => {
+  await step('CKAI 8: muat turun sijil dan edit mengekalkan pelajar dan fail', async () => {
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("PDF")')]);
     assert.strictEqual(dl.suggestedFilename(), 'sijil-anugerah.pdf');
     const content = fs.readFileSync(await dl.path(), 'utf8');
@@ -273,14 +274,14 @@ function buildHtml() {
     await page.click('#savebtn'); // simpan tanpa muat naik semula: rujukan fail sedia ada diterima
     await page.waitForSelector('td:has-text("Anugerah Inovasi Negara")');
     await page.click('.nav:has-text("Dashboard")');
-    const card = page.locator('.kcard:has(.t:text-is("CKAI 7 · Anugerah & pengiktirafan inovasi dan keusahawanan"))');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 8 · Anugerah & pengiktirafan inovasi dan keusahawanan"))');
     await card.waitFor();
     assert.ok((await card.innerText()).includes('Pelajar penerima: 2'), await card.innerText());
     const all = await page.locator('.cont').innerText();
     ['Ali Bin Abu', '900101145678', 'A24CS0001', 'sijil-anugerah'].forEach(x => assert.ok(!all.includes(x), 'bocor dalam dashboard: ' + x));
   });
-  await step('CKAI 2: daftar program inovasi (tarikh, tempat, penyertaan, kos, pendapatan) dan dashboard menjumlahkannya', async () => {
-    await page.click('.nav:has-text("CKAI 2")');
+  await step('CKAI 3: daftar program inovasi (tarikh, tempat, penyertaan, kos, pendapatan) dan dashboard menjumlahkannya', async () => {
+    await page.click('.nav:has-text("CKAI 3")');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_nama_program');
@@ -310,13 +311,13 @@ function buildHtml() {
     const row = await text('tbody tr');
     ['Dewan Utama', '50', '1500', 'Selesai'].forEach(x => assert.ok(row.includes(x), 'lajur senarai tiada: ' + x + ' => ' + row));
     await page.click('.nav:has-text("Dashboard")');
-    const card = page.locator('.kcard:has(.t:text-is("CKAI 2 · Bilangan program inovasi"))');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 3 · Bilangan program inovasi"))');
     await card.waitFor();
     const ct = await card.innerText();
     ['Jumlah peserta: 50', 'Daripada itu pelajar: 40', 'Kos penganjuran: RM 1,500.00', 'Pendapatan: RM 0.00'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
-  await step('CKAI 8: daftar inovasi pelajar (tanpa no. KP), anugerah pilihan, penapis calon peningkatan', async () => {
-    await page.click('.nav:has-text("CKAI 8")');
+  await step('CKAI 5: daftar inovasi pelajar (tanpa no. KP), anugerah pilihan, penapis calon peningkatan', async () => {
+    await page.click('.nav:has-text("CKAI 5")');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_tajuk_inovasi');
@@ -344,7 +345,7 @@ function buildHtml() {
     await page.selectOption('select[aria-label="Tapis Status peningkatan"]', 'Tidak diteruskan');
     await page.waitForSelector('td:has-text("Tiada rekod")');
     await page.click('.nav:has-text("Dashboard")');
-    const card = page.locator('.kcard:has(.t:text-is("CKAI 8 · Bilangan inovasi pelajar yang dihasilkan"))');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 5 · Bilangan inovasi pelajar yang dihasilkan"))');
     await card.waitFor();
     const ct = await card.innerText();
     ['Pelajar terlibat: 1', 'Memenang anugerah / pingat: 0', 'Calon peningkatan / sedang disokong: 1'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
