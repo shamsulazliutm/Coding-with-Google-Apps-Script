@@ -35,7 +35,7 @@ Sasaran tahunan, sasaran suku tahun (kumulatif) dan bajet disimpan dalam tab **S
 ## Pemasangan
 
 1. Buat projek Apps Script baharu (script.google.com) **atau** buka Sheet baharu → Extensions → Apps Script (projek terikat).
-2. Salin semua fail dalam folder ini: `*.gs`, `*.html` dan `appsscript.json` (aktifkan "Show appsscript.json manifest file" dalam Project Settings). Dengan [clasp](https://github.com/google/clasp): `clasp push` (fail ujian dan README diabaikan melalui `.claspignore`).
+2. Salin semua fail dalam folder ini: `*.gs`, `*.html` dan `appsscript.json` (aktifkan "Show appsscript.json manifest file" dalam Project Settings). Dengan [clasp](https://github.com/google/clasp): `clasp push` (fail ujian dan README diabaikan melalui `.claspignore`). `tools/` turut diabaikan; `Logo.html` mesti ikut disalin.
 3. Jalankan fungsi **`setup()`** sekali daripada editor dan luluskan kebenaran (Sheets, hantar e-mel, e-mel pengguna). Ia:
    - mencipta (atau menggunakan semula) Sheet dan semua tab: `Pengguna`, `Fakulti`, `Sasaran`, `Risiko`, `Log_Audit` dan 7 tab KPI,
    - memasukkan sasaran awal, senarai fakulti, daftar risiko daripada PDF, dan milestone awal KAI 2 / DKAI 1,
@@ -48,6 +48,16 @@ Sasaran tahunan, sasaran suku tahun (kumulatif) dan bajet disimpan dalam tab **S
 
 Satu tab untuk Admin dan PIC (e-mel di lajur A). Lajur: `emel`, `nama`, `peranan` (**Admin** atau **PIC**), `fakulti`, `kpi_akses` (contoh `KAI1,KAI4,KAI6`), `aktif` (**Ya** / **Tidak**), `dicipta_pada`.
 Boleh disunting terus dalam Sheet (drop-down disediakan bagi `peranan` dan `aktif`) atau melalui menu Admin → Urus Pengguna. Huruf besar/kecil dan ruang kosong diabaikan. Peranan selain Admin/PIC bermakna **tiada akses** (bukan PIC secara lalai). Lajur dibaca mengikut nama tajuk, jadi susunan lajur tidak penting.
+
+## Logo
+
+Logo UTM ASCEND 2030 (diambil daripada dokumen Pelan Tindakan) dipaparkan di atas sidebar. Ia disimpan dalam `Logo.html` sebagai data URI, jadi tiada hos imej luar diperlukan. Untuk menggantikannya dengan fail logo rasmi (PNG lut sinar, lebar ~240px):
+
+```
+python3 tools/make_logo_html.py logo-baharu.png
+```
+
+Logo asal direka untuk latar merah, jadi sidebar meletakkannya pada panel `#90020b`. Jika logo baharu sesuai pada latar lain, ubah warna `.brandlogo` dalam `Styles.html`.
 
 ## Perkara yang perlu disemak selepas setup
 

@@ -109,7 +109,9 @@
   }
 
   function renderSide(u) {
-    var h = '<div class="brand">' + esc(APP_NAME) + '<small>DS04 · Pekerjaan Premium Tier 1</small></div>';
+    var h = window.UTM_LOGO
+      ? '<div class="brandlogo"><img src="' + window.UTM_LOGO + '" alt="Universiti Teknologi Malaysia ASCEND 2030"><b>' + esc(APP_NAME) + '</b><small>DS04 · Pekerjaan Premium Tier 1</small></div>'
+      : '<div class="brand">' + esc(APP_NAME) + '<small>DS04 · Pekerjaan Premium Tier 1</small></div>';
     h += u
       ? '<div class="prof"><div class="av">' + esc(initials(u.nama, u.emel)) + '</div><div><b>' + esc(u.nama || u.emel) + '</b><small>' + esc(u.emel) + '</small></div></div>'
       : '<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>';

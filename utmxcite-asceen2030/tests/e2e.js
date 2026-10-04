@@ -67,6 +67,8 @@ function buildHtml() {
     assert.ok((await text('.side')).includes('Pengunjung'));
     assert.ok(!(await text('.side')).includes('Urus Pengguna'));
     assert.ok((await text('.kcard >> nth=0')).includes('KAI 1'));
+    const logoOk = await page.evaluate(() => { const i = document.querySelector('.brandlogo img'); return !!i && i.complete && i.naturalWidth > 100; });
+    assert.ok(logoOk, 'logo UTM tidak dimuatkan dalam sidebar');
     await page.screenshot({ path: path.join(out, '1-dashboard-awam.png'), fullPage: true });
   });
   await step('KAI 6 menunjukkan 7 / 20 minimum dan butiran fakulti', async () => {
