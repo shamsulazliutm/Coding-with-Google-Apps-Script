@@ -192,15 +192,19 @@ var MEASURES = {
     var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
     var order = ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'];
     var byLevel = countBy_(inYear, function (r) { return r.peringkat; }).sort(function (a, b) { return order.indexOf(a.label) - order.indexOf(b.label); });
+    var students = 0;
+    inYear.forEach(function (r) { var p = parseJson_(r.pelajar, []); if (Array.isArray(p)) students += p.length; });
     return {
       value: inYear.length,
       secondary: [
         { label: 'Peringkat kebangsaan / antarabangsa', value: inYear.filter(function (r) { return r.peringkat === 'Kebangsaan' || r.peringkat === 'Antarabangsa'; }).length },
-        { label: 'Pingat emas / johan', value: inYear.filter(function (r) { return r.pingat === 'Emas' || r.pingat === 'Johan'; }).length }
+        { label: 'Pingat emas / johan', value: inYear.filter(function (r) { return r.pingat === 'Emas' || r.pingat === 'Johan'; }).length },
+        { label: 'Pelajar penerima', value: students }
       ],
       breakdown: [
         { title: 'Mengikut peringkat', items: byLevel },
         { title: 'Mengikut kategori', items: countBy_(inYear, function (r) { return r.kategori; }) },
+        { title: 'Mengikut program', items: sortDesc_(countBy_(inYear, function (r) { return r.program; })) },
         { title: 'Mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) }
       ]
     };

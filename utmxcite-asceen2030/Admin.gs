@@ -37,9 +37,9 @@ function saveUser_(token, input) {
       var otherAdmins = table.rows.map(parseUser_).filter(function (u) { return u.peranan === ROLES.ADMIN && u.aktif && u.emel !== email; });
       if (!otherAdmins.length) throw userError_('Mesti ada sekurang-kurangnya seorang Admin aktif.');
     }
-    var row = [email, nama, role, fakulti, akses.join(','), aktif, existing ? existing.dicipta_pada : nowIso_()];
-    var sh = getSheet_(SHEETS.USERS);
-    if (existing) sh.getRange(existing._row, 1, 1, USER_COLS.length).setValues([row]); else sh.appendRow(row);
+    var obj = { emel: email, nama: nama, peranan: role, fakulti: fakulti, kpi_akses: akses.join(','), aktif: aktif };
+    if (!existing) obj.dicipta_pada = nowIso_();
+    writeRow_(getSheet_(SHEETS.USERS), existing ? existing._row : null, obj);
     audit_(admin, existing ? 'PENGGUNA_KEMAS_KINI' : 'PENGGUNA_TAMBAH', '', email, role + ' / ' + fakulti + ' / ' + akses.join(',') + ' / aktif=' + aktif);
     return true;
   } finally {
@@ -87,7 +87,7 @@ function saveTarget_(token, input) {
   if (sasaran === '') throw userError_('Sasaran tahunan wajib diisi.');
   if (kpi.jenis === 'kemajuan' && sasaran > 100) throw userError_('Sasaran kemajuan tidak boleh melebihi 100%.');
   var q = [numOrBlank(input.q1, 'Q1'), numOrBlank(input.q2, 'Q2'), numOrBlank(input.q3, 'Q3'), numOrBlank(input.q4, 'Q4')];
-  var row = [kpi.id, year, sasaran, q[0], q[1], q[2], q[3], kpi.jenis, numOrBlank(input.bajet_rm, 'bajet'), sanitizeText_(String(input.catatan || '').slice(0, 500))];
+  var obj = { kpi: kpi.id, tahun: year, sasaran: sasaran, q1: q[0], q2: q[1], q3: q[2], q4: q[3], jenis: kpi.jenis, bajet_rm: numOrBlank(input.bajet_rm, 'bajet'), catatan: sanitizeText_(String(input.catatan || '').slice(0, 500)) };
 
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -95,8 +95,7 @@ function saveTarget_(token, input) {
     var table = readTable_(SHEETS.TARGETS, { tahun: 'number' });
     var existing = null;
     table.rows.forEach(function (r) { if (r.kpi === kpi.id && r.tahun === year) existing = r; });
-    var sh = getSheet_(SHEETS.TARGETS);
-    if (existing) sh.getRange(existing._row, 1, 1, TARGET_COLS.length).setValues([row]); else sh.appendRow(row);
+    writeRow_(getSheet_(SHEETS.TARGETS), existing ? existing._row : null, obj);
     audit_(admin, 'SASARAN_KEMAS_KINI', kpi.id, String(year), 'sasaran=' + sasaran);
     clearDashCache_();
     return true;

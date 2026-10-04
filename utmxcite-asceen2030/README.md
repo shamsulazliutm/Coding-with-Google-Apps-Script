@@ -45,9 +45,11 @@ Tujuh ukuran peringkat pusat, dipaparkan dalam kumpulan **Center (CKAI)** pada d
 | 4 | Pendapatan usahawan pelajar | Satu baris sebulan bagi setiap perniagaan | Jumlah RM bagi bulan dalam tahun itu | PIC fakulti dan Admin |
 | 5 | Bilangan penggunaan Makerspace | Satu baris sebulan (jumlah bulanan) | Jumlah penggunaan bagi bulan dalam tahun itu | Admin |
 | 6 | Pendapatan sewaan inkubator | Satu baris sebulan bagi setiap penyewa | Jumlah RM berstatus **Dibayar** (belum bayar / tertunggak dipaparkan berasingan) | Admin |
-| 7 | Anugerah & pengiktirafan inovasi dan keusahawanan | Satu anugerah / pengiktirafan | Bilangan yang diterima pada tahun tarikh diterima (dipecahkan mengikut peringkat Fakulti / Universiti / Kebangsaan / Antarabangsa) | PIC fakulti (pencapaian fakulti sendiri) dan Admin |
+| 7 | Anugerah & pengiktirafan inovasi dan keusahawanan | Satu anugerah / pengiktirafan | Bilangan yang diterima pada tahun tarikh (dipecahkan mengikut peringkat, kategori, program dan fakulti) | PIC fakulti (pencapaian fakulti sendiri) dan Admin (pencapaian pusat: Fakulti = UTMXCITE) |
 
 Dashboard awam hanya menunjukkan jumlah agregat (kiraan atau jumlah RM), tanpa nama pelajar, perniagaan atau penyewa.
+
+**CKAI 7 · medan borang:** nama anugerah, tarikh, agensi / badan penganugerah, peringkat (Fakulti / Universiti / Kebangsaan / Antarabangsa), kategori (Inovasi / Keusahawanan), program (UTM Launchpad, Makerspace, GiGAUTM Ascend, F-SIP, UTM AI Start Up, program fakulti, atau Lain-lain + nama), nama mentor / fasilitator, **pelajar (nama, no. matrik, no. KP; tambah seberapa banyak yang perlu)** dan **sijil PDF**. Medan tambahan: pingat / kedudukan, nilai hadiah (RM), lokasi / negara, nama pasukan, produk / projek / syarikat, pautan berita dan catatan.
 **PIC diberi akses CKAI 1, 2, 4 dan 7** dengan menambah `CKAI1,CKAI2,CKAI4,CKAI7` pada lajur `kpi_akses` (tab `Pengguna` atau menu Urus Pengguna). CKAI 3, 5 dan 6 hanya untuk Admin.
 
 ## Pemasangan
@@ -66,6 +68,14 @@ Dashboard awam hanya menunjukkan jumlah agregat (kiraan atau jumlah RM), tanpa n
 
 Satu tab untuk Admin dan PIC (e-mel di lajur A). Lajur: `emel`, `nama`, `peranan` (**Admin** atau **PIC**), `fakulti`, `kpi_akses` (contoh `KAI1,KAI4,KAI6`), `aktif` (**Ya** / **Tidak**), `dicipta_pada`.
 Boleh disunting terus dalam Sheet (drop-down disediakan bagi `peranan` dan `aktif`) atau melalui menu Admin → Urus Pengguna. Huruf besar/kecil dan ruang kosong diabaikan. Peranan selain Admin/PIC bermakna **tiada akses** (bukan PIC secara lalai). Lajur dibaca mengikut nama tajuk, jadi susunan lajur tidak penting.
+
+## Lampiran PDF (sijil) dan data peribadi
+
+- Sijil dimuat naik sebagai **PDF sahaja, maksimum 5 MB**. Kandungan sebenar disemak (bermula dengan `%PDF-`), bukan sekadar nama fail. Nama fail dibersihkan. Had 20 muat naik sejam bagi setiap pengguna.
+- Fail disimpan dalam folder Drive **peribadi** "UTMXCITE ASCEEN2030 - Lampiran" milik pemilik skrip dan **tidak dikongsi**. Fail hanya boleh dimuat turun melalui aplikasi selepas semakan akses: PIC bagi fakulti sendiri, Admin bagi semua. Setiap muat naik dan muat turun direkod dalam `Log_Audit`.
+- Satu rekod hanya boleh merujuk fail yang baru dimuat naik oleh pengguna itu sendiri melalui aplikasi (tidak boleh merujuk fail Drive sembarangan). Fail yang diganti atau yang rekodnya dipadam dibuang ke tong sampah Drive.
+- Manifest meminta skop `https://www.googleapis.com/auth/drive` (diperlukan oleh `DriveApp`). Skop ini luas, jadi gunakan akaun pemilik skrip yang sesuai dan jangan kongsi projek Apps Script dengan orang yang tidak perlu.
+- **No. KP dan no. matrik pelajar** (CKAI 7, juga KAI 4 hingga 6 dan CKAI 3) ialah data peribadi (PDPA 2010). Ia hanya dipaparkan kepada Admin dan PIC fakulti berkenaan, tidak dipaparkan dalam jadual senarai (hanya nama), tidak dimasukkan dalam `Log_Audit`, dan tidak pernah muncul pada dashboard awam. Dalam Google Sheet, no. KP disimpan sebagai teks biasa, jadi **hadkan akses kepada Sheet** (jangan kongsi) dan tetapkan tempoh simpanan mengikut dasar universiti.
 
 ## Logo
 
@@ -103,13 +113,17 @@ Jika logo baharu memerlukan latar lain, ubah warna `.brandlogo` dalam `Styles.ht
 - Lampiran bukti disimpan sebagai **pautan** (Drive / URL), bukan muat naik fail.
 - Pencapaian dikira daripada rekod semasa pada hari dilihat, bukan salinan sejarah. Untuk tahun lepas, ia bergantung pada tarikh dalam rekod (tarikh pendaftaran, daftar, mula latihan, ditawarkan).
 
+## Susunan lajur
+
+Semua penulisan ke Sheet mengikut **nama tajuk lajur**, bukan kedudukan. Jadi lajur boleh disusun semula, atau lajur anda sendiri boleh ditambah, tanpa merosakkan data. Nama tajuk yang dikenali oleh kod mesti kekal tepat. Apabila versi baharu menambah medan, `setup()` menambah lajur baharu di hujung tab sedia ada.
+
 ## Ujian
 
 Logik pelayan diuji dengan tiruan API GAS (Node 18+):
 
 ```
 node tests/run.js        # ujian logik: OTP, akses, pengesahan, kiraan KPI dan CKAI, dashboard awam
-node tests/e2e.js        # ujian pelayar sebenar (Playwright + Chromium) menggunakan pelayan tiruan yang sama
+node tests/e2e.js        # ujian pelayar sebenar (Playwright + Chromium) menggunakan pelayan tiruan yang sama, termasuk muat naik/muat turun PDF
 ```
 
-Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, penghantaran e-mel sebenar, kelajuan Sheets). Lakukan ujian asap selepas deploy: log masuk Admin, tambah PIC, log masuk PIC, simpan satu rekod dan semak dashboard awam dalam tetingkap inkognito.
+Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, penghantaran e-mel sebenar, Drive sebenar, kelajuan Sheets, dan sama ada pelayar anda membenarkan muat turun PDF daripada halaman Apps Script). Lakukan ujian asap selepas deploy: log masuk Admin, tambah PIC, log masuk PIC, simpan satu rekod dan semak dashboard awam dalam tetingkap inkognito.

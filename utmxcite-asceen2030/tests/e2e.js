@@ -217,6 +217,64 @@ function buildHtml() {
     assert.ok((await card.innerText()).includes('Tiada sasaran'));
     await page.screenshot({ path: path.join(out, '9-dashboard-ckai.png'), fullPage: true });
   });
+  await step('CKAI 7: borang anugerah dengan pelajar berbilang dan muat naik sijil PDF', async () => {
+    await page.click('.nav:has-text("CKAI 7")');
+    await page.waitForSelector('table');
+    await page.click('[data-action="new"]');
+    await page.waitForSelector('#f_nama_anugerah');
+    await page.selectOption('#f_fakulti', 'FC');
+    await page.fill('#f_nama_anugerah', 'Anugerah Inovasi Negara');
+    await page.fill('#f_tarikh', '2026-05-12');
+    await page.fill('#f_agensi', 'MOSTI');
+    await page.selectOption('#f_peringkat', 'Kebangsaan');
+    await page.selectOption('#f_kategori', 'Inovasi');
+    await page.selectOption('#f_program', 'UTM AI Start Up');
+    await page.fill('#f_mentor', 'Dr. Mentor');
+    const pk = (i, f) => page.locator('[data-pk="pelajar"][data-pi="' + i + '"][data-pf="' + f + '"]');
+    await pk(0, 'nama').fill('Ali Bin Abu'); await pk(0, 'matrik').fill('A24CS0001'); await pk(0, 'nokp').fill('123');
+    await page.click('[data-action="padd"][data-key="pelajar"]');
+    await pk(1, 'nama').fill('Siti Binti Ahmad'); await pk(1, 'matrik').fill('A24CS0002'); await pk(1, 'nokp').fill('010203-10-1234');
+    assert.strictEqual(await page.locator('.prow').count(), 2);
+    // fail bukan PDF ditolak di klien
+    await page.setInputFiles('#f_sijil_file', { name: 'nota.txt', mimeType: 'text/plain', buffer: Buffer.from('bukan pdf') });
+    await page.waitForSelector('[data-field="sijil"].invalid .err:has-text("format PDF")');
+    // fail palsu bernama .pdf ditolak di pelayan (kandungan sebenar disemak)
+    await page.setInputFiles('#f_sijil_file', { name: 'palsu.pdf', mimeType: 'application/pdf', buffer: Buffer.from('<html>bukan pdf sebenar</html>') });
+    await page.waitForSelector('[data-field="sijil"].invalid .err:has-text("format PDF")');
+    // PDF sebenar diterima
+    await page.setInputFiles('#f_sijil_file', { name: 'sijil-anugerah.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF') });
+    await page.waitForSelector('.fileinfo:has-text("sijil-anugerah.pdf")');
+    await page.screenshot({ path: path.join(out, '10-borang-ckai7.png'), fullPage: true });
+    // no. KP pelajar 1 tidak sah: ralat jelas
+    await page.click('#savebtn');
+    await page.waitForSelector('[data-field="pelajar"].invalid .err:has-text("Pelajar 1")');
+    // betulkan, simpan
+    await pk(0, 'nokp').fill('900101-14-5678');
+    await page.click('#savebtn');
+    await page.waitForSelector('td:has-text("Anugerah Inovasi Negara")');
+    assert.ok((await text('table')).includes('Ali Bin Abu, Siti Binti Ahmad'));
+    assert.ok(!(await text('table')).includes('900101'), 'no. KP tidak boleh dipaparkan dalam jadual');
+    await page.screenshot({ path: path.join(out, '11-senarai-ckai7.png') });
+  });
+  await step('CKAI 7: muat turun sijil dan edit mengekalkan pelajar dan fail', async () => {
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("PDF")')]);
+    assert.strictEqual(dl.suggestedFilename(), 'sijil-anugerah.pdf');
+    const content = fs.readFileSync(await dl.path(), 'utf8');
+    assert.ok(content.startsWith('%PDF-1.4'), 'kandungan muat turun: ' + content.slice(0, 20));
+    await page.click('button:has-text("Edit") >> nth=0');
+    await page.waitForSelector('#kform');
+    assert.strictEqual(await page.locator('.prow').count(), 2);
+    assert.strictEqual(await page.locator('[data-pk="pelajar"][data-pi="1"][data-pf="nokp"]').inputValue(), '010203101234');
+    assert.ok((await text('.fileinfo')).includes('sijil-anugerah.pdf'));
+    await page.click('#savebtn'); // simpan tanpa muat naik semula: rujukan fail sedia ada diterima
+    await page.waitForSelector('td:has-text("Anugerah Inovasi Negara")');
+    await page.click('.nav:has-text("Dashboard")');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 7 · Anugerah & pengiktirafan inovasi dan keusahawanan"))');
+    await card.waitFor();
+    assert.ok((await card.innerText()).includes('Pelajar penerima: 2'), await card.innerText());
+    const all = await page.locator('.cont').innerText();
+    ['Ali Bin Abu', '900101145678', 'A24CS0001', 'sijil-anugerah'].forEach(x => assert.ok(!all.includes(x), 'bocor dalam dashboard: ' + x));
+  });
   await step('paparan telefon: menu boleh dibuka dan dashboard tidak melimpah mendatar', async () => {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 800 } });
     const mp = await mobile.newPage();

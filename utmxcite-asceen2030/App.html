@@ -9,7 +9,8 @@
     year: null, dash: null,
     list: null, listFilters: {}, editing: null,
     users: null, targets: null, audit: null,
-    navOpen: false, login: null, busy: false
+    navOpen: false, login: null, busy: false,
+    people: {}, files: {}
   };
 
   // ------------------------------------------------------------------ utiliti
@@ -268,11 +269,87 @@
     h += '<div class="panel"><table><thead><tr>' + k.listColumns.map(function (c) { return '<th>' + esc(colLabel(k, c)) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
     if (!S.list.rows.length) h += '<tr><td class="empty" colspan="' + (k.listColumns.length + 1) + '">Tiada rekod.</td></tr>';
     S.list.rows.forEach(function (r) {
-      h += '<tr>' + k.listColumns.map(function (c) { return '<td>' + esc(String(r[c] === undefined ? '' : r[c]).replace(/^'/, '')) + '</td>'; }).join('') +
+      h += '<tr>' + k.listColumns.map(function (c) { return '<td>' + listCell(k, r, c) + '</td>'; }).join('') +
         '<td class="act"><button class="btn o sm" data-action="edit" data-id="' + esc(r.id) + '">Edit</button>' +
         (S.list.canDelete ? ' <button class="btn d sm" data-action="del" data-id="' + esc(r.id) + '">Padam</button>' : '') + '</td></tr>';
     });
     el.innerHTML = h + '</tbody></table></div>';
+  }
+
+  // Sel senarai: pelajar = nama sahaja (no. KP tidak dipaparkan dalam jadual); fail = butang muat turun.
+  function listCell(k, r, c) {
+    var fd = fieldDef(k, c), v = r[c] === undefined ? '' : r[c];
+    if (fd && fd.type === 'people') {
+      var ps = parseJson(v, []);
+      return esc(ps.map(function (p) { return p.nama; }).join(', '));
+    }
+    if (fd && fd.type === 'file') {
+      var f = parseJson(v, null);
+      return f && f.id ? '<button class="btn o sm" data-action="fdl" data-id="' + esc(r.id) + '" data-key="' + esc(c) + '" title="' + esc(f.name || 'PDF') + '">📎 PDF</button>' : '';
+    }
+    return esc(String(v).replace(/^'/, ''));
+  }
+  function parseJson(v, fb) { if (!v) return fb; if (typeof v !== 'string') return v; try { return JSON.parse(v); } catch (e) { return fb; } }
+
+  // ---- Pelajar berbilang (nama, no. matrik, no. KP)
+  function peopleHtml(key) {
+    var arr = S.people[key] || [];
+    return arr.map(function (p, i) {
+      return '<div class="prow"><span class="pn">' + (i + 1) + '</span>' +
+        '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="nama" placeholder="Nama penuh" maxlength="120" aria-label="Nama pelajar ' + (i + 1) + '" value="' + esc(p.nama) + '">' +
+        '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="matrik" placeholder="No. matrik" maxlength="30" aria-label="No. matrik pelajar ' + (i + 1) + '" value="' + esc(p.matrik) + '">' +
+        '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="nokp" placeholder="No. KP / pasport" maxlength="20" inputmode="numeric" autocomplete="off" aria-label="No. KP pelajar ' + (i + 1) + '" value="' + esc(p.nokp) + '">' +
+        (arr.length > 1 ? '<button type="button" class="btn d sm" data-action="pdel" data-key="' + key + '" data-i="' + i + '" aria-label="Buang pelajar ' + (i + 1) + '">✕</button>' : '<span></span>') + '</div>';
+    }).join('');
+  }
+  function syncPeople(key) {
+    var arr = S.people[key] || [];
+    $$('[data-pk="' + key + '"]').forEach(function (inp) {
+      var i = parseInt(inp.getAttribute('data-pi'), 10), f = inp.getAttribute('data-pf');
+      if (arr[i]) arr[i][f] = inp.value;
+    });
+    S.people[key] = arr;
+  }
+  function redrawPeople(key) { var box = $('[data-people="' + key + '"]'); if (box) box.innerHTML = peopleHtml(key); }
+
+  // ---- Fail PDF
+  function fileHtml(k, key) {
+    var f = S.files[key];
+    var saved = S.editing && S.editing[key] ? parseJson(S.editing[key], {}) : {};
+    return (f && f.id
+      ? '<div class="fileinfo">📎 <b>' + esc(f.name) + '</b>' + (saved.id && saved.id === f.id ? ' <button type="button" class="btn o sm" data-action="fdl" data-id="' + esc(S.editing.id) + '" data-key="' + key + '">Muat turun</button>' : ' <span class="hint">(belum disimpan)</span>') + '</div>'
+      : '<div class="hint">Belum ada fail.</div>') +
+      '<input type="file" id="f_' + key + '_file" accept="application/pdf,.pdf" data-change="fupload" data-key="' + key + '" aria-label="Pilih fail PDF">' +
+      '<div class="hint" id="fs_' + key + '">' + (f && f.id ? 'Pilih fail lain untuk menggantikan.' : 'Hanya PDF, maksimum 5 MB.') + '</div>';
+  }
+  function uploadPdf(k, key, file) {
+    var st = $('#fs_' + key);
+    var w = $('[data-field="' + key + '"]'); if (w) { w.classList.remove('invalid'); $('.err', w).textContent = ''; }
+    if (!file) return;
+    if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== 'application/pdf')) { showFieldErrors(oneErr(key, 'Fail mesti dalam format PDF.')); return; }
+    if (file.size > 5 * 1024 * 1024) { showFieldErrors(oneErr(key, 'Fail terlalu besar. Maksimum 5 MB.')); return; }
+    if (st) st.textContent = 'Memuat naik…';
+    var rd = new FileReader();
+    rd.onerror = function () { showFieldErrors(oneErr(key, 'Fail tidak dapat dibaca.')); };
+    rd.onload = function () {
+      var data = String(rd.result).split(',')[1] || '';
+      call('api_uploadFile', S.token, k.id, key, { name: file.name, data: data }).then(function (r) {
+        S.files[key] = { id: r.id, name: r.name };
+        var box = $('[data-filebox="' + key + '"]'); if (box) box.innerHTML = fileHtml(k, key);
+        toast('Fail ' + r.name + ' dimuat naik. Tekan Simpan untuk melengkapkan rekod.');
+      }).catch(function (e) { if (authFail(e)) return; if (st) st.textContent = ''; showFieldErrors(oneErr(key, e.message)); });
+    };
+    rd.readAsDataURL(file);
+  }
+  function oneErr(key, msg) { var o = {}; o[key] = msg; return o; }
+  function downloadPdf(k, recId, key) {
+    call('api_downloadFile', S.token, k.id, recId, key).then(function (r) {
+      var bin = atob(r.base64), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+      var a = document.createElement('a'); a.href = url; a.download = r.name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 15000);
+    }).catch(function (e) { if (!authFail(e)) toast(e.message, true); });
   }
 
   function inputFor(k, fd, val) {
@@ -298,6 +375,12 @@
       case 'number':
         return '<input type="number" step="any" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '"' +
           (fd.min !== undefined ? ' min="' + fd.min + '"' : '') + (fd.max !== undefined ? ' max="' + fd.max + '"' : '') + '>';
+      case 'people':
+        return '<div class="people" data-people="' + fd.key + '" id="f_' + fd.key + '">' + peopleHtml(fd.key) + '</div>' +
+          '<button type="button" class="btn o sm" data-action="padd" data-key="' + fd.key + '">＋ Tambah pelajar</button>' +
+          '<div class="hint">Satu baris bagi setiap pelajar. No. KP 12 digit (sengkang tidak diperlukan) atau no. pasport.</div>';
+      case 'file':
+        return '<div class="filebox" data-filebox="' + fd.key + '" id="f_' + fd.key + '">' + fileHtml(k, fd.key) + '</div>';
       case 'month':
         return '<input type="month" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '" placeholder="YYYY-MM">';
       case 'date':
@@ -313,6 +396,11 @@
 
   function renderForm(k) {
     var rec = S.editing || {};
+    S.people = {}; S.files = {};
+    k.fields.forEach(function (fd) {
+      if (fd.type === 'people') { var ps = parseJson(rec[fd.key], []); S.people[fd.key] = ps.length ? ps.map(function (p) { return { nama: p.nama || '', matrik: p.matrik || '', nokp: p.nokp || '' }; }) : [{ nama: '', matrik: '', nokp: '' }]; }
+      if (fd.type === 'file') { var f = parseJson(rec[fd.key], null); S.files[fd.key] = f && f.id ? f : null; }
+    });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
     k.fields.forEach(function (fd) {
       if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
@@ -328,6 +416,8 @@
     var rec = {};
     if (S.editing) rec.id = S.editing.id;
     k.fields.forEach(function (fd) {
+      if (fd.type === 'people') { syncPeople(fd.key); rec[fd.key] = (S.people[fd.key] || []).filter(function (p) { return p.nama || p.matrik || p.nokp; }); return; }
+      if (fd.type === 'file') { rec[fd.key] = S.files[fd.key] || ''; return; }
       var el = document.getElementById('f_' + fd.key);
       if (!el) return;
       if (el.disabled && fd.key === 'fakulti') { rec[fd.key] = S.session.user.fakulti; return; }
@@ -504,6 +594,9 @@
       case 'lclose': S.login = null; renderModal(); break;
       case 'lback': S.login = { step: 'email', email: S.login.email }; renderModal(); break;
       case 'logout': doLogout(); break;
+      case 'padd': syncPeople(a.getAttribute('data-key')); (S.people[a.getAttribute('data-key')] || (S.people[a.getAttribute('data-key')] = [])).push({ nama: '', matrik: '', nokp: '' }); redrawPeople(a.getAttribute('data-key')); break;
+      case 'pdel': syncPeople(a.getAttribute('data-key')); S.people[a.getAttribute('data-key')].splice(parseInt(a.getAttribute('data-i'), 10), 1); redrawPeople(a.getAttribute('data-key')); break;
+      case 'fdl': if (k) downloadPdf(k, a.getAttribute('data-id'), a.getAttribute('data-key')); break;
       case 'tab': S.view.tab = a.getAttribute('data-tab'); if (S.view.tab === 'list') S.editing = null; renderKpi(); break;
       case 'new': S.editing = null; S.view.tab = 'form'; renderKpi(); break;
       case 'cancelform': S.editing = null; S.view.tab = 'list'; renderKpi(); break;
@@ -561,6 +654,7 @@
   document.addEventListener('change', function (ev) {
     var c = ev.target.getAttribute && ev.target.getAttribute('data-change');
     if (!c) return;
+    if (c === 'fupload') { var kk = kpiById(S.view.id); if (kk) uploadPdf(kk, ev.target.getAttribute('data-key'), ev.target.files && ev.target.files[0]); return; }
     if (c === 'year') { S.dash = null; loadDashboard(parseInt(ev.target.value, 10)); }
     if (c === 'fstatus') { S.listFilters.status = ev.target.value; S.list = null; renderKpi(); }
     if (c === 'ffak') { S.listFilters.fakulti = ev.target.value; S.list = null; renderKpi(); }

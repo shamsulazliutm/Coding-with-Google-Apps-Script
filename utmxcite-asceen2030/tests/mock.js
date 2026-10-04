@@ -74,6 +74,9 @@ function loadGas(opts = {}) {
       getUuid: () => crypto.randomUUID(),
       DigestAlgorithm: { SHA_256: 'sha256' },
       Charset: { UTF_8: 'utf8' },
+      base64Decode: (str) => Array.from(Buffer.from(str, 'base64')).map(b => (b > 127 ? b - 256 : b)),
+      base64Encode: (bytes) => Buffer.from(bytes.map(b => b & 0xff)).toString('base64'),
+      newBlob: (bytes, mime, name) => ({ getBytes: () => bytes, getName: () => name, getContentType: () => mime }),
       computeDigest: (alg, s) => Array.from(crypto.createHash('sha256').update(s, 'utf8').digest()).map(b => (b > 127 ? b - 256 : b)),
       formatDate: (d, tz, fmt) => {
         const k = kl(d);
@@ -81,6 +84,31 @@ function loadGas(opts = {}) {
         return fmt.replace(/'T'/g, 'T').replace(/yyyy|MM|dd|HH|mm|ss|M/g, t => map[t]);
       }
     },
+    DriveApp: (() => {
+      const files = {}, folders = {};
+      let n = 0;
+      const mkBlob = (bytes, mime, name) => ({ getBytes: () => bytes, getName: () => name, getContentType: () => mime });
+      class File {
+        constructor(blob, folder) { this.id = 'FILE' + (++n) + 'abcdefghijklmn'; this.name = blob.getName(); this.bytes = blob.getBytes(); this.trashed = false; this.folder = folder; files[this.id] = this; }
+        getId() { return this.id; }
+        getName() { return this.name; }
+        getBlob() { return mkBlob(this.bytes, 'application/pdf', this.name); }
+        setTrashed(t) { this.trashed = t; }
+        getParents() { const arr = [this.folder]; let i = 0; return { hasNext: () => i < arr.length, next: () => arr[i++] }; }
+      }
+      class Folder {
+        constructor(name) { this.name = name; this.id = 'FOLDER' + (++n) + 'abcdefghij'; folders[this.id] = this; }
+        getId() { return this.id; }
+        createFile(blob) { return new File(blob, this); }
+      }
+      const outside = new Folder('Folder lain (bukan lampiran)');
+      return {
+        _files: files, _outside: outside,
+        createFolder: (name) => new Folder(name),
+        getFolderById: (id) => { if (!folders[id]) throw new Error('folder tiada'); return folders[id]; },
+        getFileById: (id) => { if (!files[id]) throw new Error('fail tiada'); return files[id]; }
+      };
+    })(),
     SpreadsheetApp: {
       create: (n) => new Spreadsheet(n),
       openById: (id) => spreadsheets[id],
@@ -108,7 +136,7 @@ function loadGas(opts = {}) {
   };
   vm.createContext(sandbox);
   const dir = path.join(__dirname, '..');
-  ['Config', 'Util', 'Setup', 'Auth', 'Data', 'Metrics', 'Admin', 'Code'].forEach(f => {
+  ['Config', 'Util', 'Setup', 'Auth', 'Data', 'Files', 'Metrics', 'Admin', 'Code'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(dir, f + '.gs'), 'utf8'), sandbox, { filename: f + '.gs' });
   });
   return { g: sandbox, sent, props, cacheStore, spreadsheets, clock };

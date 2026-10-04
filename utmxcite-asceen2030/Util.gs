@@ -127,6 +127,31 @@ function readTable_(name, types) {
   return { headers: headers, rows: rows };
 }
 
+/**
+ * Tulis satu baris mengikut NAMA tajuk (bukan kedudukan lajur). Lajur yang tiada dalam `obj` dikekalkan
+ * (kemas kini) atau dibiarkan kosong (baris baharu). Jadi susunan lajur dalam Sheet tidak penting.
+ */
+function writeRow_(sh, rowNum, obj) {
+  var lc = sh.getLastColumn();
+  var headers = sh.getRange(1, 1, 1, lc).getValues()[0].map(String);
+  var base = rowNum ? sh.getRange(rowNum, 1, 1, lc).getValues()[0] : headers.map(function () { return ''; });
+  var out = headers.map(function (h, i) {
+    if (!Object.prototype.hasOwnProperty.call(obj, h)) return base[i];
+    return obj[h] === null || obj[h] === undefined ? '' : obj[h];
+  });
+  if (rowNum) sh.getRange(rowNum, 1, 1, lc).setValues([out]); else sh.appendRow(out);
+}
+
+/** Tulis banyak baris sekaligus. `cols` = nama lajur bagi setiap elemen dalam `rows` (tatasusunan). */
+function writeRows_(sh, cols, rows) {
+  if (!rows.length) return;
+  var lc = sh.getLastColumn();
+  var headers = sh.getRange(1, 1, 1, lc).getValues()[0].map(String);
+  var idx = headers.map(function (h) { return cols.indexOf(h); });
+  var matrix = rows.map(function (r) { return idx.map(function (j) { return j < 0 || r[j] === undefined ? '' : r[j]; }); });
+  sh.getRange(sh.getLastRow() + 1, 1, matrix.length, lc).setValues(matrix);
+}
+
 function rowArray_(headers, obj) {
   return headers.map(function (h) { return obj[h] === undefined || obj[h] === null ? '' : obj[h]; });
 }
@@ -148,10 +173,42 @@ function kpiColumns_(kpi) {
 function audit_(user, action, kpi, recordId, summary) {
   try {
     var sh = getSheet_(SHEETS.AUDIT);
-    sh.appendRow([nowIso_(), user ? user.emel : '', action, kpi || '', recordId || '', sanitizeText_(String(summary || '').slice(0, 500))]);
+    writeRow_(sh, null, { masa: nowIso_(), emel: user ? user.emel : '', tindakan: action, kpi: kpi || '', rekod_id: recordId || '', ringkasan: sanitizeText_(String(summary || '').slice(0, 500)) });
   } catch (e) {
     console.error('Gagal merekod audit: ' + e);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Lampiran (Google Drive): satu folder peribadi yang dimiliki pemilik skrip.
+// ---------------------------------------------------------------------------
+function getAttachFolder_() {
+  var id = getProp_('FOLDER_ID');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* folder dipadam: cipta semula */ } }
+  var f = DriveApp.createFolder('UTMXCITE ASCEEN2030 - Lampiran');
+  setProp_('FOLDER_ID', f.getId());
+  return f;
+}
+
+function fileInFolder_(file) {
+  var folderId = getAttachFolder_().getId();
+  var it = file.getParents();
+  while (it.hasNext()) { if (it.next().getId() === folderId) return true; }
+  return false;
+}
+
+function parseJson_(v, fallback) {
+  if (v === '' || v === null || v === undefined) return fallback;
+  if (typeof v !== 'string') return v;
+  try { return JSON.parse(v); } catch (e) { return fallback; }
+}
+
+function trashFile_(id) {
+  try {
+    if (!id) return;
+    var f = DriveApp.getFileById(id);
+    if (fileInFolder_(f)) f.setTrashed(true);
+  } catch (e) { console.warn('Gagal membuang fail lampiran: ' + e); }
 }
 
 function clearDashCache_() {
