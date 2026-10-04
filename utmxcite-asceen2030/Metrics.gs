@@ -109,7 +109,28 @@ var MEASURES = {
   },
 
 
-  // CKAI 1 dan 2: program yang SELESAI pada tahun itu (mengikut tarikh tamat), termasuk penyertaan, kos dan pendapatan.
+  // CKAI 1: bilangan profiling pelajar yang didaftarkan pada tahun itu (satu profil bagi setiap pelajar).
+  profiling: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh_profiling) === year; });
+    var order = ['Tiada minat', 'Rendah', 'Sederhana', 'Tinggi'];
+    var ready = ['Belum ada idea', 'Ada idea', 'Ada prototaip / MVP', 'Sudah beroperasi'];
+    return {
+      value: inYear.length,
+      secondary: [
+        { label: 'Berminat (sederhana / tinggi)', value: inYear.filter(function (r) { return r.tahap_minat === 'Sederhana' || r.tahap_minat === 'Tinggi'; }).length },
+        { label: 'Sudah ada idea / prototaip / berniaga', value: inYear.filter(function (r) { return r.tahap_kesediaan && r.tahap_kesediaan !== 'Belum ada idea'; }).length },
+        { label: 'Sedang berniaga', value: inYear.filter(function (r) { return r.pengalaman_perniagaan === 'Sedang berniaga'; }).length }
+      ],
+      breakdown: [
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) },
+        { title: 'Mengikut tahap minat', items: countBy_(inYear, function (r) { return r.tahap_minat; }).sort(function (a, b) { return order.indexOf(a.label) - order.indexOf(b.label); }) },
+        { title: 'Mengikut tahap kesediaan', items: countBy_(inYear, function (r) { return r.tahap_kesediaan || '(tiada)'; }).sort(function (a, b) { return ready.indexOf(a.label) - ready.indexOf(b.label); }) },
+        { title: 'Mengikut sumber profiling', items: sortDesc_(countBy_(inYear, function (r) { return r.sumber_profiling; })) }
+      ]
+    };
+  },
+
+  // CKAI 2 dan 3: program yang SELESAI pada tahun itu (mengikut tarikh tamat), termasuk penyertaan, kos dan pendapatan.
   program: function (kpi, rows, year) {
     var done = rows.filter(function (r) { return r.status === 'Selesai' && yearOf_(r.tarikh_tamat) === year; });
     var upcoming = rows.filter(function (r) { return (r.status === 'Dirancang' || r.status === 'Sedang berjalan') && yearOf_(r.tarikh_mula) === year; });
@@ -131,7 +152,7 @@ var MEASURES = {
     };
   },
 
-  // CKAI 3: pendaftaran SSU (Sistem Syarikat Universiti) pada tahun itu.
+  // CKAI 4: pendaftaran SSU (Sistem Syarikat Universiti) pada tahun itu.
   ssu: function (kpi, rows, year) {
     var reg = rows.filter(function (r) { return yearOf_(r.tarikh_daftar) === year; });
     return {
@@ -141,7 +162,7 @@ var MEASURES = {
     };
   },
 
-  // CKAI 4: jumlah pendapatan usahawan pelajar (RM) bagi bulan-bulan dalam tahun itu.
+  // CKAI 7: jumlah pendapatan usahawan pelajar (RM) bagi bulan-bulan dalam tahun itu.
   income: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
     var total = sumOf_(inYear, 'pendapatan_rm');
@@ -218,7 +239,7 @@ var MEASURES = {
     };
   },
 
-  // CKAI 7: anugerah dan pengiktirafan inovasi / keusahawanan yang diterima pada tahun itu.
+  // CKAI 9: anugerah dan pengiktirafan inovasi / keusahawanan yang diterima pada tahun itu.
   award: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
     var order = ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'];
@@ -339,7 +360,7 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
   var t = (targets[kpi.id] || {})[year] || null;
   var target = t && t.sasaran !== '' ? t.sasaran : '';
   var card = {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, stage: kpi.stage || null, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, fungsi: kpi.fungsi || null, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
     value: m.value, target: target,
     pct: target !== '' && target > 0 ? round1_(m.value / target * 100) : null,
     status: statusFor_(kpi, m.value, target),
@@ -368,7 +389,7 @@ function computeDashboard_(year) {
   var withTarget = cards.filter(function (c) { return c.target !== ''; }).length;
   var meet = cards.filter(function (c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }).length;
   return {
-    year: year, years: APP.YEARS, levels: LEVELS, stages: CKAI_STAGES, generatedAt: nowIso_(),
+    year: year, years: APP.YEARS, levels: LEVELS, functions: FUNCTIONS, generatedAt: nowIso_(),
     ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)', owner: 'Pengarah UTMXCITE' },
     summary: { total: withTarget, meet: meet },
     kpis: cards

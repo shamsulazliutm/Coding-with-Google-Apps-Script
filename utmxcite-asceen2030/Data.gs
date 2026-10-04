@@ -2,7 +2,7 @@
 
 function kpiSchema_(kpi) {
   return {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, stage: kpi.stage || null, unit: kpi.unit, entry: kpi.entry,
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, fungsi: kpi.fungsi || null, unit: kpi.unit, entry: kpi.entry,
     listColumns: kpi.listColumns, statusField: kpi.statusField, filter2: kpi.filter2 || null, facultyWhitelist: kpi.facultyWhitelist || null,
     fields: kpi.fields
   };
@@ -14,7 +14,7 @@ function sessionInfo_(token) {
     user: publicUser_(user),
     faculties: listFaculties_(),
     levels: LEVELS,
-    stages: CKAI_STAGES,
+    functions: FUNCTIONS,
     kpis: accessibleKpis_(user).map(kpiSchema_)
   };
 }
@@ -194,6 +194,20 @@ function saveRecord_(token, kpiId, rec) {
 
     var v = validateRecord_(kpi, input, listFaculties_(), user, existing);
     if (Object.keys(v.errors).length) throw userError_('Sila betulkan medan yang bertanda.', { fields: v.errors });
+
+    // Medan unik (contoh: satu profil bagi setiap no. matrik).
+    (kpi.unique || []).forEach(function (key) {
+      var val = String(v.clean[key] === undefined ? '' : v.clean[key]).replace(/^'/, '').toLowerCase();
+      if (!val) return;
+      var dup = table.rows.filter(function (r) { return r.id !== id && String(r[key]).replace(/^'/, '').toLowerCase() === val; })[0];
+      if (dup) {
+        var dupFields = {};
+        // ID rekod hanya didedahkan kepada Admin atau PIC fakulti yang sama (elak mendedahkan rekod fakulti lain).
+        var sameScope = !isPic || dup.fakulti === undefined || dup.fakulti === user.fakulti;
+        dupFields[key] = 'Sudah didaftarkan' + (sameScope ? ' (' + dup.id + ')' : '') + '.';
+        throw userError_('Sila betulkan medan yang bertanda.', { fields: dupFields });
+      }
+    });
 
     var obj, action, summary;
     if (existing) {

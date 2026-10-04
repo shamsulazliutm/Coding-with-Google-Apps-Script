@@ -10,7 +10,7 @@
     list: null, listFilters: {}, editing: null,
     users: null, targets: null, audit: null,
     navOpen: false, login: null, busy: false,
-    people: {}, files: {}, peopleKp: {}
+    people: {}, files: {}, peopleKp: {}, dashView: 'level'
   };
 
   // ------------------------------------------------------------------ utiliti
@@ -69,6 +69,8 @@
     var k = (S.session && S.session.kpis || []).filter(function (x) { return x.id === id; });
     return k[0] || null;
   }
+  function fnById(list, id) { return (list || []).filter(function (x) { return x.id === id; })[0] || null; }
+  function fnLabel(f) { return (f.no ? f.no + ' · ' : '') + f.label; }
   function isAdmin() { return S.session && S.session.user.peranan === 'Admin'; }
 
   // Dialog pengesahan dalam halaman (window.confirm mungkin disekat dalam iframe kotak pasir).
@@ -124,10 +126,10 @@
         h += '<div class="sec">' + esc(lv.label) + '</div>';
         var lastStage = null;
         ks.forEach(function (k) {
-          if (k.stage && k.stage !== lastStage) {
-            lastStage = k.stage;
-            var st = (S.session.stages || []).filter(function (x) { return x.id === k.stage; })[0];
-            if (st) h += '<div class="stagelbl">' + esc(st.label) + '</div>';
+          if (k.fungsi && lv.id === 'CKAI' && k.fungsi !== lastStage) {
+            lastStage = k.fungsi;
+            var fn = fnById(S.session.functions, k.fungsi);
+            if (fn) h += '<div class="stagelbl" title="' + esc(fn.ms) + '">' + esc(fnLabel(fn)) + '</div>';
           }
           h += navBtn('kpi:' + k.id, '◆', k.title.replace(/ · .*/, '') + ' · ' + k.short, S.view.name === 'kpi' && S.view.id === k.id);
         });
@@ -226,22 +228,34 @@
     var h = (!S.session ? '<div class="pub">Paparan awam · hanya data ringkasan ditunjukkan. Log masuk diperlukan untuk mengemas kini data.</div>' : '');
     h += '<div class="bar-top"><label for="yr" style="margin:0">Tahun</label><select id="yr" data-change="year">' +
       d.years.map(function (y) { return '<option' + (y === d.year ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
+      '<div class="seg" role="group" aria-label="Paparan dashboard"><button type="button" data-action="dview" data-view="level" class="' + (S.dashView === 'level' ? 'on' : '') + '" aria-pressed="' + (S.dashView === 'level') + '">Mengikut peringkat</button>' +
+      '<button type="button" data-action="dview" data-view="fungsi" class="' + (S.dashView === 'fungsi' ? 'on' : '') + '" aria-pressed="' + (S.dashView === 'fungsi') + '">Mengikut fungsi</button></div>' +
       '<span class="grow sec2">Dikemas kini: ' + esc(String(d.generatedAt).replace('T', ' ')) + '</span></div>';
     h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
       '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div></div>';
-    d.levels.forEach(function (lv) {
-      var cs = d.kpis.filter(function (c) { return c.level === lv.id; });
-      if (!cs.length) return;
-      h += '<div class="grp">' + esc(lv.label) + '</div>';
-      if (cs.some(function (c) { return c.stage; })) {
-        (d.stages || []).forEach(function (st) {
-          var sc = cs.filter(function (c) { return c.stage === st.id; });
-          if (sc.length) h += '<div class="sub">' + esc(st.label) + '</div><div class="grid">' + sc.map(renderCard).join('') + '</div>';
-        });
-      } else {
-        h += '<div class="grid">' + cs.map(renderCard).join('') + '</div>';
-      }
-    });
+    function fnHead(f) { return '<div class="sub"><b>' + esc(fnLabel(f)) + '</b><span class="subms">' + esc(f.ms) + '</span></div>'; }
+    if (S.dashView === 'fungsi') {
+      // Paparan mengikut enam fungsi UTMXCITE: setiap fungsi menunjukkan semua indikator berkaitan (KAI, DKAI dan CKAI).
+      d.functions.forEach(function (f) {
+        var fc = d.kpis.filter(function (c) { return c.fungsi === f.id; });
+        if (!fc.length) return;
+        h += '<div class="grp">' + esc(fnLabel(f)) + '<span class="grpms">' + esc(f.ms) + '</span></div><div class="grid">' + fc.map(renderCard).join('') + '</div>';
+      });
+    } else {
+      d.levels.forEach(function (lv) {
+        var cs = d.kpis.filter(function (c) { return c.level === lv.id; });
+        if (!cs.length) return;
+        h += '<div class="grp">' + esc(lv.label) + '</div>';
+        if (lv.id === 'CKAI') {
+          d.functions.forEach(function (f) {
+            var sc = cs.filter(function (c) { return c.fungsi === f.id; });
+            if (sc.length) h += fnHead(f) + '<div class="grid">' + sc.map(renderCard).join('') + '</div>';
+          });
+        } else {
+          h += '<div class="grid">' + cs.map(renderCard).join('') + '</div>';
+        }
+      });
+    }
     el.innerHTML = h;
   }
 
@@ -609,6 +623,7 @@
       case 'lclose': S.login = null; renderModal(); break;
       case 'lback': S.login = { step: 'email', email: S.login.email }; renderModal(); break;
       case 'logout': doLogout(); break;
+      case 'dview': S.dashView = a.getAttribute('data-view'); renderDashboard(); break;
       case 'padd': syncPeople(a.getAttribute('data-key')); (S.people[a.getAttribute('data-key')] || (S.people[a.getAttribute('data-key')] = [])).push({ nama: '', matrik: '', nokp: '' }); redrawPeople(a.getAttribute('data-key')); break;
       case 'pdel': syncPeople(a.getAttribute('data-key')); S.people[a.getAttribute('data-key')].splice(parseInt(a.getAttribute('data-i'), 10), 1); redrawPeople(a.getAttribute('data-key')); break;
       case 'fdl': if (k) downloadPdf(k, a.getAttribute('data-id'), a.getAttribute('data-key')); break;

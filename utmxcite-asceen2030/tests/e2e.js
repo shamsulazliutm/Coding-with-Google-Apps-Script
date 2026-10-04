@@ -62,12 +62,13 @@ function buildHtml() {
   const text = async (sel) => (await page.locator(sel).innerText());
 
   console.log('Pelayar (Chromium)');
-  await step('dashboard awam dimuatkan tanpa log masuk (15 kad: 7 KPI + 8 CKAI)', async () => {
+  await step('dashboard awam dimuatkan tanpa log masuk (16 kad: 7 KPI + 9 CKAI)', async () => {
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 15);
+    assert.strictEqual(await page.locator('.kcard').count(), 16);
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.toUpperCase());
     deepEq(heads, ['KAI · PERINGKAT UNIVERSITI', 'DKAI · PERINGKAT JABATAN (JTNC HEPA)', 'CKAI · PERINGKAT PUSAT (UTMXCITE)']);
-    deepEq((await page.locator('.sub').allInnerTexts()).map(t => t.toUpperCase()), ['1 · PENDAFTARAN', '2 · PEMBANGUNAN', '3 · HASIL', '4 · PENGIKTIRAFAN']);
+    deepEq((await page.locator('.sub b').allInnerTexts()).map(t => t.toUpperCase()), ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE']);
+    assert.ok((await text('.cont')).includes('Kenal pasti minat keusahawanan pelajar'), 'terjemahan Melayu fungsi tiada');
     assert.strictEqual(await page.locator('.tag', { hasText: 'Department' }).count(), 1);
     assert.strictEqual(await page.locator('.tag', { hasText: 'Internal' }).count(), 0);
     assert.ok((await text('.side')).includes('Pengunjung'));
@@ -100,7 +101,7 @@ function buildHtml() {
     await page.click('button:has-text("Sahkan")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
     assert.ok((await text('.side')).includes('Urus Pengguna'));
-    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 15);
+    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 16);
     await page.screenshot({ path: path.join(out, '2-dashboard-admin.png') });
   });
   await step('OTP salah menunjukkan ralat', async () => {
@@ -202,8 +203,8 @@ function buildHtml() {
     await page.click('#cyes');
     await page.waitForFunction((n) => document.querySelectorAll('tbody tr').length === n, before - 1);
   });
-  await step('Admin merekod pendapatan CKAI 6 (input bulan) dan dashboard memaparkan RM', async () => {
-    await page.click('.nav:has-text("CKAI 6")');
+  await step('Admin merekod pendapatan CKAI 7 (input bulan) dan dashboard memaparkan RM', async () => {
+    await page.click('.nav:has-text("CKAI 7")');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_tempoh');
@@ -216,14 +217,14 @@ function buildHtml() {
     await page.click('#savebtn');
     await page.waitForSelector('td:has-text("Kedai E2E")');
     await page.click('.nav:has-text("Dashboard")');
-    const card = page.locator('.kcard:has(.t:text-is("CKAI 6 · Pendapatan usahawan pelajar"))');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 7 · Pendapatan usahawan pelajar"))');
     await card.waitFor();
     assert.ok((await card.innerText()).includes('RM 1,500.50'), await card.innerText());
     assert.ok((await card.innerText()).includes('Tiada sasaran'));
     await page.screenshot({ path: path.join(out, '9-dashboard-ckai.png'), fullPage: true });
   });
-  await step('CKAI 8: borang anugerah dengan pelajar berbilang dan muat naik sijil PDF', async () => {
-    await page.click('.nav:has-text("CKAI 8")');
+  await step('CKAI 9: borang anugerah dengan pelajar berbilang dan muat naik sijil PDF', async () => {
+    await page.click('.nav:has-text("CKAI 9")');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_nama_anugerah');
@@ -261,7 +262,7 @@ function buildHtml() {
     assert.ok(!(await text('table')).includes('900101'), 'no. KP tidak boleh dipaparkan dalam jadual');
     await page.screenshot({ path: path.join(out, '11-senarai-ckai7.png') });
   });
-  await step('CKAI 8: muat turun sijil dan edit mengekalkan pelajar dan fail', async () => {
+  await step('CKAI 9: muat turun sijil dan edit mengekalkan pelajar dan fail', async () => {
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("PDF")')]);
     assert.strictEqual(dl.suggestedFilename(), 'sijil-anugerah.pdf');
     const content = fs.readFileSync(await dl.path(), 'utf8');
@@ -274,7 +275,7 @@ function buildHtml() {
     await page.click('#savebtn'); // simpan tanpa muat naik semula: rujukan fail sedia ada diterima
     await page.waitForSelector('td:has-text("Anugerah Inovasi Negara")');
     await page.click('.nav:has-text("Dashboard")');
-    const card = page.locator('.kcard:has(.t:text-is("CKAI 8 · Anugerah & pengiktirafan inovasi dan keusahawanan"))');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 9 · Anugerah & pengiktirafan inovasi dan keusahawanan"))');
     await card.waitFor();
     assert.ok((await card.innerText()).includes('Pelajar penerima: 2'), await card.innerText());
     const all = await page.locator('.cont').innerText();
@@ -316,8 +317,8 @@ function buildHtml() {
     const ct = await card.innerText();
     ['Jumlah peserta: 50', 'Daripada itu pelajar: 40', 'Kos penganjuran: RM 1,500.00', 'Pendapatan: RM 0.00'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
-  await step('CKAI 5: daftar inovasi pelajar (tanpa no. KP), anugerah pilihan, penapis calon peningkatan', async () => {
-    await page.click('.nav:has-text("CKAI 5")');
+  await step('CKAI 8: daftar inovasi pelajar (tanpa no. KP), anugerah pilihan, penapis calon peningkatan', async () => {
+    await page.click('.nav:has-text("CKAI 8")');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_tajuk_inovasi');
@@ -345,10 +346,64 @@ function buildHtml() {
     await page.selectOption('select[aria-label="Tapis Status peningkatan"]', 'Tidak diteruskan');
     await page.waitForSelector('td:has-text("Tiada rekod")');
     await page.click('.nav:has-text("Dashboard")');
-    const card = page.locator('.kcard:has(.t:text-is("CKAI 5 · Bilangan inovasi pelajar yang dihasilkan"))');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 8 · Bilangan inovasi pelajar yang dihasilkan"))');
     await card.waitFor();
     const ct = await card.innerText();
     ['Pelajar terlibat: 1', 'Memenang anugerah / pingat: 0', 'Calon peningkatan / sedang disokong: 1'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
+  });
+  await step('Dashboard: tukar paparan antara peringkat dan fungsi (enam fungsi UTMXCITE)', async () => {
+    await page.click('.nav:has-text("Dashboard")');
+    await page.waitForSelector('.seg');
+    await page.click('[data-action="dview"][data-view="fungsi"]');
+    await page.waitForSelector('.grp:has-text("Cross-cutting")');
+    assert.strictEqual(await page.locator('.grp').count(), 7);
+    assert.strictEqual(await page.locator('.kcard').count(), 16); // semua indikator, dikelompokkan semula
+    const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.split('\n')[0].toUpperCase());
+    deepEq(heads, ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE', 'CROSS-CUTTING']);
+    // fungsi 4 menghimpun KAI 1, 2, 3, 5, 6 dan CKAI 4, 5, 6
+    const startup = page.locator('.grp:has-text("Facilitate Student Startup Development") + .grid .kcard');
+    assert.strictEqual(await startup.count(), 8);
+    await page.screenshot({ path: path.join(out, '14-dashboard-fungsi.png'), fullPage: true });
+    await page.click('[data-action="dview"][data-view="level"]');
+    await page.waitForSelector('.grp:has-text("KAI · PERINGKAT UNIVERSITI"), .grp:has-text("KAI · Peringkat Universiti")');
+  });
+  await step('CKAI 1: daftar profiling pelajar (persetujuan PDPA wajib, satu profil bagi setiap no. matrik)', async () => {
+    await page.click('.nav:has-text("CKAI 1")');
+    await page.waitForSelector('table');
+    await page.click('[data-action="new"]');
+    await page.waitForSelector('#f_nama_pelajar');
+    await page.selectOption('#f_fakulti', 'FC');
+    await page.fill('#f_nama_pelajar', 'Nur Profil');
+    await page.fill('#f_no_matrik', 'A24PF9001');
+    await page.fill('#f_tarikh_profiling', '2026-05-05');
+    await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
+    await page.selectOption('#f_tahap_minat', 'Tinggi');
+    await page.selectOption('#f_tahap_kesediaan', 'Ada idea');
+    await page.selectOption('#f_persetujuan', 'Tidak');
+    await page.click('#savebtn');
+    await page.waitForSelector('[data-field="persetujuan"].invalid .err:has-text("persetujuan pelajar")');
+    await page.selectOption('#f_persetujuan', 'Ya');
+    await page.screenshot({ path: path.join(out, '15-borang-profiling.png'), fullPage: true });
+    await page.click('#savebtn');
+    await page.waitForSelector('td:has-text("Nur Profil")');
+    // no. matrik yang sama ditolak
+    await page.click('[data-action="new"]');
+    await page.waitForSelector('#f_nama_pelajar');
+    await page.selectOption('#f_fakulti', 'FC');
+    await page.fill('#f_nama_pelajar', 'Duplikasi');
+    await page.fill('#f_no_matrik', 'a24pf9001');
+    await page.fill('#f_tarikh_profiling', '2026-05-06');
+    await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
+    await page.selectOption('#f_tahap_minat', 'Rendah');
+    await page.selectOption('#f_persetujuan', 'Ya');
+    await page.click('#savebtn');
+    await page.waitForSelector('[data-field="no_matrik"].invalid .err:has-text("Sudah didaftarkan")');
+    await page.click('[data-action="cancelform"]');
+    await page.click('.nav:has-text("Dashboard")');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 1 · Bilangan profiling pelajar yang didaftarkan"))');
+    await card.waitFor();
+    const ct = await card.innerText();
+    ['Berminat (sederhana / tinggi): 1', 'profiling didaftarkan'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
   await step('paparan telefon: menu boleh dibuka dan dashboard tidak melimpah mendatar', async () => {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 800 } });
