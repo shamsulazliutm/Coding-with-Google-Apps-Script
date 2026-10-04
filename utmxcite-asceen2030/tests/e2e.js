@@ -62,9 +62,9 @@ function buildHtml() {
   const text = async (sel) => (await page.locator(sel).innerText());
 
   console.log('Pelayar (Chromium)');
-  await step('dashboard awam dimuatkan tanpa log masuk (14 kad: 7 KPI + 7 CKAI)', async () => {
+  await step('dashboard awam dimuatkan tanpa log masuk (15 kad: 7 KPI + 8 CKAI)', async () => {
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 14);
+    assert.strictEqual(await page.locator('.kcard').count(), 15);
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.toUpperCase());
     deepEq(heads, ['KAI · PERINGKAT UNIVERSITI', 'DKAI · PERINGKAT JABATAN (JTNC HEPA)', 'CKAI · PERINGKAT PUSAT (UTMXCITE)']);
     assert.strictEqual(await page.locator('.tag', { hasText: 'Department' }).count(), 1);
@@ -99,7 +99,7 @@ function buildHtml() {
     await page.click('button:has-text("Sahkan")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
     assert.ok((await text('.side')).includes('Urus Pengguna'));
-    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 14);
+    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 15);
     await page.screenshot({ path: path.join(out, '2-dashboard-admin.png') });
   });
   await step('OTP salah menunjukkan ralat', async () => {
@@ -314,6 +314,40 @@ function buildHtml() {
     await card.waitFor();
     const ct = await card.innerText();
     ['Jumlah peserta: 50', 'Daripada itu pelajar: 40', 'Kos penganjuran: RM 1,500.00', 'Pendapatan: RM 0.00'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
+  });
+  await step('CKAI 8: daftar inovasi pelajar (tanpa no. KP), anugerah pilihan, penapis calon peningkatan', async () => {
+    await page.click('.nav:has-text("CKAI 8")');
+    await page.waitForSelector('table');
+    await page.click('[data-action="new"]');
+    await page.waitForSelector('#f_tajuk_inovasi');
+    await page.selectOption('#f_fakulti', 'FKE');
+    await page.fill('#f_tajuk_inovasi', 'Robot Penyusun Sampah');
+    await page.selectOption('#f_jenis_inovasi', 'Produk fizikal');
+    await page.fill('#f_mentor', 'Prof. Penyelia');
+    assert.strictEqual(await page.locator('[data-pk="pelajar"][data-pf="nokp"]').count(), 0); // tiada medan no. KP
+    await page.locator('[data-pk="pelajar"][data-pi="0"][data-pf="nama"]').fill('Ahmad Inovator');
+    await page.locator('[data-pk="pelajar"][data-pi="0"][data-pf="matrik"]').fill('A24EE0001');
+    await page.selectOption('#f_status_penyertaan', 'Telah menyertai');
+    await page.fill('#f_nama_pertandingan', 'Pertandingan Inovasi Fakulti');
+    await page.selectOption('#f_peringkat', 'Fakulti');
+    await page.fill('#f_tarikh', '2026-05-02');
+    await page.selectOption('#f_status_peningkatan', 'Calon peningkatan');
+    await page.click('#savebtn');
+    await page.waitForSelector('[data-field="peringkat_sasaran"].invalid .err:has-text("Wajib diisi")');
+    await page.selectOption('#f_peringkat_sasaran', 'Kebangsaan');
+    await page.screenshot({ path: path.join(out, '13-borang-inovasi.png'), fullPage: true });
+    await page.click('#savebtn'); // tiada pingat / anugerah: sah
+    await page.waitForSelector('td:has-text("Robot Penyusun Sampah")');
+    // penapis status peningkatan
+    await page.selectOption('select[aria-label="Tapis Status peningkatan"]', 'Calon peningkatan');
+    await page.waitForSelector('td:has-text("Robot Penyusun Sampah")');
+    await page.selectOption('select[aria-label="Tapis Status peningkatan"]', 'Tidak diteruskan');
+    await page.waitForSelector('td:has-text("Tiada rekod")');
+    await page.click('.nav:has-text("Dashboard")');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 8 · Bilangan inovasi pelajar yang dihasilkan"))');
+    await card.waitFor();
+    const ct = await card.innerText();
+    ['Pelajar terlibat: 1', 'Memenang anugerah / pingat: 0', 'Calon peningkatan / sedang disokong: 1'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
   await step('paparan telefon: menu boleh dibuka dan dashboard tidak melimpah mendatar', async () => {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 800 } });

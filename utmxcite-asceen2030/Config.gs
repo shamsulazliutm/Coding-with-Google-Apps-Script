@@ -496,6 +496,46 @@ var KPIS = [
       F_('pautan_media', 'Pautan berita / media', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
+  },
+  {
+    id: 'CKAI8', prefix: 'IN', sheet: 'CKAI8_Inovasi_Pelajar', group: 'Center', entry: 'faculty',
+    title: 'CKAI 8 · Bilangan inovasi pelajar yang dihasilkan', short: 'Inovasi Pelajar',
+    unit: 'inovasi menyertai pertandingan', measure: 'innovation', jenis: 'minimum',
+    // OD: projek inovasi pelajar yang TELAH menyertai pertandingan, sekurang-kurangnya peringkat Fakulti.
+    listColumns: ['id', 'tajuk_inovasi', 'fakulti', 'nama_pertandingan', 'peringkat', 'tarikh', 'pingat', 'status_peningkatan'],
+    statusField: 'peringkat', filter2: 'status_peningkatan',
+    rules: [
+      { when: { field: 'status_peningkatan', in: ['Calon peningkatan', 'Sedang disokong', 'Telah dibawa ke peringkat lebih tinggi'] }, require: ['peringkat_sasaran'] }
+    ],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Inovasi' }),
+      F_('tajuk_inovasi', 'Tajuk inovasi / projek', 'text', { required: true }),
+      F_('jenis_inovasi', 'Jenis inovasi', 'select', { required: true, options: ['Produk fizikal', 'Aplikasi / perisian', 'Perkhidmatan', 'Proses / kaedah', 'Model perniagaan', 'Lain-lain'] }),
+      F_('bidang', 'Bidang', 'select', { options: ['Kejuruteraan & Teknologi', 'Digital / AI', 'Sains & Kesihatan', 'Alam Bina & Kemampanan', 'Sosial & Pendidikan', 'Perniagaan & Keusahawanan', 'Lain-lain'] }),
+      F_('penerangan', 'Penerangan ringkas (masalah dan penyelesaian)', 'textarea', { full: true }),
+      F_('trl', 'Tahap kesediaan teknologi (TRL)', 'select', { options: ['TRL 1', 'TRL 2', 'TRL 3', 'TRL 4', 'TRL 5', 'TRL 6', 'TRL 7', 'TRL 8', 'TRL 9'] }),
+      F_('status_ip', 'Status harta intelek (IP)', 'select', { options: ['Tiada', 'Dalam proses permohonan', 'Didaftarkan (paten / hak cipta / reka bentuk)'] }),
+      F_('nama_pasukan', 'Nama pasukan', 'text', { sec: 'Pasukan' }),
+      F_('mentor', 'Nama mentor / penyelia', 'text', { required: true }),
+      F_('pelajar', 'Pelajar (nama dan no. matrik)', 'people', { required: true, full: true, kp: false }),
+      F_('status_penyertaan', 'Status penyertaan', 'select', { required: true, sec: 'Pertandingan', options: ['Akan menyertai', 'Telah menyertai'] }),
+      F_('nama_pertandingan', 'Nama pertandingan', 'text', { required: true }),
+      F_('penganjur_pertandingan', 'Penganjur pertandingan', 'text'),
+      F_('peringkat', 'Peringkat pertandingan', 'select', { required: true, options: ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'] }),
+      F_('tarikh', 'Tarikh pertandingan', 'date', { required: true }),
+      F_('lokasi', 'Tempat / negara', 'text'),
+      F_('pingat', 'Pingat / kedudukan (jika menang)', 'select', { sec: 'Anugerah (pilihan, jika menang)', options: ['Emas', 'Perak', 'Gangsa', 'Johan', 'Naib Johan', 'Tempat Ketiga', 'Anugerah Khas', 'Penghargaan / Pengiktirafan'] }),
+      F_('nama_anugerah', 'Nama anugerah', 'text'),
+      F_('nilai_hadiah_rm', 'Nilai hadiah / geran (RM)', 'number', { min: 0 }),
+      F_('sijil', 'Sijil (PDF, maksimum 5 MB)', 'file', { full: true }),
+      F_('status_peningkatan', 'Status peningkatan', 'select', { sec: 'Peningkatan ke peringkat lebih tinggi', options: ['Belum dinilai', 'Calon peningkatan', 'Sedang disokong', 'Telah dibawa ke peringkat lebih tinggi', 'Tidak diteruskan'] }),
+      F_('peringkat_sasaran', 'Peringkat sasaran seterusnya', 'select', { options: ['Universiti', 'Kebangsaan', 'Antarabangsa'] }),
+      F_('pertandingan_seterusnya', 'Pertandingan / program seterusnya', 'text'),
+      F_('tarikh_seterusnya', 'Tarikh seterusnya', 'date'),
+      F_('sokongan_diperlukan', 'Sokongan diperlukan (pembiayaan, mentor, IP, prototaip, dll.)', 'textarea', { full: true }),
+      F_('pautan_demo', 'Pautan video / demo / poster', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
   }
 ];
 
@@ -539,7 +579,7 @@ function buildTargetSeed_() {
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
-  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7'].forEach(function (k) {
+  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
   });
   return rows;

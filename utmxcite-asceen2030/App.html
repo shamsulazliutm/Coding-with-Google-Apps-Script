@@ -10,7 +10,7 @@
     list: null, listFilters: {}, editing: null,
     users: null, targets: null, audit: null,
     navOpen: false, login: null, busy: false,
-    people: {}, files: {}
+    people: {}, files: {}, peopleKp: {}
   };
 
   // ------------------------------------------------------------------ utiliti
@@ -260,6 +260,8 @@
       '<input type="text" id="q" placeholder="🔍 Cari…" value="' + esc(f.q || '') + '" aria-label="Cari" data-input="q">' +
       (statusField ? '<select data-change="fstatus" aria-label="Tapis ' + esc(statusField.label) + '"><option value="">' + esc(statusField.label) + ': Semua</option>' +
         statusField.options.map(function (o) { return '<option' + (f.status === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' : '') +
+      (k.filter2 && fieldDef(k, k.filter2) ? '<select data-change="fstatus2" aria-label="Tapis ' + esc(fieldDef(k, k.filter2).label) + '"><option value="">' + esc(fieldDef(k, k.filter2).label) + ': Semua</option>' +
+        fieldDef(k, k.filter2).options.map(function (o) { return '<option' + (f.status2 === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' : '') +
       (isAdmin() && k.entry === 'faculty' ? '<select data-change="ffak" aria-label="Tapis fakulti"><option value="">Fakulti: Semua</option>' +
         S.session.faculties.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (f.fakulti === x.kod ? ' selected' : '') + '>' + esc(x.kod) + '</option>'; }).join('') + '</select>' : '') +
       '<span class="grow"></span><button class="btn" data-action="new">＋ Rekod baharu</button></div>';
@@ -292,11 +294,12 @@
   // ---- Pelajar berbilang (nama, no. matrik, no. KP)
   function peopleHtml(key) {
     var arr = S.people[key] || [];
+    var kp = S.peopleKp[key] !== false;
     return arr.map(function (p, i) {
-      return '<div class="prow"><span class="pn">' + (i + 1) + '</span>' +
+      return '<div class="prow' + (kp ? '' : ' nokp-off') + '"><span class="pn">' + (i + 1) + '</span>' +
         '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="nama" placeholder="Nama penuh" maxlength="120" aria-label="Nama pelajar ' + (i + 1) + '" value="' + esc(p.nama) + '">' +
         '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="matrik" placeholder="No. matrik" maxlength="30" aria-label="No. matrik pelajar ' + (i + 1) + '" value="' + esc(p.matrik) + '">' +
-        '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="nokp" placeholder="No. KP / pasport" maxlength="20" inputmode="numeric" autocomplete="off" aria-label="No. KP pelajar ' + (i + 1) + '" value="' + esc(p.nokp) + '">' +
+        (kp ? '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="nokp" placeholder="No. KP / pasport" maxlength="20" inputmode="numeric" autocomplete="off" aria-label="No. KP pelajar ' + (i + 1) + '" value="' + esc(p.nokp) + '">' : '') +
         (arr.length > 1 ? '<button type="button" class="btn d sm" data-action="pdel" data-key="' + key + '" data-i="' + i + '" aria-label="Buang pelajar ' + (i + 1) + '">✕</button>' : '<span></span>') + '</div>';
     }).join('');
   }
@@ -376,7 +379,7 @@
       case 'people':
         return '<div class="people" data-people="' + fd.key + '" id="f_' + fd.key + '">' + peopleHtml(fd.key) + '</div>' +
           '<button type="button" class="btn o sm" data-action="padd" data-key="' + fd.key + '">＋ Tambah pelajar</button>' +
-          '<div class="hint">Satu baris bagi setiap pelajar. No. KP 12 digit (sengkang tidak diperlukan) atau no. pasport.</div>';
+          '<div class="hint">Satu baris bagi setiap pelajar.' + (fd.kp === false ? '' : ' No. KP 12 digit (sengkang tidak diperlukan) atau no. pasport.') + '</div>';
       case 'file':
         return '<div class="filebox" data-filebox="' + fd.key + '" id="f_' + fd.key + '">' + fileHtml(k, fd.key) + '</div>';
       case 'month':
@@ -394,9 +397,9 @@
 
   function renderForm(k) {
     var rec = S.editing || {};
-    S.people = {}; S.files = {};
+    S.people = {}; S.files = {}; S.peopleKp = {};
     k.fields.forEach(function (fd) {
-      if (fd.type === 'people') { var ps = parseJson(rec[fd.key], []); S.people[fd.key] = ps.length ? ps.map(function (p) { return { nama: p.nama || '', matrik: p.matrik || '', nokp: p.nokp || '' }; }) : [{ nama: '', matrik: '', nokp: '' }]; }
+      if (fd.type === 'people') { S.peopleKp[fd.key] = fd.kp !== false; var ps = parseJson(rec[fd.key], []); S.people[fd.key] = ps.length ? ps.map(function (p) { return { nama: p.nama || '', matrik: p.matrik || '', nokp: p.nokp || '' }; }) : [{ nama: '', matrik: '', nokp: '' }]; }
       if (fd.type === 'file') { var f = parseJson(rec[fd.key], null); S.files[fd.key] = f && f.id ? f : null; }
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
@@ -655,6 +658,7 @@
     if (c === 'fupload') { var kk = kpiById(S.view.id); if (kk) uploadPdf(kk, ev.target.getAttribute('data-key'), ev.target.files && ev.target.files[0]); return; }
     if (c === 'year') { S.dash = null; loadDashboard(parseInt(ev.target.value, 10)); }
     if (c === 'fstatus') { S.listFilters.status = ev.target.value; S.list = null; renderKpi(); }
+    if (c === 'fstatus2') { S.listFilters.status2 = ev.target.value; S.list = null; renderKpi(); }
     if (c === 'ffak') { S.listFilters.fakulti = ev.target.value; S.list = null; renderKpi(); }
   });
 

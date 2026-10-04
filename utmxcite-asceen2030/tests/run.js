@@ -123,7 +123,7 @@ test('menu PIC hanya KPI yang dibenarkan; Admin nampak semua 7', () => {
   const p = ok(g.api_session(picToken));
   deepEq(p.kpis.map(k => k.id), ['KAI1', 'KAI4', 'KAI6']);
   const a = ok(g.api_session(adminToken));
-  assert.strictEqual(a.kpis.length, 14);
+  assert.strictEqual(a.kpis.length, 15);
 });
 test('PIC ditolak mengakses KPI Admin sahaja (baca & tulis)', () => {
   fail(g.api_list(picToken, 'KAI2', {}), /Akses ditolak/);
@@ -193,11 +193,11 @@ test('ID berjujukan tidak berulang selepas padam', () => {
 console.log('Dashboard');
 const dash = (y) => ok(g.api_dashboard(y));
 const card = (d, id) => d.kpis.find(k => k.id === id);
-test('dashboard awam tanpa log masuk: 7 KPI + 7 CKAI', () => {
+test('dashboard awam tanpa log masuk: 7 KPI + 8 CKAI', () => {
   const d = dash(2026);
-  assert.strictEqual(d.kpis.length, 14);
-  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Department', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
-  deepEq(d.kpis.map(k => k.level), ['KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
+  assert.strictEqual(d.kpis.length, 15);
+  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Department', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
+  deepEq(d.kpis.map(k => k.level), ['KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
   deepEq(d.levels.map(l => l.label), ['KAI · Peringkat Universiti', 'DKAI · Peringkat Jabatan (JTNC HEPA)', 'CKAI · Peringkat Pusat (UTMXCITE)']);
   assert.ok(!JSON.stringify(d).includes('Internal'));
 });
@@ -547,8 +547,70 @@ test('susunan lajur Sheet tidak penting: tab Pengguna dan KPI ditulis mengikut n
   us.data = us.data.map(r => { const c = r.slice(); const t = c[0]; c[0] = c[1]; c[1] = t; return c; });
   k.data = k.data.map(r => r.slice().reverse());
 });
+let innoPic, innoPicFc;
+const inno = (over = {}) => Object.assign({
+  fakulti: 'FM', tajuk_inovasi: 'Sistem Pintar Kitar Semula', jenis_inovasi: 'Aplikasi / perisian', mentor: 'Dr. Penyelia',
+  pelajar: [{ nama: 'Ali Inovator', matrik: 'A24IN0001' }, { nama: 'Siti Inovator', matrik: 'A24IN0002' }],
+  status_penyertaan: 'Telah menyertai', nama_pertandingan: 'Pertandingan Inovasi Fakulti', peringkat: 'Fakulti', tarikh: '2026-04-15'
+}, over);
+test('CKAI 8: akses PIC fakulti; OD = projek yang telah menyertai pertandingan sekurang-kurangnya peringkat Fakulti', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'pic.inovasi@utm.my', nama: 'PIC FM', peranan: 'PIC', fakulti: 'FM', kpi_akses: 'CKAI8', aktif: 'Ya' }));
+  ok(g.api_saveUser(adminToken, { emel: 'pic.inovasi2@utm.my', nama: 'PIC FS', peranan: 'PIC', fakulti: 'FS', kpi_akses: 'CKAI8', aktif: 'Ya' }));
+  innoPic = login('pic.inovasi@utm.my'); innoPicFc = login('pic.inovasi2@utm.my');
+  deepEq(ok(g.api_session(innoPic)).kpis.map(k => k.id), ['CKAI8']);
+  const a = ok(g.api_save(innoPic, 'CKAI8', inno({ fakulti: 'FKE' })));
+  assert.strictEqual(a.fakulti, 'FM'); // dipaksa kepada fakulti PIC
+  assert.strictEqual(JSON.parse(a.pelajar)[0].nokp, ''); // no. KP tidak diperlukan bagi CKAI 8
+  fail(g.api_save(innoPic, 'CKAI8', inno({ peringkat: 'Dalam kelas' })), /betulkan/); // peringkat paling rendah ialah Fakulti
+  fail(g.api_save(innoPic, 'CKAI8', inno({ nama_pertandingan: '' })), /betulkan/);
+  fail(g.api_save(innoPic, 'CKAI8', inno({ tarikh: '' })), /betulkan/);
+  fail(g.api_save(innoPic, 'CKAI8', inno({ mentor: '' })), /betulkan/);
+  fail(g.api_save(innoPic, 'CKAI8', inno({ pelajar: [] })), /betulkan/);
+  const r = g.api_save(innoPic, 'CKAI8', inno({ pelajar: [{ nama: '', matrik: 'X' }] })); fail(r, /betulkan/); assert.match(r.fields.pelajar, /Pelajar 1: nama/);
+  assert.ok(!/KP/.test(r.fields.pelajar), 'no. KP tidak boleh diminta');
+  assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI8', {})).rows.length, 0);
+});
+test('CKAI 8: anugerah pilihan; peringkat sasaran wajib apabila calon peningkatan', () => {
+  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Tanpa anugerah' }))); // tiada pingat/anugerah: sah
+  const r = g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Calon naik', status_peningkatan: 'Calon peningkatan' }));
+  fail(r, /betulkan/); assert.ok(r.fields.peringkat_sasaran);
+  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Calon naik', status_peningkatan: 'Calon peningkatan', peringkat_sasaran: 'Kebangsaan', pertandingan_seterusnya: 'MTE 2026', sokongan_diperlukan: 'Pembiayaan prototaip RM5,000' })));
+  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Menang', pingat: 'Emas', nama_anugerah: 'Anugerah Inovasi Fakulti', peringkat: 'Universiti', nilai_hadiah_rm: 500 })));
+  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Sudah naik', peringkat: 'Kebangsaan', status_peningkatan: 'Telah dibawa ke peringkat lebih tinggi', peringkat_sasaran: 'Antarabangsa' })));
+  fail(g.api_save(innoPic, 'CKAI8', inno({ pingat: 'Platinum' })), /betulkan/);
+});
+test('CKAI 8: hanya inovasi yang TELAH menyertai pertandingan dalam tahun itu dikira; penapis peringkat dan status peningkatan', () => {
+  ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Akan menyertai', status_penyertaan: 'Akan menyertai', tarikh: '2026-09-01' })));
+  ok(g.api_save(adminToken, 'CKAI8', inno({ fakulti: 'FC', tajuk_inovasi: 'Tahun lain', tarikh: '2027-03-01' })));
+  const c = card(dash(2026), 'CKAI8');
+  const sec = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
+  assert.strictEqual(c.value, 5); // Tanpa anugerah, Calon naik, Menang, Sudah naik + rekod pertama (FM)
+  assert.strictEqual(sec['Memenang anugerah / pingat'], 1);
+  assert.strictEqual(sec['Peringkat Universiti ke atas'], 2);
+  assert.strictEqual(sec['Calon peningkatan / sedang disokong'], 1);
+  assert.strictEqual(sec['Telah dibawa ke peringkat lebih tinggi'], 1);
+  assert.strictEqual(sec['Akan menyertai (dirancang)'], 1);
+  assert.strictEqual(sec['Pelajar terlibat'], 10);
+  deepEq(c.breakdown[0].items.map(i => i.label), ['Fakulti', 'Universiti', 'Kebangsaan']);
+  assert.strictEqual(card(dash(2027), 'CKAI8').value, 1);
+  assert.strictEqual(c.status, 'Tiada sasaran');
+  // penapis: status peningkatan (pipeline XCITE) dan peringkat
+  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI8', { status2: 'Calon peningkatan' })).rows.length, 1);
+  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI8', { status: 'Kebangsaan' })).rows.length, 1);
+  assert.strictEqual(ok(g.api_list(innoPic, 'CKAI8', { status: 'Kebangsaan', status2: 'Calon peningkatan' })).rows.length, 0);
+  assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI8', { status2: 'Calon peningkatan' })).rows.length, 0); // fakulti lain tidak nampak
+});
+test('CKAI 8: sijil anugerah PDF pilihan; paparan awam tiada tajuk, pelajar atau mentor', () => {
+  const pdf = Buffer.from('%PDF-1.4\n%sijil inovasi\n%%EOF').toString('base64');
+  const up = ok(g.api_uploadFile(innoPic, 'CKAI8', 'sijil', { name: 'sijil-inovasi.pdf', data: pdf }));
+  const rec = ok(g.api_save(innoPic, 'CKAI8', inno({ tajuk_inovasi: 'Dengan sijil', pingat: 'Perak', sijil: { id: up.id, name: up.name } })));
+  assert.strictEqual(ok(g.api_downloadFile(innoPic, 'CKAI8', rec.id, 'sijil')).base64, pdf);
+  fail(g.api_downloadFile(innoPicFc, 'CKAI8', rec.id, 'sijil'), /fakulti lain/);
+  const sj = JSON.stringify(dash(2026));
+  ['Sistem Pintar', 'Ali Inovator', 'A24IN0001', 'Dr. Penyelia', 'Pembiayaan prototaip', 'Calon naik', 'sijil-inovasi'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+});
 test('sasaran CKAI diisi Admin: status dan peratus dikira (boleh melebihi 100%)', () => {
-  assert.ok(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length >= 35);
+  assert.ok(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length >= 40);
   ok(g.api_saveTarget(adminToken, { kpi: 'CKAI4', tahun: 2026, sasaran: 3000 }));
   const c = card(dash(2026), 'CKAI4');
   assert.strictEqual(c.status, 'Melebihi sasaran'); assert.ok(Math.abs(c.pct - 133.3) < 0.1);
@@ -567,9 +629,9 @@ test('setup() dijalankan semula pada pemasangan lama menambah baris sasaran CKAI
   sh.data = sh.data.filter((row, i) => i === 0 || !/^CKAI/.test(String(row[0])));
   g.setup();
   const rows = ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi));
-  assert.strictEqual(rows.length, 35);
+  assert.strictEqual(rows.length, 40);
   g.setup();
-  assert.strictEqual(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length, 35);
+  assert.strictEqual(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length, 40);
 });
 
 console.log('Sasaran (Admin)');
@@ -593,7 +655,7 @@ test('peranan/aktif ditaip manual (huruf kecil, ada ruang) tetap berfungsi', () 
   sh.appendRow(['  Manual.Admin@UTM.my ', 'Manual', ' admin ', 'UTMXCITE', '', ' ya ', '']);
   const t = login('manual.admin@utm.my');
   assert.strictEqual(ok(g.api_session(t)).user.peranan, 'Admin');
-  assert.strictEqual(ok(g.api_session(t)).kpis.length, 14);
+  assert.strictEqual(ok(g.api_session(t)).kpis.length, 15);
 });
 test('peranan kosong atau salah: tiada OTP dan tiada akses (bukan PIC secara lalai)', () => {
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Pengguna');

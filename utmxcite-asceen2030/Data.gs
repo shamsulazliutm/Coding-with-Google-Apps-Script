@@ -3,7 +3,7 @@
 function kpiSchema_(kpi) {
   return {
     id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, unit: kpi.unit, entry: kpi.entry,
-    listColumns: kpi.listColumns, statusField: kpi.statusField, facultyWhitelist: kpi.facultyWhitelist || null,
+    listColumns: kpi.listColumns, statusField: kpi.statusField, filter2: kpi.filter2 || null, facultyWhitelist: kpi.facultyWhitelist || null,
     fields: kpi.fields
   };
 }
@@ -36,6 +36,7 @@ function listRecords_(token, kpiId, filters) {
   }
   if (filters.fakulti && kpi.entry === 'faculty') rows = rows.filter(function (r) { return r.fakulti === String(filters.fakulti); });
   if (filters.status && kpi.statusField) rows = rows.filter(function (r) { return r[kpi.statusField] === String(filters.status); });
+  if (filters.status2 && kpi.filter2) rows = rows.filter(function (r) { return r[kpi.filter2] === String(filters.status2); });
   if (filters.q) {
     var q = String(filters.q).toLowerCase();
     rows = rows.filter(function (r) {
@@ -89,7 +90,8 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
           var miss = [];
           if (!nama || nama.length > 120) miss.push('nama');
           if (!matrik || matrik.length > 30) miss.push('no. matrik');
-          if (!/^[A-Z0-9-]{6,20}$/.test(kp)) miss.push('no. KP / pasport');
+          if (f.kp === false) kp = ''; // medan no. KP tidak digunakan bagi KPI ini
+          else if (!/^[A-Z0-9-]{6,20}$/.test(kp)) miss.push('no. KP / pasport');
           if (miss.length) bad.push('Pelajar ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp });
         });
         if (bad.length) { errors[f.key] = bad.join('; ') + '.'; break; }

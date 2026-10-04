@@ -192,6 +192,32 @@ var MEASURES = {
     };
   },
 
+  // CKAI 8: inovasi pelajar yang TELAH menyertai pertandingan (sekurang-kurangnya peringkat Fakulti) pada tahun itu.
+  innovation: function (kpi, rows, year) {
+    var done = rows.filter(function (r) { return r.status_penyertaan === 'Telah menyertai' && yearOf_(r.tarikh) === year; });
+    var order = ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'];
+    var students = 0;
+    done.forEach(function (r) { var p = parseJson_(r.pelajar, []); if (Array.isArray(p)) students += p.length; });
+    var pipeOrder = ['Belum dinilai', 'Calon peningkatan', 'Sedang disokong', 'Telah dibawa ke peringkat lebih tinggi', 'Tidak diteruskan'];
+    return {
+      value: done.length,
+      secondary: [
+        { label: 'Pelajar terlibat', value: students },
+        { label: 'Memenang anugerah / pingat', value: done.filter(function (r) { return !!r.pingat; }).length },
+        { label: 'Peringkat Universiti ke atas', value: done.filter(function (r) { return r.peringkat !== 'Fakulti'; }).length },
+        { label: 'Calon peningkatan / sedang disokong', value: done.filter(function (r) { return r.status_peningkatan === 'Calon peningkatan' || r.status_peningkatan === 'Sedang disokong'; }).length },
+        { label: 'Telah dibawa ke peringkat lebih tinggi', value: done.filter(function (r) { return r.status_peningkatan === 'Telah dibawa ke peringkat lebih tinggi'; }).length },
+        { label: 'Akan menyertai (dirancang)', value: rows.filter(function (r) { return r.status_penyertaan === 'Akan menyertai' && yearOf_(r.tarikh) === year; }).length }
+      ],
+      breakdown: [
+        { title: 'Mengikut peringkat pertandingan', items: countBy_(done, function (r) { return r.peringkat; }).sort(function (a, b) { return order.indexOf(a.label) - order.indexOf(b.label); }) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) },
+        { title: 'Mengikut jenis inovasi', items: sortDesc_(countBy_(done, function (r) { return r.jenis_inovasi; })) },
+        { title: 'Status peningkatan', items: countBy_(done, function (r) { return r.status_peningkatan || 'Belum dinilai'; }).sort(function (a, b) { return pipeOrder.indexOf(a.label) - pipeOrder.indexOf(b.label); }) }
+      ]
+    };
+  },
+
   // CKAI 7: anugerah dan pengiktirafan inovasi / keusahawanan yang diterima pada tahun itu.
   award: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
