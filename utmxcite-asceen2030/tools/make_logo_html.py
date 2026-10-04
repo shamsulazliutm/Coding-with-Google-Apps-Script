@@ -2,8 +2,8 @@
 """Jana Logo.html (data URI) daripada fail PNG logo.
 
 Guna:  python3 tools/make_logo_html.py logo.png
-Cadangan: PNG lut sinar, lebar ~240px. Logo UTM ASCEND 2030 yang disertakan direka untuk latar merah (#90020b),
-jadi sidebar meletakkannya pada panel berwarna itu. Jika logo anda berlatar lut sinar lain, ubah warna
+Cadangan: PNG lut sinar, lebar ~260px (paparan 2x). Logo rasmi UTM ASCEND 2030 (marun/kelabu) sesuai untuk
+latar cerah, jadi sidebar meletakkannya pada panel putih. Jika logo anda memerlukan latar lain, ubah warna
 `.brandlogo` dalam Styles.html.
 """
 import base64, sys, pathlib

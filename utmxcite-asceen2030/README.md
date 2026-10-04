@@ -51,13 +51,13 @@ Boleh disunting terus dalam Sheet (drop-down disediakan bagi `peranan` dan `akti
 
 ## Logo
 
-Logo UTM ASCEND 2030 (diambil daripada dokumen Pelan Tindakan) dipaparkan di atas sidebar. Ia disimpan dalam `Logo.html` sebagai data URI, jadi tiada hos imej luar diperlukan. Untuk menggantikannya dengan fail logo rasmi (PNG lut sinar, lebar ~240px):
+Logo rasmi UTM ASCEND 2030 dipaparkan di atas sidebar pada panel putih. Ia disimpan dalam `Logo.html` sebagai data URI, jadi tiada hos imej luar diperlukan. Untuk menggantikannya (PNG lut sinar, lebar ~260px):
 
 ```
 python3 tools/make_logo_html.py logo-baharu.png
 ```
 
-Logo asal direka untuk latar merah, jadi sidebar meletakkannya pada panel `#90020b`. Jika logo baharu sesuai pada latar lain, ubah warna `.brandlogo` dalam `Styles.html`.
+Jika logo baharu memerlukan latar lain, ubah warna `.brandlogo` dalam `Styles.html`.
 
 ## Perkara yang perlu disemak selepas setup
 
