@@ -71,6 +71,10 @@ function validateRecord_(kpi, rec, faculties, user) {
             new Date(v + 'T00:00:00Z').toISOString().slice(0, 10) !== v) { errors[f.key] = 'Tarikh tidak sah (YYYY-MM-DD).'; break; }
         clean[f.key] = v;
         break;
+      case 'month':
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(v))) { errors[f.key] = 'Bulan tidak sah (YYYY-MM).'; break; }
+        clean[f.key] = String(v);
+        break;
       case 'select':
         if (f.options.indexOf(String(v)) < 0) { errors[f.key] = 'Pilihan tidak sah.'; break; }
         clean[f.key] = String(v);

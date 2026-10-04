@@ -1,6 +1,6 @@
 # UTMXCITE 4 ASCEEN 2030 Report
 
-Aplikasi web Google Apps Script (GAS) + Google Sheets untuk melaporkan 7 KPI UTMXCITE di bawah **DS 04 · Pekerjaan Premium Tier 1**.
+Aplikasi web Google Apps Script (GAS) + Google Sheets untuk melaporkan 7 KPI UTMXCITE di bawah **DS 04 · Pekerjaan Premium Tier 1** (KAI 1-6 dan DKAI 1), serta 6 **CKAI** (Center Key Amal Indicator).
 Rujukan sebenar: Dokumen Pelan Tindakan UTMXCITE (PDF).
 
 - **Dashboard awam** (tanpa log masuk): kemajuan 7 KPI, data agregat sahaja.
@@ -14,6 +14,7 @@ Rujukan sebenar: Dokumen Pelan Tindakan UTMXCITE (PDF).
 |---|---|---|---|---|
 | Awam | Ya | – | – | – |
 | PIC Fakulti | Ya | Fakulti sendiri sahaja, bagi KPI yang diberi akses | – | – |
+
 | Admin | Ya | Semua fakulti | Ya | Ya |
 
 KAI 6 terhad kepada **FAI, FC, FKE, MJIIT**. Semua semakan akses dibuat di pelayar **dan** di pelayan (menyembunyikan menu sahaja tidak digunakan sebagai kawalan).
@@ -32,11 +33,27 @@ KAI 6 terhad kepada **FAI, FC, FKE, MJIIT**. Semua semakan akses dibuat di pelay
 
 Sasaran tahunan, sasaran suku tahun (kumulatif) dan bajet disimpan dalam tab **Sasaran** dan boleh disunting melalui menu Admin → Sasaran (atau terus dalam Sheet). Bajet tidak dipaparkan kepada awam.
 
+## CKAI (Center Key Amal Indicator)
+
+Enam ukuran peringkat pusat, dipaparkan dalam kumpulan **Center (CKAI)** pada dashboard. Semuanya sasaran **minimum** dan **belum ditetapkan**: isi melalui menu Admin → Sasaran (sehingga itu kad menunjukkan "Tiada sasaran").
+
+| CKAI | Ukuran | Unit rekod | Dikira | Penginput |
+|---|---|---|---|---|
+| 1 | Bilangan program keusahawanan | Satu program | Program berstatus **Selesai** pada tahun tarikh tamat | PIC fakulti (fakulti sendiri) dan Admin |
+| 2 | Bilangan program inovasi | Satu program | Sama seperti CKAI 1 | PIC fakulti dan Admin |
+| 3 | Bilangan pendaftaran SSU (Sistem Syarikat Universiti) | Satu syarikat / perniagaan pelajar | Pendaftaran pada tahun tarikh daftar | Admin |
+| 4 | Pendapatan usahawan pelajar | Satu baris sebulan bagi setiap perniagaan | Jumlah RM bagi bulan dalam tahun itu | PIC fakulti dan Admin |
+| 5 | Bilangan penggunaan Makerspace | Satu baris sebulan (jumlah bulanan) | Jumlah penggunaan bagi bulan dalam tahun itu | Admin |
+| 6 | Pendapatan sewaan inkubator | Satu baris sebulan bagi setiap penyewa | Jumlah RM berstatus **Dibayar** (belum bayar / tertunggak dipaparkan berasingan) | Admin |
+
+Dashboard awam hanya menunjukkan jumlah agregat (kiraan atau jumlah RM), tanpa nama pelajar, perniagaan atau penyewa.
+**PIC diberi akses CKAI 1, 2 dan 4** dengan menambah `CKAI1,CKAI2,CKAI4` pada lajur `kpi_akses` (tab `Pengguna` atau menu Urus Pengguna). CKAI 3, 5 dan 6 hanya untuk Admin.
+
 ## Pemasangan
 
 1. Buat projek Apps Script baharu (script.google.com) **atau** buka Sheet baharu → Extensions → Apps Script (projek terikat).
 2. Salin semua fail dalam folder ini: `*.gs`, `*.html` dan `appsscript.json` (aktifkan "Show appsscript.json manifest file" dalam Project Settings). Dengan [clasp](https://github.com/google/clasp): `clasp push` (fail ujian dan README diabaikan melalui `.claspignore`). `tools/` turut diabaikan; `Logo.html` mesti ikut disalin.
-3. Jalankan fungsi **`setup()`** sekali daripada editor dan luluskan kebenaran (Sheets, hantar e-mel, e-mel pengguna). Ia:
+3. Jalankan fungsi **`setup()`** sekali daripada editor dan luluskan kebenaran (Sheets, hantar e-mel, e-mel pengguna). (Pemasangan sedia ada yang dikemas kini kepada versi ini: jalankan `setup()` sekali lagi. Ia menambah tab CKAI dan baris sasaran CKAI tanpa menyentuh data sedia ada.) Ia:
    - mencipta (atau menggunakan semula) Sheet dan semua tab: `Pengguna`, `Fakulti`, `Sasaran`, `Risiko`, `Log_Audit` dan 7 tab KPI,
    - memasukkan sasaran awal, senarai fakulti, daftar risiko daripada PDF, dan milestone awal KAI 2 / DKAI 1,
    - mendaftarkan **pemilik skrip sebagai Admin pertama**.
@@ -90,7 +107,7 @@ Jika logo baharu memerlukan latar lain, ubah warna `.brandlogo` dalam `Styles.ht
 Logik pelayan diuji dengan tiruan API GAS (Node 18+):
 
 ```
-node tests/run.js        # 38 ujian logik: OTP, akses, pengesahan, kiraan KPI, dashboard awam
+node tests/run.js        # ujian logik: OTP, akses, pengesahan, kiraan KPI dan CKAI, dashboard awam
 node tests/e2e.js        # ujian pelayar sebenar (Playwright + Chromium) menggunakan pelayan tiruan yang sama
 ```
 

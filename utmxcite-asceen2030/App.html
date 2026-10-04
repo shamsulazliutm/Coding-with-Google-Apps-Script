@@ -68,6 +68,8 @@
     var k = (S.session && S.session.kpis || []).filter(function (x) { return x.id === id; });
     return k[0] || null;
   }
+  var GROUPS = ['Growth', 'Transform', 'Internal', 'Center'];
+  var GROUP_LABEL = { Growth: 'Growth', Transform: 'Transform', Internal: 'Internal (DKAI)', Center: 'Center (CKAI)' };
   function isAdmin() { return S.session && S.session.user.peranan === 'Admin'; }
 
   // Dialog pengesahan dalam halaman (window.confirm mungkin disekat dalam iframe kotak pasir).
@@ -117,10 +119,10 @@
       : '<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>';
     h += navBtn('dashboard', '▦', 'Dashboard', S.view.name === 'dashboard');
     if (u) {
-      ['Growth', 'Transform', 'Internal'].forEach(function (g) {
+      GROUPS.forEach(function (g) {
         var ks = S.session.kpis.filter(function (k) { return k.group === g; });
         if (!ks.length) return;
-        h += '<div class="sec">' + g + '</div>';
+        h += '<div class="sec">' + esc(GROUP_LABEL[g]) + '</div>';
         ks.forEach(function (k) {
           h += navBtn('kpi:' + k.id, '◆', k.title.replace(/ · .*/, '') + ' · ' + k.short, S.view.name === 'kpi' && S.view.id === k.id);
         });
@@ -167,7 +169,9 @@
     var cls = s === 'Melebihi sasaran' || s === 'Selesai' ? 'over' : s === 'Capai sasaran' ? 'meet' : s === 'Di bawah sasaran' ? 'below' : 'none';
     return '<span class="chip ' + cls + '">' + esc(s) + '</span>';
   }
-  function fmtVal(c, v) { return c.jenis === 'kemajuan' ? fmtNum(v) + '%' : fmtNum(v); }
+  function money(n) { return 'RM ' + Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtVal(c, v) { return c.format === 'rm' ? money(v) : c.jenis === 'kemajuan' ? fmtNum(v) + '%' : fmtNum(v); }
+  function fmtItem(c, v) { return c.format === 'rm' ? money(v) : fmtNum(v); }
 
   function progressBar(pct) {
     if (pct === null || pct === undefined) return '<div class="track" aria-hidden="true"></div>';
@@ -183,7 +187,7 @@
   function renderCard(c) {
     var h = '<article class="kcard"><span class="tag ' + esc(c.group) + '">' + esc(c.group) + '</span>' +
       '<div class="t">' + esc(c.title) + '</div>' +
-      '<div class="v">' + esc(fmtVal(c, c.value)) + (c.target !== '' ? ' <small>/ ' + esc(fmtVal(c, c.target)) + (c.jenis === 'kemajuan' ? '' : ' minimum') + '</small>' : '') + '</div>' +
+      '<div class="v">' + esc(fmtVal(c, c.value)) + (c.target !== '' ? ' <small>/ ' + esc(fmtVal(c, c.target)) + (c.jenis === 'kemajuan' ? '' : ' minimum') + '</small>' : ' <small>' + esc(c.unit) + '</small>') + '</div>' +
       progressBar(c.pct) +
       '<div class="chips">' + statusChip(c.status) + (c.pct !== null ? '<span class="sec2"><b>' + esc(fmtNum(c.pct)) + '%</b> daripada sasaran ' + esc(S.year) + '</span>' : '') + '</div>';
     if (c.quarter) {
@@ -202,7 +206,7 @@
         b.items.forEach(function (i) {
           h += '<div class="bi"><span class="l" title="' + esc(i.label) + '">' + esc(i.label) + '</span>' +
             '<span class="mini"><i style="width:' + Math.min(100, i.value / max * 100).toFixed(0) + '%"></i></span>' +
-            '<span class="n">' + esc(fmtNum(i.value)) + (i.target ? ' / ' + esc(i.target) : '') + '</span></div>';
+            '<span class="n">' + esc(fmtItem(c, i.value)) + (i.target ? ' / ' + esc(i.target) : '') + '</span></div>';
         });
       });
       h += '</details>';
@@ -220,10 +224,10 @@
       '<span class="grow sec2">Dikemas kini: ' + esc(String(d.generatedAt).replace('T', ' ')) + '</span></div>';
     h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
       '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div></div>';
-    ['Growth', 'Transform', 'Internal'].forEach(function (g) {
+    GROUPS.forEach(function (g) {
       var cs = d.kpis.filter(function (c) { return c.group === g; });
       if (!cs.length) return;
-      h += '<div class="grp">' + g + '</div><div class="grid">' + cs.map(renderCard).join('') + '</div>';
+      h += '<div class="grp">' + esc(GROUP_LABEL[g]) + '</div><div class="grid">' + cs.map(renderCard).join('') + '</div>';
     });
     el.innerHTML = h;
   }
@@ -294,6 +298,8 @@
       case 'number':
         return '<input type="number" step="any" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '"' +
           (fd.min !== undefined ? ' min="' + fd.min + '"' : '') + (fd.max !== undefined ? ' max="' + fd.max + '"' : '') + '>';
+      case 'month':
+        return '<input type="month" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '" placeholder="YYYY-MM">';
       case 'date':
         return '<input type="date" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '">';
       case 'email':
@@ -477,7 +483,7 @@
   // ------------------------------------------------------------------ navigasi
   function go(target) {
     S.navOpen = false; S.editing = null; S.list = null; S.listFilters = {};
-    if (target === 'dashboard') S.view = { name: 'dashboard' };
+    if (target === 'dashboard') { S.view = { name: 'dashboard' }; S.dash = null; } // muat semula supaya angka terkini dipaparkan
     else if (target.indexOf('kpi:') === 0) S.view = { name: 'kpi', id: target.slice(4), tab: 'list' };
     else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; }
     render(); window.scrollTo(0, 0);

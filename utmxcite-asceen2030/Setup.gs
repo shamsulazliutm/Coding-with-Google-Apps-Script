@@ -28,6 +28,7 @@ function setup() {
 
   seedIfEmpty_(ss, SHEETS.FACULTIES, FACULTY_SEED);
   seedIfEmpty_(ss, SHEETS.TARGETS, buildTargetSeed_());
+  addMissingTargetRows_(ss);
   seedIfEmpty_(ss, SHEETS.RISKS, RISK_SEED.map(function (r) { return [r[0], r[1], r[2], r[3], 'Terbuka', nowIso_()]; }));
   seedAdmin_(ss);
   seedMilestones_(ss);
@@ -55,7 +56,7 @@ function ensureSheet_(ss, name, headers, fieldDefs) {
   sh.setFrozenRows(1);
   // Lajur teks/tarikh disimpan sebagai teks supaya no. matrik/telefon tidak hilang sifar di hadapan.
   var all = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
-  var textTypes = { text: 1, textarea: 1, email: 1, url: 1, select: 1, faculty: 1, yesno: 1, date: 1 };
+  var textTypes = { text: 1, textarea: 1, email: 1, url: 1, select: 1, faculty: 1, yesno: 1, date: 1, month: 1 };
   var typeOf = {};
   (fieldDefs || []).forEach(function (f) { typeOf[f.key] = f.type; });
   all.forEach(function (h, i) {
@@ -77,6 +78,19 @@ function seedIfEmpty_(ss, name, rows) {
   var sh = ss.getSheetByName(name);
   if (sh.getLastRow() > 1 || !rows.length) return;
   sh.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/**
+ * Pemasangan sedia ada: tambah baris sasaran bagi KPI yang BELUM langsung ada dalam tab Sasaran (contoh CKAI yang baru ditambah).
+ * KPI yang sudah ada tidak disentuh, jadi baris yang anda padam atau ubah tidak dihidupkan semula.
+ */
+function addMissingTargetRows_(ss) {
+  var sh = ss.getSheetByName(SHEETS.TARGETS);
+  if (sh.getLastRow() < 2) return;
+  var present = {};
+  sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().forEach(function (r) { present[String(r[0])] = true; });
+  var add = buildTargetSeed_().filter(function (r) { return !present[r[0]]; });
+  if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, add[0].length).setValues(add);
 }
 
 function seedAdmin_(ss) {

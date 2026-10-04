@@ -58,7 +58,7 @@ function emailDomainAllowed_(e) {
 }
 
 function yearOf_(iso) {
-  var m = /^(\d{4})-\d{2}-\d{2}/.exec(String(iso || ''));
+  var m = /^(\d{4})-\d{2}(-\d{2})?/.exec(String(iso || '')); // YYYY-MM-DD atau YYYY-MM (bulan)
   return m ? parseInt(m[1], 10) : null;
 }
 

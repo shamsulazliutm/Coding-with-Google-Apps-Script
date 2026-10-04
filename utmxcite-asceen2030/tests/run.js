@@ -123,7 +123,7 @@ test('menu PIC hanya KPI yang dibenarkan; Admin nampak semua 7', () => {
   const p = ok(g.api_session(picToken));
   deepEq(p.kpis.map(k => k.id), ['KAI1', 'KAI4', 'KAI6']);
   const a = ok(g.api_session(adminToken));
-  assert.strictEqual(a.kpis.length, 7);
+  assert.strictEqual(a.kpis.length, 13);
 });
 test('PIC ditolak mengakses KPI Admin sahaja (baca & tulis)', () => {
   fail(g.api_list(picToken, 'KAI2', {}), /Akses ditolak/);
@@ -193,10 +193,10 @@ test('ID berjujukan tidak berulang selepas padam', () => {
 console.log('Dashboard');
 const dash = (y) => ok(g.api_dashboard(y));
 const card = (d, id) => d.kpis.find(k => k.id === id);
-test('dashboard awam tanpa log masuk: 7 KPI', () => {
+test('dashboard awam tanpa log masuk: 7 KPI + 6 CKAI', () => {
   const d = dash(2026);
-  assert.strictEqual(d.kpis.length, 7);
-  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Internal']);
+  assert.strictEqual(d.kpis.length, 13);
+  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Internal', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
 });
 test('KAI1: aktif = didaftarkan + dalam pembangunan/beroperasi (2 daripada 3), sasaran 20', () => {
   const c = card(dash(2026), 'KAI1');
@@ -298,6 +298,108 @@ test('cache dashboard dibatalkan selepas tulis', () => {
 });
 test('tahun tidak sah jatuh balik kepada tahun semasa', () => { assert.strictEqual(dash('abc').year, 2026); assert.strictEqual(dash(1999).year, 2026); });
 
+console.log('CKAI (Center Key Amal Indicator)');
+let ckaiPic, ckaiPicFc;
+test('Admin memberi PIC akses CKAI 1, 2 dan 4 (bukan CKAI 3, 5, 6)', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'pic.ckai.fke@utm.my', nama: 'PIC FKE', peranan: 'PIC', fakulti: 'FKE', kpi_akses: 'CKAI1,CKAI2,CKAI4', aktif: 'Ya' }));
+  ok(g.api_saveUser(adminToken, { emel: 'pic.ckai.fc@utm.my', nama: 'PIC FC', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI1,CKAI4', aktif: 'Ya' }));
+  fail(g.api_saveUser(adminToken, { emel: 'pic.salah@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI3', aktif: 'Ya' }), /tidak sah/);
+  fail(g.api_saveUser(adminToken, { emel: 'pic.salah@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'CKAI5', aktif: 'Ya' }), /tidak sah/);
+  ckaiPic = login('pic.ckai.fke@utm.my');
+  ckaiPicFc = login('pic.ckai.fc@utm.my');
+  deepEq(ok(g.api_session(ckaiPic)).kpis.map(k => k.id), ['CKAI1', 'CKAI2', 'CKAI4']);
+  fail(g.api_list(ckaiPic, 'CKAI3', {}), /Akses ditolak/);
+  fail(g.api_save(ckaiPic, 'CKAI5', { tempoh: '2026-01', bil_penggunaan: 5 }), /Akses ditolak/);
+  fail(g.api_save(ckaiPic, 'CKAI6', { tempoh: '2026-01' }), /Akses ditolak/);
+});
+test('CKAI 1: fakulti merekod program sendiri; hanya program Selesai dikira pada tahun tamat', () => {
+  const base = { nama_program: 'Bengkel Pitching', kategori: 'Bengkel', tarikh_mula: '2026-03-01', bil_peserta: 40 };
+  fail(g.api_save(ckaiPic, 'CKAI1', Object.assign({ fakulti: 'FKE', status: 'Selesai' }, base)), /betulkan/); // tarikh tamat wajib
+  const a = ok(g.api_save(ckaiPic, 'CKAI1', Object.assign({ fakulti: 'FC', status: 'Selesai', tarikh_tamat: '2026-03-02' }, base)));
+  assert.strictEqual(a.fakulti, 'FKE'); // dipaksa kepada fakulti PIC
+  ok(g.api_save(ckaiPic, 'CKAI1', Object.assign({}, base, { fakulti: 'FKE', status: 'Dirancang', nama_program: 'Akan datang' })));
+  ok(g.api_save(adminToken, 'CKAI1', Object.assign({}, base, { fakulti: 'UTMXCITE', status: 'Selesai', tarikh_tamat: '2027-01-10', nama_program: 'Program 2027' })));
+  const c = card(dash(2026), 'CKAI1');
+  assert.strictEqual(c.value, 1); assert.strictEqual(c.status, 'Tiada sasaran');
+  assert.strictEqual(c.secondary[0].value, 40);
+  assert.strictEqual(card(dash(2027), 'CKAI1').value, 1);
+  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI1', {})).rows.length, 0); // PIC FC tidak nampak rekod FKE
+  assert.strictEqual(ok(g.api_list(ckaiPic, 'CKAI1', {})).rows.length, 2);
+});
+test('CKAI 2: program inovasi dikira berasingan daripada CKAI 1', () => {
+  ok(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'Hackathon', kategori: 'Hackathon / Pertandingan', status: 'Selesai', tarikh_tamat: '2026-04-12', bil_peserta: 100 }));
+  fail(g.api_save(ckaiPic, 'CKAI2', { fakulti: 'FKE', nama_program: 'X', kategori: 'Bengkel Pitching', status: 'Dirancang' }), /betulkan/); // kategori tidak sah
+  assert.strictEqual(card(dash(2026), 'CKAI2').value, 1);
+  assert.strictEqual(card(dash(2026), 'CKAI1').value, 1);
+});
+test('CKAI 3 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
+  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_matrik: 'S1', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Berdaftar' };
+  ok(g.api_save(adminToken, 'CKAI3', r));
+  ok(g.api_save(adminToken, 'CKAI3', Object.assign({}, r, { nama_syarikat: 'Syarikat B', no_ssu: 'SSU-002', status: 'Tidak aktif' })));
+  ok(g.api_save(adminToken, 'CKAI3', Object.assign({}, r, { nama_syarikat: 'Syarikat C', no_ssu: 'SSU-003', tarikh_daftar: '2027-01-01' })));
+  fail(g.api_save(adminToken, 'CKAI3', Object.assign({}, r, { no_ssu: '' })), /betulkan/);
+  const c = card(dash(2026), 'CKAI3');
+  assert.strictEqual(c.value, 2); assert.strictEqual(c.secondary[0].value, 1);
+  assert.strictEqual(card(dash(2027), 'CKAI3').value, 1);
+  assert.match(c.title, /Sistem Syarikat Universiti/);
+});
+test('CKAI 4: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan disahkan', () => {
+  const r = { nama_perniagaan: 'Kedai A', jenis_pendapatan: 'Jualan produk' };
+  ok(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: '2026-03', pendapatan_rm: 1500.5 }, r)));
+  ok(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: '2026-04', pendapatan_rm: 2000 }, r)));
+  ok(g.api_save(ckaiPicFc, 'CKAI4', Object.assign({ fakulti: 'FC', tempoh: '2026-04', pendapatan_rm: 499.5, nama_perniagaan: 'Gig B', jenis_pendapatan: 'Perkhidmatan / Gig' })));
+  ok(g.api_save(adminToken, 'CKAI4', Object.assign({ fakulti: 'FC', tempoh: '2027-01', pendapatan_rm: 100 }, r)));
+  ['2026-13', '2026-00', '26-03', '2026-3', 'bukan-bulan'].forEach(b => fail(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: b, pendapatan_rm: 1 }, r)), /betulkan/));
+  fail(g.api_save(ckaiPic, 'CKAI4', Object.assign({ fakulti: 'FKE', tempoh: '2026-05', pendapatan_rm: -5 }, r)), /betulkan/);
+  const c = card(dash(2026), 'CKAI4');
+  assert.strictEqual(c.value, 4000); assert.strictEqual(c.format, 'rm');
+  assert.strictEqual(c.secondary[0].value, 2); // dua perniagaan unik
+  assert.strictEqual(card(dash(2027), 'CKAI4').value, 100);
+  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI4', {})).rows.length, 2); // PIC FC hanya nampak rekod FC (2026-04 dan 2027-01), bukan FKE
+  assert.ok(ok(g.api_list(ckaiPicFc, 'CKAI4', {})).rows.every(r => r.fakulti === 'FC'));
+  const byFak = c.breakdown[0].items; assert.strictEqual(byFak[0].label, 'FKE'); assert.strictEqual(byFak[0].value, 3500.5);
+});
+test('CKAI 5 (Makerspace): jumlah penggunaan bulanan, Admin sahaja', () => {
+  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2026-01', bil_penggunaan: 120, jam_penggunaan: 300 }));
+  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2026-02', bil_penggunaan: 80, jam_penggunaan: 150.5 }));
+  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2027-01', bil_penggunaan: 10 }));
+  const c = card(dash(2026), 'CKAI5');
+  assert.strictEqual(c.value, 200); assert.strictEqual(c.secondary[0].value, 2); assert.strictEqual(c.secondary[1].value, 100);
+  deepEq(c.breakdown[0].items.map(i => i.label), ['2026-01', '2026-02']); // tertib bulan
+});
+test('CKAI 6 (sewaan inkubator): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
+  const r = { tempoh: '2026-03', inkubator: 'Launchpad FC', penyewa: 'Syarikat A', jumlah_rm: 500 };
+  fail(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar' }, r)), /betulkan/); // tarikh bayar wajib
+  ok(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar', tarikh_bayar: '2026-03-05' }, r)));
+  ok(g.api_save(adminToken, 'CKAI6', Object.assign({}, r, { tempoh: '2026-04', jumlah_rm: 700, status_bayaran: 'Tertunggak' })));
+  const c = card(dash(2026), 'CKAI6');
+  assert.strictEqual(c.value, 500); assert.strictEqual(c.secondary[0].value, 'RM 700.00'); assert.strictEqual(c.secondary[1].value, 1);
+});
+test('sasaran CKAI diisi Admin: status dan peratus dikira (boleh melebihi 100%)', () => {
+  assert.ok(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length >= 30);
+  ok(g.api_saveTarget(adminToken, { kpi: 'CKAI4', tahun: 2026, sasaran: 3000 }));
+  const c = card(dash(2026), 'CKAI4');
+  assert.strictEqual(c.status, 'Melebihi sasaran'); assert.ok(Math.abs(c.pct - 133.3) < 0.1);
+  ok(g.api_saveTarget(adminToken, { kpi: 'CKAI1', tahun: 2026, sasaran: 5 }));
+  assert.strictEqual(card(dash(2026), 'CKAI1').status, 'Di bawah sasaran');
+  assert.strictEqual(card(dash(2026), 'CKAI1').quarterStatus, 'Tiada sasaran suku tahun');
+});
+test('dashboard awam CKAI tidak mendedahkan nama pelajar, perniagaan atau penyewa', () => {
+  const sj = JSON.stringify(dash(2026));
+  ['Kedai A', 'Gig B', 'Syarikat A', 'Syarikat B', 'Pelajar SSU', 'SSU-001', 'Launchpad FC', 'pic.ckai'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+});
+test('setup() dijalankan semula pada pemasangan lama menambah baris sasaran CKAI tanpa menduplikasi', () => {
+  const ss = env.spreadsheets[env.props.SHEET_ID];
+  const sh = ss.getSheetByName('Sasaran');
+  // simulasi pemasangan lama: buang semua baris CKAI
+  sh.data = sh.data.filter((row, i) => i === 0 || !/^CKAI/.test(String(row[0])));
+  g.setup();
+  const rows = ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi));
+  assert.strictEqual(rows.length, 30);
+  g.setup();
+  assert.strictEqual(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length, 30);
+});
+
 console.log('Sasaran (Admin)');
 test('Admin menyunting sasaran; PIC tidak boleh', () => {
   fail(g.api_saveTarget(picToken, { kpi: 'KAI1', tahun: 2026, sasaran: 30 }), /Admin sahaja/);
@@ -319,7 +421,7 @@ test('peranan/aktif ditaip manual (huruf kecil, ada ruang) tetap berfungsi', () 
   sh.appendRow(['  Manual.Admin@UTM.my ', 'Manual', ' admin ', 'UTMXCITE', '', ' ya ', '']);
   const t = login('manual.admin@utm.my');
   assert.strictEqual(ok(g.api_session(t)).user.peranan, 'Admin');
-  assert.strictEqual(ok(g.api_session(t)).kpis.length, 7);
+  assert.strictEqual(ok(g.api_session(t)).kpis.length, 13);
 });
 test('peranan kosong atau salah: tiada OTP dan tiada akses (bukan PIC secara lalai)', () => {
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Pengguna');

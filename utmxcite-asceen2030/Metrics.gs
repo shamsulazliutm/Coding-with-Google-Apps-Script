@@ -5,6 +5,26 @@
 
 function num_(v) { var n = Number(v); return isFinite(n) ? n : 0; }
 function round1_(n) { return Math.round(n * 10) / 10; }
+function round2_(n) { return Math.round(n * 100) / 100; }
+function rm_(n) { return 'RM ' + round2_(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+function sumBy_(rows, keyFn, valFn) {
+  var m = {}, order = [];
+  rows.forEach(function (r) {
+    var k = keyFn(r);
+    if (k === '' || k === undefined || k === null) k = '(tiada)';
+    if (!(k in m)) { m[k] = 0; order.push(k); }
+    m[k] += valFn(r);
+  });
+  return order.map(function (k) { return { label: k, value: round2_(m[k]) }; });
+}
+function sumOf_(rows, field) { var t = 0; rows.forEach(function (r) { t += num_(r[field]); }); return t; }
+function distinctCount_(rows, field) {
+  var seen = {};
+  rows.forEach(function (r) { var v = String(r[field] || '').trim().toLowerCase(); if (v) seen[v] = 1; });
+  return Object.keys(seen).length;
+}
+function byMonth_(items) { return items.sort(function (a, b) { return String(a.label).localeCompare(String(b.label)); }); }
 
 function countBy_(rows, keyFn) {
   var m = {}, order = [];
@@ -85,6 +105,85 @@ var MEASURES = {
         title: 'Kemajuan milestone (%)',
         items: rows.map(function (r) { return { label: (r.fasa || r.peringkat || '') + ' - ' + r.nama_milestone + ' (' + num_(r.pemberat) + '%)', value: num_(r.peratus_siap), target: 100 }; })
       }]
+    };
+  },
+
+
+  // CKAI 1 dan 2: program yang SELESAI pada tahun itu (mengikut tarikh tamat).
+  program: function (kpi, rows, year) {
+    var done = rows.filter(function (r) { return r.status === 'Selesai' && yearOf_(r.tarikh_tamat) === year; });
+    var upcoming = rows.filter(function (r) { return (r.status === 'Dirancang' || r.status === 'Sedang berjalan') && yearOf_(r.tarikh_mula) === year; });
+    return {
+      value: done.length,
+      secondary: [
+        { label: 'Jumlah peserta', value: sumOf_(done, 'bil_peserta') },
+        { label: 'Dirancang / sedang berjalan', value: upcoming.length }
+      ],
+      breakdown: [
+        { title: 'Program selesai mengikut fakulti / penganjur', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) },
+        { title: 'Mengikut kategori', items: sortDesc_(countBy_(done, function (r) { return r.kategori; })) }
+      ]
+    };
+  },
+
+  // CKAI 3: pendaftaran SSU (Sistem Syarikat Universiti) pada tahun itu.
+  ssu: function (kpi, rows, year) {
+    var reg = rows.filter(function (r) { return yearOf_(r.tarikh_daftar) === year; });
+    return {
+      value: reg.length,
+      secondary: [{ label: 'Masih berdaftar (aktif)', value: reg.filter(function (r) { return r.status === 'Berdaftar'; }).length }],
+      breakdown: [{ title: 'Mengikut fakulti', items: sortDesc_(countBy_(reg, function (r) { return r.fakulti; })) }]
+    };
+  },
+
+  // CKAI 4: jumlah pendapatan usahawan pelajar (RM) bagi bulan-bulan dalam tahun itu.
+  income: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
+    var total = sumOf_(inYear, 'pendapatan_rm');
+    return {
+      value: round2_(total),
+      secondary: [
+        { label: 'Perniagaan melaporkan pendapatan', value: distinctCount_(inYear, 'nama_perniagaan') },
+        { label: 'Purata setiap perniagaan', value: rm_(distinctCount_(inYear, 'nama_perniagaan') ? total / distinctCount_(inYear, 'nama_perniagaan') : 0) }
+      ],
+      breakdown: [
+        { title: 'Pendapatan (RM) mengikut fakulti', items: sortDesc_(sumBy_(inYear, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_rm); })) },
+        { title: 'Pendapatan (RM) mengikut jenis', items: sortDesc_(sumBy_(inYear, function (r) { return r.jenis_pendapatan; }, function (r) { return num_(r.pendapatan_rm); })) },
+        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.tempoh; }, function (r) { return num_(r.pendapatan_rm); })) }
+      ]
+    };
+  },
+
+  // CKAI 5: jumlah bilangan penggunaan Makerspace (rekod bulanan).
+  makerspace: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
+    var months = {};
+    inYear.forEach(function (r) { months[r.tempoh] = 1; });
+    var total = sumOf_(inYear, 'bil_penggunaan');
+    var nMonths = Object.keys(months).length;
+    return {
+      value: total,
+      secondary: [
+        { label: 'Bulan dilaporkan', value: nMonths },
+        { label: 'Purata sebulan', value: nMonths ? round1_(total / nMonths) : 0 },
+        { label: 'Jumlah jam penggunaan', value: round1_(sumOf_(inYear, 'jam_penggunaan')) }
+      ],
+      breakdown: [{ title: 'Penggunaan mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.tempoh; }, function (r) { return num_(r.bil_penggunaan); })) }]
+    };
+  },
+
+  // CKAI 6: pendapatan sewaan inkubator yang DITERIMA (status Dibayar) pada tahun itu.
+  rent: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
+    var paid = inYear.filter(function (r) { return r.status_bayaran === 'Dibayar'; });
+    var due = inYear.filter(function (r) { return r.status_bayaran !== 'Dibayar'; });
+    return {
+      value: round2_(sumOf_(paid, 'jumlah_rm')),
+      secondary: [
+        { label: 'Belum dibayar / tertunggak', value: rm_(sumOf_(due, 'jumlah_rm')) },
+        { label: 'Penyewa', value: distinctCount_(inYear, 'penyewa') }
+      ],
+      breakdown: [{ title: 'Sewaan diterima (RM) mengikut bulan', items: byMonth_(sumBy_(paid, function (r) { return r.tempoh; }, function (r) { return num_(r.jumlah_rm); })) }]
     };
   },
 
@@ -186,7 +285,7 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
   var t = (targets[kpi.id] || {})[year] || null;
   var target = t && t.sasaran !== '' ? t.sasaran : '';
   var card = {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, unit: kpi.unit, jenis: kpi.jenis,
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
     value: m.value, target: target,
     pct: target !== '' && target > 0 ? round1_(m.value / target * 100) : null,
     status: statusFor_(kpi, m.value, target),
@@ -194,7 +293,7 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
     note: t ? t.catatan : ''
   };
   var nowYear = yearOf_(todayIso_());
-  if (t && year === nowYear) {
+  if (t && target !== '' && year === nowYear) {
     var q = currentQuarter_();
     var qt = t.q[q - 1];
     card.quarter = q;
@@ -212,11 +311,12 @@ function computeDashboard_(year) {
     var rows = readTable_(kpi.sheet, typesFor_(kpi)).rows;
     return buildKpiCard_(kpi, rows, year, targets, ctx);
   });
+  var withTarget = cards.filter(function (c) { return c.target !== ''; }).length;
   var meet = cards.filter(function (c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }).length;
   return {
     year: year, years: APP.YEARS, generatedAt: nowIso_(),
     ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)', owner: 'Pengarah UTMXCITE' },
-    summary: { total: cards.length, meet: meet },
+    summary: { total: withTarget, meet: meet },
     kpis: cards
   };
 }

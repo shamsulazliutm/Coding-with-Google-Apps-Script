@@ -63,6 +63,27 @@ function F_(key, label, type, o) {
   return f;
 }
 
+
+/** Medan program (CKAI 1 dan CKAI 2): satu rekod = satu program. */
+function programFields_(kategori) {
+  return [
+    F_('fakulti', 'Fakulti / penganjur', 'faculty', { required: true, sec: 'Program' }),
+    F_('nama_program', 'Nama program', 'text', { required: true }),
+    F_('kategori', 'Kategori', 'select', { required: true, options: kategori }),
+    F_('tahap', 'Peringkat', 'select', { options: ['Fakulti', 'Pusat (UTMXCITE)', 'Universiti', 'Kebangsaan', 'Antarabangsa'] }),
+    F_('penganjur', 'Penganjur / kerjasama', 'text'),
+    F_('lokasi', 'Lokasi', 'text'),
+    F_('status', 'Status', 'select', { required: true, sec: 'Jadual & penyertaan', options: ['Dirancang', 'Sedang berjalan', 'Selesai', 'Dibatalkan'] }),
+    F_('tarikh_mula', 'Tarikh mula', 'date'),
+    F_('tarikh_tamat', 'Tarikh tamat', 'date'),
+    F_('bil_peserta', 'Bilangan peserta', 'number', { min: 0 }),
+    F_('bil_pelajar', 'Daripada itu pelajar', 'number', { min: 0 }),
+    F_('bajet_rm', 'Perbelanjaan (RM)', 'number', { min: 0 }),
+    F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+    F_('catatan', 'Catatan', 'textarea', { full: true })
+  ];
+}
+
 // ---------------------------------------------------------------------------
 // Definisi KPI. entry: 'faculty' = PIC fakulti + Admin; 'admin' = Admin sahaja.
 // ---------------------------------------------------------------------------
@@ -314,6 +335,103 @@ var KPIS = [
       F_('isu', 'Isu / halangan', 'textarea', { full: true }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
+  },
+  // ------------------------------------------------------------------ CKAI (Center Key Amal Indicator)
+  {
+    id: 'CKAI1', prefix: 'PK', sheet: 'CKAI1_Program_Keusahawanan', group: 'Center', entry: 'faculty',
+    title: 'CKAI 1 · Bilangan program keusahawanan', short: 'Program Keusahawanan',
+    unit: 'program selesai', measure: 'program', jenis: 'minimum',
+    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'status'],
+    statusField: 'status',
+    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: ['tarikh_tamat'] }],
+    fields: programFields_(['Bengkel', 'Kursus / Latihan', 'Bootcamp', 'Pertandingan', 'Seminar / Forum', 'Mentoring', 'Lain-lain'])
+  },
+  {
+    id: 'CKAI2', prefix: 'PI', sheet: 'CKAI2_Program_Inovasi', group: 'Center', entry: 'faculty',
+    title: 'CKAI 2 · Bilangan program inovasi', short: 'Program Inovasi',
+    unit: 'program selesai', measure: 'program', jenis: 'minimum',
+    listColumns: ['id', 'nama_program', 'kategori', 'fakulti', 'tarikh_mula', 'status'],
+    statusField: 'status',
+    rules: [{ when: { field: 'status', in: ['Selesai'] }, require: ['tarikh_tamat'] }],
+    fields: programFields_(['Bengkel', 'Hackathon / Pertandingan', 'Pameran / Showcase', 'Latihan Teknikal', 'Seminar / Forum', 'Lain-lain'])
+  },
+  {
+    id: 'CKAI3', prefix: 'SS', sheet: 'CKAI3_SSU', group: 'Center', entry: 'admin',
+    title: 'CKAI 3 · Bilangan pendaftaran SSU (Sistem Syarikat Universiti)', short: 'Pendaftaran SSU',
+    unit: 'pendaftaran SSU', measure: 'ssu', jenis: 'minimum',
+    listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
+    statusField: 'status',
+    rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
+      F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
+      F_('no_matrik', 'No. matrik', 'text', { required: true }),
+      F_('emel', 'E-mel', 'email'),
+      F_('telefon', 'No. telefon', 'text'),
+      F_('nama_syarikat', 'Nama syarikat / perniagaan', 'text', { required: true, sec: 'Pendaftaran SSU' }),
+      F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
+      F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
+      F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
+      F_('status', 'Status', 'select', { required: true, options: ['Berdaftar', 'Tidak aktif'] }),
+      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
+  },
+  {
+    id: 'CKAI4', prefix: 'PP', sheet: 'CKAI4_Pendapatan_Pelajar', group: 'Center', entry: 'faculty',
+    title: 'CKAI 4 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
+    unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
+    listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
+    statusField: 'jenis_pendapatan',
+    rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
+      F_('tempoh', 'Bulan', 'month', { required: true }),
+      F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true }),
+      F_('nama_pelajar', 'Nama pelajar', 'text'),
+      F_('no_matrik', 'No. matrik', 'text'),
+      F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
+      F_('jenis_pendapatan', 'Jenis pendapatan', 'select', { required: true, options: ['Jualan produk', 'Perkhidmatan / Gig', 'Geran / Pembiayaan', 'Lain-lain'] }),
+      F_('pendapatan_rm', 'Pendapatan (RM)', 'number', { required: true, min: 0 }),
+      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
+  },
+  {
+    id: 'CKAI5', prefix: 'MS', sheet: 'CKAI5_Makerspace', group: 'Center', entry: 'admin',
+    title: 'CKAI 5 · Bilangan penggunaan Makerspace', short: 'Penggunaan Makerspace',
+    unit: 'penggunaan', measure: 'makerspace', jenis: 'minimum',
+    listColumns: ['id', 'tempoh', 'bil_penggunaan', 'bil_pengguna_unik', 'jam_penggunaan'],
+    statusField: null,
+    rules: [],
+    fields: [
+      F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Penggunaan bulanan' }),
+      F_('bil_penggunaan', 'Bilangan penggunaan', 'number', { required: true, min: 0 }),
+      F_('bil_pengguna_unik', 'Bilangan pengguna unik', 'number', { min: 0 }),
+      F_('bil_pelajar', 'Daripada itu pelajar', 'number', { min: 0 }),
+      F_('jam_penggunaan', 'Jumlah jam penggunaan', 'number', { min: 0 }),
+      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
+  },
+  {
+    id: 'CKAI6', prefix: 'SI', sheet: 'CKAI6_Sewaan_Inkubator', group: 'Center', entry: 'admin',
+    title: 'CKAI 6 · Pendapatan sewaan inkubator', short: 'Sewaan Inkubator',
+    unit: 'RM sewaan diterima', measure: 'rent', jenis: 'minimum', valueFormat: 'rm',
+    listColumns: ['id', 'tempoh', 'inkubator', 'penyewa', 'jumlah_rm', 'status_bayaran'],
+    statusField: 'status_bayaran',
+    rules: [{ when: { field: 'status_bayaran', in: ['Dibayar'] }, require: ['tarikh_bayar'] }],
+    fields: [
+      F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Sewaan bulanan' }),
+      F_('inkubator', 'Inkubator / ruang', 'text', { required: true }),
+      F_('penyewa', 'Penyewa (syarikat / pasukan)', 'text', { required: true }),
+      F_('jumlah_rm', 'Jumlah sewa (RM)', 'number', { required: true, min: 0 }),
+      F_('status_bayaran', 'Status bayaran', 'select', { required: true, options: ['Dibayar', 'Belum dibayar', 'Tertunggak'] }),
+      F_('tarikh_bayar', 'Tarikh bayaran', 'date'),
+      F_('no_resit', 'No. resit / rujukan', 'text'),
+      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
   }
 ];
 
@@ -354,6 +472,10 @@ function buildTargetSeed_() {
     add('KAI6', y, 20, [], 'minimum', y === 2026 ? 400000 : '', y === 2026 ? 'Minimum 5 pelajar setiap fakulti (FAI, FC, FKE, MJIIT). Sasaran sekunder startup AI: Q1 0, Q2 1, Q3 2, Q4 3' : '');
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
+  // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
+  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6'].forEach(function (k) {
+    [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
+  });
   return rows;
 }
 

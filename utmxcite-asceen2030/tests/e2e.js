@@ -61,9 +61,10 @@ function buildHtml() {
   const text = async (sel) => (await page.locator(sel).innerText());
 
   console.log('Pelayar (Chromium)');
-  await step('dashboard awam dimuatkan tanpa log masuk (7 kad)', async () => {
+  await step('dashboard awam dimuatkan tanpa log masuk (13 kad: 7 KPI + 6 CKAI)', async () => {
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 7);
+    assert.strictEqual(await page.locator('.kcard').count(), 13);
+    assert.ok((await text('.cont')).toUpperCase().includes('CENTER (CKAI)'));
     assert.ok((await text('.side')).includes('Pengunjung'));
     assert.ok(!(await text('.side')).includes('Urus Pengguna'));
     assert.ok((await text('.kcard >> nth=0')).includes('KAI 1'));
@@ -72,7 +73,7 @@ function buildHtml() {
     await page.screenshot({ path: path.join(out, '1-dashboard-awam.png'), fullPage: true });
   });
   await step('KAI 6 menunjukkan 7 / 20 minimum dan butiran fakulti', async () => {
-    const k6 = page.locator('.kcard', { hasText: 'KAI 6' });
+    const k6 = page.locator('.kcard:has(.t:text-is("KAI 6 · Tubuhkan UTM AI Start Up"))');
     assert.ok((await k6.innerText()).includes('7'));
     assert.ok((await k6.innerText()).includes('20'));
     await k6.locator('summary').click();
@@ -94,7 +95,7 @@ function buildHtml() {
     await page.click('button:has-text("Sahkan")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
     assert.ok((await text('.side')).includes('Urus Pengguna'));
-    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 7);
+    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 13);
     await page.screenshot({ path: path.join(out, '2-dashboard-admin.png') });
   });
   await step('OTP salah menunjukkan ralat', async () => {
@@ -195,6 +196,26 @@ function buildHtml() {
     await page.click('button:has-text("Padam") >> nth=0');
     await page.click('#cyes');
     await page.waitForFunction((n) => document.querySelectorAll('tbody tr').length === n, before - 1);
+  });
+  await step('Admin merekod pendapatan CKAI 4 (input bulan) dan dashboard memaparkan RM', async () => {
+    await page.click('.nav:has-text("CKAI 4")');
+    await page.waitForSelector('table');
+    await page.click('[data-action="new"]');
+    await page.waitForSelector('#f_tempoh');
+    await page.selectOption('#f_fakulti', 'FC');
+    await page.fill('#f_tempoh', '2026-05');
+    await page.fill('#f_nama_perniagaan', 'Kedai E2E');
+    await page.selectOption('#f_jenis_pendapatan', 'Jualan produk');
+    await page.fill('#f_pendapatan_rm', '1500.5');
+    await page.screenshot({ path: path.join(out, '8-borang-ckai4.png'), fullPage: true });
+    await page.click('#savebtn');
+    await page.waitForSelector('td:has-text("Kedai E2E")');
+    await page.click('.nav:has-text("Dashboard")');
+    const card = page.locator('.kcard:has(.t:text-is("CKAI 4 · Pendapatan usahawan pelajar"))');
+    await card.waitFor();
+    assert.ok((await card.innerText()).includes('RM 1,500.50'), await card.innerText());
+    assert.ok((await card.innerText()).includes('Tiada sasaran'));
+    await page.screenshot({ path: path.join(out, '9-dashboard-ckai.png'), fullPage: true });
   });
   await step('paparan telefon: menu boleh dibuka dan dashboard tidak melimpah mendatar', async () => {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 800 } });
