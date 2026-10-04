@@ -33,8 +33,8 @@ function saveUser_(token, input) {
     var table = readTable_(SHEETS.USERS);
     var existing = null;
     table.rows.forEach(function (r) { if (normEmail_(r.emel) === email) existing = r; });
-    if (existing && existing.peranan === ROLES.ADMIN && (role !== ROLES.ADMIN || aktif !== 'Ya')) {
-      var otherAdmins = table.rows.filter(function (r) { return r.peranan === ROLES.ADMIN && String(r.aktif) === 'Ya' && normEmail_(r.emel) !== email; });
+    if (existing && parseUser_(existing).peranan === ROLES.ADMIN && (role !== ROLES.ADMIN || aktif !== 'Ya')) {
+      var otherAdmins = table.rows.map(parseUser_).filter(function (u) { return u.peranan === ROLES.ADMIN && u.aktif && u.emel !== email; });
       if (!otherAdmins.length) throw userError_('Mesti ada sekurang-kurangnya seorang Admin aktif.');
     }
     var row = [email, nama, role, fakulti, akses.join(','), aktif, existing ? existing.dicipta_pada : nowIso_()];

@@ -33,6 +33,7 @@ function loadGas(opts = {}) {
     setValue(v) { this.sh._set(this.r, this.c, v); return this; }
     getValue() { return this.getValues()[0][0]; }
     setNumberFormat(f) { for (let i = 0; i < this.nr; i++) for (let j = 0; j < this.nc; j++) this.sh.formats[(this.r + i) + ':' + (this.c + j)] = f; return this; }
+    setDataValidation(r) { this.sh.validations = this.sh.validations || {}; this.sh.validations[this.c] = r; return this; }
     setFontWeight() { return this; } setBackground() { return this; } setFontColor() { return this; }
   }
   class Sheet {
@@ -83,7 +84,8 @@ function loadGas(opts = {}) {
     SpreadsheetApp: {
       create: (n) => new Spreadsheet(n),
       openById: (id) => spreadsheets[id],
-      getActiveSpreadsheet: () => null
+      getActiveSpreadsheet: () => null,
+      newDataValidation: () => { const v = { list: null }; const b = { requireValueInList: (l) => { v.list = l; return b; }, setAllowInvalid: () => b, build: () => v }; return b; }
     },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; } }) },
     CacheService: {

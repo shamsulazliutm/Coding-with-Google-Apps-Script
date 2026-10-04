@@ -3,15 +3,25 @@
  * OTP dan sesi disimpan dalam CacheService (dalam bentuk hash); token tidak pernah disimpan dalam teks biasa.
  */
 
+function normRole_(v) {
+  var r = String(v === null || v === undefined ? '' : v).trim().toLowerCase();
+  return r === 'admin' ? ROLES.ADMIN : r === 'pic' ? ROLES.PIC : '';
+}
+
+/**
+ * Tab Pengguna boleh disunting terus dalam Sheet, jadi nilai dinormalkan (huruf besar/kecil, ruang kosong).
+ * Peranan selain Admin/PIC dianggap tidak sah: pengguna tidak aktif dan tiada akses (tidak jatuh ke PIC secara lalai).
+ */
 function parseUser_(row) {
   var akses = String(row.kpi_akses || '').split(/[,;\s]+/).map(function (s) { return s.trim().toUpperCase(); }).filter(String);
+  var role = normRole_(row.peranan);
   return {
     emel: normEmail_(row.emel),
     nama: String(row.nama || ''),
-    peranan: String(row.peranan || ''),
-    fakulti: String(row.fakulti || ''),
+    peranan: role,
+    fakulti: String(row.fakulti || '').trim(),
     kpiAkses: akses,
-    aktif: String(row.aktif || '') === 'Ya',
+    aktif: /^ya$/i.test(String(row.aktif || '').trim()) && role !== '',
     _row: row._row
   };
 }

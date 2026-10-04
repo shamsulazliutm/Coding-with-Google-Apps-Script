@@ -23,6 +23,9 @@ function setup() {
     ensureSheet_(ss, kpi.sheet, kpiColumns_(kpi), kpi.fields.concat([{ key: 'id', type: 'text' }].concat(SYS_COLS.map(function (k) { return { key: k, type: 'text' }; }))));
   });
 
+  listValidation_(ss.getSheetByName(SHEETS.USERS), 'peranan', [ROLES.ADMIN, ROLES.PIC]);
+  listValidation_(ss.getSheetByName(SHEETS.USERS), 'aktif', YES_NO);
+
   seedIfEmpty_(ss, SHEETS.FACULTIES, FACULTY_SEED);
   seedIfEmpty_(ss, SHEETS.TARGETS, buildTargetSeed_());
   seedIfEmpty_(ss, SHEETS.RISKS, RISK_SEED.map(function (r) { return [r[0], r[1], r[2], r[3], 'Terbuka', nowIso_()]; }));
@@ -59,6 +62,15 @@ function ensureSheet_(ss, name, headers, fieldDefs) {
     var plain = fieldDefs && fieldDefs.length ? textTypes[typeOf[h]] : (h !== 'tahun' && h !== 'sasaran' && h !== 'bajet_rm' && h !== 'q1' && h !== 'q2' && h !== 'q3' && h !== 'q4');
     if (plain) sh.getRange(2, i + 1, Math.max(sh.getMaxRows() - 1, 1), 1).setNumberFormat('@');
   });
+}
+
+/** Drop-down dalam Sheet supaya penyuntingan manual tab Pengguna kekal bersih. */
+function listValidation_(sh, header, values) {
+  var hdrs = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+  var col = hdrs.indexOf(header) + 1;
+  if (!col) return;
+  var rule = SpreadsheetApp.newDataValidation().requireValueInList(values, true).setAllowInvalid(false).build();
+  sh.getRange(2, col, Math.max(sh.getMaxRows() - 1, 1), 1).setDataValidation(rule);
 }
 
 function seedIfEmpty_(ss, name, rows) {

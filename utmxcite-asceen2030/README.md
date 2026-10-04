@@ -44,6 +44,11 @@ Sasaran tahunan, sasaran suku tahun (kumulatif) dan bajet disimpan dalam tab **S
 4. **Deploy → New deployment → Web app**: *Execute as* **Me**, *Who has access* **Anyone** (diperlukan supaya dashboard boleh dilihat tanpa akaun Google; log masuk OTP dikendalikan oleh aplikasi). Salin URL web app.
 5. Log masuk sebagai Admin → **Urus Pengguna** → daftar e-mel PIC (peranan PIC, fakulti, akses KPI contoh `KAI1,KAI4,KAI6`).
 
+## Tab `Pengguna`
+
+Satu tab untuk Admin dan PIC (e-mel di lajur A). Lajur: `emel`, `nama`, `peranan` (**Admin** atau **PIC**), `fakulti`, `kpi_akses` (contoh `KAI1,KAI4,KAI6`), `aktif` (**Ya** / **Tidak**), `dicipta_pada`.
+Boleh disunting terus dalam Sheet (drop-down disediakan bagi `peranan` dan `aktif`) atau melalui menu Admin → Urus Pengguna. Huruf besar/kecil dan ruang kosong diabaikan. Peranan selain Admin/PIC bermakna **tiada akses** (bukan PIC secara lalai). Lajur dibaca mengikut nama tajuk, jadi susunan lajur tidak penting.
+
 ## Perkara yang perlu disemak selepas setup
 
 - **Tab `Fakulti`**: senarai awal (13 fakulti + `UTMXCITE`) ialah andaian. Semak dan betulkan kod/nama mengikut senarai sebenar UTM. `FAI`, `FC`, `FKE`, `MJIIT` perlu kekal kerana digunakan oleh KAI 6.

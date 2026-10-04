@@ -308,5 +308,30 @@ test('Admin menyunting sasaran; PIC tidak boleh', () => {
   assert.ok(ok(g.api_listTargets(adminToken)).length > 20);
 });
 
+console.log('Penyuntingan manual tab Pengguna');
+test('drop-down peranan dan aktif disediakan dalam tab Pengguna', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Pengguna');
+  assert.strictEqual(JSON.stringify(sh.validations[3].list), JSON.stringify(['Admin', 'PIC']));
+  assert.strictEqual(JSON.stringify(sh.validations[6].list), JSON.stringify(['Ya', 'Tidak']));
+});
+test('peranan/aktif ditaip manual (huruf kecil, ada ruang) tetap berfungsi', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Pengguna');
+  sh.appendRow(['  Manual.Admin@UTM.my ', 'Manual', ' admin ', 'UTMXCITE', '', ' ya ', '']);
+  const t = login('manual.admin@utm.my');
+  assert.strictEqual(ok(g.api_session(t)).user.peranan, 'Admin');
+  assert.strictEqual(ok(g.api_session(t)).kpis.length, 7);
+});
+test('peranan kosong atau salah: tiada OTP dan tiada akses (bukan PIC secara lalai)', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Pengguna');
+  sh.appendRow(['tanpa.peranan@utm.my', 'X', '', 'FAI', 'KAI1,KAI4', 'Ya', '']);
+  sh.appendRow(['peranan.salah@utm.my', 'Y', 'Pengurus', 'FAI', 'KAI1', 'Ya', '']);
+  const n = env.sent.length;
+  ok(g.api_requestOtp('tanpa.peranan@utm.my')); ok(g.api_requestOtp('peranan.salah@utm.my'));
+  assert.strictEqual(env.sent.length, n);
+});
+test('Admin yang didaftar manual boleh diturunkan kepada PIC kerana Admin lain masih aktif', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'manual.admin@utm.my', nama: 'Manual', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1', aktif: 'Ya' }));
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);
