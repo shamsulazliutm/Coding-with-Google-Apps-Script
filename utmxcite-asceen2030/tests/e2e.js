@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
+const deepEq = (a, b) => assert.strictEqual(JSON.stringify(a), JSON.stringify(b));
 const { chromium } = require('playwright');
 const { loadGas } = require('./mock');
 
@@ -64,7 +65,10 @@ function buildHtml() {
   await step('dashboard awam dimuatkan tanpa log masuk (14 kad: 7 KPI + 7 CKAI)', async () => {
     await page.waitForSelector('.kcard');
     assert.strictEqual(await page.locator('.kcard').count(), 14);
-    assert.ok((await text('.cont')).toUpperCase().includes('CENTER (CKAI)'));
+    const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.toUpperCase());
+    deepEq(heads, ['KAI · PERINGKAT UNIVERSITI', 'DKAI · PERINGKAT JABATAN (JTNC HEPA)', 'CKAI · PERINGKAT PUSAT (UTMXCITE)']);
+    assert.strictEqual(await page.locator('.tag', { hasText: 'Department' }).count(), 1);
+    assert.strictEqual(await page.locator('.tag', { hasText: 'Internal' }).count(), 0);
     assert.ok((await text('.side')).includes('Pengunjung'));
     assert.ok(!(await text('.side')).includes('Urus Pengguna'));
     assert.ok((await text('.kcard >> nth=0')).includes('KAI 1'));

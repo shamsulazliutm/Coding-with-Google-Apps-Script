@@ -56,6 +56,13 @@ var FACULTY_SEED = [
 
 var YES_NO = ['Ya', 'Tidak'];
 
+/** Tiga peringkat penunjuk. Setiap KPI tergolong dalam satu peringkat mengikut awalan ID (KAI / DKAI / CKAI). */
+var LEVELS = [
+  { id: 'KAI', label: 'KAI · Peringkat Universiti' },
+  { id: 'DKAI', label: 'DKAI · Peringkat Jabatan (JTNC HEPA)' },
+  { id: 'CKAI', label: 'CKAI · Peringkat Pusat (UTMXCITE)' }
+];
+
 function F_(key, label, type, o) {
   var f = { key: key, label: label, type: type || 'text' };
   o = o || {};
@@ -305,7 +312,7 @@ var KPIS = [
     ]
   },
   {
-    id: 'DKAI1', prefix: 'D1', sheet: 'DKAI1_Pelan', group: 'Internal', entry: 'admin',
+    id: 'DKAI1', prefix: 'D1', sheet: 'DKAI1_Pelan', group: 'Department', entry: 'admin',
     title: 'DKAI 1 · Pelan Pemerkasaan Keusahawanan Pelajar', short: 'Pelan Keusahawanan',
     unit: '% kemajuan pelan', measure: 'progress', jenis: 'kemajuan',
     listColumns: ['id', 'peringkat', 'nama_milestone', 'suku_sasaran', 'status', 'peratus_siap', 'pemberat'],
@@ -462,6 +469,8 @@ var KPIS = [
     ]
   }
 ];
+
+KPIS.forEach(function (k) { k.level = k.id.replace(/\d+$/, ''); });
 
 /** Baris milestone awal bagi KPI berasaskan kemajuan (pemberat boleh diubah Admin). */
 var MILESTONE_SEED = {

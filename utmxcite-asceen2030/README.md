@@ -8,6 +8,16 @@ Rujukan sebenar: Dokumen Pelan Tindakan UTMXCITE (PDF).
 - **Sidebar kiri** (kad profil: nama dan e-mel) dan **sub-tab Senarai / Masuk Data** pada bar atas setiap KAI.
 - Semua data disimpan dalam satu Google Sheet, **satu tab bagi setiap KPI**.
 
+## Tiga peringkat penunjuk
+
+| Peringkat | KPI | Tag kad |
+|---|---|---|
+| **KAI · Peringkat Universiti** | KAI 1 hingga KAI 6 | Growth (KAI 1-3), Transform (KAI 4-6) |
+| **DKAI · Peringkat Jabatan (JTNC HEPA)** | DKAI 1 | Department |
+| **CKAI · Peringkat Pusat (UTMXCITE)** | CKAI 1 hingga CKAI 7 | Center |
+
+Dashboard dan sidebar dikelompokkan mengikut tiga peringkat ini.
+
 ## Peranan dan akses
 
 | Peranan | Dashboard | KAI 1, 4, 6 (fakulti) | KAI 2, 3, 5, DKAI 1 | Urus pengguna / sasaran / audit |
@@ -35,7 +45,7 @@ Sasaran tahunan, sasaran suku tahun (kumulatif) dan bajet disimpan dalam tab **S
 
 ## CKAI (Center Key Amal Indicator)
 
-Tujuh ukuran peringkat pusat, dipaparkan dalam kumpulan **Center (CKAI)** pada dashboard. Semuanya sasaran **minimum** dan **belum ditetapkan**: isi melalui menu Admin → Sasaran (sehingga itu kad menunjukkan "Tiada sasaran").
+Tujuh ukuran peringkat pusat, dipaparkan dalam bahagian **CKAI · Peringkat Pusat (UTMXCITE)** pada dashboard. Semuanya sasaran **minimum** dan **belum ditetapkan**: isi melalui menu Admin → Sasaran (sehingga itu kad menunjukkan "Tiada sasaran").
 
 | CKAI | Ukuran | Unit rekod | Dikira | Penginput |
 |---|---|---|---|---|

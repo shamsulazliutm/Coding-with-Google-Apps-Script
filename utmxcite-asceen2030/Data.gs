@@ -2,7 +2,7 @@
 
 function kpiSchema_(kpi) {
   return {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, unit: kpi.unit, entry: kpi.entry,
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, unit: kpi.unit, entry: kpi.entry,
     listColumns: kpi.listColumns, statusField: kpi.statusField, facultyWhitelist: kpi.facultyWhitelist || null,
     fields: kpi.fields
   };
@@ -13,6 +13,7 @@ function sessionInfo_(token) {
   return {
     user: publicUser_(user),
     faculties: listFaculties_(),
+    levels: LEVELS,
     kpis: accessibleKpis_(user).map(kpiSchema_)
   };
 }

@@ -69,8 +69,6 @@
     var k = (S.session && S.session.kpis || []).filter(function (x) { return x.id === id; });
     return k[0] || null;
   }
-  var GROUPS = ['Growth', 'Transform', 'Internal', 'Center'];
-  var GROUP_LABEL = { Growth: 'Growth', Transform: 'Transform', Internal: 'Internal (DKAI)', Center: 'Center (CKAI)' };
   function isAdmin() { return S.session && S.session.user.peranan === 'Admin'; }
 
   // Dialog pengesahan dalam halaman (window.confirm mungkin disekat dalam iframe kotak pasir).
@@ -120,10 +118,10 @@
       : '<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>';
     h += navBtn('dashboard', '▦', 'Dashboard', S.view.name === 'dashboard');
     if (u) {
-      GROUPS.forEach(function (g) {
-        var ks = S.session.kpis.filter(function (k) { return k.group === g; });
+      S.session.levels.forEach(function (lv) {
+        var ks = S.session.kpis.filter(function (k) { return k.level === lv.id; });
         if (!ks.length) return;
-        h += '<div class="sec">' + esc(GROUP_LABEL[g]) + '</div>';
+        h += '<div class="sec">' + esc(lv.label) + '</div>';
         ks.forEach(function (k) {
           h += navBtn('kpi:' + k.id, '◆', k.title.replace(/ · .*/, '') + ' · ' + k.short, S.view.name === 'kpi' && S.view.id === k.id);
         });
@@ -225,10 +223,10 @@
       '<span class="grow sec2">Dikemas kini: ' + esc(String(d.generatedAt).replace('T', ' ')) + '</span></div>';
     h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
       '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div></div>';
-    GROUPS.forEach(function (g) {
-      var cs = d.kpis.filter(function (c) { return c.group === g; });
+    d.levels.forEach(function (lv) {
+      var cs = d.kpis.filter(function (c) { return c.level === lv.id; });
       if (!cs.length) return;
-      h += '<div class="grp">' + esc(GROUP_LABEL[g]) + '</div><div class="grid">' + cs.map(renderCard).join('') + '</div>';
+      h += '<div class="grp">' + esc(lv.label) + '</div><div class="grid">' + cs.map(renderCard).join('') + '</div>';
     });
     el.innerHTML = h;
   }

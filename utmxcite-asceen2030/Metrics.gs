@@ -308,7 +308,7 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
   var t = (targets[kpi.id] || {})[year] || null;
   var target = t && t.sasaran !== '' ? t.sasaran : '';
   var card = {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
     value: m.value, target: target,
     pct: target !== '' && target > 0 ? round1_(m.value / target * 100) : null,
     status: statusFor_(kpi, m.value, target),
@@ -337,7 +337,7 @@ function computeDashboard_(year) {
   var withTarget = cards.filter(function (c) { return c.target !== ''; }).length;
   var meet = cards.filter(function (c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }).length;
   return {
-    year: year, years: APP.YEARS, generatedAt: nowIso_(),
+    year: year, years: APP.YEARS, levels: LEVELS, generatedAt: nowIso_(),
     ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)', owner: 'Pengarah UTMXCITE' },
     summary: { total: withTarget, meet: meet },
     kpis: cards

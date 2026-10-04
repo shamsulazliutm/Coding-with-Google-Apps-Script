@@ -196,7 +196,10 @@ const card = (d, id) => d.kpis.find(k => k.id === id);
 test('dashboard awam tanpa log masuk: 7 KPI + 7 CKAI', () => {
   const d = dash(2026);
   assert.strictEqual(d.kpis.length, 14);
-  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Internal', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
+  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Department', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
+  deepEq(d.kpis.map(k => k.level), ['KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
+  deepEq(d.levels.map(l => l.label), ['KAI · Peringkat Universiti', 'DKAI · Peringkat Jabatan (JTNC HEPA)', 'CKAI · Peringkat Pusat (UTMXCITE)']);
+  assert.ok(!JSON.stringify(d).includes('Internal'));
 });
 test('KAI1: aktif = didaftarkan + dalam pembangunan/beroperasi (2 daripada 3), sasaran 20', () => {
   const c = card(dash(2026), 'KAI1');
