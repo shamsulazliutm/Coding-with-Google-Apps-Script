@@ -5,6 +5,7 @@
  */
 var APP = {
   NAME: 'UTMXCITE 4 ASCEEN 2030 Report',
+  WEB_URL: 'https://script.google.com/a/macros/utm.my/s/AKfycbza7zjSdub5fOgDbS6q8LFM11ByewnyUTlm8Ft4fq4l9F1MSYDsPWkkb7HTuh_rTjyi/exec', // pautan web app (menu Sheet); kosong = dikesan automatik
   TZ: 'Asia/Kuala_Lumpur',
   OTP_TTL: 300,            // saat
   OTP_MAX_ATTEMPTS: 5,

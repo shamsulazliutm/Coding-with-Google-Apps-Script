@@ -118,6 +118,7 @@ function loadGas(opts = {}) {
       create: (n) => new Spreadsheet(n),
       openById: (id) => spreadsheets[id],
       getActiveSpreadsheet: () => null,
+      getUi: () => ({ createMenu: (n) => { const m = { name: n, items: [], addItem(l, f) { m.items.push([l, f]); return m; }, addToUi() { opts.menus = opts.menus || []; opts.menus.push(m); return m; } }; return m; }, showModalDialog: (o, t) => { opts.dialog = { html: o.html, title: t }; } }),
       newDataValidation: () => { const v = { list: null }; const b = { requireValueInList: (l) => { v.list = l; return b; }, setAllowInvalid: () => b, build: () => v }; return b; }
     },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; } }) },
@@ -132,7 +133,7 @@ function loadGas(opts = {}) {
     MailApp: { sendEmail: (m) => { sent.push(m); quota.n--; }, getRemainingDailyQuota: () => quota.n },
     ScriptApp: { getScriptId: () => 'SCRIPTID1234567890', getService: () => ({ getUrl: () => opts.webAppUrl === undefined ? 'https://script.google.com/macros/s/AKfycbxDEPLOY/exec' : opts.webAppUrl }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => opts.owner || 'admin@utm.my' }) },
-    HtmlService: {}
+    HtmlService: { createHtmlOutput: (h) => { const o = { html: h, setWidth: () => o, setHeight: () => o }; return o; } }
   };
   // Date palsu supaya "hari ini" boleh dikawal dalam ujian.
   const RealDate = Date;
@@ -145,7 +146,7 @@ function loadGas(opts = {}) {
   ['Config', 'Util', 'Setup', 'Auth', 'Data', 'Files', 'Metrics', 'Admin', 'Code'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(dir, f + '.gs'), 'utf8'), sandbox, { filename: f + '.gs' });
   });
-  return { g: sandbox, sent, props, cacheStore, spreadsheets, clock };
+  return { g: sandbox, sent, props, cacheStore, spreadsheets, clock, opts };
 }
 
 module.exports = { loadGas };

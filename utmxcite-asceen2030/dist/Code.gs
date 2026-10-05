@@ -6,6 +6,7 @@
  */
 var APP = {
   NAME: 'UTMXCITE 4 ASCEEN 2030 Report',
+  WEB_URL: 'https://script.google.com/a/macros/utm.my/s/AKfycbza7zjSdub5fOgDbS6q8LFM11ByewnyUTlm8Ft4fq4l9F1MSYDsPWkkb7HTuh_rTjyi/exec', // pautan web app (menu Sheet); kosong = dikesan automatik
   TZ: 'Asia/Kuala_Lumpur',
   OTP_TTL: 300,            // saat
   OTP_MAX_ATTEMPTS: 5,
@@ -1047,6 +1048,30 @@ function writeSetupTab_(ss) {
     sh.setColumnWidth(1, 230); sh.setColumnWidth(2, 520); sh.setColumnWidth(3, 420);
     sh.setFrozenRows(2);
   } catch (e) { /* pemformatan tidak kritikal */ }
+}
+
+/** Menu dalam Google Sheet: buka dashboard dan jalankan persediaan. */
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi().createMenu('UTMXCITE')
+      .addItem('Buka Dashboard KPI', 'linkSistem')
+      .addItem('Jalankan persediaan (setup)', 'setup')
+      .addToUi();
+  } catch (e) { /* bukan dalam konteks Sheet */ }
+}
+
+function webUrl_() {
+  var u = APP.WEB_URL || '';
+  if (!u) { try { u = ScriptApp.getService().getUrl() || ''; } catch (e) { u = ''; } }
+  return u;
+}
+
+/** Buka Dashboard KPI UTMXCITE JTNCHEPA dalam tab baharu. */
+function linkSistem() {
+  var url = webUrl_();
+  if (!/^https:\/\/script\.google\.com\//.test(url)) throw new Error('Pautan web app belum ditetapkan (APP.WEB_URL dalam Config.gs).');
+  var html = "<script>window.open(" + JSON.stringify(url) + ");google.script.host.close();</script>";
+  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(html).setWidth(1).setHeight(1), 'Dashboard KPI UTMXCITE JTNCHEPA');
 }
 
 
