@@ -187,7 +187,7 @@ function webUrl_() {
 function linkSistem() {
   var url = webUrl_();
   if (!/^https:\/\/script\.google\.com\//.test(url)) throw new Error('Pautan web app belum ditetapkan (APP.WEB_URL dalam Config.gs).');
-  var html = "<script>window.open(" + JSON.stringify(url) + ");google.script.host.close();</script>";
+  var html = "<script>window.open(" + JSON.stringify(url) + ");google.script.host.close();<\/script>";
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(html).setWidth(1).setHeight(1), 'Dashboard KPI UTMXCITE JTNCHEPA');
 }
 
