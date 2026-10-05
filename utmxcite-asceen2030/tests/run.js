@@ -769,5 +769,19 @@ test('menu Sheet: onOpen dan linkSistem membuka pautan web app', () => {
   assert.strictEqual(env.opts.dialog.title, 'Dashboard KPI UTMXCITE JTNCHEPA');
 });
 
+test('folder lampiran yang ditampal pada tab Persediaan digunakan oleh setup()', () => {
+  const ss = env.spreadsheets[env.props.SHEET_ID];
+  const mine = g.DriveApp.createFolder('Folder saya');
+  const sh = ss.getSheetByName('Persediaan');
+  const r = sh.data.findIndex(row => String(row[0]).indexOf('Folder lampiran Drive') === 0) + 1;
+  sh.getRange(r, 2).setValue(mine.getId());
+  g.setup();
+  assert.strictEqual(env.props.FOLDER_ID, mine.getId());
+  assert.ok(String(sh.data[r - 1][1]).includes(mine.getId()));
+  sh.getRange(r, 2).setValue('ID-tidak-wujud-xyz-1234567890');
+  g.setup();
+  assert.strictEqual(env.props.FOLDER_ID, mine.getId());
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);

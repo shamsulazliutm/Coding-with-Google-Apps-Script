@@ -36,6 +36,7 @@ function setup() {
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
 
+  adoptFolderFromTab_(ss);
   writeSetupTab_(ss);
 
   console.log('Setup selesai. Sheet: ' + ss.getUrl());
@@ -143,7 +144,7 @@ function writeSetupTab_(ss) {
     ['Google Sheet - Pautan', ss.getUrl(), 'Hadkan akses Sheet kepada Admin sahaja (ada no. KP pelajar).'],
     ['Web app - Pautan', url || '(belum deploy)', url ? (/\/dev$/.test(url) ? 'Ini pautan ujian /dev. Gunakan pautan /exec untuk orang ramai.' : 'Kongsi pautan ini kepada pengguna.') : 'Deploy > New deployment > Web app. Salin pautan berakhir /exec.'],
     ['Apps Script - Script ID', scriptId || '(tidak dikesan)', 'Untuk clasp (.clasp.json).'],
-    ['Folder lampiran Drive - Pautan', folder ? folder.getUrl() : '(belum dicipta)', 'Dicipta automatik semasa muat naik PDF pertama.'],
+    ['Folder lampiran Drive - Pautan', folder ? folder.getUrl() : '(belum dicipta)', 'Dicipta automatik. Untuk guna folder sendiri, tampal ID atau pautan folder di sini, kemudian jalankan setup().'],
     ['Pemilik skrip (Execute as)', owner || '(tidak dikesan)', 'Admin pertama dalam tab Pengguna ialah pemilik ini.'],
     ['Dikemas kini', Utilities.formatDate(new Date(), APP.TZ, "yyyy-MM-dd HH:mm"), 'Jalankan setup() semula untuk menyegarkan.'],
     ['', '', ''],
@@ -188,4 +189,20 @@ function linkSistem() {
   if (!/^https:\/\/script\.google\.com\//.test(url)) throw new Error('Pautan web app belum ditetapkan (APP.WEB_URL dalam Config.gs).');
   var html = "<script>window.open(" + JSON.stringify(url) + ");google.script.host.close();</script>";
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(html).setWidth(1).setHeight(1), 'Dashboard KPI UTMXCITE JTNCHEPA');
+}
+
+/** Jika ID/pautan folder lampiran ditampal pada tab Persediaan, gunakan folder itu (mesti boleh dicapai oleh pemilik skrip). */
+function adoptFolderFromTab_(ss) {
+  var sh = ss.getSheetByName(SHEETS.SETUP);
+  if (!sh || sh.getLastRow() < 2) return;
+  var rows = sh.getRange(1, 1, sh.getLastRow(), 2).getValues();
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i][0]).indexOf('Folder lampiran Drive') !== 0) continue;
+    var v = String(rows[i][1] || '').trim();
+    var m = /\/folders\/([A-Za-z0-9_-]{10,})/.exec(v) || /^([A-Za-z0-9_-]{15,})$/.exec(v);
+    if (!m || m[1] === getProp_('FOLDER_ID')) return;
+    try { DriveApp.getFolderById(m[1]).getName(); } catch (e) { console.warn('Folder pada tab Persediaan tidak dapat dicapai: ' + m[1]); return; }
+    setProp_('FOLDER_ID', m[1]);
+    return;
+  }
 }
