@@ -87,6 +87,9 @@ function buildHtml() {
     assert.ok(logoOk, 'logo UTM tidak dimuatkan dalam sidebar');
     await page.screenshot({ path: path.join(out, '1-dashboard-awam.png'), fullPage: true });
   });
+  await step('tajuk dashboard: Dashboard KPI UTMXCITE JTNCHEPA', async () => {
+    assert.strictEqual((await text('.top h1')).trim(), 'Dashboard KPI UTMXCITE JTNCHEPA');
+  });
   await step('KAI 6 menunjukkan 7 / 20 minimum dan butiran fakulti', async () => {
     const k6 = page.locator('.kcard:has(.t:text-is("KAI 6 · Tubuhkan UTM AI Start Up"))');
     assert.ok((await k6.innerText()).includes('7'));

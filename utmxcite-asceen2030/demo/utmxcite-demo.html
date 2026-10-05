@@ -52,7 +52,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .side.mini .prof{justify-content:center;padding:8px 0;background:none;border:0}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
 .top{background:#fff;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
-.top h1{font-size:19px;color:var(--m);font-weight:700}
+.tt{display:flex;gap:10px;align-items:center;min-width:0}
+.top h1{font-size:19px;color:var(--m);font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .burger{display:none;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:18px;cursor:pointer}
 .user{display:flex;gap:10px;align-items:center;font-size:12.5px}
 .badge{background:#e9b94933;color:#7a5400;padding:3px 9px;border-radius:12px;font-weight:600;white-space:nowrap}
@@ -2557,6 +2558,7 @@ window.__demoSeed = function () {
   'use strict';
 
   var APP_NAME = 'UTMXCITE 4 ASCEEN 2030 Report';
+  var DASH_TITLE = 'Dashboard KPI UTMXCITE JTNCHEPA';
   var S = {
     token: null, session: null,
     view: { name: 'dashboard' },
@@ -2652,7 +2654,7 @@ window.__demoSeed = function () {
       '<aside class="side' + (S.navOpen ? ' open' : '') + (S.mini ? ' mini' : '') + '" id="side" aria-label="Menu utama">' + renderSide(u) + '</aside>' +
       '<div class="scrim' + (S.navOpen ? ' open' : '') + '" data-action="closenav"></div>' +
       '<div class="main">' +
-      '<header class="top"><div style="display:flex;gap:10px;align-items:center">' +
+      '<header class="top"><div class="tt">' +
       '<button class="burger" data-action="togglenav" aria-label="Buka menu">☰</button><h1>' + esc(pageTitle()) + '</h1></div>' +
       '<div class="user">' + (u
         ? '<span class="badge">' + esc(u.peranan) + (u.peranan === 'PIC' ? ' · ' + esc(u.fakulti) : '') + '</span>' +
@@ -2744,7 +2746,7 @@ window.__demoSeed = function () {
   }
   function pageTitle() {
     var v = S.view;
-    if (v.name === 'dashboard') return 'Dashboard KPI';
+    if (v.name === 'dashboard') return DASH_TITLE;
     if (v.name === 'kpi') { var k = kpiById(v.id); return k ? k.title : 'KPI'; }
     return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit' }[v.name] || APP_NAME;
   }
