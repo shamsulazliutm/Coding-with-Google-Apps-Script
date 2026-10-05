@@ -50,12 +50,12 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
   await step('log masuk OTP: kod simulasi muncul dan berfungsi', async () => {
     await page.click('[data-action="login"]');
     await page.fill('#l_emel', 'pic.fai@utm.my');
-    await page.click('button:has-text("Hantar OTP")');
+    await page.click('button:has-text("Hantar / Hantar Semula Kod")');
     await page.waitForSelector('#demomail .code');
     const code = await page.locator('#demomail .code').innerText();
     assert.match(code, /^\d{6}$/);
     await page.fill('#l_code', code);
-    await page.click('button:has-text("Sahkan")');
+    await page.click('button:has-text("Sahkan dan Log Masuk")');
     await page.waitForSelector('.prof >> text=pic.fai@utm.my');
   });
   await step('PIC FAI: hanya KPI dibenarkan; CKAI 4/5/6 tiada', async () => {

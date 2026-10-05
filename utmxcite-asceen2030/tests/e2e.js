@@ -115,10 +115,10 @@ function buildHtml() {
   await step('log masuk Admin dengan OTP', async () => {
     await page.click('[data-action="login"]');
     await page.fill('#l_emel', 'admin@utm.my');
-    await page.click('button:has-text("Hantar OTP")');
+    await page.click('button:has-text("Hantar / Hantar Semula Kod")');
     await page.waitForSelector('#l_code');
     await page.fill('#l_code', code());
-    await page.click('button:has-text("Sahkan")');
+    await page.click('button:has-text("Sahkan dan Log Masuk")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
     assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 1); // dalam kumpulan Admin (dilipat)
     assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 16);
@@ -145,22 +145,22 @@ function buildHtml() {
     await page.click('[data-action="logout"]');
     await page.click('[data-action="login"]');
     await page.fill('#l_emel', 'admin@utm.my');
-    await page.click('button:has-text("Hantar OTP")');
+    await page.click('button:has-text("Hantar / Hantar Semula Kod")');
     await page.waitForSelector('#l_code');
     const wrong = code() === '123456' ? '654321' : '123456';
     await page.fill('#l_code', wrong);
-    await page.click('button:has-text("Sahkan")');
-    await page.waitForSelector('.dlg .err:has-text("tidak sah")');
+    await page.click('button:has-text("Sahkan dan Log Masuk")');
+    await page.waitForSelector('.lgcard .err:has-text("tidak sah")');
     await page.keyboard.press('Escape');
-    await page.waitForSelector('.dlg', { state: 'detached' });
+    await page.waitForSelector('.lgcard', { state: 'detached' });
   });
   await step('PIC FAI: hanya 3 KPI, fakulti dikunci, simpan rekod KAI 4', async () => {
     await page.click('[data-action="login"]');
     await page.fill('#l_emel', 'pic.fai@utm.my');
-    await page.click('button:has-text("Hantar OTP")');
+    await page.click('button:has-text("Hantar / Hantar Semula Kod")');
     await page.waitForSelector('#l_code');
     await page.fill('#l_code', code());
-    await page.click('button:has-text("Sahkan")');
+    await page.click('button:has-text("Sahkan dan Log Masuk")');
     await page.waitForSelector('.prof >> text=Siti Aminah');
     assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 3);
     assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 0);
@@ -205,10 +205,10 @@ function buildHtml() {
   await step('Admin: urus pengguna, sasaran dan log audit', async () => {
     await page.click('[data-action="login"]');
     await page.fill('#l_emel', 'admin@utm.my');
-    await page.click('button:has-text("Hantar OTP")');
+    await page.click('button:has-text("Hantar / Hantar Semula Kod")');
     await page.waitForSelector('#l_code');
     await page.fill('#l_code', code());
-    await page.click('button:has-text("Sahkan")');
+    await page.click('button:has-text("Sahkan dan Log Masuk")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
     await goNav('Urus Pengguna');
     await page.waitForSelector('#uform');

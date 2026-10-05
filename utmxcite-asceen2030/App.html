@@ -92,6 +92,7 @@
 
   // ------------------------------------------------------------------ rangka
   function render() {
+    if (S.login) { renderLogin(); return; }
     var app = $('#app');
     var u = S.session && S.session.user;
     app.innerHTML =
@@ -109,7 +110,6 @@
       '<div id="tabs"></div><main class="cont" id="content"></main></div></div>' +
       '<div id="modal"></div><div id="confirm"></div>';
     renderView();
-    renderModal();
   }
 
   // ---- Ikon garis (inline SVG, gaya sama dengan portal UTM)
@@ -627,48 +627,58 @@
   }
 
   // ------------------------------------------------------------------ log masuk (OTP)
-  function renderModal() {
-    var m = $('#modal');
-    if (!S.login) { m.innerHTML = ''; return; }
+
+  function renderLogin() {
     var L = S.login;
-    m.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ltitle"><div class="dlg">' +
+    $('#app').innerHTML =
+      '<div class="lgpage"><header class="lgban">' +
+      (window.UTM_LOGO ? '<img src="' + window.UTM_LOGO + '" alt="Universiti Teknologi Malaysia ASCEND 2030">' : '') +
+      '<div class="lgtt"><small>DS04 · Pekerjaan Premium Tier 1</small><b>' + esc(APP_NAME) + '</b><span>Dashboard KPI UTMXCITE JTNCHEPA</span></div></header>' +
+      '<main class="lgmain"><div class="lgcard" role="dialog" aria-labelledby="ltitle">' +
       '<h2 id="ltitle">Log Masuk</h2>' +
-      (L.step === 'email'
-        ? '<p>Masukkan e-mel berdaftar anda. Kod OTP 6 digit akan dihantar ke e-mel itu.</p>' +
-          '<form id="lform"><label for="l_emel">E-mel</label><input type="email" id="l_emel" autocomplete="email" required value="' + esc(L.email || '') + '">' +
-          '<div class="err" role="alert">' + esc(L.error || '') + '</div>' +
-          '<div class="acts"><button class="btn" type="submit"' + (L.busy ? ' disabled' : '') + '>' + (L.busy ? 'Menghantar…' : 'Hantar OTP') + '</button><button class="btn o" type="button" data-action="lclose">Batal</button></div></form>'
-        : '<p>' + esc(L.message || 'Kod OTP telah dihantar.') + '<br><b>' + esc(L.email) + '</b></p>' +
-          '<form id="lform"><label for="l_code">Kod OTP</label><input type="text" id="l_code" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>' +
-          '<div class="err" role="alert">' + esc(L.error || '') + '</div>' +
-          '<div class="acts"><button class="btn" type="submit"' + (L.busy ? ' disabled' : '') + '>' + (L.busy ? 'Mengesahkan…' : 'Sahkan') + '</button>' +
-          '<button class="btn o" type="button" data-action="lback">Tukar e-mel</button></div></form>') +
-      '</div></div>';
-    var inp = $('#l_emel') || $('#l_code'); if (inp) inp.focus();
+      '<p>Masukkan e-mel berdaftar anda. Kod pengesahan enam digit akan dihantar melalui e-mel.</p>' +
+      '<form id="lform" novalidate>' +
+      '<label for="l_emel">E-mel berdaftar</label><input type="email" id="l_emel" autocomplete="email" placeholder="nama@utm.my" value="' + esc(L.email || '') + '">' +
+      '<label for="l_code">Kod OTP</label><input type="text" id="l_code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Masukkan kod 6 digit" value="' + esc(L.code || '') + '">' +
+      (L.message ? '<div class="ok" role="status">' + esc(L.message) + '</div>' : '') +
+      '<div class="err" role="alert">' + esc(L.error || '') + '</div>' +
+      '<div class="lgacts"><button class="btn" type="button" data-action="sendotp"' + (L.busy ? ' disabled' : '') + '>' + (L.busy === 'send' ? 'Menghantar…' : 'Hantar / Hantar Semula Kod') + '</button>' +
+      '<button class="btn" type="submit"' + (L.busy ? ' disabled' : '') + '>' + (L.busy === 'verify' ? 'Mengesahkan…' : 'Sahkan dan Log Masuk') + '</button></div>' +
+      '<p class="lgback"><a href="#" data-action="lclose">← Kembali ke dashboard awam</a></p></form></div></main>' +
+      '<footer class="lgfoot">© 2026 UTMXCITE, Universiti Teknologi Malaysia</footer></div>';
+    var f = (L.message && $('#l_code')) || $('#l_emel'); if (f && !L.noFocus) f.focus();
+  }
+  function loginKeep() {   // simpan nilai medan sebelum lukis semula
+    var L = S.login; if (!L) return;
+    if ($('#l_emel')) L.email = $('#l_emel').value.trim();
+    if ($('#l_code')) L.code = $('#l_code').value.trim();
+  }
+
+  function sendOtp() {
+    var L = S.login; if (!L || L.busy) return;
+    loginKeep(); L.error = ''; L.message = '';
+    if (!L.email) { L.error = 'Sila masukkan e-mel.'; renderLogin(); return; }
+    L.busy = 'send'; renderLogin();
+    call('api_requestOtp', L.email).then(function (r) {
+      L.busy = false; L.message = r.message || 'Kod OTP telah dihantar.'; renderLogin();
+    }).catch(function (e) { L.busy = false; L.error = e.message; renderLogin(); });
   }
 
   function submitLogin() {
     var L = S.login; if (!L || L.busy) return;
-    L.error = ''; L.busy = true;
-    if (L.step === 'email') {
-      L.email = $('#l_emel').value.trim();
-      renderModal();
-      call('api_requestOtp', L.email).then(function (r) {
-        L.step = 'code'; L.message = r.message; L.busy = false; renderModal();
-      }).catch(function (e) { L.busy = false; L.error = e.message; renderModal(); });
-    } else {
-      var code = $('#l_code').value.trim();
-      renderModal();
-      call('api_verifyOtp', L.email, code).then(function (r) {
-        S.token = r.token; store('set', 'utmx_token', r.token);
-        S.login = null;
-        return call('api_session', S.token);
-      }).then(function (sess) {
-        S.session = sess; S.view = { name: 'dashboard' }; S.dash = null;
-        toast('Selamat datang, ' + (sess.user.nama || sess.user.emel) + '.');
-        render();
-      }).catch(function (e) { L.busy = false; L.error = e.message; renderModal(); });
-    }
+    loginKeep(); L.error = '';
+    if (!L.email) { L.error = 'Sila masukkan e-mel.'; renderLogin(); return; }
+    if (!/^\d{6}$/.test(L.code || '')) { L.error = L.message ? 'Masukkan kod 6 digit.' : 'Tekan "Hantar Kod" dahulu, kemudian masukkan kod 6 digit.'; renderLogin(); return; }
+    L.busy = 'verify'; renderLogin();
+    call('api_verifyOtp', L.email, L.code).then(function (r) {
+      S.token = r.token; store('set', 'utmx_token', r.token);
+      S.login = null;
+      return call('api_session', S.token);
+    }).then(function (sess) {
+      S.session = sess; S.view = { name: 'dashboard' }; S.dash = null;
+      toast('Selamat datang, ' + (sess.user.nama || sess.user.emel) + '.');
+      render();
+    }).catch(function (e) { L.busy = false; L.error = e.message; L.code = ''; renderLogin(); });
   }
 
   function doLogout() {
@@ -709,9 +719,9 @@
         else { S.mini = !S.mini; redrawSide(); }
         break;
       case 'closenav': S.navOpen = false; $('#side').classList.remove('open'); $('.scrim').classList.remove('open'); break;
-      case 'login': S.login = { step: 'email' }; renderModal(); break;
-      case 'lclose': S.login = null; renderModal(); break;
-      case 'lback': S.login = { step: 'email', email: S.login.email }; renderModal(); break;
+      case 'login': S.login = { email: '' }; renderLogin(); break;
+      case 'sendotp': sendOtp(); break;
+      case 'lclose': ev.preventDefault(); S.login = null; render(); break;
       case 'logout': doLogout(); break;
       case 'dview': S.dashView = a.getAttribute('data-view'); renderDashboard(); break;
       case 'padd': syncPeople(a.getAttribute('data-key')); (S.people[a.getAttribute('data-key')] || (S.people[a.getAttribute('data-key')] = [])).push({ nama: '', matrik: '', nokp: '' }); redrawPeople(a.getAttribute('data-key')); break;
@@ -807,7 +817,7 @@
 
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape') {
-      if (S.login) { S.login = null; renderModal(); }
+      if (S.login) { S.login = null; render(); }
       else if (S.navOpen) { S.navOpen = false; render(); }
     }
   });
