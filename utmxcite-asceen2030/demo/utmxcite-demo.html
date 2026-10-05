@@ -115,6 +115,9 @@ details.bd summary{cursor:pointer;color:var(--m);font-size:12.5px;font-weight:60
 .bi .mini{height:6px;background:#eadfe2;border-radius:3px;overflow:hidden}
 .bi .mini i{display:block;height:100%;background:var(--m2)}
 .bi .n{font-variant-numeric:tabular-nums;color:var(--mut)}
+.muted{color:#6a5a5f;font-size:12.5px}
+.chk{list-style:none;margin:8px 0;padding:0}.chk li{padding:4px 0}.chk li[data-ok="0"]{color:#a4132f}.chk li[data-ok="1"]{color:#18703a}
+.panel h3{margin:12px 14px 0}.panel .acts{margin:10px 14px}.panel>p{margin:8px 14px 12px}
 .panel{background:#fff;border-radius:10px;box-shadow:0 1px 3px #0001;overflow:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{background:#f0e7ea;text-align:left;padding:9px 12px;font-size:12px;color:var(--m);white-space:nowrap;position:sticky;top:0}
@@ -261,8 +264,11 @@ label .req{color:var(--bad)}
   Sheet.prototype.appendRow = function (arr) { var r = this.getLastRow() + 1, self = this; arr.forEach(function (v, j) { self._set(r, j + 1, v); }); persist(); };
   Sheet.prototype.deleteRow = function (n) { this.data.splice(n - 1, 1); persist(); };
   Sheet.prototype.setFrozenRows = function () {};
+  Sheet.prototype.setColumnWidth = function () { return this; };
+  Sheet.prototype.clear = function () { this.data = []; this.formats = {}; persist(); return this; };
   function Spreadsheet(name, id) { this.name = name; this.id = id || ('DEMO' + (++ssCounter)); this.sheets = [new Sheet('Sheet1')]; spreadsheets[this.id] = this; }
   Spreadsheet.prototype.getId = function () { return this.id; };
+  Spreadsheet.prototype.getName = function () { return this.name; };
   Spreadsheet.prototype.getUrl = function () { return '#demo-sheet-' + this.id; };
   Spreadsheet.prototype.getSheetByName = function (n) { return this.sheets.filter(function (s) { return s.name === n; })[0] || null; };
   Spreadsheet.prototype.insertSheet = function (n) { var s = new Sheet(n); this.sheets.push(s); persist(); return s; };
@@ -286,7 +292,8 @@ label .req{color:var(--bad)}
   window.Session = { getEffectiveUser: function () { return { getEmail: function () { return 'admin.demo@utm.my'; } }; } };
 
   // ---------- Mel (disimulasikan: dipaparkan pada skrin demo)
-  window.MailApp = { sendEmail: function (m) { if (window.__demoMail) window.__demoMail(m); } };
+  window.MailApp = { sendEmail: function (m) { if (window.__demoMail) window.__demoMail(m); }, getRemainingDailyQuota: function () { return 100; } };
+  window.ScriptApp = { getScriptId: function () { return 'DEMO-SCRIPT-ID'; }, getService: function () { return { getUrl: function () { return 'https://script.google.com/macros/s/DEMO/exec'; } }; } };
 
   // ---------- Drive dalam memori (fail kecil disimpan dalam localStorage)
   function DFile(id, name, b64, folder, trashed) { this.id = id; this.name = name; this.b64 = b64; this.folder = folder; this.trashed = !!trashed; }
@@ -297,6 +304,7 @@ label .req{color:var(--bad)}
   DFile.prototype.getParents = function () { var arr = [{ getId: function () { return this._f; }, _f: this.folder }], i = 0; return { hasNext: function () { return i < arr.length; }, next: function () { return arr[i++]; } }; };
   function DFolder(id, name) { this.id = id; this.name = name; }
   DFolder.prototype.getId = function () { return this.id; };
+  DFolder.prototype.getUrl = function () { return '#demo-folder-' + this.id; };
   DFolder.prototype.createFile = function (blob) {
     var id = 'DEMOFILE' + (++drive.n) + 'abcdefghij', f = new DFile(id, blob.getName(), Utilities.base64Encode(blob.getBytes()), this.id);
     drive.files[id] = f; persist(); return f;
@@ -374,7 +382,8 @@ var SHEETS = {
   TARGETS: 'Sasaran',
   FACULTIES: 'Fakulti',
   RISKS: 'Risiko',
-  AUDIT: 'Log_Audit'
+  AUDIT: 'Log_Audit',
+  SETUP: 'Persediaan'
 };
 
 var ROLES = { ADMIN: 'Admin', PIC: 'PIC' };
@@ -1271,6 +1280,8 @@ function setup() {
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
 
+  writeSetupTab_(ss);
+
   console.log('Setup selesai. Sheet: ' + ss.getUrl());
   return { id: ss.getId(), url: ss.getUrl() };
 }
@@ -1354,6 +1365,49 @@ function seedMilestones_(ss) {
       writeRow_(sh, null, o);
     });
   });
+}
+
+/**
+ * Tab "Persediaan" di dalam Google Sheet: ID dan pautan penting serta panduan jika paparan "404".
+ * Ditulis semula setiap kali setup() dijalankan. Tab ini hanya maklumat (tiada data pengguna).
+ */
+function writeSetupTab_(ss) {
+  var sh = ss.getSheetByName(SHEETS.SETUP) || ss.insertSheet(SHEETS.SETUP);
+  var url = '', scriptId = '', owner = '', folder = null;
+  try { url = ScriptApp.getService().getUrl() || ''; } catch (e) { url = ''; }
+  try { scriptId = ScriptApp.getScriptId(); } catch (e) { scriptId = ''; }
+  try { owner = Session.getEffectiveUser().getEmail(); } catch (e) { owner = ''; }
+  var fid = getProp_('FOLDER_ID');
+  if (fid) { try { folder = DriveApp.getFolderById(fid); } catch (e) { folder = null; } }
+  var rows = [
+    ['PERSEDIAAN & PAUTAN', '', ''],
+    ['Item', 'Nilai', 'Catatan'],
+    ['Nama aplikasi', APP.NAME, ''],
+    ['Google Sheet - ID', ss.getId(), 'Disimpan dalam Script Properties (SHEET_ID).'],
+    ['Google Sheet - Pautan', ss.getUrl(), 'Hadkan akses Sheet kepada Admin sahaja (ada no. KP pelajar).'],
+    ['Web app - Pautan', url || '(belum deploy)', url ? (/\/dev$/.test(url) ? 'Ini pautan ujian /dev. Gunakan pautan /exec untuk orang ramai.' : 'Kongsi pautan ini kepada pengguna.') : 'Deploy > New deployment > Web app. Salin pautan berakhir /exec.'],
+    ['Apps Script - Script ID', scriptId || '(tidak dikesan)', 'Untuk clasp (.clasp.json).'],
+    ['Folder lampiran Drive - Pautan', folder ? folder.getUrl() : '(belum dicipta)', 'Dicipta automatik semasa muat naik PDF pertama.'],
+    ['Pemilik skrip (Execute as)', owner || '(tidak dikesan)', 'Admin pertama dalam tab Pengguna ialah pemilik ini.'],
+    ['Dikemas kini', Utilities.formatDate(new Date(), APP.TZ, "yyyy-MM-dd HH:mm"), 'Jalankan setup() semula untuk menyegarkan.'],
+    ['', '', ''],
+    ['JIKA "404 - PAGE NOT FOUND"', '', ''],
+    ['1', 'Guna pautan /exec daripada Deploy > Manage deployments (bukan /dev, bukan pautan editor).', ''],
+    ['2', 'Deploy sebagai Web app: Execute as = Me, Who has access = Anyone.', ''],
+    ['3', 'Selepas ubah kod: Deploy > Manage deployments > Edit > Version: New version > Deploy.', ''],
+    ['4', 'Pautan dengan /u/1/ atau akaun Google berbeza boleh menyebabkan 404. Cuba tetingkap incognito.', ''],
+    ['5', 'Semak dalam aplikasi: log masuk Admin > Pentadbiran > Persediaan.', '']
+  ];
+  sh.clear();
+  sh.getRange(1, 1, rows.length, 3).setValues(rows);
+  try {
+    sh.getRange(1, 1, rows.length, 3).setNumberFormat('@');
+    sh.getRange(1, 1).setFontWeight('bold');
+    sh.getRange(2, 1, 1, 3).setFontWeight('bold').setBackground('#5c0f2a').setFontColor('#ffffff');
+    sh.getRange(12, 1).setFontWeight('bold');
+    sh.setColumnWidth(1, 230); sh.setColumnWidth(2, 520); sh.setColumnWidth(3, 420);
+    sh.setFrozenRows(2);
+  } catch (e) { /* pemformatan tidak kritikal */ }
 }
 
 ;
@@ -2362,6 +2416,88 @@ function listAudit_(token, limit) {
   return rows.slice(0, Math.min(parseInt(limit, 10) || 200, 500));
 }
 
+// ---------------------------------------------------------------------------
+// Tab Persediaan (Admin): pautan, ID dan semakan kesihatan sistem
+// ---------------------------------------------------------------------------
+function safe_(fn, fallback) { try { var v = fn(); return v === undefined ? fallback : v; } catch (e) { return fallback; } }
+
+function getSetupInfo_(token) {
+  requireAdmin_(token);
+  var ss = safe_(function () { return getSS_(); }, null);
+  var info = {
+    appName: APP.NAME, timeZone: APP.TZ,
+    owner: safe_(function () { return normEmail_(Session.getEffectiveUser().getEmail()); }, ''),
+    scriptId: safe_(function () { return ScriptApp.getScriptId(); }, ''),
+    webAppUrl: safe_(function () { return ScriptApp.getService().getUrl(); }, ''),
+    sheet: ss ? { id: ss.getId(), url: ss.getUrl(), name: safe_(function () { return ss.getName ? ss.getName() : ''; }, '') } : null,
+    folder: null, mailQuota: safe_(function () { return MailApp.getRemainingDailyQuota(); }, null),
+    checks: [], counts: {}
+  };
+  info.isDevUrl = /\/dev$/.test(info.webAppUrl || '');
+  var folderId = getProp_('FOLDER_ID');
+  if (folderId) {
+    var f = safe_(function () { return DriveApp.getFolderById(folderId); }, null);
+    info.folder = f ? { id: folderId, url: safe_(function () { return f.getUrl(); }, ''), ok: true } : { id: folderId, url: '', ok: false };
+  }
+
+  function check(label, ok, detail) { info.checks.push({ label: label, ok: ok, detail: detail || '' }); }
+  check('Google Sheet laporan dijumpai', !!ss, ss ? '' : 'Jalankan setup() daripada editor Apps Script atau tekan "Jalankan persediaan".');
+  if (ss) {
+    var missingTabs = [], missingCols = [];
+    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS]]
+      .concat(KPIS.map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
+    specs.forEach(function (sp) {
+      var sh = ss.getSheetByName(sp[0]);
+      if (!sh) { missingTabs.push(sp[0]); return; }
+      var lc = sh.getLastColumn();
+      var hdr = lc ? sh.getRange(1, 1, 1, lc).getValues()[0].map(String) : [];
+      var miss = sp[1].filter(function (c) { return hdr.indexOf(c) < 0; });
+      if (miss.length) missingCols.push(sp[0] + ' (' + miss.join(', ') + ')');
+    });
+    check('Semua tab wujud (' + specs.length + ' tab)', !missingTabs.length, missingTabs.length ? 'Tab tiada: ' + missingTabs.join(', ') : '');
+    check('Semua lajur wajib wujud', !missingCols.length, missingCols.length ? 'Lajur tiada: ' + missingCols.join('; ') : '');
+    var users = safe_(function () { return readTable_(SHEETS.USERS).rows.map(parseUser_); }, []);
+    var admins = users.filter(function (u) { return u.peranan === ROLES.ADMIN && u.aktif; });
+    info.counts = { admin: admins.length, pic: users.filter(function (u) { return u.peranan === ROLES.PIC && u.aktif; }).length, fakulti: safe_(function () { return listFaculties_().length; }, 0),
+      sasaran: safe_(function () { return readTable_(SHEETS.TARGETS).rows.length; }, 0) };
+    check('Sekurang-kurangnya seorang Admin aktif', admins.length > 0, admins.length + ' Admin aktif');
+    check('Senarai fakulti ada isi', info.counts.fakulti > 0, info.counts.fakulti + ' fakulti dalam tab Fakulti');
+    check('Baris sasaran wujud', info.counts.sasaran > 0, info.counts.sasaran + ' baris dalam tab Sasaran');
+  }
+  check('Kunci OTP (salt) wujud', !!getProp_('OTP_SALT'), '');
+  check('Folder lampiran Drive', folderId ? !!(info.folder && info.folder.ok) : null, folderId ? (info.folder && info.folder.ok ? '' : 'Folder tidak dapat dicapai. Ia akan dicipta semula pada muat naik seterusnya.') : 'Belum dicipta (dicipta secara automatik semasa muat naik PDF pertama).');
+  check('Pautan web app dikesan', !!info.webAppUrl, info.webAppUrl ? '' : 'Belum deploy sebagai Web app. Gunakan Deploy > New deployment > Web app.');
+  if (info.webAppUrl) check('Pautan web app ialah pautan /exec (bukan /dev)', !info.isDevUrl, info.isDevUrl ? 'Anda berada dalam mod ujian (/dev). Kongsi pautan /exec daripada Deploy > Manage deployments.' : '');
+  check('Kuota e-mel harian mencukupi', info.mailQuota === null ? null : info.mailQuota >= 20, info.mailQuota === null ? '' : info.mailQuota + ' e-mel berbaki hari ini');
+  return info;
+}
+
+function runSetupFromApp_(token) {
+  var admin = requireAdmin_(token);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var r = setup();
+    audit_(admin, 'SETUP', '', '', 'Persediaan dijalankan semula daripada tab Persediaan');
+    clearDashCache_();
+    return { ok: true, url: r && r.url };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function sendTestMail_(token) {
+  var admin = requireAdmin_(token);
+  var cache = CacheService.getScriptCache();
+  var key = 'testmail:' + sha256Hex_(admin.emel);
+  var n = parseInt(cache.get(key) || '0', 10);
+  if (n >= 3) throw userError_('Had 3 e-mel ujian sejam dicapai. Cuba lagi kemudian.');
+  cache.put(key, String(n + 1), 3600);
+  MailApp.sendEmail({ to: admin.emel, name: APP.NAME, subject: '[' + APP.NAME + '] Ujian e-mel', body: 'Ini e-mel ujian daripada tab Persediaan. Jika anda menerimanya, penghantaran OTP berfungsi.\n\n' + APP.NAME });
+  audit_(admin, 'UJIAN_EMEL', '', '', '');
+  return { to: admin.emel, remaining: safe_(function () { return MailApp.getRemainingDailyQuota(); }, null) };
+}
+
 ;
 /* Code.gs */
 /** Titik masuk web app dan fungsi API yang dipanggil klien (google.script.run). */
@@ -2412,6 +2548,9 @@ function api_saveUser(token, input) { return wrap_(function () { return saveUser
 function api_deleteUser(token, email) { return wrap_(function () { return deleteUser_(str_(token, 200), str_(email, 254)); }); }
 function api_listTargets(token) { return wrap_(function () { return listTargetsAdmin_(str_(token, 200)); }); }
 function api_saveTarget(token, input) { return wrap_(function () { return saveTarget_(str_(token, 200), input); }); }
+function api_setupInfo(token) { return wrap_(function () { return getSetupInfo_(str_(token, 200)); }); }
+function api_runSetup(token) { return wrap_(function () { return runSetupFromApp_(str_(token, 200)); }); }
+function api_testMail(token) { return wrap_(function () { return sendTestMail_(str_(token, 200)); }); }
 function api_listAudit(token, limit) { return wrap_(function () { return listAudit_(str_(token, 200), limit); }); }
 </script>
 <script>/* Data contoh (demo/seed.js) */
@@ -2684,11 +2823,11 @@ window.__demoSeed = function () {
   function groupKey(k) { return k.level === 'CKAI' ? k.fungsi : k.group; }
   function levelOf(target) {   // pulangkan id kumpulan yang perlu dibuka bagi sasaran navigasi
     if (target.indexOf('kpi:') === 0) { var k = kpiById(target.slice(4)); return k ? k.level : null; }
-    return { users: 'ADMIN', targets: 'ADMIN', audit: 'ADMIN' }[target] || null;
+    return { users: 'ADMIN', targets: 'ADMIN', audit: 'ADMIN', setup: 'ADMIN' }[target] || null;
   }
   function groupActive(g) {
     var v = S.view;
-    if (g === 'ADMIN') return v.name === 'users' || v.name === 'targets' || v.name === 'audit';
+    if (g === 'ADMIN') return v.name === 'users' || v.name === 'targets' || v.name === 'audit' || v.name === 'setup';
     if (v.name === 'kpi') { var k = kpiById(v.id); return !!k && k.level === g; }
     return false;
   }
@@ -2730,7 +2869,8 @@ window.__demoSeed = function () {
         h += '<div class="mod">Admin</div>' + groupHtml('ADMIN', 'Pentadbiran',
           navBtn('users', ico('user'), 'Urus Pengguna', S.view.name === 'users') +
           navBtn('targets', ico('target'), 'Sasaran', S.view.name === 'targets') +
-          navBtn('audit', ico('list'), 'Log Audit', S.view.name === 'audit'));
+          navBtn('audit', ico('list'), 'Log Audit', S.view.name === 'audit') +
+          navBtn('setup', ico('target'), 'Persediaan', S.view.name === 'setup'));
       }
     }
     return h + '</div>';
@@ -2748,7 +2888,7 @@ window.__demoSeed = function () {
     var v = S.view;
     if (v.name === 'dashboard') return DASH_TITLE;
     if (v.name === 'kpi') { var k = kpiById(v.id); return k ? k.title : 'KPI'; }
-    return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit' }[v.name] || APP_NAME;
+    return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit', setup: 'Persediaan & Pautan' }[v.name] || APP_NAME;
   }
   function renderView() {
     $('#tabs').innerHTML = '';
@@ -2759,6 +2899,7 @@ window.__demoSeed = function () {
     if (v.name === 'users') return renderUsers();
     if (v.name === 'targets') return renderTargets();
     if (v.name === 'audit') return renderAudit();
+    if (v.name === 'setup') return renderSetup();
   }
 
   // ------------------------------------------------------------------ dashboard
@@ -3143,6 +3284,42 @@ window.__demoSeed = function () {
     el.innerHTML = h + '</tbody></table></div>';
   }
 
+  // ------------------------------------------------------------------ Admin: persediaan
+  function renderSetup() {
+    var el = $('#content');
+    if (!S.setup) {
+      el.innerHTML = '<p class="boot">Memuatkan…</p>';
+      call('api_setupInfo', S.token).then(function (r) { S.setup = r; if (S.view.name === 'setup') renderSetup(); })
+        .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+      return;
+    }
+    var i = S.setup;
+    function row(label, val, url, note) {
+      var v = val ? (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(val) + '</a>' : esc(val)) : '<span class="muted">(tiada)</span>';
+      return '<tr><th scope="row">' + esc(label) + '</th><td style="word-break:break-all">' + v + (note ? '<div class="muted">' + esc(note) + '</div>' : '') + '</td><td>' +
+        (val ? '<button class="btn o" data-action="copy" data-v="' + esc(val) + '">Salin</button>' : '') + '</td></tr>';
+    }
+    var h = '<div class="panel"><table><tbody>' +
+      row('Google Sheet - ID', i.sheet && i.sheet.id) +
+      row('Google Sheet - Pautan', i.sheet && i.sheet.url, i.sheet && i.sheet.url) +
+      row('Web app - Pautan', i.webAppUrl, i.webAppUrl, i.isDevUrl ? 'Ini pautan ujian /dev. Kongsi pautan /exec daripada Deploy > Manage deployments.' : '') +
+      row('Script ID', i.scriptId) +
+      row('Folder lampiran - Pautan', i.folder && i.folder.url, i.folder && i.folder.url, i.folder ? '' : 'Dicipta automatik semasa muat naik PDF pertama.') +
+      row('Pemilik skrip (Execute as)', i.owner) +
+      '</tbody></table></div>' +
+      '<div class="panel"><h3>Semakan sistem</h3><ul class="chk">';
+    i.checks.forEach(function (c) {
+      h += '<li data-ok="' + (c.ok === null ? 'na' : c.ok ? '1' : '0') + '">' + (c.ok === null ? '–' : c.ok ? '✓' : '✗') + ' ' + esc(c.label) + (c.detail ? '<div class="muted">' + esc(c.detail) + '</div>' : '') + '</li>';
+    });
+    h += '</ul><div class="acts"><button class="btn" data-action="runsetup">Jalankan persediaan</button> <button class="btn o" data-action="testmail">Hantar e-mel ujian</button></div>' +
+      '<p class="muted">Maklumat sama juga ada dalam tab "Persediaan" di dalam Google Sheet. Jika paparan "404", pastikan guna pautan /exec, Execute as = Me, Who has access = Anyone, dan deploy New version selepas ubah kod.</p></div>';
+    el.innerHTML = h;
+  }
+  function copyText(t) {
+    function fb() { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Disalin.'); } catch (e) { toast('Tidak dapat menyalin.', true); } ta.remove(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('Disalin.'); }, fb); else fb();
+  }
+
   // ------------------------------------------------------------------ log masuk (OTP)
   function renderModal() {
     var m = $('#modal');
@@ -3203,7 +3380,7 @@ window.__demoSeed = function () {
     var lvl = levelOf(target); if (lvl) S.open[lvl] = true;
     if (target === 'dashboard') { S.view = { name: 'dashboard' }; S.dash = null; } // muat semula supaya angka terkini dipaparkan
     else if (target.indexOf('kpi:') === 0) S.view = { name: 'kpi', id: target.slice(4), tab: 'list' };
-    else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; }
+    else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; if (target === 'setup') S.setup = null; }
     render(); window.scrollTo(0, 0);
   }
 
@@ -3259,6 +3436,18 @@ window.__demoSeed = function () {
         }
         break;
       case 'uclear': $('#uform').reset(); break;
+      case 'copy': copyText(a.getAttribute('data-v')); break;
+      case 'runsetup':
+        askConfirm('Jalankan persediaan semula? Tab/lajur yang tiada akan ditambah; data sedia ada tidak dipadam.', 'Ya, jalankan').then(function (yes) {
+          if (!yes) return;
+          call('api_runSetup', S.token).then(function () { toast('Persediaan selesai.'); S.setup = null; renderSetup(); })
+            .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+        });
+        break;
+      case 'testmail':
+        call('api_testMail', S.token).then(function (r) { toast('E-mel ujian dihantar ke ' + r.to + '.'); })
+          .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+        break;
       case 'udel':
         var em = a.getAttribute('data-email');
         askConfirm('Padam pengguna ' + em + '?', 'Ya, padam').then(function (yes) {
@@ -3408,6 +3597,7 @@ window.__demoSeed = function () {
     d.innerHTML = '<small>E-mel simulasi kepada <b></b></small><b class="code"></b><small>Sah 5 minit. Dalam sistem sebenar kod ini dihantar melalui e-mel.</small><br><button data-c>Salin kod</button><button data-x>Tutup</button>';
     d.querySelector('small b').textContent = mail.to;
     d.querySelector('.code').textContent = code;
+    if (!code) { d.querySelector('.code').textContent = 'E-mel ujian'; }
     d.addEventListener('click', function (e) {
       if (e.target.hasAttribute('data-c')) { try { navigator.clipboard.writeText(code); e.target.textContent = 'Disalin'; } catch (err) { /* abaikan */ } }
       if (e.target.hasAttribute('data-x')) d.remove();

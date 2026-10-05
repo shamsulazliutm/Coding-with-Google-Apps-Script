@@ -726,5 +726,40 @@ test('Admin yang didaftar manual boleh diturunkan kepada PIC kerana Admin lain m
   ok(g.api_saveUser(adminToken, { emel: 'manual.admin@utm.my', nama: 'Manual', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1', aktif: 'Ya' }));
 });
 
+console.log('Persediaan (Admin) dan tab Persediaan dalam Sheet');
+test('Persediaan: Admin sahaja', () => {
+  fail(g.api_setupInfo(picToken), /Admin sahaja/);
+  fail(g.api_runSetup(picToken), /Admin sahaja/);
+  fail(g.api_testMail(picToken), /Admin sahaja/);
+});
+test('Persediaan: maklumat pautan/ID dan semakan lulus', () => {
+  const i = ok(g.api_setupInfo(adminToken));
+  assert.strictEqual(i.sheet.id, env.props.SHEET_ID);
+  assert.ok(/\/exec$/.test(i.webAppUrl) || i.webAppUrl === '' || i.isDevUrl !== undefined);
+  assert.ok(i.checks.length >= 8);
+  assert.strictEqual(i.checks.filter(c => c.ok === false).length, 0, JSON.stringify(i.checks.filter(c => c.ok === false)));
+});
+test('tab Persediaan dalam Google Sheet mengandungi ID dan pautan Sheet', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Persediaan');
+  assert.ok(sh);
+  const txt = JSON.stringify(sh.data);
+  assert.ok(txt.includes(env.props.SHEET_ID) && txt.includes('404'));
+});
+test('Persediaan: tab dan lajur hilang dikesan, dibaiki oleh Jalankan persediaan', () => {
+  const ss = env.spreadsheets[env.props.SHEET_ID];
+  ss.deleteSheet(ss.getSheetByName('Risiko'));
+  let i = ok(g.api_setupInfo(adminToken));
+  assert.ok(i.checks.some(c => c.ok === false && /Risiko/.test(c.detail)));
+  ok(g.api_runSetup(adminToken));
+  i = ok(g.api_setupInfo(adminToken));
+  assert.strictEqual(i.checks.filter(c => c.ok === false).length, 0);
+});
+test('e-mel ujian dihantar ke Admin dan dihadkan 3 sejam', () => {
+  const n = env.sent.length;
+  ok(g.api_testMail(adminToken)); ok(g.api_testMail(adminToken)); ok(g.api_testMail(adminToken));
+  assert.strictEqual(env.sent.length, n + 3);
+  fail(g.api_testMail(adminToken), /Had 3/);
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);

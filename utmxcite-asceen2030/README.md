@@ -162,3 +162,9 @@ node tests/e2e.js        # ujian pelayar sebenar (Playwright + Chromium) menggun
 ```
 
 Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, penghantaran e-mel sebenar, Drive sebenar, kelajuan Sheets, dan sama ada pelayar anda membenarkan muat turun PDF daripada halaman Apps Script). Lakukan ujian asap selepas deploy: log masuk Admin, tambah PIC, log masuk PIC, simpan satu rekod dan semak dashboard awam dalam tetingkap inkognito.
+
+## Tab Persediaan (pautan, ID dan semakan sistem)
+
+- **Dalam Google Sheet:** tab `Persediaan` ditulis semula setiap kali `setup()` dijalankan. Ia memuatkan ID/pautan Sheet, pautan web app, Script ID, pautan folder lampiran, pemilik skrip dan panduan jika paparan "404".
+- **Dalam aplikasi:** Admin > Pentadbiran > Persediaan. Menunjukkan pautan/ID (butang Salin), senarai semakan ✓/✗ (tab, lajur, Admin aktif, folder, pautan /exec, kuota e-mel), butang "Jalankan persediaan" (baiki tab/lajur hilang) dan "Hantar e-mel ujian".
+- **Punca biasa "404":** guna pautan `/exec` (bukan `/dev` atau pautan editor), Execute as = Me, Who has access = Anyone, dan deploy *New version* selepas ubah kod.

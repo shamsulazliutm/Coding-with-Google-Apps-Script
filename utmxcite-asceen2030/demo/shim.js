@@ -95,8 +95,11 @@
   Sheet.prototype.appendRow = function (arr) { var r = this.getLastRow() + 1, self = this; arr.forEach(function (v, j) { self._set(r, j + 1, v); }); persist(); };
   Sheet.prototype.deleteRow = function (n) { this.data.splice(n - 1, 1); persist(); };
   Sheet.prototype.setFrozenRows = function () {};
+  Sheet.prototype.setColumnWidth = function () { return this; };
+  Sheet.prototype.clear = function () { this.data = []; this.formats = {}; persist(); return this; };
   function Spreadsheet(name, id) { this.name = name; this.id = id || ('DEMO' + (++ssCounter)); this.sheets = [new Sheet('Sheet1')]; spreadsheets[this.id] = this; }
   Spreadsheet.prototype.getId = function () { return this.id; };
+  Spreadsheet.prototype.getName = function () { return this.name; };
   Spreadsheet.prototype.getUrl = function () { return '#demo-sheet-' + this.id; };
   Spreadsheet.prototype.getSheetByName = function (n) { return this.sheets.filter(function (s) { return s.name === n; })[0] || null; };
   Spreadsheet.prototype.insertSheet = function (n) { var s = new Sheet(n); this.sheets.push(s); persist(); return s; };
@@ -120,7 +123,8 @@
   window.Session = { getEffectiveUser: function () { return { getEmail: function () { return 'admin.demo@utm.my'; } }; } };
 
   // ---------- Mel (disimulasikan: dipaparkan pada skrin demo)
-  window.MailApp = { sendEmail: function (m) { if (window.__demoMail) window.__demoMail(m); } };
+  window.MailApp = { sendEmail: function (m) { if (window.__demoMail) window.__demoMail(m); }, getRemainingDailyQuota: function () { return 100; } };
+  window.ScriptApp = { getScriptId: function () { return 'DEMO-SCRIPT-ID'; }, getService: function () { return { getUrl: function () { return 'https://script.google.com/macros/s/DEMO/exec'; } }; } };
 
   // ---------- Drive dalam memori (fail kecil disimpan dalam localStorage)
   function DFile(id, name, b64, folder, trashed) { this.id = id; this.name = name; this.b64 = b64; this.folder = folder; this.trashed = !!trashed; }
@@ -131,6 +135,7 @@
   DFile.prototype.getParents = function () { var arr = [{ getId: function () { return this._f; }, _f: this.folder }], i = 0; return { hasNext: function () { return i < arr.length; }, next: function () { return arr[i++]; } }; };
   function DFolder(id, name) { this.id = id; this.name = name; }
   DFolder.prototype.getId = function () { return this.id; };
+  DFolder.prototype.getUrl = function () { return '#demo-folder-' + this.id; };
   DFolder.prototype.createFile = function (blob) {
     var id = 'DEMOFILE' + (++drive.n) + 'abcdefghij', f = new DFile(id, blob.getName(), Utilities.base64Encode(blob.getBytes()), this.id);
     drive.files[id] = f; persist(); return f;

@@ -103,6 +103,9 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await goNav('Log Audit');
     await page.waitForSelector('td:has-text("TAMBAH")');
     await page.screenshot({ path: path.join(out, 'demo-2-admin-audit.png') });
+    await goNav('Persediaan');
+    await page.waitForSelector('text=Semakan sistem');
+    assert.strictEqual(await page.locator('li[data-ok="0"]').count(), 0);
   });
   await step('paparan mengikut fungsi dan sidebar PERINGKAT', async () => {
     await page.click('.nav:has-text("Dashboard")');

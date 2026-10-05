@@ -76,6 +76,7 @@
     d.innerHTML = '<small>E-mel simulasi kepada <b></b></small><b class="code"></b><small>Sah 5 minit. Dalam sistem sebenar kod ini dihantar melalui e-mel.</small><br><button data-c>Salin kod</button><button data-x>Tutup</button>';
     d.querySelector('small b').textContent = mail.to;
     d.querySelector('.code').textContent = code;
+    if (!code) { d.querySelector('.code').textContent = 'E-mel ujian'; }
     d.addEventListener('click', function (e) {
       if (e.target.hasAttribute('data-c')) { try { navigator.clipboard.writeText(code); e.target.textContent = 'Disalin'; } catch (err) { /* abaikan */ } }
       if (e.target.hasAttribute('data-x')) d.remove();

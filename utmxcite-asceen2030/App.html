@@ -129,11 +129,11 @@
   function groupKey(k) { return k.level === 'CKAI' ? k.fungsi : k.group; }
   function levelOf(target) {   // pulangkan id kumpulan yang perlu dibuka bagi sasaran navigasi
     if (target.indexOf('kpi:') === 0) { var k = kpiById(target.slice(4)); return k ? k.level : null; }
-    return { users: 'ADMIN', targets: 'ADMIN', audit: 'ADMIN' }[target] || null;
+    return { users: 'ADMIN', targets: 'ADMIN', audit: 'ADMIN', setup: 'ADMIN' }[target] || null;
   }
   function groupActive(g) {
     var v = S.view;
-    if (g === 'ADMIN') return v.name === 'users' || v.name === 'targets' || v.name === 'audit';
+    if (g === 'ADMIN') return v.name === 'users' || v.name === 'targets' || v.name === 'audit' || v.name === 'setup';
     if (v.name === 'kpi') { var k = kpiById(v.id); return !!k && k.level === g; }
     return false;
   }
@@ -175,7 +175,8 @@
         h += '<div class="mod">Admin</div>' + groupHtml('ADMIN', 'Pentadbiran',
           navBtn('users', ico('user'), 'Urus Pengguna', S.view.name === 'users') +
           navBtn('targets', ico('target'), 'Sasaran', S.view.name === 'targets') +
-          navBtn('audit', ico('list'), 'Log Audit', S.view.name === 'audit'));
+          navBtn('audit', ico('list'), 'Log Audit', S.view.name === 'audit') +
+          navBtn('setup', ico('target'), 'Persediaan', S.view.name === 'setup'));
       }
     }
     return h + '</div>';
@@ -193,7 +194,7 @@
     var v = S.view;
     if (v.name === 'dashboard') return DASH_TITLE;
     if (v.name === 'kpi') { var k = kpiById(v.id); return k ? k.title : 'KPI'; }
-    return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit' }[v.name] || APP_NAME;
+    return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit', setup: 'Persediaan & Pautan' }[v.name] || APP_NAME;
   }
   function renderView() {
     $('#tabs').innerHTML = '';
@@ -204,6 +205,7 @@
     if (v.name === 'users') return renderUsers();
     if (v.name === 'targets') return renderTargets();
     if (v.name === 'audit') return renderAudit();
+    if (v.name === 'setup') return renderSetup();
   }
 
   // ------------------------------------------------------------------ dashboard
@@ -588,6 +590,42 @@
     el.innerHTML = h + '</tbody></table></div>';
   }
 
+  // ------------------------------------------------------------------ Admin: persediaan
+  function renderSetup() {
+    var el = $('#content');
+    if (!S.setup) {
+      el.innerHTML = '<p class="boot">Memuatkan…</p>';
+      call('api_setupInfo', S.token).then(function (r) { S.setup = r; if (S.view.name === 'setup') renderSetup(); })
+        .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+      return;
+    }
+    var i = S.setup;
+    function row(label, val, url, note) {
+      var v = val ? (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(val) + '</a>' : esc(val)) : '<span class="muted">(tiada)</span>';
+      return '<tr><th scope="row">' + esc(label) + '</th><td style="word-break:break-all">' + v + (note ? '<div class="muted">' + esc(note) + '</div>' : '') + '</td><td>' +
+        (val ? '<button class="btn o" data-action="copy" data-v="' + esc(val) + '">Salin</button>' : '') + '</td></tr>';
+    }
+    var h = '<div class="panel"><table><tbody>' +
+      row('Google Sheet - ID', i.sheet && i.sheet.id) +
+      row('Google Sheet - Pautan', i.sheet && i.sheet.url, i.sheet && i.sheet.url) +
+      row('Web app - Pautan', i.webAppUrl, i.webAppUrl, i.isDevUrl ? 'Ini pautan ujian /dev. Kongsi pautan /exec daripada Deploy > Manage deployments.' : '') +
+      row('Script ID', i.scriptId) +
+      row('Folder lampiran - Pautan', i.folder && i.folder.url, i.folder && i.folder.url, i.folder ? '' : 'Dicipta automatik semasa muat naik PDF pertama.') +
+      row('Pemilik skrip (Execute as)', i.owner) +
+      '</tbody></table></div>' +
+      '<div class="panel"><h3>Semakan sistem</h3><ul class="chk">';
+    i.checks.forEach(function (c) {
+      h += '<li data-ok="' + (c.ok === null ? 'na' : c.ok ? '1' : '0') + '">' + (c.ok === null ? '–' : c.ok ? '✓' : '✗') + ' ' + esc(c.label) + (c.detail ? '<div class="muted">' + esc(c.detail) + '</div>' : '') + '</li>';
+    });
+    h += '</ul><div class="acts"><button class="btn" data-action="runsetup">Jalankan persediaan</button> <button class="btn o" data-action="testmail">Hantar e-mel ujian</button></div>' +
+      '<p class="muted">Maklumat sama juga ada dalam tab "Persediaan" di dalam Google Sheet. Jika paparan "404", pastikan guna pautan /exec, Execute as = Me, Who has access = Anyone, dan deploy New version selepas ubah kod.</p></div>';
+    el.innerHTML = h;
+  }
+  function copyText(t) {
+    function fb() { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Disalin.'); } catch (e) { toast('Tidak dapat menyalin.', true); } ta.remove(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('Disalin.'); }, fb); else fb();
+  }
+
   // ------------------------------------------------------------------ log masuk (OTP)
   function renderModal() {
     var m = $('#modal');
@@ -648,7 +686,7 @@
     var lvl = levelOf(target); if (lvl) S.open[lvl] = true;
     if (target === 'dashboard') { S.view = { name: 'dashboard' }; S.dash = null; } // muat semula supaya angka terkini dipaparkan
     else if (target.indexOf('kpi:') === 0) S.view = { name: 'kpi', id: target.slice(4), tab: 'list' };
-    else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; }
+    else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; if (target === 'setup') S.setup = null; }
     render(); window.scrollTo(0, 0);
   }
 
@@ -704,6 +742,18 @@
         }
         break;
       case 'uclear': $('#uform').reset(); break;
+      case 'copy': copyText(a.getAttribute('data-v')); break;
+      case 'runsetup':
+        askConfirm('Jalankan persediaan semula? Tab/lajur yang tiada akan ditambah; data sedia ada tidak dipadam.', 'Ya, jalankan').then(function (yes) {
+          if (!yes) return;
+          call('api_runSetup', S.token).then(function () { toast('Persediaan selesai.'); S.setup = null; renderSetup(); })
+            .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+        });
+        break;
+      case 'testmail':
+        call('api_testMail', S.token).then(function (r) { toast('E-mel ujian dihantar ke ' + r.to + '.'); })
+          .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+        break;
       case 'udel':
         var em = a.getAttribute('data-email');
         askConfirm('Padam pengguna ' + em + '?', 'Ya, padam').then(function (yes) {

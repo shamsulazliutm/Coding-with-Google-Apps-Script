@@ -46,4 +46,7 @@ function api_saveUser(token, input) { return wrap_(function () { return saveUser
 function api_deleteUser(token, email) { return wrap_(function () { return deleteUser_(str_(token, 200), str_(email, 254)); }); }
 function api_listTargets(token) { return wrap_(function () { return listTargetsAdmin_(str_(token, 200)); }); }
 function api_saveTarget(token, input) { return wrap_(function () { return saveTarget_(str_(token, 200), input); }); }
+function api_setupInfo(token) { return wrap_(function () { return getSetupInfo_(str_(token, 200)); }); }
+function api_runSetup(token) { return wrap_(function () { return runSetupFromApp_(str_(token, 200)); }); }
+function api_testMail(token) { return wrap_(function () { return sendTestMail_(str_(token, 200)); }); }
 function api_listAudit(token, limit) { return wrap_(function () { return listAudit_(str_(token, 200), limit); }); }

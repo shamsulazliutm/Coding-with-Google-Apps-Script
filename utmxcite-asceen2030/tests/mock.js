@@ -6,6 +6,7 @@ const vm = require('vm');
 
 function loadGas(opts = {}) {
   const sent = [];
+  const quota = { n: 100 };
   const props = {};
   const cacheStore = {};
   const sheetsByName = {};
@@ -52,11 +53,14 @@ function loadGas(opts = {}) {
     appendRow(arr) { const r = this.getLastRow() + 1; arr.forEach((v, j) => this._set(r, j + 1, v)); }
     deleteRow(n) { this.data.splice(n - 1, 1); }
     setFrozenRows() {}
+    clear() { this.data = []; this.formats = {}; return this; }
+    setColumnWidth() { return this; }
   }
   class Spreadsheet {
     constructor(name) { this.name = name; this.id = 'SS' + (++ssCounter); this.sheets = []; this.sheets.push(new Sheet('Sheet1')); spreadsheets[this.id] = this; }
     getId() { return this.id; }
     getUrl() { return 'https://docs.google.com/spreadsheets/d/' + this.id; }
+    getName() { return this.name; }
     getSheetByName(n) { return this.sheets.find(s => s.name === n) || null; }
     insertSheet(n) { const s = new Sheet(n); this.sheets.push(s); return s; }
     getSheets() { return this.sheets; }
@@ -99,6 +103,7 @@ function loadGas(opts = {}) {
       class Folder {
         constructor(name) { this.name = name; this.id = 'FOLDER' + (++n) + 'abcdefghij'; folders[this.id] = this; }
         getId() { return this.id; }
+        getUrl() { return 'https://drive.google.com/drive/folders/' + this.id; }
         createFile(blob) { return new File(blob, this); }
       }
       const outside = new Folder('Folder lain (bukan lampiran)');
@@ -124,7 +129,8 @@ function loadGas(opts = {}) {
       })
     },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
-    MailApp: { sendEmail: (m) => sent.push(m) },
+    MailApp: { sendEmail: (m) => { sent.push(m); quota.n--; }, getRemainingDailyQuota: () => quota.n },
+    ScriptApp: { getScriptId: () => 'SCRIPTID1234567890', getService: () => ({ getUrl: () => opts.webAppUrl === undefined ? 'https://script.google.com/macros/s/AKfycbxDEPLOY/exec' : opts.webAppUrl }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => opts.owner || 'admin@utm.my' }) },
     HtmlService: {}
   };

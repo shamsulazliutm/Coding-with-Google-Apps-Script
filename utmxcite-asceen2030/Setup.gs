@@ -36,6 +36,8 @@ function setup() {
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
 
+  writeSetupTab_(ss);
+
   console.log('Setup selesai. Sheet: ' + ss.getUrl());
   return { id: ss.getId(), url: ss.getUrl() };
 }
@@ -119,4 +121,47 @@ function seedMilestones_(ss) {
       writeRow_(sh, null, o);
     });
   });
+}
+
+/**
+ * Tab "Persediaan" di dalam Google Sheet: ID dan pautan penting serta panduan jika paparan "404".
+ * Ditulis semula setiap kali setup() dijalankan. Tab ini hanya maklumat (tiada data pengguna).
+ */
+function writeSetupTab_(ss) {
+  var sh = ss.getSheetByName(SHEETS.SETUP) || ss.insertSheet(SHEETS.SETUP);
+  var url = '', scriptId = '', owner = '', folder = null;
+  try { url = ScriptApp.getService().getUrl() || ''; } catch (e) { url = ''; }
+  try { scriptId = ScriptApp.getScriptId(); } catch (e) { scriptId = ''; }
+  try { owner = Session.getEffectiveUser().getEmail(); } catch (e) { owner = ''; }
+  var fid = getProp_('FOLDER_ID');
+  if (fid) { try { folder = DriveApp.getFolderById(fid); } catch (e) { folder = null; } }
+  var rows = [
+    ['PERSEDIAAN & PAUTAN', '', ''],
+    ['Item', 'Nilai', 'Catatan'],
+    ['Nama aplikasi', APP.NAME, ''],
+    ['Google Sheet - ID', ss.getId(), 'Disimpan dalam Script Properties (SHEET_ID).'],
+    ['Google Sheet - Pautan', ss.getUrl(), 'Hadkan akses Sheet kepada Admin sahaja (ada no. KP pelajar).'],
+    ['Web app - Pautan', url || '(belum deploy)', url ? (/\/dev$/.test(url) ? 'Ini pautan ujian /dev. Gunakan pautan /exec untuk orang ramai.' : 'Kongsi pautan ini kepada pengguna.') : 'Deploy > New deployment > Web app. Salin pautan berakhir /exec.'],
+    ['Apps Script - Script ID', scriptId || '(tidak dikesan)', 'Untuk clasp (.clasp.json).'],
+    ['Folder lampiran Drive - Pautan', folder ? folder.getUrl() : '(belum dicipta)', 'Dicipta automatik semasa muat naik PDF pertama.'],
+    ['Pemilik skrip (Execute as)', owner || '(tidak dikesan)', 'Admin pertama dalam tab Pengguna ialah pemilik ini.'],
+    ['Dikemas kini', Utilities.formatDate(new Date(), APP.TZ, "yyyy-MM-dd HH:mm"), 'Jalankan setup() semula untuk menyegarkan.'],
+    ['', '', ''],
+    ['JIKA "404 - PAGE NOT FOUND"', '', ''],
+    ['1', 'Guna pautan /exec daripada Deploy > Manage deployments (bukan /dev, bukan pautan editor).', ''],
+    ['2', 'Deploy sebagai Web app: Execute as = Me, Who has access = Anyone.', ''],
+    ['3', 'Selepas ubah kod: Deploy > Manage deployments > Edit > Version: New version > Deploy.', ''],
+    ['4', 'Pautan dengan /u/1/ atau akaun Google berbeza boleh menyebabkan 404. Cuba tetingkap incognito.', ''],
+    ['5', 'Semak dalam aplikasi: log masuk Admin > Pentadbiran > Persediaan.', '']
+  ];
+  sh.clear();
+  sh.getRange(1, 1, rows.length, 3).setValues(rows);
+  try {
+    sh.getRange(1, 1, rows.length, 3).setNumberFormat('@');
+    sh.getRange(1, 1).setFontWeight('bold');
+    sh.getRange(2, 1, 1, 3).setFontWeight('bold').setBackground('#5c0f2a').setFontColor('#ffffff');
+    sh.getRange(12, 1).setFontWeight('bold');
+    sh.setColumnWidth(1, 230); sh.setColumnWidth(2, 520); sh.setColumnWidth(3, 420);
+    sh.setFrozenRows(2);
+  } catch (e) { /* pemformatan tidak kritikal */ }
 }

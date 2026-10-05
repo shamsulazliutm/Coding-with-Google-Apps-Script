@@ -226,6 +226,10 @@ function buildHtml() {
     await goNav('Log Audit');
     await page.waitForSelector('td:has-text("PENGGUNA_TAMBAH")');
     await page.screenshot({ path: path.join(out, '6-admin-audit.png') });
+    await goNav('Persediaan');
+    await page.waitForSelector('text=Semakan sistem');
+    await page.waitForSelector('li[data-ok="1"]');
+    assert.strictEqual(await page.locator('li[data-ok="0"]').count(), 0);
   });
   await step('Admin memadam rekod melalui dialog pengesahan (batal tidak memadam)', async () => {
     await goNav('GiGAUTM');

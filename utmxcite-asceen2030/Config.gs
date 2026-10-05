@@ -20,7 +20,8 @@ var SHEETS = {
   TARGETS: 'Sasaran',
   FACULTIES: 'Fakulti',
   RISKS: 'Risiko',
-  AUDIT: 'Log_Audit'
+  AUDIT: 'Log_Audit',
+  SETUP: 'Persediaan'
 };
 
 var ROLES = { ADMIN: 'Admin', PIC: 'PIC' };
