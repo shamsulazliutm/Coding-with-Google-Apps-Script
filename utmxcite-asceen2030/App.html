@@ -10,7 +10,7 @@
     list: null, listFilters: {}, editing: null,
     users: null, targets: null, audit: null,
     navOpen: false, login: null, busy: false,
-    people: {}, files: {}, peopleKp: {}, dashView: 'level'
+    people: {}, files: {}, peopleKp: {}, dashView: 'level', open: {}, mini: false
   };
 
   // ------------------------------------------------------------------ utiliti
@@ -95,7 +95,7 @@
     var u = S.session && S.session.user;
     app.innerHTML =
       '<div class="shell">' +
-      '<aside class="side' + (S.navOpen ? ' open' : '') + '" id="side" aria-label="Menu utama">' + renderSide(u) + '</aside>' +
+      '<aside class="side' + (S.navOpen ? ' open' : '') + (S.mini ? ' mini' : '') + '" id="side" aria-label="Menu utama">' + renderSide(u) + '</aside>' +
       '<div class="scrim' + (S.navOpen ? ' open' : '') + '" data-action="closenav"></div>' +
       '<div class="main">' +
       '<header class="top"><div style="display:flex;gap:10px;align-items:center">' +
@@ -111,40 +111,82 @@
     renderModal();
   }
 
+  // ---- Ikon garis (inline SVG, gaya sama dengan portal UTM)
+  var ICONS = {
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
+    box: '<rect x="3.5" y="4" width="17" height="4.5" rx="1"/><path d="M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5M10 12.5h4"/>',
+    chev: '<path d="M6 9l6 6 6-6"/>',
+    user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>',
+    target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/>',
+    list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'
+  };
+  function ico(n) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[n] + '</svg>'; }
+
+  // Sidebar: satu bahagian "PERINGKAT" dengan tiga kumpulan boleh dilipat (Universiti = KAI, Jabatan = DKAI, Pusat = CKAI).
+  // Di dalam kumpulan, subtajuk kecil: KAI mengikut Growth / Transform, CKAI mengikut enam fungsi.
+  function groupKey(k) { return k.level === 'CKAI' ? k.fungsi : k.group; }
+  function levelOf(target) {   // pulangkan id kumpulan yang perlu dibuka bagi sasaran navigasi
+    if (target.indexOf('kpi:') === 0) { var k = kpiById(target.slice(4)); return k ? k.level : null; }
+    return { users: 'ADMIN', targets: 'ADMIN', audit: 'ADMIN' }[target] || null;
+  }
+  function groupActive(g) {
+    var v = S.view;
+    if (g === 'ADMIN') return v.name === 'users' || v.name === 'targets' || v.name === 'audit';
+    if (v.name === 'kpi') { var k = kpiById(v.id); return !!k && k.level === g; }
+    return false;
+  }
+  function isOpen(g) { return S.open[g] === undefined ? groupActive(g) : !!S.open[g]; }
+  function groupHtml(g, label, bodyHtml, title) {
+    var open = isOpen(g);
+    return '<button type="button" class="gh' + (groupActive(g) ? ' has-act' : '') + '" data-action="tg" data-g="' + esc(g) + '" aria-expanded="' + open + '" title="' + esc(title || label) + '">' +
+      '<span class="ic">' + ico('box') + '</span><span class="lb">' + esc(label) + '</span><span class="cv">' + ico('chev') + '</span></button>' +
+      '<div class="gb" data-g="' + esc(g) + '"' + (open ? '' : ' hidden') + '>' + bodyHtml + '</div>';
+  }
+
   function renderSide(u) {
-    var h = window.UTM_LOGO
-      ? '<div class="brandlogo"><img src="' + window.UTM_LOGO + '" alt="Universiti Teknologi Malaysia ASCEND 2030"><b>' + esc(APP_NAME) + '</b><small>DS04 · Pekerjaan Premium Tier 1</small></div>'
-      : '<div class="brand">' + esc(APP_NAME) + '<small>DS04 · Pekerjaan Premium Tier 1</small></div>';
+    var h = '<div class="sh"><button type="button" class="hb" data-action="collapse" aria-label="Kecilkan atau besarkan menu" title="Menu">' + ico('menu') + '</button>' +
+      (window.UTM_LOGO ? '<img class="shlogo" src="' + window.UTM_LOGO + '" alt="Universiti Teknologi Malaysia ASCEND 2030">' : '') +
+      '<div class="shname"><b>' + esc(APP_NAME) + '</b><small>DS04 · Pekerjaan Premium Tier 1</small></div></div><div class="sbody">';
     h += u
       ? '<div class="prof"><div class="av">' + esc(initials(u.nama, u.emel)) + '</div><div><b>' + esc(u.nama || u.emel) + '</b><small>' + esc(u.emel) + '</small></div></div>'
       : '<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>';
-    h += navBtn('dashboard', '▦', 'Dashboard', S.view.name === 'dashboard');
+    h += navBtn('dashboard', ico('grid'), 'Dashboard', S.view.name === 'dashboard');
     if (u) {
+      h += '<div class="mod">Peringkat</div>';
       S.session.levels.forEach(function (lv) {
         var ks = S.session.kpis.filter(function (k) { return k.level === lv.id; });
         if (!ks.length) return;
-        h += '<div class="sec">' + esc(lv.label) + '</div>';
-        var lastStage = null;
+        var body = '', last = null;
         ks.forEach(function (k) {
-          if (k.fungsi && lv.id === 'CKAI' && k.fungsi !== lastStage) {
-            lastStage = k.fungsi;
-            var fn = fnById(S.session.functions, k.fungsi);
-            if (fn) h += '<div class="stagelbl" title="' + esc(fn.ms) + '">' + esc(fnLabel(fn)) + '</div>';
+          var key = groupKey(k);
+          if (lv.id !== 'DKAI' && key !== last) {
+            last = key;
+            var sub = key, subTitle = key;
+            if (lv.id === 'CKAI') { var fn = fnById(S.session.functions, key); if (fn) { sub = fnLabel(fn); subTitle = fn.ms; } }
+            body += '<div class="stagelbl" title="' + esc(subTitle) + '">' + esc(sub) + '</div>';
           }
-          h += navBtn('kpi:' + k.id, '◆', k.title.replace(/ · .*/, '') + ' · ' + k.short, S.view.name === 'kpi' && S.view.id === k.id);
+          body += navBtn('kpi:' + k.id, '<span class="dot"></span>', k.title.replace(/ · .*/, '') + ' · ' + k.short, S.view.name === 'kpi' && S.view.id === k.id);
         });
+        h += groupHtml(lv.id, lv.short || lv.label, body, lv.label);
       });
       if (isAdmin()) {
-        h += '<div class="sec">Admin</div>' +
-          navBtn('users', '☺', 'Urus Pengguna', S.view.name === 'users') +
-          navBtn('targets', '◎', 'Sasaran', S.view.name === 'targets') +
-          navBtn('audit', '☰', 'Log Audit', S.view.name === 'audit');
+        h += '<div class="mod">Admin</div>' + groupHtml('ADMIN', 'Pentadbiran',
+          navBtn('users', ico('user'), 'Urus Pengguna', S.view.name === 'users') +
+          navBtn('targets', ico('target'), 'Sasaran', S.view.name === 'targets') +
+          navBtn('audit', ico('list'), 'Log Audit', S.view.name === 'audit'));
       }
     }
-    return h;
+    return h + '</div>';
+  }
+  function redrawSide() {
+    var side = $('#side'); if (!side) return;
+    side.className = 'side' + (S.navOpen ? ' open' : '') + (S.mini ? ' mini' : '');
+    side.innerHTML = renderSide(S.session && S.session.user);
   }
   function navBtn(target, icon, label, act) {
-    return '<button class="nav' + (act ? ' act' : '') + '" data-nav="' + esc(target) + '"' + (act ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + icon + '</span>' + esc(label) + '</button>';
+    return '<button class="nav' + (act ? ' act' : '') + '" data-nav="' + esc(target) + '"' + (act ? ' aria-current="page"' : '') + ' title="' + esc(label) + '">' +
+      '<span class="ic" aria-hidden="true">' + icon + '</span><span class="lb">' + esc(label) + '</span></button>';
   }
   function pageTitle() {
     var v = S.view;
@@ -602,6 +644,7 @@
   // ------------------------------------------------------------------ navigasi
   function go(target) {
     S.navOpen = false; S.editing = null; S.list = null; S.listFilters = {};
+    var lvl = levelOf(target); if (lvl) S.open[lvl] = true;
     if (target === 'dashboard') { S.view = { name: 'dashboard' }; S.dash = null; } // muat semula supaya angka terkini dipaparkan
     else if (target.indexOf('kpi:') === 0) S.view = { name: 'kpi', id: target.slice(4), tab: 'list' };
     else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; }
@@ -618,6 +661,14 @@
     var k = S.view.name === 'kpi' ? kpiById(S.view.id) : null;
     switch (act) {
       case 'togglenav': S.navOpen = !S.navOpen; $('#side').classList.toggle('open', S.navOpen); $('.scrim').classList.toggle('open', S.navOpen); break;
+      case 'tg':
+        var gid = a.getAttribute('data-g');
+        if (S.mini) { S.mini = false; S.open[gid] = true; } else S.open[gid] = !isOpen(gid);
+        redrawSide(); break;
+      case 'collapse':
+        if (window.innerWidth <= 860) { S.navOpen = false; $('#side').classList.remove('open'); $('.scrim').classList.remove('open'); }
+        else { S.mini = !S.mini; redrawSide(); }
+        break;
       case 'closenav': S.navOpen = false; $('#side').classList.remove('open'); $('.scrim').classList.remove('open'); break;
       case 'login': S.login = { step: 'email' }; renderModal(); break;
       case 'lclose': S.login = null; renderModal(); break;

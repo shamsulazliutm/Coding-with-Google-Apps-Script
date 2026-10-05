@@ -58,6 +58,15 @@ function buildHtml() {
   fs.writeFileSync(htmlPath, buildHtml());
   await page.goto('file://' + htmlPath);
 
+  // Kumpulan sidebar dilipat secara lalai: buka kumpulan item sebelum klik jika perlu.
+  const goNav = async (txt) => {
+    const item = page.locator('.nav', { hasText: txt }).first();
+    if (!(await item.isVisible())) {
+      const g = await item.evaluate(el => el.closest('.gb') && el.closest('.gb').getAttribute('data-g'));
+      await page.click('.gh[data-g="' + g + '"]');
+    }
+    await item.click();
+  };
   const step = async (name, fn) => { try { await fn(); console.log('  ok   ' + name); } catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message.split('\n')[0]); process.exitCode = 1; await page.screenshot({ path: path.join(out, 'FAIL-' + name.replace(/\W+/g, '_') + '.png') }); } };
   const text = async (sel) => (await page.locator(sel).innerText());
 
@@ -72,9 +81,9 @@ function buildHtml() {
     assert.strictEqual(await page.locator('.tag', { hasText: 'Department' }).count(), 1);
     assert.strictEqual(await page.locator('.tag', { hasText: 'Internal' }).count(), 0);
     assert.ok((await text('.side')).includes('Pengunjung'));
-    assert.ok(!(await text('.side')).includes('Urus Pengguna'));
+    assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 0);
     assert.ok((await text('.kcard >> nth=0')).includes('KAI 1'));
-    const logoOk = await page.evaluate(() => { const i = document.querySelector('.brandlogo img'); return !!i && i.complete && i.naturalWidth > 100; });
+    const logoOk = await page.evaluate(() => { const i = document.querySelector('.shlogo'); return !!i && i.complete && i.naturalWidth > 100; });
     assert.ok(logoOk, 'logo UTM tidak dimuatkan dalam sidebar');
     await page.screenshot({ path: path.join(out, '1-dashboard-awam.png'), fullPage: true });
   });
@@ -92,6 +101,14 @@ function buildHtml() {
     await page.selectOption('#yr', '2026');
     await page.waitForFunction(() => /25/.test(document.querySelectorAll('.kcard')[2].innerText));
   });
+  await step('sidebar gaya portal: logo UTM ASCEND, MODUL, kumpulan boleh dilipat', async () => {
+    assert.ok(await page.locator('.shlogo').isVisible());
+    assert.ok(await page.locator('.hb svg').isVisible(), 'ikon menu tidak kelihatan');
+    assert.ok((await text('.shname')).includes('UTMXCITE 4 ASCEEN 2030 Report'));
+    // pengunjung: hanya Dashboard (tiada MODUL / kumpulan)
+    assert.strictEqual(await page.locator('.gh').count(), 0);
+    assert.strictEqual(await page.locator('.mod').count(), 0);
+  });
   await step('log masuk Admin dengan OTP', async () => {
     await page.click('[data-action="login"]');
     await page.fill('#l_emel', 'admin@utm.my');
@@ -100,9 +117,26 @@ function buildHtml() {
     await page.fill('#l_code', code());
     await page.click('button:has-text("Sahkan")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
-    assert.ok((await text('.side')).includes('Urus Pengguna'));
+    assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 1); // dalam kumpulan Admin (dilipat)
     assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 16);
+    // kumpulan dilipat secara lalai; klik untuk membuka dan menutup
+    // Satu bahagian "PERINGKAT" dengan tiga kumpulan boleh dilipat (+ bahagian Admin)
+    deepEq((await page.locator('.mod').allInnerTexts()).map(x => x.toUpperCase()), ['PERINGKAT', 'ADMIN']);
+    deepEq(await page.locator('.gh').evaluateAll(els => els.map(e => e.getAttribute('data-g') + '=' + e.getAttribute('aria-expanded'))), ['KAI=false', 'DKAI=false', 'CKAI=false', 'ADMIN=false']);
+    deepEq(await page.locator('.gh .lb').allInnerTexts(), ['KAI · Universiti', 'DKAI · Jabatan (JTNC HEPA)', 'CKAI · Pusat (UTMXCITE)', 'Pentadbiran']);
+    assert.ok(!(await page.locator('.gb[data-g="KAI"] .nav').first().isVisible()));
+    await page.click('.gh[data-g="KAI"]');
+    assert.ok(await page.locator('.gb[data-g="KAI"] .nav').first().isVisible());
+    assert.strictEqual(await page.locator('.gb[data-g="KAI"] .nav').count(), 6); // KAI 1-6
+    assert.strictEqual(await page.locator('.gh[data-g="KAI"]').getAttribute('aria-expanded'), 'true');
+    deepEq((await page.locator('.gb[data-g="KAI"] .stagelbl').allInnerTexts()).map(x => x.toUpperCase()), ['GROWTH', 'TRANSFORM']);
+    await page.click('.gh[data-g="CKAI"]');
+    assert.strictEqual(await page.locator('.gb[data-g="CKAI"] .nav').count(), 9); // CKAI 1-9
+    deepEq((await page.locator('.gb[data-g="CKAI"] .stagelbl').allInnerTexts()).map(x => x.toUpperCase()), ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE']);
+    await page.click('.gh[data-g="CKAI"]');
     await page.screenshot({ path: path.join(out, '2-dashboard-admin.png') });
+    await page.click('.gh[data-g="KAI"]');
+    assert.ok(!(await page.locator('.gb[data-g="KAI"] .nav').first().isVisible()));
   });
   await step('OTP salah menunjukkan ralat', async () => {
     await page.click('[data-action="logout"]');
@@ -126,9 +160,9 @@ function buildHtml() {
     await page.click('button:has-text("Sahkan")');
     await page.waitForSelector('.prof >> text=Siti Aminah');
     assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 3);
-    assert.ok(!(await text('.side')).includes('Urus Pengguna'));
-    assert.ok(!(await text('.side')).includes('Makerspace'));
-    await page.click('.nav:has-text("GiGAUTM")');
+    assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 0);
+    assert.strictEqual(await page.locator('.nav', { hasText: 'Makerspace' }).count(), 0);
+    await goNav('GiGAUTM');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#kform');
@@ -173,7 +207,7 @@ function buildHtml() {
     await page.fill('#l_code', code());
     await page.click('button:has-text("Sahkan")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
-    await page.click('.nav:has-text("Urus Pengguna")');
+    await goNav('Urus Pengguna');
     await page.waitForSelector('#uform');
     await page.fill('#u_emel', 'pic.baru@utm.my');
     await page.fill('#u_akses', 'KAI2'); // tidak dibenarkan bagi PIC
@@ -184,14 +218,14 @@ function buildHtml() {
     await page.click('#uform button[type=submit]');
     await page.waitForSelector('td:has-text("pic.baru@utm.my")');
     await page.screenshot({ path: path.join(out, '5-admin-pengguna.png') });
-    await page.click('.nav:has-text("Sasaran")');
+    await goNav('Sasaran');
     await page.waitForSelector('input[data-k="sasaran"]');
-    await page.click('.nav:has-text("Log Audit")');
+    await goNav('Log Audit');
     await page.waitForSelector('td:has-text("PENGGUNA_TAMBAH")');
     await page.screenshot({ path: path.join(out, '6-admin-audit.png') });
   });
   await step('Admin memadam rekod melalui dialog pengesahan (batal tidak memadam)', async () => {
-    await page.click('.nav:has-text("GiGAUTM")');
+    await goNav('GiGAUTM');
     await page.waitForSelector('table');
     const before = await page.locator('tbody tr').count();
     await page.click('button:has-text("Padam") >> nth=0');
@@ -204,7 +238,7 @@ function buildHtml() {
     await page.waitForFunction((n) => document.querySelectorAll('tbody tr').length === n, before - 1);
   });
   await step('Admin merekod pendapatan CKAI 7 (input bulan) dan dashboard memaparkan RM', async () => {
-    await page.click('.nav:has-text("CKAI 7")');
+    await goNav('CKAI 7');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_tempoh');
@@ -216,7 +250,7 @@ function buildHtml() {
     await page.screenshot({ path: path.join(out, '8-borang-ckai4.png'), fullPage: true });
     await page.click('#savebtn');
     await page.waitForSelector('td:has-text("Kedai E2E")');
-    await page.click('.nav:has-text("Dashboard")');
+    await goNav('Dashboard');
     const card = page.locator('.kcard:has(.t:text-is("CKAI 7 · Pendapatan usahawan pelajar"))');
     await card.waitFor();
     assert.ok((await card.innerText()).includes('RM 1,500.50'), await card.innerText());
@@ -224,7 +258,7 @@ function buildHtml() {
     await page.screenshot({ path: path.join(out, '9-dashboard-ckai.png'), fullPage: true });
   });
   await step('CKAI 9: borang anugerah dengan pelajar berbilang dan muat naik sijil PDF', async () => {
-    await page.click('.nav:has-text("CKAI 9")');
+    await goNav('CKAI 9');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_nama_anugerah');
@@ -274,7 +308,7 @@ function buildHtml() {
     assert.ok((await text('.fileinfo')).includes('sijil-anugerah.pdf'));
     await page.click('#savebtn'); // simpan tanpa muat naik semula: rujukan fail sedia ada diterima
     await page.waitForSelector('td:has-text("Anugerah Inovasi Negara")');
-    await page.click('.nav:has-text("Dashboard")');
+    await goNav('Dashboard');
     const card = page.locator('.kcard:has(.t:text-is("CKAI 9 · Anugerah & pengiktirafan inovasi dan keusahawanan"))');
     await card.waitFor();
     assert.ok((await card.innerText()).includes('Pelajar penerima: 2'), await card.innerText());
@@ -282,7 +316,7 @@ function buildHtml() {
     ['Ali Bin Abu', '900101145678', 'A24CS0001', 'sijil-anugerah'].forEach(x => assert.ok(!all.includes(x), 'bocor dalam dashboard: ' + x));
   });
   await step('CKAI 3: daftar program inovasi (tarikh, tempat, penyertaan, kos, pendapatan) dan dashboard menjumlahkannya', async () => {
-    await page.click('.nav:has-text("CKAI 3")');
+    await goNav('CKAI 3');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_nama_program');
@@ -311,14 +345,14 @@ function buildHtml() {
     await page.waitForSelector('td:has-text("Hackathon Inovasi 2026")');
     const row = await text('tbody tr');
     ['Dewan Utama', '50', '1500', 'Selesai'].forEach(x => assert.ok(row.includes(x), 'lajur senarai tiada: ' + x + ' => ' + row));
-    await page.click('.nav:has-text("Dashboard")');
+    await goNav('Dashboard');
     const card = page.locator('.kcard:has(.t:text-is("CKAI 3 · Bilangan program inovasi"))');
     await card.waitFor();
     const ct = await card.innerText();
     ['Jumlah peserta: 50', 'Daripada itu pelajar: 40', 'Kos penganjuran: RM 1,500.00', 'Pendapatan: RM 0.00'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
   await step('CKAI 8: daftar inovasi pelajar (tanpa no. KP), anugerah pilihan, penapis calon peningkatan', async () => {
-    await page.click('.nav:has-text("CKAI 8")');
+    await goNav('CKAI 8');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_tajuk_inovasi');
@@ -345,14 +379,14 @@ function buildHtml() {
     await page.waitForSelector('td:has-text("Robot Penyusun Sampah")');
     await page.selectOption('select[aria-label="Tapis Status peningkatan"]', 'Tidak diteruskan');
     await page.waitForSelector('td:has-text("Tiada rekod")');
-    await page.click('.nav:has-text("Dashboard")');
+    await goNav('Dashboard');
     const card = page.locator('.kcard:has(.t:text-is("CKAI 8 · Bilangan inovasi pelajar yang dihasilkan"))');
     await card.waitFor();
     const ct = await card.innerText();
     ['Pelajar terlibat: 1', 'Memenang anugerah / pingat: 0', 'Calon peningkatan / sedang disokong: 1'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
   await step('Dashboard: tukar paparan antara peringkat dan fungsi (enam fungsi UTMXCITE)', async () => {
-    await page.click('.nav:has-text("Dashboard")');
+    await goNav('Dashboard');
     await page.waitForSelector('.seg');
     await page.click('[data-action="dview"][data-view="fungsi"]');
     await page.waitForSelector('.grp:has-text("Cross-cutting")');
@@ -368,7 +402,7 @@ function buildHtml() {
     await page.waitForSelector('.grp:has-text("KAI · PERINGKAT UNIVERSITI"), .grp:has-text("KAI · Peringkat Universiti")');
   });
   await step('CKAI 1: daftar profiling pelajar (persetujuan PDPA wajib, satu profil bagi setiap no. matrik)', async () => {
-    await page.click('.nav:has-text("CKAI 1")');
+    await goNav('CKAI 1');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_nama_pelajar');
@@ -399,11 +433,31 @@ function buildHtml() {
     await page.click('#savebtn');
     await page.waitForSelector('[data-field="no_matrik"].invalid .err:has-text("Sudah didaftarkan")');
     await page.click('[data-action="cancelform"]');
-    await page.click('.nav:has-text("Dashboard")');
+    await goNav('Dashboard');
     const card = page.locator('.kcard:has(.t:text-is("CKAI 1 · Bilangan profiling pelajar yang didaftarkan"))');
     await card.waitFor();
     const ct = await card.innerText();
     ['Berminat (sederhana / tinggi): 1', 'profiling didaftarkan'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
+  });
+  await step('sidebar: kumpulan aktif terbuka automatik; butang menu mengecilkan sidebar kepada ikon', async () => {
+    await goNav('CKAI 7');
+    assert.strictEqual(await page.locator('.gh[data-g="CKAI"]').getAttribute('aria-expanded'), 'true'); // kumpulan aktif dibuka
+    assert.ok(await page.locator('.gb[data-g="CKAI"] .nav.act').isVisible());
+    assert.strictEqual(await page.locator('.gh[data-g="DKAI"]').getAttribute('aria-expanded'), 'false'); // kumpulan lain kekal dilipat
+    const w0 = (await page.locator('#side').boundingBox()).width;
+    await page.click('[data-action="collapse"]');
+    await page.waitForSelector('.side.mini');
+    await page.waitForFunction(() => document.querySelector('#side').getBoundingClientRect().width < 100); // menunggu peralihan CSS
+    const w1 = (await page.locator('#side').boundingBox()).width;
+    assert.ok(w1 < 100 && w0 > 200, 'lebar sidebar: ' + w0 + ' -> ' + w1);
+    assert.ok(!(await page.locator('.shlogo').isVisible()));
+    await page.screenshot({ path: path.join(out, '16-sidebar-kecil.png') });
+    // klik kumpulan ketika dikecilkan: sidebar dibesarkan dan kumpulan dibuka
+    await page.click('.gh[data-g="DKAI"]');
+    await page.waitForSelector('.side:not(.mini)');
+    assert.strictEqual(await page.locator('.gh[data-g="DKAI"]').getAttribute('aria-expanded'), 'true');
+    await page.waitForFunction(() => document.querySelector('#side').getBoundingClientRect().width > 250); // tunggu animasi siap
+    await page.screenshot({ path: path.join(out, '17-sidebar-dibuka.png') });
   });
   await step('paparan telefon: menu boleh dibuka dan dashboard tidak melimpah mendatar', async () => {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 800 } });

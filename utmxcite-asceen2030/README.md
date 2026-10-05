@@ -5,7 +5,8 @@ Rujukan sebenar: Dokumen Pelan Tindakan UTMXCITE (PDF).
 
 - **Dashboard awam** (tanpa log masuk): kemajuan 7 KPI, data agregat sahaja.
 - **Log masuk e-mel + OTP** untuk PIC fakulti dan Admin. Tiada kata laluan.
-- **Sidebar kiri** (kad profil: nama dan e-mel) dan **sub-tab Senarai / Masuk Data** pada bar atas setiap KAI.
+- **Sidebar kiri** (gaya portal UTM, cerah): pengepala dengan butang menu dan **logo UTM ASCEND**, kad profil (nama dan e-mel), **Dashboard**, dan satu bahagian **PERINGKAT** dengan tiga kumpulan boleh dilipat: **KAI · Universiti** (subtajuk Growth / Transform), **DKAI · Jabatan (JTNC HEPA)** dan **CKAI · Pusat (UTMXCITE)** (subtajuk enam fungsi). Admin mempunyai bahagian **Admin**. Kumpulan yang mengandungi halaman aktif dibuka automatik. Butang menu mengecilkan sidebar kepada ikon (pada telefon ia menutup laci menu).
+- **Sub-tab Senarai / Masuk Data** pada bar atas setiap KAI, DKAI dan CKAI.
 - Semua data disimpan dalam satu Google Sheet, **satu tab bagi setiap KPI**.
 
 ## Tiga peringkat penunjuk

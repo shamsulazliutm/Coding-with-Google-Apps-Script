@@ -61,20 +61,20 @@ var YES_NO = ['Ya', 'Tidak'];
  * ditanda dengan satu `fungsi`. DKAI 1 ialah pelan merentas semua fungsi.
  */
 var FUNCTIONS = [
-  { id: 'minat', no: 1, label: 'Identify Student Entrepreneurship Interest', ms: 'Kenal pasti minat keusahawanan pelajar' },
-  { id: 'latihan', no: 2, label: 'Conduct Entrepreneurship Training', ms: 'Jalankan latihan keusahawanan' },
-  { id: 'ideasi', no: 3, label: 'Support Student Business Ideation', ms: 'Sokong pengideaan perniagaan pelajar' },
-  { id: 'startup', no: 4, label: 'Facilitate Student Startup Development', ms: 'Fasilitasi pembangunan startup pelajar' },
-  { id: 'prestasi', no: 5, label: 'Monitor Student Enterprise Performance', ms: 'Pantau prestasi perusahaan pelajar' },
-  { id: 'pameran', no: 6, label: 'Showcase Student Innovation Venture', ms: 'Pamerkan inovasi dan venture pelajar' },
+  { id: 'minat', no: 1, short: 'Identify Interest', label: 'Identify Student Entrepreneurship Interest', ms: 'Kenal pasti minat keusahawanan pelajar' },
+  { id: 'latihan', no: 2, short: 'Entrepreneurship Training', label: 'Conduct Entrepreneurship Training', ms: 'Jalankan latihan keusahawanan' },
+  { id: 'ideasi', no: 3, short: 'Business Ideation', label: 'Support Student Business Ideation', ms: 'Sokong pengideaan perniagaan pelajar' },
+  { id: 'startup', no: 4, short: 'Startup Development', label: 'Facilitate Student Startup Development', ms: 'Fasilitasi pembangunan startup pelajar' },
+  { id: 'prestasi', no: 5, short: 'Enterprise Performance', label: 'Monitor Student Enterprise Performance', ms: 'Pantau prestasi perusahaan pelajar' },
+  { id: 'pameran', no: 6, short: 'Showcase Innovation', label: 'Showcase Student Innovation Venture', ms: 'Pamerkan inovasi dan venture pelajar' },
   { id: 'rentas', no: null, label: 'Cross-cutting', ms: 'Pelan dan tadbir urus merentas fungsi' }
 ];
 
 /** Tiga peringkat penunjuk. Setiap KPI tergolong dalam satu peringkat mengikut awalan ID (KAI / DKAI / CKAI). */
 var LEVELS = [
-  { id: 'KAI', label: 'KAI · Peringkat Universiti' },
-  { id: 'DKAI', label: 'DKAI · Peringkat Jabatan (JTNC HEPA)' },
-  { id: 'CKAI', label: 'CKAI · Peringkat Pusat (UTMXCITE)' }
+  { id: 'KAI', label: 'KAI · Peringkat Universiti', short: 'KAI · Universiti', section: 'Peringkat Universiti · KAI' },
+  { id: 'DKAI', label: 'DKAI · Peringkat Jabatan (JTNC HEPA)', short: 'DKAI · Jabatan (JTNC HEPA)', section: 'Peringkat Jabatan · DKAI (JTNC HEPA)' },
+  { id: 'CKAI', label: 'CKAI · Peringkat Pusat (UTMXCITE)', short: 'CKAI · Pusat (UTMXCITE)', section: 'Peringkat Pusat · CKAI (UTMXCITE)' }
 ];
 
 function F_(key, label, type, o) {
