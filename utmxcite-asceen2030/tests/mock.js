@@ -103,6 +103,7 @@ function loadGas(opts = {}) {
       class Folder {
         constructor(name) { this.name = name; this.id = 'FOLDER' + (++n) + 'abcdefghij'; folders[this.id] = this; }
         getId() { return this.id; }
+        getName() { return this.name; }
         getUrl() { return 'https://drive.google.com/drive/folders/' + this.id; }
         createFile(blob) { return new File(blob, this); }
       }

@@ -135,6 +135,7 @@
   DFile.prototype.getParents = function () { var arr = [{ getId: function () { return this._f; }, _f: this.folder }], i = 0; return { hasNext: function () { return i < arr.length; }, next: function () { return arr[i++]; } }; };
   function DFolder(id, name) { this.id = id; this.name = name; }
   DFolder.prototype.getId = function () { return this.id; };
+  DFolder.prototype.getName = function () { return this.name; };
   DFolder.prototype.getUrl = function () { return '#demo-folder-' + this.id; };
   DFolder.prototype.createFile = function (blob) {
     var id = 'DEMOFILE' + (++drive.n) + 'abcdefghij', f = new DFile(id, blob.getName(), Utilities.base64Encode(blob.getBytes()), this.id);
