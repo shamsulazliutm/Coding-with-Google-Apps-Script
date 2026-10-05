@@ -4,3 +4,4 @@ package.json
 .gitignore
 .claspignore
 tools/**
+demo/**

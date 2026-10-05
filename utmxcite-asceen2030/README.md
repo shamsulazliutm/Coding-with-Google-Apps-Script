@@ -147,12 +147,17 @@ Jika logo baharu memerlukan latar lain, ubah warna `.brandlogo` dalam `Styles.ht
 
 Semua penulisan ke Sheet mengikut **nama tajuk lajur**, bukan kedudukan. Jadi lajur boleh disusun semula, atau lajur anda sendiri boleh ditambah, tanpa merosakkan data. Nama tajuk yang dikenali oleh kod mesti kekal tepat. Apabila versi baharu menambah medan, `setup()` menambah lajur baharu di hujung tab sedia ada.
 
+## Prototaip pra-demo
+
+`demo/utmxcite-demo.html` ialah satu fail HTML yang menjalankan kod sistem sebenar dalam pelayar dengan data contoh (tanpa Google), untuk pra-demo. Lihat `demo/README.md`. Bina semula dengan `node tools/build_demo.js`.
+
 ## Ujian
 
 Logik pelayan diuji dengan tiruan API GAS (Node 18+):
 
 ```
 node tests/run.js        # ujian logik: OTP, akses, pengesahan, kiraan KPI dan CKAI, dashboard awam
+node tests/demo.js       # ujian prototaip pra-demo (fail HTML tunggal, file://)
 node tests/e2e.js        # ujian pelayar sebenar (Playwright + Chromium) menggunakan pelayan tiruan yang sama, termasuk muat naik/muat turun PDF
 ```
 
