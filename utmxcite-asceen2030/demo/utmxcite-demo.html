@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UTMXCITE ASCEEN 2030 · Prototaip pra-demo</title>
+<title>UTMXCITE ASCEND 2030 · Prototaip pra-demo</title>
 <style>
 :root{--m:#5c0f2a;--m2:#7a1a3d;--gold:#e9b949;--bg:#f4f1ee;--card:#fff;--ink:#2b1a1f;--mut:#6a5a5f;--line:#e3d9dc;
 --ok:#1f6f6b;--warn:#b45f06;--bad:#b3261e;--over:#2e7d32;--info:#3b78d8}
@@ -381,12 +381,12 @@ label .req{color:var(--bad)}
 <script>/* Kod pelayar sebenar sistem: logik pelayan (.gs) */
 /* Config.gs */
 /**
- * UTMXCITE 4 ASCEEN 2030 Report
+ * UTMXCITE 4 ASCEND 2030 Report
  * Konfigurasi: pemalar aplikasi, definisi 7 KPI (medan borang), sasaran awal dan data awal.
  * Sumber rujukan: Dokumen Pelan Tindakan UTMXCITE (DS 04 - Premium Employment).
  */
 var APP = {
-  NAME: 'UTMXCITE 4 ASCEEN 2030 Report',
+  NAME: 'UTMXCITE 4 ASCEND 2030 Report',
   WEB_URL: 'https://script.google.com/a/macros/utm.my/s/AKfycbza7zjSdub5fOgDbS6q8LFM11ByewnyUTlm8Ft4fq4l9F1MSYDsPWkkb7HTuh_rTjyi/exec', // pautan web app (menu Sheet); kosong = dikesan automatik
   TZ: 'Asia/Kuala_Lumpur',
   OTP_TTL: 300,            // saat
@@ -1230,7 +1230,7 @@ function audit_(user, action, kpi, recordId, summary) {
 function getAttachFolder_() {
   var id = getProp_('FOLDER_ID');
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* folder dipadam: cipta semula */ } }
-  var f = DriveApp.createFolder('UTMXCITE ASCEEN2030 - Lampiran');
+  var f = DriveApp.createFolder('UTMXCITE ASCEND2030 - Lampiran');
   setProp_('FOLDER_ID', f.getId());
   return f;
 }
@@ -1274,7 +1274,7 @@ function setup() {
     ss = SpreadsheetApp.openById(id);
   } else {
     try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) { ss = null; }
-    if (!ss) ss = SpreadsheetApp.create('Laporan ASCEEN 2030 - UTMXCITE');
+    if (!ss) ss = SpreadsheetApp.create('Laporan ASCEND 2030 - UTMXCITE');
     setProp_('SHEET_ID', ss.getId());
   }
   getSalt_();
@@ -2758,7 +2758,7 @@ window.__demoSeed = function () {
 (function () {
   'use strict';
 
-  var APP_NAME = 'UTMXCITE 4 ASCEEN 2030 Report';
+  var APP_NAME = 'UTMXCITE 4 ASCEND 2030 Report';
   var DASH_TITLE = 'Dashboard KPI UTMXCITE JTNCHEPA';
   var S = {
     token: null, session: null,

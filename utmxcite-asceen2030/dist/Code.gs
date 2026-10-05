@@ -1,11 +1,11 @@
 // ===== Config.gs =====
 /**
- * UTMXCITE 4 ASCEEN 2030 Report
+ * UTMXCITE 4 ASCEND 2030 Report
  * Konfigurasi: pemalar aplikasi, definisi 7 KPI (medan borang), sasaran awal dan data awal.
  * Sumber rujukan: Dokumen Pelan Tindakan UTMXCITE (DS 04 - Premium Employment).
  */
 var APP = {
-  NAME: 'UTMXCITE 4 ASCEEN 2030 Report',
+  NAME: 'UTMXCITE 4 ASCEND 2030 Report',
   WEB_URL: 'https://script.google.com/a/macros/utm.my/s/AKfycbza7zjSdub5fOgDbS6q8LFM11ByewnyUTlm8Ft4fq4l9F1MSYDsPWkkb7HTuh_rTjyi/exec', // pautan web app (menu Sheet); kosong = dikesan automatik
   TZ: 'Asia/Kuala_Lumpur',
   OTP_TTL: 300,            // saat
@@ -849,7 +849,7 @@ function audit_(user, action, kpi, recordId, summary) {
 function getAttachFolder_() {
   var id = getProp_('FOLDER_ID');
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* folder dipadam: cipta semula */ } }
-  var f = DriveApp.createFolder('UTMXCITE ASCEEN2030 - Lampiran');
+  var f = DriveApp.createFolder('UTMXCITE ASCEND2030 - Lampiran');
   setProp_('FOLDER_ID', f.getId());
   return f;
 }
@@ -893,7 +893,7 @@ function setup() {
     ss = SpreadsheetApp.openById(id);
   } else {
     try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) { ss = null; }
-    if (!ss) ss = SpreadsheetApp.create('Laporan ASCEEN 2030 - UTMXCITE');
+    if (!ss) ss = SpreadsheetApp.create('Laporan ASCEND 2030 - UTMXCITE');
     setProp_('SHEET_ID', ss.getId());
   }
   getSalt_();

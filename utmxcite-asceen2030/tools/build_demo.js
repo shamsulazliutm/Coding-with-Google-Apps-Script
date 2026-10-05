@@ -18,7 +18,7 @@ const html = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UTMXCITE ASCEEN 2030 · Prototaip pra-demo</title>
+<title>UTMXCITE ASCEND 2030 · Prototaip pra-demo</title>
 ${rd('Styles.html')}
 </head>
 <body>

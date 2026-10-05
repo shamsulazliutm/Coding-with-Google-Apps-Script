@@ -9,7 +9,7 @@ function setup() {
     ss = SpreadsheetApp.openById(id);
   } else {
     try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) { ss = null; }
-    if (!ss) ss = SpreadsheetApp.create('Laporan ASCEEN 2030 - UTMXCITE');
+    if (!ss) ss = SpreadsheetApp.create('Laporan ASCEND 2030 - UTMXCITE');
     setProp_('SHEET_ID', ss.getId());
   }
   getSalt_();

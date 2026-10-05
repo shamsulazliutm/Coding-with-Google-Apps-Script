@@ -1,10 +1,10 @@
 /**
- * UTMXCITE 4 ASCEEN 2030 Report
+ * UTMXCITE 4 ASCEND 2030 Report
  * Konfigurasi: pemalar aplikasi, definisi 7 KPI (medan borang), sasaran awal dan data awal.
  * Sumber rujukan: Dokumen Pelan Tindakan UTMXCITE (DS 04 - Premium Employment).
  */
 var APP = {
-  NAME: 'UTMXCITE 4 ASCEEN 2030 Report',
+  NAME: 'UTMXCITE 4 ASCEND 2030 Report',
   WEB_URL: 'https://script.google.com/a/macros/utm.my/s/AKfycbza7zjSdub5fOgDbS6q8LFM11ByewnyUTlm8Ft4fq4l9F1MSYDsPWkkb7HTuh_rTjyi/exec', // pautan web app (menu Sheet); kosong = dikesan automatik
   TZ: 'Asia/Kuala_Lumpur',
   OTP_TTL: 300,            // saat

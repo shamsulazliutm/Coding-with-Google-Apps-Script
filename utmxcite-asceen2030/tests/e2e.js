@@ -12,7 +12,7 @@ fs.mkdirSync(out, { recursive: true });
 
 function buildHtml() {
   const inc = (n) => fs.readFileSync(path.join(root, n + '.html'), 'utf8');
-  return inc('Index').replace('<?= appName ?>', 'UTMXCITE 4 ASCEEN 2030 Report')
+  return inc('Index').replace('<?= appName ?>', 'UTMXCITE 4 ASCEND 2030 Report')
     .replace(/<\?!= include\('(\w+)'\) \?>/g, (_, n) => inc(n));
 }
 
@@ -107,7 +107,7 @@ function buildHtml() {
   await step('sidebar gaya portal: logo UTM ASCEND, MODUL, kumpulan boleh dilipat', async () => {
     assert.ok(await page.locator('.shlogo').isVisible());
     assert.ok(await page.locator('.hb svg').isVisible(), 'ikon menu tidak kelihatan');
-    assert.ok((await text('.shname')).includes('UTMXCITE 4 ASCEEN 2030 Report'));
+    assert.ok((await text('.shname')).includes('UTMXCITE 4 ASCEND 2030 Report'));
     // pengunjung: hanya Dashboard (tiada MODUL / kumpulan)
     assert.strictEqual(await page.locator('.gh').count(), 0);
     assert.strictEqual(await page.locator('.mod').count(), 0);

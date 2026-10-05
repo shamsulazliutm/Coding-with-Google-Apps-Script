@@ -185,7 +185,7 @@ function audit_(user, action, kpi, recordId, summary) {
 function getAttachFolder_() {
   var id = getProp_('FOLDER_ID');
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* folder dipadam: cipta semula */ } }
-  var f = DriveApp.createFolder('UTMXCITE ASCEEN2030 - Lampiran');
+  var f = DriveApp.createFolder('UTMXCITE ASCEND2030 - Lampiran');
   setProp_('FOLDER_ID', f.getId());
   return f;
 }
