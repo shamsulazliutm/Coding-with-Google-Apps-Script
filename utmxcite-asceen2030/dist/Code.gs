@@ -248,6 +248,7 @@ var KPIS = [
     id: 'KAI3', prefix: 'R3', sheet: 'KAI3_Ruang_Perniagaan', group: 'Growth', fungsi: 'startup', entry: 'admin',
     title: 'KAI 3 · Ruang & kemudahan perniagaan pelajar', short: 'Ruang Perniagaan',
     unit: 'ruang ditawarkan', measure: 'kai3', jenis: 'minimum',
+    retired: ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai'], // lajur dibuang daripada Sheet oleh setup()
     listColumns: ['id', 'kod_lot', 'jenis_ruang', 'kolej_fakulti', 'status', 'diwartakan'],
     statusField: 'status',
     rules: [
@@ -987,6 +988,7 @@ function setup() {
   seedAdmin_(ss);
   seedMilestones_(ss);
   backfillFileLinks_(ss);
+  dropRetiredColumns_(ss);
 
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
@@ -1171,6 +1173,25 @@ function backfillFileLinks_(ss) {
       }
       if (changed) sh.getRange(2, dst + 1, n, 1).setValues(to);
     });
+  });
+}
+
+/**
+ * Buang lajur yang sudah tidak digunakan (KPI.retired) daripada tab. Data dalam lajur itu dipadam kekal.
+ * Hanya lajur yang tiada dalam definisi semasa dibuang.
+ */
+function dropRetiredColumns_(ss) {
+  KPIS.forEach(function (kpi) {
+    if (!kpi.retired || !kpi.retired.length) return;
+    var sh = ss.getSheetByName(kpi.sheet);
+    if (!sh || sh.getLastColumn() < 1) return;
+    var current = kpiColumns_(kpi);
+    var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+    var removed = [];
+    for (var i = hdr.length - 1; i >= 0; i--) {   // dari kanan supaya indeks tidak berubah
+      if (kpi.retired.indexOf(hdr[i]) >= 0 && current.indexOf(hdr[i]) < 0) { sh.deleteColumn(i + 1); removed.push(hdr[i]); }
+    }
+    if (removed.length) audit_(null, 'LAJUR_DIBUANG', kpi.id, '', removed.reverse().join(', '));
   });
 }
 

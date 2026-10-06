@@ -94,6 +94,7 @@
   Sheet.prototype.getRange = function (r, c, nr, nc) { return new Range(this, r, c, nr || 1, nc || 1); };
   Sheet.prototype.appendRow = function (arr) { var r = this.getLastRow() + 1, self = this; arr.forEach(function (v, j) { self._set(r, j + 1, v); }); persist(); };
   Sheet.prototype.deleteRow = function (n) { this.data.splice(n - 1, 1); persist(); };
+  Sheet.prototype.deleteColumn = function (n) { this.data.forEach(function (row) { if (row.length >= n) row.splice(n - 1, 1); }); persist(); };
   Sheet.prototype.setFrozenRows = function () {};
   Sheet.prototype.setColumnWidth = function () { return this; };
   Sheet.prototype.clear = function () { this.data = []; this.formats = {}; persist(); return this; };

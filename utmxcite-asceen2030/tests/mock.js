@@ -52,6 +52,7 @@ function loadGas(opts = {}) {
     getRange(r, c, nr = 1, nc = 1) { return new Range(this, r, c, nr, nc); }
     appendRow(arr) { const r = this.getLastRow() + 1; arr.forEach((v, j) => this._set(r, j + 1, v)); }
     deleteRow(n) { this.data.splice(n - 1, 1); }
+    deleteColumn(n) { this.data.forEach(row => { if (row.length >= n) row.splice(n - 1, 1); }); }
     setFrozenRows() {}
     clear() { this.data = []; this.formats = {}; return this; }
     setColumnWidth() { return this; }

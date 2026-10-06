@@ -876,5 +876,20 @@ test('KAI 3: No. KP penyewa wajib bila Disewa, disahkan dan sengkang dibuang', (
   assert.strictEqual(String(ok(g.api_list(adminToken, 'KAI3', {})).rows.find(x => x.id === r.id).penyewa_kp).replace(/^'/, ''), '000101101234');
 });
 
+test('setup() membuang lajur Perolehan lama daripada tab KAI3 (data dipadam) tanpa mengganggu lajur lain', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('KAI3_Ruang_Perniagaan');
+  ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai'].forEach((h, i) => { sh.getRange(1, 40 + i).setValue(h); sh.getRange(2, 40 + i).setValue('data-lama-' + i); });
+  const before = sh.data[0].filter(h => h !== '' && !['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai'].includes(h)).length;
+  g.setup();
+  const hdr = sh.data[0];
+  ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai'].forEach(h => assert.ok(!hdr.includes(h), h));
+  assert.ok(!JSON.stringify(sh.data).includes('data-lama-'));
+  assert.strictEqual(hdr.filter(h => h !== '').length, before);
+  assert.ok(hdr.includes('kod_lot') && hdr.includes('penyewa_kp'));
+  assert.ok(ok(g.api_list(adminToken, 'KAI3', {})).rows.length > 0); // rekod sedia ada kekal
+  g.setup(); // idempotent
+  assert.ok(env.spreadsheets[env.props.SHEET_ID].getSheetByName('Log_Audit').data.some(r => r.includes('LAJUR_DIBUANG')));
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);
