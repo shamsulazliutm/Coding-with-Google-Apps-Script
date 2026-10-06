@@ -671,7 +671,7 @@ label .req{color:var(--bad)}
     k.fields.forEach(function (fd) {
       if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
       h += '<div class="' + (fd.full ? 'full' : '') + '" data-field="' + fd.key + '"><label for="f_' + fd.key + '">' + esc(fd.label) + (fd.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
-        inputFor(k, fd, rec[fd.key]) + '<div class="err" role="alert"></div></div>';
+        inputFor(k, fd, rec[fd.key]) + (fd.hint ? '<div class="hint">' + esc(fd.hint) + '</div>' : '') + '<div class="err" role="alert"></div></div>';
     });
     h += '</div><div class="acts"><button class="btn" type="submit" id="savebtn">Simpan</button>' +
       '<button class="btn o" type="button" data-action="cancelform">Batal</button></div></form>';

@@ -483,7 +483,7 @@ var KPIS = [
     unit: 'permohonan penggunaan', measure: 'makerspace', jenis: 'minimum',
     listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'borang'],
     statusField: null,
-    rules: [],
+    rules: [{ when: { field: 'peralatan', in: ['Lain-lain (Other)'] }, require: ['peralatan_lain'] }],
     validate: makerspaceValidate_,
     fields: [
       F_('emel', 'E-mel (Email Address)', 'email', { required: true, sec: 'Pemohon' }),
@@ -493,7 +493,8 @@ var KPIS = [
       F_('fakulti', 'Fakulti / jabatan / unit (Faculty / Department / Unit)', 'faculty', { required: true }),
       F_('kelas', 'Jabatan / unit / kelas (jika berkaitan)', 'text'),
       F_('telefon', 'Nombor telefon (Phone Number)', 'text', { required: true }),
-      F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'text', { required: true, full: true, sec: 'Permohonan' }),
+      F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'select', { required: true, sec: 'Permohonan', options: ['3D Printer', 'Laser Cutter Machine', 'Peralatan Tangan (Tools)', 'Sewaan Ruang (Space Rental)', 'Lain-lain (Other)'] }),
+      F_('peralatan_lain', 'Nyatakan nama peralatan / jenis lain (Other, please specify)', 'text', { hint: 'Wajib jika memilih Lain-lain (Other).' }),
       F_('tujuan', 'Tujuan permohonan (Purpose of Application)', 'textarea', { required: true, full: true }),
       F_('bil_peserta', 'Bilangan peserta (Number of Participants)', 'number', { required: true, min: 1 }),
       F_('tarikh_mula', 'Tarikh mula (Start Date)', 'date', { required: true, sec: 'Tarikh dan masa' }),
