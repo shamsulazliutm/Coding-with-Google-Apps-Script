@@ -168,16 +168,6 @@ function writeSetupTab_(ss) {
   } catch (e) { /* pemformatan tidak kritikal */ }
 }
 
-/** Menu dalam Google Sheet: buka dashboard dan jalankan persediaan. */
-function onOpen() {
-  try {
-    SpreadsheetApp.getUi().createMenu('UTMXCITE')
-      .addItem('Buka Dashboard KPI', 'linkSistem')
-      .addItem('Jalankan persediaan (setup)', 'setup')
-      .addToUi();
-  } catch (e) { /* bukan dalam konteks Sheet */ }
-}
-
 function webUrl_() {
   var u = APP.WEB_URL || '';
   if (!u) { try { u = ScriptApp.getService().getUrl() || ''; } catch (e) { u = ''; } }

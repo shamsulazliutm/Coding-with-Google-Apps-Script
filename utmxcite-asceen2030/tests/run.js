@@ -797,9 +797,8 @@ test('e-mel ujian dihantar ke Admin dan dihadkan 3 sejam', () => {
   fail(g.api_testMail(adminToken), /Had 3/);
 });
 
-test('menu Sheet: onOpen dan linkSistem membuka pautan web app', () => {
-  g.onOpen();
-  assert.ok(g.linkSistem);
+test('linkSistem membuka pautan web app; tiada onOpen automatik', () => {
+  assert.strictEqual(typeof g.onOpen, 'undefined');
   g.linkSistem();
   assert.ok(env.opts.dialog.html.includes('window.open("https://script.google.com/'));
   assert.strictEqual(env.opts.dialog.title, 'Dashboard KPI UTMXCITE JTNCHEPA');
