@@ -279,7 +279,7 @@ var MEASURES = {
       secondary: [{ label: 'Disewa pelajar', value: rented.length }, { label: 'Kadar penggunaan', value: rate + '%' }],
       breakdown: [
         { title: 'Ruang ditawarkan mengikut jenis', items: countBy_(offered, function (r) { return r.jenis_ruang; }) },
-        { title: 'Ruang ditawarkan mengikut kolej / fakulti', items: sortDesc_(countBy_(offered, function (r) { return r.kolej_fakulti; })) },
+        { title: 'Ruang ditawarkan mengikut lokasi', items: sortDesc_(countBy_(offered, function (r) { return r.lokasi; })) },
         { title: 'Saluran paip semua ruang (mengikut status)', items: pipe }
       ]
     };

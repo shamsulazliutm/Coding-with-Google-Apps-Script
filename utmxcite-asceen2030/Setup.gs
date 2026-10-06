@@ -19,6 +19,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.TARGETS, TARGET_COLS, []);
   ensureSheet_(ss, SHEETS.RISKS, RISK_COLS, []);
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
+  renameColumns_(ss);
   KPIS.forEach(function (kpi) {
     ensureSheet_(ss, kpi.sheet, kpiColumns_(kpi), kpi.fields.concat([{ key: 'id', type: 'text' }].concat(SYS_COLS.map(function (k) { return { key: k, type: 'text' }; }))));
   });
@@ -237,5 +238,20 @@ function dropRetiredColumns_(ss) {
       if (kpi.retired.indexOf(hdr[i]) >= 0 && current.indexOf(hdr[i]) < 0) { sh.deleteColumn(i + 1); removed.push(hdr[i]); }
     }
     if (removed.length) audit_(null, 'LAJUR_DIBUANG', kpi.id, '', removed.reverse().join(', '));
+  });
+}
+
+/** Namakan semula tajuk lajur lama (KPI.renamed: {lama: baharu}) supaya data dikekalkan. */
+function renameColumns_(ss) {
+  KPIS.forEach(function (kpi) {
+    if (!kpi.renamed) return;
+    var sh = ss.getSheetByName(kpi.sheet);
+    if (!sh || sh.getLastColumn() < 1) return;
+    var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+    for (var old in kpi.renamed) {
+      if (!kpi.renamed.hasOwnProperty(old)) continue;
+      var i = hdr.indexOf(old);
+      if (i >= 0 && hdr.indexOf(kpi.renamed[old]) < 0) { sh.getRange(1, i + 1).setValue(kpi.renamed[old]); audit_(null, 'LAJUR_DINAMA_SEMULA', kpi.id, '', old + ' -> ' + kpi.renamed[old]); }
+    }
   });
 }

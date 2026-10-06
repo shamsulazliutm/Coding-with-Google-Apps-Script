@@ -247,8 +247,9 @@ var KPIS = [
     id: 'KAI3', prefix: 'R3', sheet: 'KAI3_Ruang_Perniagaan', group: 'Growth', fungsi: 'startup', entry: 'admin',
     title: 'KAI 3 · Ruang & kemudahan perniagaan pelajar', short: 'Ruang Perniagaan',
     unit: 'ruang ditawarkan', measure: 'kai3', jenis: 'minimum',
+    renamed: { kolej_fakulti: 'lokasi' }, // tajuk lajur lama dinamakan semula oleh setup() (data dikekalkan)
     retired: ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai'], // lajur dibuang daripada Sheet oleh setup()
-    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'kolej_fakulti', 'status', 'diwartakan'],
+    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'lokasi', 'status', 'diwartakan'],
     statusField: 'status',
     rules: [
       { when: { field: 'status', in: ['Ditawarkan', 'Disewa'] }, require: ['tarikh_ditawarkan'] },
@@ -259,7 +260,7 @@ var KPIS = [
     fields: [
       F_('kod_lot', 'Nama / kod lot', 'text', { required: true, sec: 'Identiti' }),
       F_('jenis_ruang', 'Jenis ruang', 'select', { required: true, options: ['Student Mall', 'Student Union Building (SUB)', 'Kiosk / Lot Mudah Alih', 'Bilik / Ruang Perniagaan', 'Lain-lain'] }),
-      F_('kolej_fakulti', 'Kolej / Fakulti', 'text', { required: true }),
+      F_('lokasi', 'Lokasi', 'text', { required: true }),
       F_('bangunan', 'Bangunan / zon', 'text'),
       F_('keluasan', 'Keluasan (m²)', 'number', { min: 0 }),
       F_('status', 'Status ruang', 'select', { required: true, sec: 'Kemajuan', options: ['Dikenal pasti', 'Spesifikasi disediakan', 'Dalam perolehan', 'Siap', 'Ditawarkan', 'Disewa', 'Tidak aktif'] }),

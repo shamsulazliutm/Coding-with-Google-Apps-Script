@@ -248,8 +248,9 @@ var KPIS = [
     id: 'KAI3', prefix: 'R3', sheet: 'KAI3_Ruang_Perniagaan', group: 'Growth', fungsi: 'startup', entry: 'admin',
     title: 'KAI 3 · Ruang & kemudahan perniagaan pelajar', short: 'Ruang Perniagaan',
     unit: 'ruang ditawarkan', measure: 'kai3', jenis: 'minimum',
+    renamed: { kolej_fakulti: 'lokasi' }, // tajuk lajur lama dinamakan semula oleh setup() (data dikekalkan)
     retired: ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai'], // lajur dibuang daripada Sheet oleh setup()
-    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'kolej_fakulti', 'status', 'diwartakan'],
+    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'lokasi', 'status', 'diwartakan'],
     statusField: 'status',
     rules: [
       { when: { field: 'status', in: ['Ditawarkan', 'Disewa'] }, require: ['tarikh_ditawarkan'] },
@@ -260,7 +261,7 @@ var KPIS = [
     fields: [
       F_('kod_lot', 'Nama / kod lot', 'text', { required: true, sec: 'Identiti' }),
       F_('jenis_ruang', 'Jenis ruang', 'select', { required: true, options: ['Student Mall', 'Student Union Building (SUB)', 'Kiosk / Lot Mudah Alih', 'Bilik / Ruang Perniagaan', 'Lain-lain'] }),
-      F_('kolej_fakulti', 'Kolej / Fakulti', 'text', { required: true }),
+      F_('lokasi', 'Lokasi', 'text', { required: true }),
       F_('bangunan', 'Bangunan / zon', 'text'),
       F_('keluasan', 'Keluasan (m²)', 'number', { min: 0 }),
       F_('status', 'Status ruang', 'select', { required: true, sec: 'Kemajuan', options: ['Dikenal pasti', 'Spesifikasi disediakan', 'Dalam perolehan', 'Siap', 'Ditawarkan', 'Disewa', 'Tidak aktif'] }),
@@ -974,6 +975,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.TARGETS, TARGET_COLS, []);
   ensureSheet_(ss, SHEETS.RISKS, RISK_COLS, []);
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
+  renameColumns_(ss);
   KPIS.forEach(function (kpi) {
     ensureSheet_(ss, kpi.sheet, kpiColumns_(kpi), kpi.fields.concat([{ key: 'id', type: 'text' }].concat(SYS_COLS.map(function (k) { return { key: k, type: 'text' }; }))));
   });
@@ -1192,6 +1194,21 @@ function dropRetiredColumns_(ss) {
       if (kpi.retired.indexOf(hdr[i]) >= 0 && current.indexOf(hdr[i]) < 0) { sh.deleteColumn(i + 1); removed.push(hdr[i]); }
     }
     if (removed.length) audit_(null, 'LAJUR_DIBUANG', kpi.id, '', removed.reverse().join(', '));
+  });
+}
+
+/** Namakan semula tajuk lajur lama (KPI.renamed: {lama: baharu}) supaya data dikekalkan. */
+function renameColumns_(ss) {
+  KPIS.forEach(function (kpi) {
+    if (!kpi.renamed) return;
+    var sh = ss.getSheetByName(kpi.sheet);
+    if (!sh || sh.getLastColumn() < 1) return;
+    var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+    for (var old in kpi.renamed) {
+      if (!kpi.renamed.hasOwnProperty(old)) continue;
+      var i = hdr.indexOf(old);
+      if (i >= 0 && hdr.indexOf(kpi.renamed[old]) < 0) { sh.getRange(1, i + 1).setValue(kpi.renamed[old]); audit_(null, 'LAJUR_DINAMA_SEMULA', kpi.id, '', old + ' -> ' + kpi.renamed[old]); }
+    }
   });
 }
 
@@ -1964,7 +1981,7 @@ var MEASURES = {
       secondary: [{ label: 'Disewa pelajar', value: rented.length }, { label: 'Kadar penggunaan', value: rate + '%' }],
       breakdown: [
         { title: 'Ruang ditawarkan mengikut jenis', items: countBy_(offered, function (r) { return r.jenis_ruang; }) },
-        { title: 'Ruang ditawarkan mengikut kolej / fakulti', items: sortDesc_(countBy_(offered, function (r) { return r.kolej_fakulti; })) },
+        { title: 'Ruang ditawarkan mengikut lokasi', items: sortDesc_(countBy_(offered, function (r) { return r.lokasi; })) },
         { title: 'Saluran paip semua ruang (mengikut status)', items: pipe }
       ]
     };

@@ -258,12 +258,12 @@ test('KAI2: siap 100% = Selesai; amaran jika pemberat bukan 100%', () => {
   assert.match(card(dash(2026), 'KAI2').warnings[0], /pemberat/);
 });
 test('KAI3: ruang ditawarkan (kumulatif) + penggunaan; sasaran +5 setahun', () => {
-  const mk = (kod, st, extra) => ok(g.api_save(adminToken, 'KAI3', Object.assign({ kod_lot: kod, jenis_ruang: 'Kiosk / Lot Mudah Alih', kolej_fakulti: 'KTDI', status: st }, extra)));
+  const mk = (kod, st, extra) => ok(g.api_save(adminToken, 'KAI3', Object.assign({ kod_lot: kod, jenis_ruang: 'Kiosk / Lot Mudah Alih', lokasi: 'KTDI', status: st }, extra)));
   mk('L-1', 'Ditawarkan', { tarikh_ditawarkan: '2026-03-01' });
   mk('L-2', 'Disewa', { tarikh_ditawarkan: '2026-03-01', penyewa_nama: 'Ali', penyewa_kp: '990101-01-1234', tarikh_mula_sewa: '2026-04-01' });
   mk('L-3', 'Siap', {});
   mk('L-4', 'Ditawarkan', { tarikh_ditawarkan: '2027-02-01' });
-  fail(g.api_save(adminToken, 'KAI3', { kod_lot: 'L-5', jenis_ruang: 'Student Mall', kolej_fakulti: 'X', status: 'Disewa', tarikh_ditawarkan: '2026-01-01' }), /betulkan/);
+  fail(g.api_save(adminToken, 'KAI3', { kod_lot: 'L-5', jenis_ruang: 'Student Mall', lokasi: 'X', status: 'Disewa', tarikh_ditawarkan: '2026-01-01' }), /betulkan/);
   const c = card(dash(2026), 'KAI3');
   assert.strictEqual(c.value, 2); assert.strictEqual(c.target, 25);
   deepEq(c.secondary.map(s => s.value), [1, '50%']);
@@ -869,7 +869,7 @@ test('KAI 4 (GiGA): No. KP / pasport wajib, disahkan dan sengkang dibuang', () =
 });
 
 test('KAI 3: No. KP penyewa wajib bila Disewa, disahkan dan sengkang dibuang', () => {
-  const b = { kod_lot: 'L-KP', jenis_ruang: 'Student Mall', kolej_fakulti: 'KTDI', status: 'Disewa', tarikh_ditawarkan: '2025-01-01', penyewa_nama: 'Ali', tarikh_mula_sewa: '2025-02-01' };
+  const b = { kod_lot: 'L-KP', jenis_ruang: 'Student Mall', lokasi: 'KTDI', status: 'Disewa', tarikh_ditawarkan: '2025-01-01', penyewa_nama: 'Ali', tarikh_mula_sewa: '2025-02-01' };
   fail(g.api_save(adminToken, 'KAI3', b), /betulkan/);
   fail(g.api_save(adminToken, 'KAI3', Object.assign({}, b, { penyewa_kp: '12' })), /betulkan/);
   const r = ok(g.api_save(adminToken, 'KAI3', Object.assign({}, b, { penyewa_kp: '000101-10-1234' })));
@@ -889,6 +889,19 @@ test('setup() membuang lajur Perolehan lama daripada tab KAI3 (data dipadam) tan
   assert.ok(ok(g.api_list(adminToken, 'KAI3', {})).rows.length > 0); // rekod sedia ada kekal
   g.setup(); // idempotent
   assert.ok(env.spreadsheets[env.props.SHEET_ID].getSheetByName('Log_Audit').data.some(r => r.includes('LAJUR_DIBUANG')));
+});
+
+test('setup() menamakan semula lajur kolej_fakulti kepada lokasi dengan data dikekalkan', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('KAI3_Ruang_Perniagaan');
+  const c = sh.data[0].indexOf('lokasi');
+  assert.ok(c >= 0);
+  sh.data[0][c] = 'kolej_fakulti';
+  const n = sh.data[0].length;
+  g.setup();
+  assert.strictEqual(sh.data[0][c], 'lokasi');
+  assert.strictEqual(sh.data[0].length, n);
+  assert.ok(!sh.data[0].includes('kolej_fakulti'));
+  assert.ok(ok(g.api_list(adminToken, 'KAI3', {})).rows.every(r => r.lokasi));
 });
 
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');

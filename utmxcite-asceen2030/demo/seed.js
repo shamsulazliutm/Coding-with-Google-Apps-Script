@@ -51,7 +51,7 @@ window.__demoSeed = function () {
   // ---- KAI 3 Ruang perniagaan
   for (var i = 1; i <= 10; i++) {
     var st = i <= 5 ? 'Disewa' : i <= 8 ? 'Ditawarkan' : 'Dalam perolehan';
-    var rec = { kod_lot: 'Lot ' + p2(i), jenis_ruang: i % 3 ? 'Kiosk / Lot Mudah Alih' : 'Student Mall', kolej_fakulti: ['KTDI', 'KTHO', 'KTR', 'FC', 'FKE'][i % 5], status: st };
+    var rec = { kod_lot: 'Lot ' + p2(i), jenis_ruang: i % 3 ? 'Kiosk / Lot Mudah Alih' : 'Student Mall', lokasi: ['KTDI', 'KTHO', 'KTR', 'FC', 'FKE'][i % 5], status: st };
     if (st !== 'Dalam perolehan') rec.tarikh_ditawarkan = ymd(2, i + 1);
     if (st === 'Disewa') { rec.penyewa_nama = nm('Pasukan Contoh', i); rec.penyewa_kp = '0501' + p2(i) + '10' + ('0000' + i).slice(-4); rec.tarikh_mula_sewa = ymd(3, i + 1); rec.kadar_sewa = 150; }
     save('KAI3', rec);
