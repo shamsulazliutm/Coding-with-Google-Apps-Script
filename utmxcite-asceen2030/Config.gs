@@ -478,7 +478,8 @@ var KPIS = [
     unit: 'pendaftaran SSU', measure: 'ssu', jenis: 'minimum',
     listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
-    rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] }],
+    rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] },
+      { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] }],
     validate: ssuValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pemilik' }),
@@ -495,10 +496,10 @@ var KPIS = [
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
-      F_('sijil_ssm', 'Sijil SSM (PDF)', 'file', { full: true, hint: 'Lampirkan jika status SSM Berdaftar. PDF sahaja, maksimum 5 MB.' }),
+      F_('tarikh_ssm', 'Tarikh pendaftaran SSM', 'date', { hint: 'Wajib jika status SSM Berdaftar.' }),
+      F_('sijil_ssm', 'Attachment SSM (PDF)', 'file', { full: true, hint: 'Sijil / bukti pendaftaran SSM. PDF sahaja, maksimum 5 MB.' }),
       F_('status', 'Status', 'select', { required: true, options: ['Berdaftar', 'Tidak aktif'] }),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
+      F_('catatan', 'Catatan', 'textarea', { full: true, sec: 'Pengurusan' })
     ]
   },
   {
