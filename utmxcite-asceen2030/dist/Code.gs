@@ -857,7 +857,21 @@ function getKpi_(id) {
 }
 
 function kpiColumns_(kpi) {
-  return ['id'].concat(kpi.fields.map(function (f) { return f.key; })).concat(SYS_COLS);
+  var cols = ['id'];
+  kpi.fields.forEach(function (f) { cols.push(f.key); if (f.type === 'file') cols.push(fileLinkCol_(f.key)); });
+  return cols.concat(SYS_COLS);
+}
+
+/** Lajur pautan Drive bagi medan fail (untuk Admin klik terus dalam Sheet). Tidak dihantar kepada klien. */
+function fileLinkCol_(key) { return key + '_pautan'; }
+
+function driveFileUrl_(fileId) { return fileId ? 'https://drive.google.com/file/d/' + fileId + '/view' : ''; }
+
+function setFileLinks_(kpi, clean, obj) {
+  kpi.fields.forEach(function (f) {
+    if (f.type !== 'file') return;
+    obj[fileLinkCol_(f.key)] = driveFileUrl_((parseJson_(clean[f.key], {}) || {}).id);
+  });
 }
 
 function audit_(user, action, kpi, recordId, summary) {
@@ -942,6 +956,7 @@ function setup() {
   seedIfEmpty_(ss, SHEETS.RISKS, RISK_COLS, RISK_SEED.map(function (r) { return [r[0], r[1], r[2], r[3], 'Terbuka', nowIso_()]; }));
   seedAdmin_(ss);
   seedMilestones_(ss);
+  backfillFileLinks_(ss);
 
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
@@ -1117,6 +1132,28 @@ function adoptFolderFromTab_(ss) {
   }
 }
 
+/** Isi lajur pautan Drive bagi rekod lama yang sudah ada fail lampiran tetapi belum ada pautan. */
+function backfillFileLinks_(ss) {
+  KPIS.forEach(function (kpi) {
+    var fileFields = kpi.fields.filter(function (f) { return f.type === 'file'; });
+    var sh = ss.getSheetByName(kpi.sheet);
+    if (!fileFields.length || !sh || sh.getLastRow() < 2) return;
+    var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+    var n = sh.getLastRow() - 1;
+    fileFields.forEach(function (f) {
+      var src = hdr.indexOf(f.key), dst = hdr.indexOf(fileLinkCol_(f.key));
+      if (src < 0 || dst < 0) return;
+      var from = sh.getRange(2, src + 1, n, 1).getValues(), to = sh.getRange(2, dst + 1, n, 1).getValues(), changed = false;
+      for (var i = 0; i < n; i++) {
+        var id = (parseJson_(from[i][0], {}) || {}).id;
+        var want = driveFileUrl_(id);
+        if (want && to[i][0] !== want) { to[i][0] = want; changed = true; }
+      }
+      if (changed) sh.getRange(2, dst + 1, n, 1).setValues(to);
+    });
+  });
+}
+
 
 // ===== Auth.gs =====
 /**
@@ -1284,7 +1321,7 @@ function sessionInfo_(token) {
 
 function stripRow_(r) {
   var o = {};
-  for (var k in r) { if (r.hasOwnProperty(k) && k !== '_row') o[k] = r[k]; }
+  for (var k in r) { if (r.hasOwnProperty(k) && k !== '_row' && !/_pautan$/.test(k)) o[k] = r[k]; }
   return o;
 }
 
@@ -1304,7 +1341,7 @@ function listRecords_(token, kpiId, filters) {
   if (filters.q) {
     var q = String(filters.q).toLowerCase();
     rows = rows.filter(function (r) {
-      for (var k in r) { if (k !== '_row' && String(r[k]).toLowerCase().indexOf(q) >= 0) return true; }
+      for (var k in r) { if (k !== '_row' && !/_pautan$/.test(k) && String(r[k]).toLowerCase().indexOf(q) >= 0) return true; }
       return false;
     });
   }
@@ -1482,6 +1519,7 @@ function saveRecord_(token, kpiId, rec) {
       kpi.fields.forEach(function (f) { if (String(existing[f.key]) !== String(v.clean[f.key])) changed.push(f.key); });
       obj = { id: id, dicipta_pada: existing.dicipta_pada, dicipta_oleh: existing.dicipta_oleh, dikemas_kini_pada: now, dikemas_kini_oleh: user.emel };
       for (var a in v.clean) { if (v.clean.hasOwnProperty(a)) obj[a] = v.clean[a]; }
+      setFileLinks_(kpi, v.clean, obj);
       writeRow_(sh, existing._row, obj);
       // Fail lampiran yang diganti dibuang ke tong sampah Drive.
       kpi.fields.forEach(function (f) {
@@ -1494,12 +1532,13 @@ function saveRecord_(token, kpiId, rec) {
       id = nextId_(kpi, table.rows);
       obj = { id: id, dicipta_pada: now, dicipta_oleh: user.emel, dikemas_kini_pada: now, dikemas_kini_oleh: user.emel };
       for (var b in v.clean) { if (v.clean.hasOwnProperty(b)) obj[b] = v.clean[b]; }
+      setFileLinks_(kpi, v.clean, obj);
       writeRow_(sh, null, obj);
       action = 'TAMBAH'; summary = 'Rekod baharu' + (kpi.entry === 'faculty' ? ' (' + obj.fakulti + ')' : '');
     }
     audit_(user, action, kpi.id, id, summary);
     clearDashCache_();
-    return obj;
+    return stripRow_(obj);
   } finally {
     lock.releaseLock();
   }

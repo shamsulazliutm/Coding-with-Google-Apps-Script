@@ -167,7 +167,21 @@ function getKpi_(id) {
 }
 
 function kpiColumns_(kpi) {
-  return ['id'].concat(kpi.fields.map(function (f) { return f.key; })).concat(SYS_COLS);
+  var cols = ['id'];
+  kpi.fields.forEach(function (f) { cols.push(f.key); if (f.type === 'file') cols.push(fileLinkCol_(f.key)); });
+  return cols.concat(SYS_COLS);
+}
+
+/** Lajur pautan Drive bagi medan fail (untuk Admin klik terus dalam Sheet). Tidak dihantar kepada klien. */
+function fileLinkCol_(key) { return key + '_pautan'; }
+
+function driveFileUrl_(fileId) { return fileId ? 'https://drive.google.com/file/d/' + fileId + '/view' : ''; }
+
+function setFileLinks_(kpi, clean, obj) {
+  kpi.fields.forEach(function (f) {
+    if (f.type !== 'file') return;
+    obj[fileLinkCol_(f.key)] = driveFileUrl_((parseJson_(clean[f.key], {}) || {}).id);
+  });
 }
 
 function audit_(user, action, kpi, recordId, summary) {

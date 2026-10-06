@@ -32,6 +32,7 @@ function setup() {
   seedIfEmpty_(ss, SHEETS.RISKS, RISK_COLS, RISK_SEED.map(function (r) { return [r[0], r[1], r[2], r[3], 'Terbuka', nowIso_()]; }));
   seedAdmin_(ss);
   seedMilestones_(ss);
+  backfillFileLinks_(ss);
 
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
@@ -205,4 +206,26 @@ function adoptFolderFromTab_(ss) {
     setProp_('FOLDER_ID', m[1]);
     return;
   }
+}
+
+/** Isi lajur pautan Drive bagi rekod lama yang sudah ada fail lampiran tetapi belum ada pautan. */
+function backfillFileLinks_(ss) {
+  KPIS.forEach(function (kpi) {
+    var fileFields = kpi.fields.filter(function (f) { return f.type === 'file'; });
+    var sh = ss.getSheetByName(kpi.sheet);
+    if (!fileFields.length || !sh || sh.getLastRow() < 2) return;
+    var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+    var n = sh.getLastRow() - 1;
+    fileFields.forEach(function (f) {
+      var src = hdr.indexOf(f.key), dst = hdr.indexOf(fileLinkCol_(f.key));
+      if (src < 0 || dst < 0) return;
+      var from = sh.getRange(2, src + 1, n, 1).getValues(), to = sh.getRange(2, dst + 1, n, 1).getValues(), changed = false;
+      for (var i = 0; i < n; i++) {
+        var id = (parseJson_(from[i][0], {}) || {}).id;
+        var want = driveFileUrl_(id);
+        if (want && to[i][0] !== want) { to[i][0] = want; changed = true; }
+      }
+      if (changed) sh.getRange(2, dst + 1, n, 1).setValues(to);
+    });
+  });
 }

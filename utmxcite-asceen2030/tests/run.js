@@ -806,5 +806,23 @@ test('folder lampiran yang ditampal pada tab Persediaan digunakan oleh setup()',
   assert.strictEqual(env.props.FOLDER_ID, mine.getId());
 });
 
+test('medan fail: pautan Drive ditulis dalam lajur *_pautan (Sheet sahaja, tidak dihantar ke klien); setup() mengisi rekod lama', () => {
+  const ss = env.spreadsheets[env.props.SHEET_ID];
+  const sh = ss.getSheetByName('CKAI5_Makerspace');
+  const hdr = sh.data[0];
+  assert.ok(hdr.includes('borang') && hdr.includes('borang_pautan'));
+  const mkRec = { emel: 'f@utm.my', nama: 'F', no_kp: '990101011234', no_matrik: 'A1', fakulti: 'FC', telefon: '0123456789', peralatan: '3D Printer', tujuan: 'x', bil_peserta: 1, tarikh_mula: '2026-05-01', tarikh_tamat: '2026-05-01', masa_mula: '09:00', masa_tamat: '10:00', status_bayaran: 'Bayar', bayaran_rm: 5 };
+  const up = ok(g.api_uploadFile(adminToken, 'CKAI5', 'borang', { name: 'borang.pdf', data: PDF('pautan') }));
+  const saved = ok(g.api_save(adminToken, 'CKAI5', Object.assign({ borang: { id: up.id, name: up.name } }, mkRec)));
+  assert.ok(!('borang_pautan' in saved));
+  assert.ok(ok(g.api_list(adminToken, 'CKAI5', {})).rows.every(r => !('borang_pautan' in r)));
+  const col = hdr.indexOf('borang_pautan');
+  const row = sh.data.find(r => r[0] === saved.id);
+  assert.strictEqual(row[col], 'https://drive.google.com/file/d/' + up.id + '/view');
+  row[col] = ''; // rekod lama tanpa pautan
+  g.setup();
+  assert.strictEqual(sh.data.find(r => r[0] === saved.id)[col], 'https://drive.google.com/file/d/' + up.id + '/view');
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);
