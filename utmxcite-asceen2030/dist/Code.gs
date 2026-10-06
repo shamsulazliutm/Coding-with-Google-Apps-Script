@@ -474,7 +474,7 @@ var KPIS = [
     validate: ssuValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
-      F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
+      F_('nama_pelajar', 'Nama pemilik', 'text', { required: true }),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('emel', 'E-mel', 'email'),
