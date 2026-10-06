@@ -219,7 +219,7 @@ var KPIS = [
     ],
     fields: [
       F_('kod_lot', 'Nama / kod lot', 'text', { required: true, sec: 'Identiti' }),
-      F_('jenis_ruang', 'Jenis ruang', 'select', { required: true, options: ['Student Mall', 'Kiosk / Lot Mudah Alih', 'Bilik / Ruang Perniagaan', 'Lain-lain'] }),
+      F_('jenis_ruang', 'Jenis ruang', 'select', { required: true, options: ['Student Mall', 'Student Union Building (SUB)', 'Kiosk / Lot Mudah Alih', 'Bilik / Ruang Perniagaan', 'Lain-lain'] }),
       F_('kolej_fakulti', 'Kolej / Fakulti', 'text', { required: true }),
       F_('bangunan', 'Bangunan / zon', 'text'),
       F_('keluasan', 'Keluasan (m²)', 'number', { min: 0 }),
