@@ -394,11 +394,14 @@ test('Program: laporan PDF pilihan; boleh dimuat naik dan dimuat turun oleh PIC 
   fail(g.api_uploadFile(ckaiPic, 'CKAI4', 'lampiran', { name: 'x.pdf', data: pdf }), /Akses ditolak/);
 });
 test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
-  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', bil_rakan_kongsi: 3, status_ssm: 'Berdaftar', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Berdaftar' };
+  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', jenis_perniagaan: 'Runcit', bil_rakan_kongsi: 3, status_ssm: 'Berdaftar', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Berdaftar' };
   ok(g.api_save(adminToken, 'CKAI4', r));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat B', no_ssu: 'SSU-002', status: 'Tidak aktif' })));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat C', no_ssu: 'SSU-003', tarikh_daftar: '2027-01-01' })));
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: '' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', jenis_perniagaan: 'Retail' })), /betulkan/); // bukan pilihan
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', jenis_perniagaan: 'Lain-lain' })), /betulkan/); // mesti dinamakan
+  ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-011', jenis_perniagaan: 'Lain-lain', jenis_perniagaan_lain: 'Akuaponik', tarikh_daftar: '2025-07-01' })));
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', bil_rakan_kongsi: 0 })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', bil_rakan_kongsi: '' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', status_ssm: '' })), /betulkan/);
@@ -834,7 +837,7 @@ test('medan fail: pautan Drive ditulis dalam lajur *_pautan (Sheet sahaja, tidak
 
 test('CKAI 4: lampiran Sijil SSM (PDF) disimpan dengan pautan Drive dalam Sheet', () => {
   const up = ok(g.api_uploadFile(adminToken, 'CKAI4', 'sijil_ssm', { name: 'sijil-ssm.pdf', data: PDF('ssm') }));
-  const r = ok(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'Pelajar SSM', no_kp: '990101011234', no_matrik: 'S77', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', sijil_ssm: { id: up.id, name: up.name }, nama_syarikat: 'Syarikat SSM', no_ssu: 'SSU-777', tarikh_daftar: '2026-04-01', status: 'Berdaftar' }));
+  const r = ok(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'Pelajar SSM', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', sijil_ssm: { id: up.id, name: up.name }, nama_syarikat: 'Syarikat SSM', no_ssu: 'SSU-777', tarikh_daftar: '2026-04-01', status: 'Berdaftar' }));
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI4_SSU');
   const row = sh.data.find(x => x[0] === r.id);
   assert.strictEqual(row[sh.data[0].indexOf('sijil_ssm_pautan')], 'https://drive.google.com/file/d/' + up.id + '/view');
@@ -842,7 +845,7 @@ test('CKAI 4: lampiran Sijil SSM (PDF) disimpan dengan pautan Drive dalam Sheet'
 });
 
 test('CKAI 4: rakan kongsi (nama, no. matrik, no. KP), maksimum 12, selaras dengan bilangan rakan kongsi', () => {
-  const base = { fakulti: 'FC', nama_pelajar: 'Pemilik', no_kp: '990101011234', no_matrik: 'S90', status_ssm: 'Berdaftar', nama_syarikat: 'Syarikat RK', tarikh_daftar: '2026-04-02', status: 'Berdaftar' };
+  const base = { fakulti: 'FC', nama_pelajar: 'Pemilik', no_kp: '990101011234', no_matrik: 'S90', jenis_perniagaan: 'Pembinaan', status_ssm: 'Berdaftar', nama_syarikat: 'Syarikat RK', tarikh_daftar: '2026-04-02', status: 'Berdaftar' };
   const p = (n) => Array.from({ length: n }, (_, i) => ({ nama: 'Rakan ' + (i + 1), matrik: 'M' + (i + 1), nokp: '0001010' + (10000 + i) }));
   const r = ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-801', bil_rakan_kongsi: 13, rakan_kongsi: p(12) })));
   const row = ok(g.api_list(adminToken, 'CKAI4', {})).rows.find(x => x.id === r.id);

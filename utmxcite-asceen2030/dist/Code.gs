@@ -60,6 +60,10 @@ var FACULTY_SEED = [
 
 var YES_NO = ['Ya', 'Tidak'];
 
+var JENIS_PERNIAGAAN = ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Aksesori', 'Telefon Mudah Alih & Gajet', 'Komputer & Aksesori',
+  'Kesihatan & Kecantikan', 'Permainan, Buku & Hobi', 'Penyemakan Bukti, Terjemahan & Penyuntingan', 'Reka Bentuk Grafik, Laman Web & Perkhidmatan Digital',
+  'Pengangkutan', 'Pertanian', 'Pembinaan', 'Sukan & Luar', 'Percetakan 3D & Robotik', 'Lain-lain'];
+
 /**
  * Enam fungsi UTMXCITE (mandat peringkat Universiti) = aliran proses kerja. Setiap indikator (KAI, DKAI, CKAI)
  * ditanda dengan satu `fungsi`. DKAI 1 ialah pelan merentas semua fungsi.
@@ -475,7 +479,7 @@ var KPIS = [
     unit: 'pendaftaran SSU', measure: 'ssu', jenis: 'minimum',
     listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
-    rules: [],
+    rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] }],
     validate: ssuValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pemilik' }),
@@ -485,7 +489,8 @@ var KPIS = [
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
       F_('nama_syarikat', 'Nama syarikat / perniagaan', 'text', { required: true, sec: 'Pendaftaran SSU' }),
-      F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
+      F_('jenis_perniagaan', 'Jenis perniagaan', 'select', { required: true, options: JENIS_PERNIAGAAN }),
+      F_('jenis_perniagaan_lain', 'Nama jenis perniagaan lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
       F_('rakan_kongsi', 'Rakan kongsi lain (nama, no. matrik, no. KP)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
