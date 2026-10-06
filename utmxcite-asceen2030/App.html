@@ -457,6 +457,8 @@
         return '<div class="filebox" data-filebox="' + fd.key + '" id="f_' + fd.key + '">' + fileHtml(k, fd.key) + '</div>';
       case 'month':
         return '<input type="month" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '" placeholder="YYYY-MM">';
+      case 'time':
+        return '<input type="time" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '">';
       case 'date':
         return '<input type="date" id="' + id + '" name="' + fd.key + '" value="' + esc(v) + '">';
       case 'email':

@@ -138,6 +138,17 @@ function profilingValidate_(c, errors) {
   if (c.persetujuan === 'Tidak' && !errors.persetujuan) errors.persetujuan = 'Profiling hanya boleh didaftarkan dengan persetujuan pelajar (PDPA).';
 }
 
+function makerspaceValidate_(c, errors) {
+  var kp = String(c.no_kp || '').replace(/\s+/g, '').toUpperCase();
+  if (kp && !errors.no_kp) {
+    if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
+    if (!/^[A-Z0-9-]{6,20}$/.test(kp)) errors.no_kp = 'No. KP / pasport tidak sah.'; else c.no_kp = kp;
+  }
+  if (c.telefon && !errors.telefon && !/^[0-9+\-\s()]{7,20}$/.test(String(c.telefon))) errors.telefon = 'Nombor telefon tidak sah.';
+  if (c.tarikh_mula && c.tarikh_tamat && !errors.tarikh_tamat && c.tarikh_tamat < c.tarikh_mula) errors.tarikh_tamat = 'Tarikh tamat mesti pada atau selepas tarikh mula.';
+  if (c.tarikh_mula && c.tarikh_mula === c.tarikh_tamat && c.masa_mula && c.masa_tamat && !errors.masa_tamat && c.masa_tamat <= c.masa_mula) errors.masa_tamat = 'Masa tamat mesti selepas masa mula.';
+}
+
 var PROGRAM_DONE_REQUIRE = ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'];
 
 // ---------------------------------------------------------------------------
@@ -468,18 +479,26 @@ var KPIS = [
   {
     id: 'CKAI5', prefix: 'MS', sheet: 'CKAI5_Makerspace', fungsi: 'startup', group: 'Center', entry: 'admin',
     title: 'CKAI 5 · Bilangan penggunaan Makerspace (pembangunan prototaip)', short: 'Penggunaan Makerspace',
-    unit: 'penggunaan', measure: 'makerspace', jenis: 'minimum',
-    listColumns: ['id', 'tempoh', 'bil_penggunaan', 'bil_pengguna_unik', 'jam_penggunaan'],
+    unit: 'permohonan penggunaan', measure: 'makerspace', jenis: 'minimum',
+    listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'borang'],
     statusField: null,
     rules: [],
+    validate: makerspaceValidate_,
     fields: [
-      F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Penggunaan bulanan' }),
-      F_('bil_penggunaan', 'Bilangan penggunaan', 'number', { required: true, min: 0 }),
-      F_('bil_pengguna_unik', 'Bilangan pengguna unik', 'number', { min: 0 }),
-      F_('bil_pelajar', 'Daripada itu pelajar', 'number', { min: 0 }),
-      F_('jam_penggunaan', 'Jumlah jam penggunaan', 'number', { min: 0 }),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
+      F_('emel', 'E-mel (Email Address)', 'email', { required: true, sec: 'Pemohon' }),
+      F_('nama', 'Nama penuh (Full Name)', 'text', { required: true }),
+      F_('no_kp', 'No. kad pengenalan / no. pasport (Identity Card / Passport No.)', 'text', { required: true }),
+      F_('no_matrik', 'No. matrik staf / pelajar (Staff / Student Matric No.)', 'text', { required: true }),
+      F_('fakulti_unit', 'Fakulti / jabatan / unit / kelas (Faculty / Department / Unit / Class)', 'text', { required: true }),
+      F_('telefon', 'Nombor telefon (Phone Number)', 'text', { required: true }),
+      F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'text', { required: true, full: true, sec: 'Permohonan' }),
+      F_('tujuan', 'Tujuan permohonan (Purpose of Application)', 'textarea', { required: true, full: true }),
+      F_('bil_peserta', 'Bilangan peserta (Number of Participants)', 'number', { required: true, min: 1 }),
+      F_('tarikh_mula', 'Tarikh mula (Start Date)', 'date', { required: true, sec: 'Tarikh dan masa' }),
+      F_('tarikh_tamat', 'Tarikh tamat (End Date)', 'date', { required: true }),
+      F_('masa_mula', 'Masa mula (Start Time)', 'time', { required: true }),
+      F_('masa_tamat', 'Masa tamat (End Time)', 'time', { required: true }),
+      F_('borang', 'Muat naik borang permohonan (PDF, maksimum 5 MB)', 'file', { full: true, sec: 'Dokumen' })
     ]
   },
   {
@@ -943,7 +962,7 @@ function ensureSheet_(ss, name, headers, fieldDefs) {
   sh.setFrozenRows(1);
   // Lajur teks/tarikh disimpan sebagai teks supaya no. matrik/telefon tidak hilang sifar di hadapan.
   var all = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
-  var textTypes = { text: 1, textarea: 1, email: 1, url: 1, select: 1, faculty: 1, yesno: 1, date: 1, month: 1, file: 1, people: 1 };
+  var textTypes = { text: 1, textarea: 1, email: 1, url: 1, select: 1, faculty: 1, yesno: 1, date: 1, month: 1, time: 1, file: 1, people: 1 };
   var typeOf = {};
   (fieldDefs || []).forEach(function (f) { typeOf[f.key] = f.type; });
   all.forEach(function (h, i) {
@@ -1315,6 +1334,10 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
         break;
       case 'month':
         if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(v))) { errors[f.key] = 'Bulan tidak sah (YYYY-MM).'; break; }
+        clean[f.key] = String(v);
+        break;
+      case 'time':
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(v))) { errors[f.key] = 'Masa tidak sah (HH:MM).'; break; }
         clean[f.key] = String(v);
         break;
       case 'people':
@@ -1754,21 +1777,21 @@ var MEASURES = {
     };
   },
 
-  // CKAI 5: jumlah bilangan penggunaan Makerspace (rekod bulanan).
+  // CKAI 5: bilangan penggunaan Makerspace = bilangan permohonan (satu rekod = satu penggunaan), mengikut tahun tarikh mula.
   makerspace: function (kpi, rows, year) {
-    var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
-    var months = {};
-    inYear.forEach(function (r) { months[r.tempoh] = 1; });
-    var total = sumOf_(inYear, 'bil_penggunaan');
-    var nMonths = Object.keys(months).length;
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh_mula) === year; });
+    var users = {};
+    inYear.forEach(function (r) { users[String(r.no_matrik || r.emel).toUpperCase()] = 1; });
     return {
-      value: total,
+      value: inYear.length,
       secondary: [
-        { label: 'Bulan dilaporkan', value: nMonths },
-        { label: 'Purata sebulan', value: nMonths ? round1_(total / nMonths) : 0 },
-        { label: 'Jumlah jam penggunaan', value: round1_(sumOf_(inYear, 'jam_penggunaan')) }
+        { label: 'Pengguna unik', value: Object.keys(users).length },
+        { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') }
       ],
-      breakdown: [{ title: 'Penggunaan mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.tempoh; }, function (r) { return num_(r.bil_penggunaan); })) }]
+      breakdown: [
+        { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },
+        { title: 'Peralatan paling banyak dipohon', items: sortDesc_(countBy_(inYear, function (r) { return String(r.peralatan || '').trim(); })).slice(0, 5) }
+      ]
     };
   },
 

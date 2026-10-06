@@ -93,7 +93,11 @@ window.__demoSeed = function () {
   // ---- CKAI 5 Makerspace, CKAI 6 Sewaan inkubator, CKAI 7 Pendapatan
   var biz = ['Kedai Contoh A', 'Gig Contoh B', 'Kraf Contoh C', 'Aplikasi Contoh D'];
   for (var m = 1; m <= lastM; m++) {
-    save('CKAI5', { tempoh: ym(m), bil_penggunaan: 40 + m * 11 + (m % 3) * 9, bil_pengguna_unik: 25 + m * 4, bil_pelajar: 20 + m * 3, jam_penggunaan: 120 + m * 20 });
+    var eq = ['3D Printer', 'Laser Cutter', 'CNC Router', 'Soldering Station', 'Vinyl Cutter'];
+    for (var u = 0; u < 3 + (m % 3); u++) {
+      save('CKAI5', { emel: 'pengguna' + u + '@graduate.utm.my', nama: nm('Pemohon Makerspace', m * 5 + u), no_kp: '9901' + p2(m) + '0' + u + '1234', no_matrik: 'A2' + p2(m) + 'EC' + p2(u + 1) + '1', fakulti_unit: fac(m + u) + ' / Tahun ' + (1 + u % 4), telefon: '012-34567' + p2(m + u),
+        peralatan: eq[(m + u) % eq.length], tujuan: 'Membangunkan prototaip projek contoh', bil_peserta: 1 + (u % 4), tarikh_mula: ymd(m, 3 + u * 5), tarikh_tamat: ymd(m, 3 + u * 5), masa_mula: '09:00', masa_tamat: '12:30' });
+    }
     ['Launchpad FAI', 'Launchpad FC', 'Co-working UTMXCITE A'].forEach(function (inc, k) {
       var late = m === lastM && k === 2;
       save('CKAI6', { tempoh: ym(m), inkubator: inc, penyewa: 'Penyewa Contoh ' + (k + 1), jumlah_rm: 600 + k * 150, status_bayaran: late ? 'Belum dibayar' : 'Dibayar', tarikh_bayar: late ? '' : ymd(m, 7) });

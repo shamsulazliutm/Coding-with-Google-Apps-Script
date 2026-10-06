@@ -137,6 +137,17 @@ function profilingValidate_(c, errors) {
   if (c.persetujuan === 'Tidak' && !errors.persetujuan) errors.persetujuan = 'Profiling hanya boleh didaftarkan dengan persetujuan pelajar (PDPA).';
 }
 
+function makerspaceValidate_(c, errors) {
+  var kp = String(c.no_kp || '').replace(/\s+/g, '').toUpperCase();
+  if (kp && !errors.no_kp) {
+    if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
+    if (!/^[A-Z0-9-]{6,20}$/.test(kp)) errors.no_kp = 'No. KP / pasport tidak sah.'; else c.no_kp = kp;
+  }
+  if (c.telefon && !errors.telefon && !/^[0-9+\-\s()]{7,20}$/.test(String(c.telefon))) errors.telefon = 'Nombor telefon tidak sah.';
+  if (c.tarikh_mula && c.tarikh_tamat && !errors.tarikh_tamat && c.tarikh_tamat < c.tarikh_mula) errors.tarikh_tamat = 'Tarikh tamat mesti pada atau selepas tarikh mula.';
+  if (c.tarikh_mula && c.tarikh_mula === c.tarikh_tamat && c.masa_mula && c.masa_tamat && !errors.masa_tamat && c.masa_tamat <= c.masa_mula) errors.masa_tamat = 'Masa tamat mesti selepas masa mula.';
+}
+
 var PROGRAM_DONE_REQUIRE = ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'];
 
 // ---------------------------------------------------------------------------
@@ -467,18 +478,26 @@ var KPIS = [
   {
     id: 'CKAI5', prefix: 'MS', sheet: 'CKAI5_Makerspace', fungsi: 'startup', group: 'Center', entry: 'admin',
     title: 'CKAI 5 · Bilangan penggunaan Makerspace (pembangunan prototaip)', short: 'Penggunaan Makerspace',
-    unit: 'penggunaan', measure: 'makerspace', jenis: 'minimum',
-    listColumns: ['id', 'tempoh', 'bil_penggunaan', 'bil_pengguna_unik', 'jam_penggunaan'],
+    unit: 'permohonan penggunaan', measure: 'makerspace', jenis: 'minimum',
+    listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'borang'],
     statusField: null,
     rules: [],
+    validate: makerspaceValidate_,
     fields: [
-      F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Penggunaan bulanan' }),
-      F_('bil_penggunaan', 'Bilangan penggunaan', 'number', { required: true, min: 0 }),
-      F_('bil_pengguna_unik', 'Bilangan pengguna unik', 'number', { min: 0 }),
-      F_('bil_pelajar', 'Daripada itu pelajar', 'number', { min: 0 }),
-      F_('jam_penggunaan', 'Jumlah jam penggunaan', 'number', { min: 0 }),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
+      F_('emel', 'E-mel (Email Address)', 'email', { required: true, sec: 'Pemohon' }),
+      F_('nama', 'Nama penuh (Full Name)', 'text', { required: true }),
+      F_('no_kp', 'No. kad pengenalan / no. pasport (Identity Card / Passport No.)', 'text', { required: true }),
+      F_('no_matrik', 'No. matrik staf / pelajar (Staff / Student Matric No.)', 'text', { required: true }),
+      F_('fakulti_unit', 'Fakulti / jabatan / unit / kelas (Faculty / Department / Unit / Class)', 'text', { required: true }),
+      F_('telefon', 'Nombor telefon (Phone Number)', 'text', { required: true }),
+      F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'text', { required: true, full: true, sec: 'Permohonan' }),
+      F_('tujuan', 'Tujuan permohonan (Purpose of Application)', 'textarea', { required: true, full: true }),
+      F_('bil_peserta', 'Bilangan peserta (Number of Participants)', 'number', { required: true, min: 1 }),
+      F_('tarikh_mula', 'Tarikh mula (Start Date)', 'date', { required: true, sec: 'Tarikh dan masa' }),
+      F_('tarikh_tamat', 'Tarikh tamat (End Date)', 'date', { required: true }),
+      F_('masa_mula', 'Masa mula (Start Time)', 'time', { required: true }),
+      F_('masa_tamat', 'Masa tamat (End Time)', 'time', { required: true }),
+      F_('borang', 'Muat naik borang permohonan (PDF, maksimum 5 MB)', 'file', { full: true, sec: 'Dokumen' })
     ]
   },
   {

@@ -59,7 +59,7 @@ function ensureSheet_(ss, name, headers, fieldDefs) {
   sh.setFrozenRows(1);
   // Lajur teks/tarikh disimpan sebagai teks supaya no. matrik/telefon tidak hilang sifar di hadapan.
   var all = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
-  var textTypes = { text: 1, textarea: 1, email: 1, url: 1, select: 1, faculty: 1, yesno: 1, date: 1, month: 1, file: 1, people: 1 };
+  var textTypes = { text: 1, textarea: 1, email: 1, url: 1, select: 1, faculty: 1, yesno: 1, date: 1, month: 1, time: 1, file: 1, people: 1 };
   var typeOf = {};
   (fieldDefs || []).forEach(function (f) { typeOf[f.key] = f.type; });
   all.forEach(function (h, i) {

@@ -180,21 +180,21 @@ var MEASURES = {
     };
   },
 
-  // CKAI 5: jumlah bilangan penggunaan Makerspace (rekod bulanan).
+  // CKAI 5: bilangan penggunaan Makerspace = bilangan permohonan (satu rekod = satu penggunaan), mengikut tahun tarikh mula.
   makerspace: function (kpi, rows, year) {
-    var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
-    var months = {};
-    inYear.forEach(function (r) { months[r.tempoh] = 1; });
-    var total = sumOf_(inYear, 'bil_penggunaan');
-    var nMonths = Object.keys(months).length;
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh_mula) === year; });
+    var users = {};
+    inYear.forEach(function (r) { users[String(r.no_matrik || r.emel).toUpperCase()] = 1; });
     return {
-      value: total,
+      value: inYear.length,
       secondary: [
-        { label: 'Bulan dilaporkan', value: nMonths },
-        { label: 'Purata sebulan', value: nMonths ? round1_(total / nMonths) : 0 },
-        { label: 'Jumlah jam penggunaan', value: round1_(sumOf_(inYear, 'jam_penggunaan')) }
+        { label: 'Pengguna unik', value: Object.keys(users).length },
+        { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') }
       ],
-      breakdown: [{ title: 'Penggunaan mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.tempoh; }, function (r) { return num_(r.bil_penggunaan); })) }]
+      breakdown: [
+        { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },
+        { title: 'Peralatan paling banyak dipohon', items: sortDesc_(countBy_(inYear, function (r) { return String(r.peralatan || '').trim(); })).slice(0, 5) }
+      ]
     };
   },
 

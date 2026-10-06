@@ -420,13 +420,24 @@ test('CKAI 7: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan
   assert.ok(ok(g.api_list(ckaiPicFc, 'CKAI7', {})).rows.every(r => r.fakulti === 'FC'));
   const byFak = c.breakdown[0].items; assert.strictEqual(byFak[0].label, 'FKE'); assert.strictEqual(byFak[0].value, 3500.5);
 });
-test('CKAI 5 (Makerspace): jumlah penggunaan bulanan, Admin sahaja', () => {
-  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2026-01', bil_penggunaan: 120, jam_penggunaan: 300 }));
-  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2026-02', bil_penggunaan: 80, jam_penggunaan: 150.5 }));
-  ok(g.api_save(adminToken, 'CKAI5', { tempoh: '2027-01', bil_penggunaan: 10 }));
+test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () => {
+  const mk = (extra) => Object.assign({ emel: 'Ali@utm.my', nama: 'Ali Bin Abu', no_kp: '990101-01-1234', no_matrik: 'A23EC0001', fakulti_unit: 'FC / Tahun 2', telefon: '012-3456789',
+    peralatan: '3D Printer', tujuan: 'Prototaip projek', bil_peserta: 3, tarikh_mula: '2026-01-10', tarikh_tamat: '2026-01-10', masa_mula: '09:00', masa_tamat: '12:00' }, extra);
+  const r1 = ok(g.api_save(adminToken, 'CKAI5', mk({})));
+  ok(g.api_save(adminToken, 'CKAI5', mk({ nama: 'Siti', no_matrik: 'A23EC0002', peralatan: 'Laser Cutter', bil_peserta: 2, tarikh_mula: '2026-02-03', tarikh_tamat: '2026-02-04' })));
+  ok(g.api_save(adminToken, 'CKAI5', mk({ tarikh_mula: '2026-02-20', tarikh_tamat: '2026-02-20' })));
+  ok(g.api_save(adminToken, 'CKAI5', mk({ tarikh_mula: '2027-01-05', tarikh_tamat: '2027-01-05' })));
+  const row = ok(g.api_list(adminToken, 'CKAI5', {})).rows.find(r => r.id === r1.id);
+  assert.strictEqual(row.no_kp, '990101011234'); // sengkang dibuang
   const c = card(dash(2026), 'CKAI5');
-  assert.strictEqual(c.value, 200); assert.strictEqual(c.secondary[0].value, 2); assert.strictEqual(c.secondary[1].value, 100);
-  deepEq(c.breakdown[0].items.map(i => i.label), ['2026-01', '2026-02']); // tertib bulan
+  assert.strictEqual(c.value, 3); assert.strictEqual(c.secondary[0].value, 2); assert.strictEqual(c.secondary[1].value, 8);
+  deepEq(c.breakdown[0].items.map(i => i.label + ':' + i.value), ['2026-01:1', '2026-02:2']);
+  assert.strictEqual(c.breakdown[1].items[0].label, '3D Printer');
+  fail(g.api_save(adminToken, 'CKAI5', mk({ tarikh_tamat: '2026-01-09' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI5', mk({ masa_tamat: '08:00' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI5', mk({ masa_mula: '25:61' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI5', mk({ telefon: 'abc' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI5', mk({ bil_peserta: 0 })), /betulkan/);
 });
 test('CKAI 6 (sewaan inkubator): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
   const r = { tempoh: '2026-03', inkubator: 'Launchpad FC', penyewa: 'Syarikat A', jumlah_rm: 500 };

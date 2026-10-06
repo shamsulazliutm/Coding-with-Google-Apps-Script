@@ -80,6 +80,10 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
         if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(v))) { errors[f.key] = 'Bulan tidak sah (YYYY-MM).'; break; }
         clean[f.key] = String(v);
         break;
+      case 'time':
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(v))) { errors[f.key] = 'Masa tidak sah (HH:MM).'; break; }
+        clean[f.key] = String(v);
+        break;
       case 'people':
         var list = Array.isArray(v) ? v : parseJson_(String(v), null);
         if (!Array.isArray(list) || !list.length) { errors[f.key] = 'Tambah sekurang-kurangnya seorang pelajar.'; break; }
