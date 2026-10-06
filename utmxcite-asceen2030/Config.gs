@@ -248,13 +248,12 @@ var KPIS = [
     title: 'KAI 3 · Ruang & kemudahan perniagaan pelajar', short: 'Ruang Perniagaan',
     unit: 'ruang ditawarkan', measure: 'kai3', jenis: 'minimum',
     renamed: { kolej_fakulti: 'lokasi' }, // tajuk lajur lama dinamakan semula oleh setup() (data dikekalkan)
-    retired: ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai'], // lajur dibuang daripada Sheet oleh setup()
-    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'lokasi', 'status', 'diwartakan'],
+    retired: ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai', 'tarikh_dikenalpasti', 'tarikh_sasaran_siap', 'diwartakan', 'tarikh_diwartakan'], // lajur dibuang daripada Sheet oleh setup()
+    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'lokasi', 'status', 'tarikh_ditawarkan'],
     statusField: 'status',
     rules: [
       { when: { field: 'status', in: ['Ditawarkan', 'Disewa'] }, require: ['tarikh_ditawarkan'] },
-      { when: { field: 'status', in: ['Disewa'] }, require: ['penyewa_nama', 'penyewa_kp', 'tarikh_mula_sewa'] },
-      { when: { field: 'diwartakan', in: ['Ya'] }, require: ['tarikh_diwartakan'] }
+      { when: { field: 'status', in: ['Disewa'] }, require: ['penyewa_nama', 'penyewa_kp', 'tarikh_mula_sewa'] }
     ],
     validate: kai3Validate_,
     fields: [
@@ -263,12 +262,8 @@ var KPIS = [
       F_('lokasi', 'Lokasi', 'text', { required: true }),
       F_('bangunan', 'Bangunan / zon', 'text'),
       F_('keluasan', 'Keluasan (m²)', 'number', { min: 0 }),
-      F_('status', 'Status ruang', 'select', { required: true, sec: 'Kemajuan', options: ['Dikenal pasti', 'Spesifikasi disediakan', 'Dalam perolehan', 'Siap', 'Ditawarkan', 'Disewa', 'Tidak aktif'] }),
-      F_('tarikh_dikenalpasti', 'Tarikh dikenal pasti', 'date'),
-      F_('tarikh_sasaran_siap', 'Tarikh sasaran siap', 'date'),
+      F_('status', 'Status ruang', 'select', { required: true, sec: 'Status', options: ['Dikenal pasti', 'Spesifikasi disediakan', 'Dalam perolehan', 'Siap', 'Ditawarkan', 'Disewa', 'Tidak aktif'] }),
       F_('tarikh_ditawarkan', 'Tarikh ditawarkan kepada pelajar', 'date'),
-      F_('diwartakan', 'Diwartakan?', 'yesno'),
-      F_('tarikh_diwartakan', 'Tarikh diwartakan', 'date'),
       F_('penyewa_nama', 'Nama pelajar / pasukan penyewa', 'text', { sec: 'Sewaan' }),
       F_('penyewa_matrik', 'No. matrik penyewa', 'text'),
       F_('penyewa_kp', 'No. KP penyewa', 'text', { hint: 'No. KP 12 digit (tanpa sengkang) atau no. pasport. Wajib jika status Disewa.' }),
