@@ -148,7 +148,12 @@ function icValidate_(c, errors) {
   }
 }
 
-function ssuValidate_(c, errors) { icValidate_(c, errors); }
+function ssuValidate_(c, errors) {
+  icValidate_(c, errors);
+  var partners = parseJson_(c.rakan_kongsi, []) || [];
+  if (partners.length && Number(c.bil_rakan_kongsi) && !errors.rakan_kongsi && !errors.bil_rakan_kongsi && partners.length > Number(c.bil_rakan_kongsi) - 1)
+    errors.rakan_kongsi = 'Bilangan rakan kongsi yang disenaraikan (' + partners.length + ') melebihi bilangan rakan kongsi tolak pemilik (' + (Number(c.bil_rakan_kongsi) - 1) + ').';
+}
 
 function makerspaceValidate_(c, errors) {
   icValidate_(c, errors);
@@ -473,7 +478,7 @@ var KPIS = [
     rules: [],
     validate: ssuValidate_,
     fields: [
-      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pemilik' }),
       F_('nama_pelajar', 'Nama pemilik', 'text', { required: true }),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
@@ -481,7 +486,8 @@ var KPIS = [
       F_('telefon', 'No. telefon', 'text'),
       F_('nama_syarikat', 'Nama syarikat / perniagaan', 'text', { required: true, sec: 'Pendaftaran SSU' }),
       F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
-      F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1 }),
+      F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
+      F_('rakan_kongsi', 'Rakan kongsi lain (nama, no. matrik, no. KP)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
@@ -1398,8 +1404,9 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
         break;
       case 'people':
         var list = Array.isArray(v) ? v : parseJson_(String(v), null);
-        if (!Array.isArray(list) || !list.length) { errors[f.key] = 'Tambah sekurang-kurangnya seorang pelajar.'; break; }
-        if (list.length > 30) { errors[f.key] = 'Maksimum 30 pelajar bagi satu rekod.'; break; }
+        var noun = f.noun || 'pelajar', maxN = f.max || 30;
+        if (!Array.isArray(list) || !list.length) { errors[f.key] = 'Tambah sekurang-kurangnya seorang ' + noun + '.'; break; }
+        if (list.length > maxN) { errors[f.key] = 'Maksimum ' + maxN + ' ' + noun + ' bagi satu rekod.'; break; }
         var people = [], bad = [];
         list.forEach(function (p, i) {
           var nama = String(p && p.nama || '').trim(), matrik = String(p && p.matrik || '').trim(), kp = String(p && p.nokp || '').replace(/\s+/g, '').toUpperCase();
@@ -1409,7 +1416,7 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
           if (!matrik || matrik.length > 30) miss.push('no. matrik');
           if (f.kp === false) kp = ''; // medan no. KP tidak digunakan bagi KPI ini
           else if (!/^[A-Z0-9-]{6,20}$/.test(kp)) miss.push('no. KP / pasport');
-          if (miss.length) bad.push('Pelajar ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp });
+          if (miss.length) bad.push(noun.charAt(0).toUpperCase() + noun.slice(1) + ' ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp });
         });
         if (bad.length) { errors[f.key] = bad.join('; ') + '.'; break; }
         clean[f.key] = JSON.stringify(people);

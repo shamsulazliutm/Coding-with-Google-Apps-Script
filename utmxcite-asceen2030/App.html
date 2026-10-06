@@ -451,8 +451,8 @@
           (fd.min !== undefined ? ' min="' + fd.min + '"' : '') + (fd.max !== undefined ? ' max="' + fd.max + '"' : '') + '>';
       case 'people':
         return '<div class="people" data-people="' + fd.key + '" id="f_' + fd.key + '">' + peopleHtml(fd.key) + '</div>' +
-          '<button type="button" class="btn o sm" data-action="padd" data-key="' + fd.key + '">＋ Tambah pelajar</button>' +
-          '<div class="hint">Satu baris bagi setiap pelajar.' + (fd.kp === false ? '' : ' No. KP 12 digit (sengkang tidak diperlukan) atau no. pasport.') + '</div>';
+          '<button type="button" class="btn o sm" data-action="padd" data-key="' + fd.key + '">＋ Tambah ' + esc(fd.noun || 'pelajar') + '</button>' +
+          '<div class="hint">Satu baris bagi setiap ' + esc(fd.noun || 'pelajar') + (fd.max ? ' (maksimum ' + fd.max + ')' : '') + '.' + (fd.kp === false ? '' : ' No. KP 12 digit (sengkang tidak diperlukan) atau no. pasport.') + '</div>';
       case 'file':
         return '<div class="filebox" data-filebox="' + fd.key + '" id="f_' + fd.key + '">' + fileHtml(k, fd.key) + '</div>';
       case 'month':
@@ -726,7 +726,12 @@
       case 'lclose': ev.preventDefault(); S.login = null; render(); break;
       case 'logout': doLogout(); break;
       case 'dview': S.dashView = a.getAttribute('data-view'); renderDashboard(); break;
-      case 'padd': syncPeople(a.getAttribute('data-key')); (S.people[a.getAttribute('data-key')] || (S.people[a.getAttribute('data-key')] = [])).push({ nama: '', matrik: '', nokp: '' }); redrawPeople(a.getAttribute('data-key')); break;
+      case 'padd':
+        var pk = a.getAttribute('data-key'), pfd = k && fieldDef(k, pk);
+        syncPeople(pk);
+        if (!S.people[pk]) S.people[pk] = [];
+        if (pfd && pfd.max && S.people[pk].length >= pfd.max) { toast('Maksimum ' + pfd.max + ' ' + (pfd.noun || 'pelajar') + '.', true); break; }
+        S.people[pk].push({ nama: '', matrik: '', nokp: '' }); redrawPeople(pk); break;
       case 'pdel': syncPeople(a.getAttribute('data-key')); S.people[a.getAttribute('data-key')].splice(parseInt(a.getAttribute('data-i'), 10), 1); redrawPeople(a.getAttribute('data-key')); break;
       case 'fdl': if (k) downloadPdf(k, a.getAttribute('data-id'), a.getAttribute('data-key')); break;
       case 'tab': S.view.tab = a.getAttribute('data-tab'); if (S.view.tab === 'list') S.editing = null; renderKpi(); break;

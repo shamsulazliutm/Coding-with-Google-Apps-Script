@@ -841,5 +841,19 @@ test('CKAI 4: lampiran Sijil SSM (PDF) disimpan dengan pautan Drive dalam Sheet'
   fail(g.api_uploadFile(adminToken, 'CKAI4', 'sijil_ssm', { name: 'x.pdf', data: Buffer.from('bukan pdf').toString('base64') }), /PDF/);
 });
 
+test('CKAI 4: rakan kongsi (nama, no. matrik, no. KP), maksimum 12, selaras dengan bilangan rakan kongsi', () => {
+  const base = { fakulti: 'FC', nama_pelajar: 'Pemilik', no_kp: '990101011234', no_matrik: 'S90', status_ssm: 'Berdaftar', nama_syarikat: 'Syarikat RK', tarikh_daftar: '2026-04-02', status: 'Berdaftar' };
+  const p = (n) => Array.from({ length: n }, (_, i) => ({ nama: 'Rakan ' + (i + 1), matrik: 'M' + (i + 1), nokp: '0001010' + (10000 + i) }));
+  const r = ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-801', bil_rakan_kongsi: 13, rakan_kongsi: p(12) })));
+  const row = ok(g.api_list(adminToken, 'CKAI4', {})).rows.find(x => x.id === r.id);
+  assert.strictEqual(JSON.parse(row.rakan_kongsi).length, 12);
+  assert.strictEqual(JSON.parse(row.rakan_kongsi)[0].nokp, '000101010000');
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-802', bil_rakan_kongsi: 13, rakan_kongsi: p(13) })), /betulkan/); // lebih 12
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-803', bil_rakan_kongsi: 14 })), /betulkan/); // lebih 13
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-804', bil_rakan_kongsi: 3, rakan_kongsi: p(3) })), /betulkan/); // 3 > 3-1
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-805', bil_rakan_kongsi: 2, rakan_kongsi: [{ nama: 'A', matrik: '', nokp: '12' }] })), /betulkan/);
+  ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-806', bil_rakan_kongsi: 1 }))); // pemilik tunggal, tanpa senarai
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);

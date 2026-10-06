@@ -86,8 +86,9 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
         break;
       case 'people':
         var list = Array.isArray(v) ? v : parseJson_(String(v), null);
-        if (!Array.isArray(list) || !list.length) { errors[f.key] = 'Tambah sekurang-kurangnya seorang pelajar.'; break; }
-        if (list.length > 30) { errors[f.key] = 'Maksimum 30 pelajar bagi satu rekod.'; break; }
+        var noun = f.noun || 'pelajar', maxN = f.max || 30;
+        if (!Array.isArray(list) || !list.length) { errors[f.key] = 'Tambah sekurang-kurangnya seorang ' + noun + '.'; break; }
+        if (list.length > maxN) { errors[f.key] = 'Maksimum ' + maxN + ' ' + noun + ' bagi satu rekod.'; break; }
         var people = [], bad = [];
         list.forEach(function (p, i) {
           var nama = String(p && p.nama || '').trim(), matrik = String(p && p.matrik || '').trim(), kp = String(p && p.nokp || '').replace(/\s+/g, '').toUpperCase();
@@ -97,7 +98,7 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
           if (!matrik || matrik.length > 30) miss.push('no. matrik');
           if (f.kp === false) kp = ''; // medan no. KP tidak digunakan bagi KPI ini
           else if (!/^[A-Z0-9-]{6,20}$/.test(kp)) miss.push('no. KP / pasport');
-          if (miss.length) bad.push('Pelajar ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp });
+          if (miss.length) bad.push(noun.charAt(0).toUpperCase() + noun.slice(1) + ' ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp });
         });
         if (bad.length) { errors[f.key] = bad.join('; ') + '.'; break; }
         clean[f.key] = JSON.stringify(people);
