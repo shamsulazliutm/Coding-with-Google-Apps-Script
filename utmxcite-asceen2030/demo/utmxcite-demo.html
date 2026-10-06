@@ -162,6 +162,32 @@ label .req{color:var(--bad)}
 .lgback a{color:var(--m)}
 .lgfoot{text-align:center;color:var(--mut);font-size:13px;padding:22px 16px 28px}
 @media(max-width:600px){.lgban{flex-direction:column;text-align:center}.lgtt b{font-size:22px}.lgban img{height:64px}}
+.igtop{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.igh{color:var(--m);font-size:24px}.igs{color:var(--mut);font-size:12.5px;margin-top:2px}
+.igctl{display:flex;gap:8px;align-items:center}
+.ig{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.igp{background:#fff;border:1px solid #e6d3da;border-radius:14px;padding:16px;min-width:0}
+.igp.c4{grid-column:span 4}.igp.c8{grid-column:span 8}.igp.c12{grid-column:span 12}
+.igt2{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);margin:12px 0 4px}
+.igt{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--m);margin-bottom:10px}
+.ring{width:100%;max-width:150px;display:block;margin:0 auto}
+.rv{font-weight:700;fill:var(--ink)}
+.prem2{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.prem2 .ring{max-width:150px;flex:none}
+.pt{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--mut);min-width:140px;flex:1}.pt b{font-size:26px;color:var(--ink)}.pt .gold{color:#8a6410;font-weight:600}
+.rrow{display:flex;gap:10px;justify-content:space-around}.rrow:not(.six) .rtile{flex:1 1 0}.rrow.six{display:grid;grid-template-columns:repeat(6,1fr)}
+.rtile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;min-width:0}.rtile .ring{max-width:104px}.rrow.six .ring{max-width:88px}
+.rtile b{font-size:12.5px;color:var(--ink)}.rtile small{font-size:11px;color:var(--mut)}
+.bigs{display:flex;gap:16px;justify-content:space-between}.bigs div{display:flex;flex-direction:column}.bigs b{font-size:30px;color:var(--m);line-height:1.1}.bigs b small{font-size:15px;color:var(--mut);font-weight:400}.bigs span{font-size:12px;color:var(--mut)}
+.pbar2{height:6px;background:var(--track,#efe6e9);border-radius:3px;margin:8px 0 4px;overflow:hidden}.pbar2 i{display:block;height:100%;background:var(--m);border-radius:3px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{display:flex;flex-direction:column;gap:2px;min-width:0}.tile b{font-size:28px;color:var(--m);line-height:1.1}.tile span{font-size:12.5px;color:var(--ink)}.tile small{font-size:11px;color:var(--mut)}
+.big1{font-size:24px;font-weight:700;color:var(--m);margin-bottom:2px}.big1 small{font-size:12px;font-weight:400;color:var(--mut)}
+.chart{width:100%;height:auto;display:block}.chart .ax{font-size:9.5px;fill:var(--mut)}.chart .av{font-size:10px;font-weight:600;fill:var(--ink)}
+.klist{display:flex;flex-direction:column;gap:6px}.kl{display:grid;grid-template-columns:minmax(170px,1.1fr) 1.6fr 190px 120px;gap:10px;align-items:center;font-size:12.5px}
+.kl .kn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kl .mini{height:6px;background:#efe6e9;border-radius:3px;overflow:hidden}.kl .mini i{display:block;height:100%;background:var(--m)}.kl .n{text-align:right;color:var(--mut)}
+@media(max-width:1000px){.igp.c4{grid-column:span 6}.igp.c8{grid-column:span 12}.rrow.six{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.igp.c4,.igp.c8,.igp.c12{grid-column:span 12}.tiles{grid-template-columns:repeat(2,1fr)}.kl{grid-template-columns:1fr auto}.kl .mini{grid-column:1/-1;order:3}}
+@media print{.side,.top,.igctl,.scrim,#toast,#demobar{display:none!important}.main{width:100%}.igp{break-inside:avoid}}
 .otp{letter-spacing:6px;font-size:20px;text-align:center}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2b1a1f;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:90vw}
 #toast.show{opacity:1}
@@ -1336,6 +1362,7 @@ function trashFile_(id) {
 function clearDashCache_() {
   var cache = CacheService.getScriptCache();
   APP.YEARS.forEach(function (y) { cache.remove('dash:' + y); });
+  cache.remove('trend');
 }
 
 ;
@@ -2529,6 +2556,21 @@ function getDashboard_(yearIn) {
   return d;
 }
 
+/** Trend 2026-2030 untuk Infografik (awam, agregat sahaja): nilai setiap KPI, ukuran premium dan bilangan KPI mencapai sasaran bagi setiap tahun. */
+function getTrend_() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('trend');
+  if (hit) return JSON.parse(hit);
+  var out = APP.YEARS.map(function (y) {
+    var d = getDashboard_(y);
+    var vals = {};
+    d.kpis.forEach(function (c) { vals[c.id] = { v: c.value, t: c.target, p: c.pct }; });
+    return { year: y, premiumPct: d.premium ? d.premium.pct : 0, premiumTotal: d.premium ? d.premium.total : 0, meet: d.summary.meet, total: d.summary.total, kpis: vals };
+  });
+  try { cache.put('trend', JSON.stringify(out), APP.DASH_CACHE_TTL); } catch (e) { /* abaikan */ }
+  return out;
+}
+
 ;
 /* Admin.gs */
 /** Fungsi Admin: pengurusan pengguna (PIC), sasaran dan paparan log audit. */
@@ -2757,6 +2799,7 @@ function wrap_(fn) {
 function str_(v, max) { return String(v === null || v === undefined ? '' : v).slice(0, max || 300); }
 
 // --- Awam ---------------------------------------------------------------
+function api_trend() { return wrap_(function () { return getTrend_(); }); }
 function api_dashboard(year) { return wrap_(function () { return getDashboard_(year); }); }
 function api_requestOtp(email) { return wrap_(function () { return requestOtp_(str_(email, 254)); }); }
 function api_verifyOtp(email, code) { return wrap_(function () { return verifyOtp_(str_(email, 254), str_(code, 20)); }); }
@@ -3046,7 +3089,8 @@ window.__demoSeed = function () {
     chev: '<path d="M6 9l6 6 6-6"/>',
     user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>',
     target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/>',
-    list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'
+    list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
   };
   function ico(n) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[n] + '</svg>'; }
 
@@ -3079,6 +3123,7 @@ window.__demoSeed = function () {
       ? '<div class="prof"><div class="av">' + esc(initials(u.nama, u.emel)) + '</div><div><b>' + esc(u.nama || u.emel) + '</b><small>' + esc(u.emel) + '</small></div></div>'
       : '<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>';
     h += navBtn('dashboard', ico('grid'), 'Dashboard', S.view.name === 'dashboard');
+    h += navBtn('infografik', ico('chart'), 'Infografik', S.view.name === 'infografik');
     if (u) {
       h += '<div class="mod">Peringkat</div>';
       S.session.levels.forEach(function (lv) {
@@ -3119,6 +3164,7 @@ window.__demoSeed = function () {
   function pageTitle() {
     var v = S.view;
     if (v.name === 'dashboard') return DASH_TITLE;
+    if (v.name === 'infografik') return 'Infografik Pencapaian UTMXCITE';
     if (v.name === 'kpi') { var k = kpiById(v.id); return k ? k.title : 'KPI'; }
     return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit', setup: 'Persediaan & Pautan' }[v.name] || APP_NAME;
   }
@@ -3126,6 +3172,7 @@ window.__demoSeed = function () {
     $('#tabs').innerHTML = '';
     var v = S.view;
     if (v.name === 'dashboard') return renderDashboard();
+    if (v.name === 'infografik') return renderInfo();
     if (!S.session) { S.view = { name: 'dashboard' }; return renderDashboard(); }
     if (v.name === 'kpi') return renderKpi();
     if (v.name === 'users') return renderUsers();
@@ -3522,6 +3569,153 @@ window.__demoSeed = function () {
     el.innerHTML = h + '</tbody></table></div>';
   }
 
+  // ------------------------------------------------------------------ infografik (awam)
+  var MS = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
+  var COL = { m: '#5c0f2a', gold: '#e9b949', teal: '#1f6f6b', track: '#efe6e9', mut: '#6a5a5f' };
+  var gradN = 0;
+  function monthShort(l) { var m = /^\d{4}-(\d{2})/.exec(String(l)); return m ? MS[parseInt(m[1], 10) - 1] : String(l); }
+  function isMeet(c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }
+  function pctCap(c) { return c.pct === null || c.pct === undefined ? null : Math.min(100, c.pct); }
+
+  // Cincin kemajuan; o.tick = penanda sasaran (0-100)
+  function ringSvg(pct, o) {
+    var size = o.size || 120, cx = size / 2, r = size / 2 - 10, c = 2 * Math.PI * r, p = Math.max(0, Math.min(100, pct || 0));
+    var h = '<svg class="ring" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="' + esc(o.label + ': ' + o.text) + '">' +
+      '<circle cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="' + COL.track + '" stroke-width="9"/>' +
+      '<circle cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="' + (o.color || COL.m) + '" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + (c * p / 100).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cx + ')"><title>' + esc(o.label + ': ' + o.text) + '</title></circle>';
+    if (o.tick) {
+      var a = (o.tick / 100 * 360 - 90) * Math.PI / 180;
+      h += '<line x1="' + (cx + (r - 8) * Math.cos(a)).toFixed(1) + '" y1="' + (cx + (r - 8) * Math.sin(a)).toFixed(1) + '" x2="' + (cx + (r + 8) * Math.cos(a)).toFixed(1) + '" y2="' + (cx + (r + 8) * Math.sin(a)).toFixed(1) + '" stroke="' + COL.gold + '" stroke-width="3" stroke-linecap="round"><title>Sasaran ' + o.tick + '%</title></line>';
+    }
+    return h + '<text x="' + cx + '" y="' + (cx + size * 0.07) + '" text-anchor="middle" class="rv" style="font-size:' + Math.round(size * 0.22) + 'px">' + esc(o.text) + '</text></svg>';
+  }
+  function ringTile(pct, o) {
+    return '<div class="rtile">' + ringSvg(pct, o) + '<b>' + esc(o.label) + '</b>' + (o.sub ? '<small>' + esc(o.sub) + '</small>' : '') + '</div>';
+  }
+
+  // Carta bar menegak (satu paksi); item = {label, value}
+  function barsSvg(items, o) {
+    o = o || {};
+    var W = 320, H = 140, pl = 6, pb = 20, pt = 16, n = items.length, max = Math.max.apply(null, items.map(function (i) { return i.value; }).concat([1]));
+    var slot = (W - pl * 2) / n, bw = Math.min(24, slot - 6), h = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label || 'Carta bar') + '">' +
+      '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (W - pl) + '" y2="' + (H - pb) + '" stroke="#d9cdd1" stroke-width="1"/>';
+    var peak = items.reduce(function (m, i, k) { return i.value > items[m].value ? k : m; }, 0);
+    items.forEach(function (it, k) {
+      var bh = Math.max(2, (H - pb - pt) * it.value / max), x = pl + slot * k + (slot - bw) / 2, y = H - pb - bh, rr = Math.min(4, bw / 2);
+      h += '<path d="M' + x + ' ' + (H - pb) + 'V' + (y + rr) + 'a' + rr + ' ' + rr + ' 0 0 1 ' + rr + ' -' + rr + 'h' + (bw - 2 * rr) + 'a' + rr + ' ' + rr + ' 0 0 1 ' + rr + ' ' + rr + 'V' + (H - pb) + 'z" fill="' + (k === peak ? COL.m : '#a0577a') + '"><title>' + esc(it.label + ': ' + (o.fmt ? o.fmt(it.value) : fmtNum(it.value))) + '</title></path>' +
+        '<text x="' + (x + bw / 2) + '" y="' + (H - 6) + '" text-anchor="middle" class="ax">' + esc(monthShort(it.label)) + '</text>';
+      if (k === peak) h += '<text x="' + (x + bw / 2) + '" y="' + (y - 4) + '" text-anchor="middle" class="av">' + esc(o.fmt ? o.fmt(it.value) : fmtNum(it.value)) + '</text>';
+    });
+    return h + '</svg>';
+  }
+
+  // Carta kawasan/garis (satu paksi); o.target = garis sasaran melintang
+  function areaSvg(items, o) {
+    o = o || {};
+    var W = 320, H = 140, pl = 14, pr = 14, pb = 20, pt = 18, n = items.length;
+    var max = Math.max.apply(null, items.map(function (i) { return i.value; }).concat([o.target || 0, 1])) * 1.1;
+    function X(k) { return n === 1 ? W / 2 : pl + (W - pl - pr) * k / (n - 1); }
+    function Y(v) { return H - pb - (H - pb - pt) * v / max; }
+    var id = 'ag' + (++gradN), pts = items.map(function (it, k) { return X(k).toFixed(1) + ' ' + Y(it.value).toFixed(1); });
+    var h = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label || 'Carta') + '"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + COL.m + '" stop-opacity=".28"/><stop offset="1" stop-color="' + COL.m + '" stop-opacity="0"/></linearGradient></defs>' +
+      '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (W - pr) + '" y2="' + (H - pb) + '" stroke="#d9cdd1"/>';
+    if (o.target) h += '<line x1="' + pl + '" y1="' + Y(o.target).toFixed(1) + '" x2="' + (W - pr) + '" y2="' + Y(o.target).toFixed(1) + '" stroke="' + COL.gold + '" stroke-width="2" stroke-dasharray="5 4"><title>' + esc(o.targetLabel || 'Sasaran') + '</title></line>' +
+      '<text x="' + (W - pr) + '" y="' + (Y(o.target) - 5).toFixed(1) + '" text-anchor="end" class="av">' + esc(o.targetLabel || 'Sasaran') + '</text>';
+    if (n > 1) h += '<path d="M' + pts.join('L') + 'L' + X(n - 1).toFixed(1) + ' ' + (H - pb) + 'L' + X(0).toFixed(1) + ' ' + (H - pb) + 'z" fill="url(#' + id + ')"/>';
+    h += '<path d="M' + pts.join('L') + '" fill="none" stroke="' + COL.m + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    items.forEach(function (it, k) {
+      h += '<circle cx="' + X(k).toFixed(1) + '" cy="' + Y(it.value).toFixed(1) + '" r="4" fill="' + COL.m + '" stroke="#fff" stroke-width="2"><title>' + esc(it.label + ': ' + (o.fmt ? o.fmt(it.value) : fmtNum(it.value))) + '</title></circle>' +
+        '<text x="' + X(k).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" class="ax">' + esc(o.xlabel ? o.xlabel(it.label) : monthShort(it.label)) + '</text>';
+    });
+    if (o.valueLabels) items.forEach(function (it, k) { h += '<text x="' + X(k).toFixed(1) + '" y="' + (Y(it.value) - 8).toFixed(1) + '" text-anchor="middle" class="av">' + esc(o.fmt ? o.fmt(it.value) : fmtNum(it.value)) + '</text>'; });
+    return h + '</svg>';
+  }
+
+  function hbarsHtml(items, fmt, limit) {
+    var arr = items.slice(0, limit || 8), max = Math.max.apply(null, arr.map(function (i) { return i.value; }).concat([1]));
+    return arr.map(function (i) {
+      return '<div class="bi"><span class="l" title="' + esc(i.label) + '">' + esc(i.label) + '</span><span class="mini"><i style="width:' + Math.min(100, i.value / max * 100).toFixed(0) + '%"></i></span><span class="n">' + esc(fmt ? fmt(i.value) : fmtNum(i.value)) + '</span></div>';
+    }).join('');
+  }
+  function bdOf(c, re) { var b = (c && c.breakdown || []).filter(function (x) { return re.test(x.title) && x.items.length; })[0]; return b ? b.items : null; }
+  function panel(title, body, cls) { return '<section class="igp ' + (cls || '') + '"><h3 class="igt">' + esc(title) + '</h3>' + body + '</section>'; }
+
+  function loadInfo(year) {
+    $('#content').innerHTML = '<p class="boot">Memuatkan infografik…</p>';
+    var y = year || S.year || '';
+    Promise.all([call('api_dashboard', y), S.trend ? Promise.resolve(S.trend) : call('api_trend')]).then(function (r) {
+      S.dash = r[0]; S.year = r[0].year; S.trend = r[1];
+      if (S.view.name === 'infografik') renderInfo();
+    }).catch(function (e) { $('#content').innerHTML = '<p class="boot">' + esc(e.message) + '</p>'; });
+  }
+
+  function renderInfo() {
+    var d = S.dash, tr = S.trend, el = $('#content');
+    if (!d || !tr) { loadInfo(); return; }
+    var byId = {}; d.kpis.forEach(function (c) { byId[c.id] = c; });
+    var cs = d.kpis, withT = cs.filter(function (c) { return c.target !== ''; });
+    function avgPct(list) { var v = list.map(pctCap).filter(function (x) { return x !== null; }); return v.length ? Math.round(v.reduce(function (a, b) { return a + b; }, 0) / v.length) : null; }
+    var h = '<div class="igtop"><div><h2 class="igh">Infografik Pencapaian UTMXCITE</h2><p class="igs">' + esc(d.ds.label) + ' · tahun ' + esc(d.year) + ' · data ringkasan, tiada maklumat peribadi</p></div>' +
+      '<div class="igctl"><label for="iy" style="margin:0">Tahun</label><select id="iy" data-change="iyear">' + d.years.map(function (y) { return '<option' + (y === d.year ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
+      '<button class="btn o sm" type="button" data-action="print">Cetak / PDF</button></div></div><div class="ig">';
+
+    // 1) Pekerjaan Premium Tier 1
+    var pr = d.premium;
+    h += panel('Pekerjaan Premium Tier 1', '<div class="prem2">' + ringSvg(pr.pct, { size: 150, label: 'Usahawan berpendapatan premium', text: pr.pct + '%', tick: pr.targetPct }) +
+      '<div class="pt"><b>' + pr.premium + ' / ' + pr.total + '</b><span>usahawan dengan purata pendapatan sebulan melebihi RM' + String(pr.thresholdRm).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</span>' +
+      '<span class="gold">▎ Sasaran ' + pr.targetYear + ': ' + pr.targetPct + '%</span><span>' + pr.pctOfTarget + '% daripada sasaran dicapai</span></div></div>', 'c4');
+
+    // 2) Tiga peringkat
+    var lv = d.levels.map(function (l) {
+      var list = cs.filter(function (c) { return c.level === l.id; }), t = list.filter(function (c) { return c.target !== ''; }), p = avgPct(t), m = t.filter(isMeet).length;
+      return ringTile(p === null ? 0 : p, { size: 84, label: l.short.split(' · ')[0], text: p === null ? '–' : p + '%', sub: t.length ? m + ' / ' + t.length + ' KPI capai sasaran' : 'Sasaran belum ditetapkan', color: l.id === 'KAI' ? COL.m : l.id === 'DKAI' ? COL.teal : '#a0577a' });
+    }).join('');
+    h += panel('Pencapaian mengikut peringkat', '<div class="rrow">' + lv + '</div><p class="igs">Purata peratus sasaran (had 100%) bagi KPI yang mempunyai sasaran.</p>', 'c4');
+
+    // 3) Ringkasan
+    var rate = Math.round(d.summary.meet * 100 / Math.max(1, d.summary.total));
+    h += panel('Ringkasan ' + d.year, '<div class="bigs"><div><b>' + d.summary.meet + '<small> / ' + d.summary.total + '</small></b><span>KPI mencapai sasaran</span></div>' +
+      '<div><b>' + cs.length + '</b><span>indikator dipantau</span></div><div><b>' + rate + '%</b><span>kadar pencapaian</span></div></div>' +
+      '<div class="pbar2"><i style="width:' + rate + '%"></i></div>' +
+      '<h4 class="igt2">KPI mencapai sasaran mengikut tahun</h4>' + barsSvg(tr.map(function (t) { return { label: String(t.year), value: t.meet }; }), { label: 'KPI mencapai sasaran', fmt: function (v) { return v + ' KPI'; } }), 'c4');
+
+    // 4) Nombor utama
+    var tiles = [['KAI1', 'Inkubator aktif'], ['KAI3', 'Ruang perniagaan'], ['KAI4', 'Pelajar GiGA'], ['KAI6', 'Startup AI'], ['CKAI1', 'Profiling pelajar'], ['CKAI4', 'Pendaftaran SSU'], ['CKAI5', 'Penggunaan Makerspace'], ['CKAI9', 'Anugerah']].filter(function (t) { return byId[t[0]]; });
+    h += panel('Nombor utama', '<div class="tiles">' + tiles.map(function (t) {
+      var c = byId[t[0]];
+      return '<div class="tile"><b>' + esc(fmtVal(c, c.value)) + '</b><span>' + esc(t[1]) + '</span>' + (c.pct !== null ? '<div class="pbar2"><i style="width:' + Math.min(100, c.pct) + '%"></i></div><small>' + fmtNum(c.pct) + '% daripada sasaran ' + esc(fmtVal(c, c.target)) + '</small>' : '<small>Tiada sasaran ditetapkan</small>') + '</div>';
+    }).join('') + '</div>', 'c8');
+
+    // Trend ukuran premium (hanya tahun yang ada data)
+    var yrs = tr.filter(function (t) { return t.premiumTotal > 0; }).map(function (t) { return { label: String(t.year), value: t.premiumPct }; });
+    h += panel('Trend ukuran premium', (yrs.length ? areaSvg(yrs, { label: 'Trend peratus pekerjaan premium', fmt: function (v) { return v + '%'; }, xlabel: function (l) { return l; }, target: pr.targetPct, targetLabel: 'Sasaran ' + pr.targetPct + '%', valueLabels: true }) : '<p class="igs">Belum ada data pendapatan (CKAI 7) untuk dipaparkan.</p>') + '<p class="igs">Hanya tahun yang ada laporan pendapatan dipaparkan.</p>', 'c4');
+
+    // 5) Enam fungsi
+    h += panel('Enam fungsi UTMXCITE', '<div class="rrow six">' + d.functions.filter(function (f) { return f.no; }).map(function (f) {
+      var list = cs.filter(function (c) { return c.fungsi === f.id; }), t = list.filter(function (c) { return c.target !== ''; }), p = avgPct(t);
+      return ringTile(p === null ? 0 : p, { size: 88, label: f.no + ' · ' + f.short, text: p === null ? '–' : p + '%', sub: list.length + ' indikator' });
+    }).join('') + '</div>', 'c12');
+
+    // 7) Carta bulanan (RM dan bilangan)
+    var inc = bdOf(byId.CKAI7, /bulan/i), rent = bdOf(byId.CKAI6, /bulan/i), ms = bdOf(byId.CKAI5, /bulan/i);
+    if (inc) h += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c4');
+    if (rent) h += panel('Sewaan inkubator diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan inkubator bulanan', fmt: money }), 'c4');
+    if (ms) h += panel('Penggunaan Makerspace mengikut bulan', '<div class="big1">' + esc(fmtNum(byId.CKAI5.value)) + ' <small>penggunaan</small></div>' + barsSvg(ms, { label: 'Penggunaan Makerspace bulanan', fmt: function (v) { return v + ' penggunaan'; } }), 'c4');
+
+    // 8) Fakulti
+    var fakCards = [['CKAI7', 'Pendapatan usahawan mengikut fakulti', money], ['CKAI4', 'Pendaftaran SSU mengikut fakulti'], ['CKAI1', 'Profiling pelajar mengikut fakulti']];
+    fakCards.forEach(function (f) { var it = bdOf(byId[f[0]], /fakulti/i); if (it) h += panel(f[1], hbarsHtml(it, f[2], 7), 'c4'); });
+
+    // 9) Semua indikator
+    var all = cs.slice().sort(function (a, b) { return (b.pct === null ? -1 : b.pct) - (a.pct === null ? -1 : a.pct); });
+    h += panel('Semua indikator (susunan peratus sasaran)', '<div class="klist">' + all.map(function (c) {
+      return '<div class="kl"><span class="kn" title="' + esc(c.title) + '">' + esc(c.title.split(' · ')[0]) + ' · ' + esc(c.short) + '</span>' +
+        '<span class="mini"><i style="width:' + (c.pct === null ? 0 : Math.min(100, c.pct)) + '%"></i></span><span class="n">' + esc(fmtVal(c, c.value)) + (c.target !== '' ? ' / ' + esc(fmtVal(c, c.target)) : '') + '</span>' + statusChip(c.status) + '</div>';
+    }).join('') + '</div>', 'c12');
+
+    el.innerHTML = h + '</div>';
+  }
+
   // ------------------------------------------------------------------ Admin: persediaan
   function renderSetup() {
     var el = $('#content');
@@ -3626,7 +3820,8 @@ window.__demoSeed = function () {
   function go(target) {
     S.navOpen = false; S.editing = null; S.list = null; S.listFilters = {};
     var lvl = levelOf(target); if (lvl) S.open[lvl] = true;
-    if (target === 'dashboard') { S.view = { name: 'dashboard' }; S.dash = null; } // muat semula supaya angka terkini dipaparkan
+    if (target === 'infografik') { S.view = { name: 'infografik' }; S.trend = null; S.dash = null; }
+    else if (target === 'dashboard') { S.view = { name: 'dashboard' }; S.dash = null; } // muat semula supaya angka terkini dipaparkan
     else if (target.indexOf('kpi:') === 0) S.view = { name: 'kpi', id: target.slice(4), tab: 'list' };
     else { S.view = { name: target }; if (target === 'users') S.users = null; if (target === 'targets') S.targets = null; if (target === 'audit') S.audit = null; if (target === 'setup') S.setup = null; }
     render(); window.scrollTo(0, 0);
@@ -3690,6 +3885,7 @@ window.__demoSeed = function () {
         break;
       case 'uclear': $('#uform').reset(); break;
       case 'copy': copyText(a.getAttribute('data-v')); break;
+      case 'print': window.print(); break;
       case 'runsetup':
         askConfirm('Jalankan persediaan semula? Tab/lajur yang tiada akan ditambah; data sedia ada tidak dipadam.', 'Ya, jalankan').then(function (yes) {
           if (!yes) return;
@@ -3735,6 +3931,7 @@ window.__demoSeed = function () {
     if (!c) return;
     if (c === 'fupload') { var kk = kpiById(S.view.id); if (kk) uploadPdf(kk, ev.target.getAttribute('data-key'), ev.target.files && ev.target.files[0]); return; }
     if (c === 'year') { S.dash = null; loadDashboard(parseInt(ev.target.value, 10)); }
+    if (c === 'iyear') { S.dash = null; loadInfo(parseInt(ev.target.value, 10)); }
     if (c === 'fstatus') { S.listFilters.status = ev.target.value; S.list = null; renderKpi(); }
     if (c === 'fstatus2') { S.listFilters.status2 = ev.target.value; S.list = null; renderKpi(); }
     if (c === 'ffak') { S.listFilters.fakulti = ev.target.value; S.list = null; renderKpi(); }

@@ -950,6 +950,7 @@ function trashFile_(id) {
 function clearDashCache_() {
   var cache = CacheService.getScriptCache();
   APP.YEARS.forEach(function (y) { cache.remove('dash:' + y); });
+  cache.remove('trend');
 }
 
 
@@ -2143,6 +2144,21 @@ function getDashboard_(yearIn) {
   return d;
 }
 
+/** Trend 2026-2030 untuk Infografik (awam, agregat sahaja): nilai setiap KPI, ukuran premium dan bilangan KPI mencapai sasaran bagi setiap tahun. */
+function getTrend_() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('trend');
+  if (hit) return JSON.parse(hit);
+  var out = APP.YEARS.map(function (y) {
+    var d = getDashboard_(y);
+    var vals = {};
+    d.kpis.forEach(function (c) { vals[c.id] = { v: c.value, t: c.target, p: c.pct }; });
+    return { year: y, premiumPct: d.premium ? d.premium.pct : 0, premiumTotal: d.premium ? d.premium.total : 0, meet: d.summary.meet, total: d.summary.total, kpis: vals };
+  });
+  try { cache.put('trend', JSON.stringify(out), APP.DASH_CACHE_TTL); } catch (e) { /* abaikan */ }
+  return out;
+}
+
 
 // ===== Admin.gs =====
 /** Fungsi Admin: pengurusan pengguna (PIC), sasaran dan paparan log audit. */
@@ -2371,6 +2387,7 @@ function wrap_(fn) {
 function str_(v, max) { return String(v === null || v === undefined ? '' : v).slice(0, max || 300); }
 
 // --- Awam ---------------------------------------------------------------
+function api_trend() { return wrap_(function () { return getTrend_(); }); }
 function api_dashboard(year) { return wrap_(function () { return getDashboard_(year); }); }
 function api_requestOtp(email) { return wrap_(function () { return requestOtp_(str_(email, 254)); }); }
 function api_verifyOtp(email, code) { return wrap_(function () { return verifyOtp_(str_(email, 254), str_(code, 20)); }); }

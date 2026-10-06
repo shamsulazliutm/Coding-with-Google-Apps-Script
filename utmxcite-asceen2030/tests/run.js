@@ -922,5 +922,16 @@ test('Ukuran Pekerjaan Premium Tier 1: purata pendapatan sebulan > RM4,000 dibah
   assert.ok(!JSON.stringify(dash(2029)).includes('Niaga A')); // tiada nama perniagaan pada paparan awam
 });
 
+test('Trend Infografik (awam): nilai agregat setiap tahun, tiada data peribadi', () => {
+  const tr = ok(g.api_trend());
+  deepEq(tr.map(t => t.year), [2026, 2027, 2028, 2029, 2030]);
+  tr.forEach(t => { assert.ok(t.total >= t.meet); assert.ok(t.kpis.KAI1 && t.kpis.CKAI7); });
+  assert.strictEqual(tr[3].premiumTotal, 4); assert.strictEqual(tr[3].premiumPct, 50); // 2029: data ujian premium
+  const sj = JSON.stringify(tr);
+  ['Niaga A', 'Kedai A', '990101', 'pic.', 'admin@'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+  ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', tempoh: '2028-02', nama_perniagaan: 'Trend X', no_kp: '000000000009', jenis_pendapatan: 'Jualan produk', pendapatan_rm: 5000 }));
+  assert.strictEqual(ok(g.api_trend())[2].premiumTotal, 1); // cache trend dibatalkan selepas tulis
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);

@@ -47,6 +47,13 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     ['Pelajar Profil Contoh', 'Pelajar Anugerah', 'P24', '000101', '@utm.my'].forEach((x) => assert.ok(!t.includes(x), 'bocor: ' + x));
     assert.deepStrictEqual(reqs, [], 'permintaan luar: ' + reqs.join(','));
   });
+  await step('Infografik awam dipaparkan dengan data contoh', async () => {
+    await page.click('.nav:has-text("Infografik")');
+    await page.waitForSelector('.ig .igp');
+    assert.ok((await page.locator('svg.ring').count()) >= 10);
+    await page.click('.nav:has-text("Dashboard")');
+    await page.waitForSelector('.kcard');
+  });
   await step('log masuk OTP: kod simulasi muncul dan berfungsi', async () => {
     await page.click('[data-action="login"]');
     await page.fill('#l_emel', 'pic.fai@utm.my');

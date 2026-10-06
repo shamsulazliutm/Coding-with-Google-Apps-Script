@@ -394,6 +394,20 @@ function buildHtml() {
     const ct = await card.innerText();
     ['Pelajar terlibat: 1', 'Memenang anugerah / pingat: 0', 'Calon peningkatan / sedang disokong: 1'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
+  await step('Infografik (awam): panel, cincin dan carta dipaparkan; tukar tahun', async () => {
+    await goNav('Infografik');
+    await page.waitForSelector('.ig .igp');
+    assert.ok((await page.locator('.igp').count()) >= 6);
+    assert.ok((await page.locator('svg.ring').count()) >= 10); // premium + 3 peringkat + 6 fungsi
+    assert.ok((await page.locator('svg.chart').count()) >= 1);
+    const txt = await page.locator('.ig').innerText();
+    ['Pekerjaan Premium Tier 1', 'Sasaran 2030: 40%', 'Enam fungsi UTMXCITE', 'Semua indikator'].forEach(x => assert.ok(txt.toLowerCase().includes(x.toLowerCase()), 'infografik tiada: ' + x));
+    await page.selectOption('#iy', '2027');
+    await page.waitForSelector('.igs:has-text("tahun 2027")');
+    await page.selectOption('#iy', '2026');
+    await page.waitForSelector('.igs:has-text("tahun 2026")');
+    await page.screenshot({ path: path.join(out, '17-infografik.png'), fullPage: true });
+  });
   await step('Dashboard: tukar paparan antara peringkat dan fungsi (enam fungsi UTMXCITE)', async () => {
     await goNav('Dashboard');
     await page.waitForSelector('.seg');

@@ -440,3 +440,18 @@ function getDashboard_(yearIn) {
   try { cache.put('dash:' + year, JSON.stringify(d), APP.DASH_CACHE_TTL); } catch (e) { /* terlalu besar: abaikan cache */ }
   return d;
 }
+
+/** Trend 2026-2030 untuk Infografik (awam, agregat sahaja): nilai setiap KPI, ukuran premium dan bilangan KPI mencapai sasaran bagi setiap tahun. */
+function getTrend_() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('trend');
+  if (hit) return JSON.parse(hit);
+  var out = APP.YEARS.map(function (y) {
+    var d = getDashboard_(y);
+    var vals = {};
+    d.kpis.forEach(function (c) { vals[c.id] = { v: c.value, t: c.target, p: c.pct }; });
+    return { year: y, premiumPct: d.premium ? d.premium.pct : 0, premiumTotal: d.premium ? d.premium.total : 0, meet: d.summary.meet, total: d.summary.total, kpis: vals };
+  });
+  try { cache.put('trend', JSON.stringify(out), APP.DASH_CACHE_TTL); } catch (e) { /* abaikan */ }
+  return out;
+}

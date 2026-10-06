@@ -168,3 +168,7 @@ Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, pe
 - **Dalam Google Sheet:** tab `Persediaan` ditulis semula setiap kali `setup()` dijalankan. Ia memuatkan ID/pautan Sheet, pautan web app, Script ID, pautan folder lampiran, pemilik skrip dan panduan jika paparan "404".
 - **Dalam aplikasi:** Admin > Pentadbiran > Persediaan. Menunjukkan pautan/ID (butang Salin), senarai semakan ✓/✗ (tab, lajur, Admin aktif, folder, pautan /exec, kuota e-mel), butang "Jalankan persediaan" (baiki tab/lajur hilang) dan "Hantar e-mel ujian".
 - **Punca biasa "404":** guna pautan `/exec` (bukan `/dev` atau pautan editor), Execute as = Me, Who has access = Anyone, dan deploy *New version* selepas ubah kod.
+
+## Infografik (menu awam)
+
+Menu **Infografik** (di bawah Dashboard, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, pencapaian mengikut tiga peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).

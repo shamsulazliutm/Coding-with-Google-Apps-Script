@@ -228,4 +228,5 @@ function trashFile_(id) {
 function clearDashCache_() {
   var cache = CacheService.getScriptCache();
   APP.YEARS.forEach(function (y) { cache.remove('dash:' + y); });
+  cache.remove('trend');
 }
