@@ -830,5 +830,14 @@ test('medan fail: pautan Drive ditulis dalam lajur *_pautan (Sheet sahaja, tidak
   assert.strictEqual(sh.data.find(r => r[0] === saved.id)[col], 'https://drive.google.com/file/d/' + up.id + '/view');
 });
 
+test('CKAI 4: lampiran Sijil SSM (PDF) disimpan dengan pautan Drive dalam Sheet', () => {
+  const up = ok(g.api_uploadFile(adminToken, 'CKAI4', 'sijil_ssm', { name: 'sijil-ssm.pdf', data: PDF('ssm') }));
+  const r = ok(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'Pelajar SSM', no_kp: '990101011234', no_matrik: 'S77', status_ssm: 'Ya', sijil_ssm: { id: up.id, name: up.name }, nama_syarikat: 'Syarikat SSM', no_ssu: 'SSU-777', tarikh_daftar: '2026-04-01', status: 'Berdaftar' }));
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI4_SSU');
+  const row = sh.data.find(x => x[0] === r.id);
+  assert.strictEqual(row[sh.data[0].indexOf('sijil_ssm_pautan')], 'https://drive.google.com/file/d/' + up.id + '/view');
+  fail(g.api_uploadFile(adminToken, 'CKAI4', 'sijil_ssm', { name: 'x.pdf', data: Buffer.from('bukan pdf').toString('base64') }), /PDF/);
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);
