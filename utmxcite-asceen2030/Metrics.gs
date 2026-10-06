@@ -157,7 +157,7 @@ var MEASURES = {
     var reg = rows.filter(function (r) { return yearOf_(r.tarikh_daftar) === year; });
     return {
       value: reg.length,
-      secondary: [{ label: 'Masih berdaftar (aktif)', value: reg.filter(function (r) { return r.status === 'Berdaftar'; }).length }],
+      secondary: [{ label: 'Masih aktif', value: reg.filter(function (r) { return r.status === 'Aktif'; }).length }],
       breakdown: [{ title: 'Mengikut fakulti', items: sortDesc_(countBy_(reg, function (r) { return r.fakulti; })) }]
     };
   },

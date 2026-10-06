@@ -501,7 +501,7 @@ var KPIS = [
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
       F_('tarikh_ssm', 'Tarikh pendaftaran SSM', 'date', { hint: 'Wajib jika status SSM Berdaftar.' }),
       F_('sijil_ssm', 'Attachment SSM (PDF)', 'file', { full: true, hint: 'Sijil / bukti pendaftaran SSM. PDF sahaja, maksimum 5 MB.' }),
-      F_('status', 'Status', 'select', { required: true, options: ['Berdaftar', 'Tidak aktif'] }),
+      F_('status', 'Status', 'select', { required: true, options: ['Aktif', 'Tidak Aktif'] }),
       F_('catatan', 'Catatan', 'textarea', { full: true, sec: 'Pengurusan' })
     ]
   },
@@ -1817,7 +1817,7 @@ var MEASURES = {
     var reg = rows.filter(function (r) { return yearOf_(r.tarikh_daftar) === year; });
     return {
       value: reg.length,
-      secondary: [{ label: 'Masih berdaftar (aktif)', value: reg.filter(function (r) { return r.status === 'Berdaftar'; }).length }],
+      secondary: [{ label: 'Masih aktif', value: reg.filter(function (r) { return r.status === 'Aktif'; }).length }],
       breakdown: [{ title: 'Mengikut fakulti', items: sortDesc_(countBy_(reg, function (r) { return r.fakulti; })) }]
     };
   },
