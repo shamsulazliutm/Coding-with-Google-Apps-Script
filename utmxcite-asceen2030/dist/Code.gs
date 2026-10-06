@@ -284,9 +284,11 @@ var KPIS = [
     rules: [
       { when: { field: 'status', in: ['Mendaftar', 'Tamat'] }, require: ['tarikh_daftar'] }
     ],
+    validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),

@@ -271,7 +271,7 @@ test('KAI3: ruang ditawarkan (kumulatif) + penggunaan; sasaran +5 setahun', () =
   deepEq([2026, 2027, 2028, 2029, 2030].map(y => card(dash(y), 'KAI3').target), [25, 30, 35, 40, 45]);
 });
 test('KAI4/KAI5: pelajar mendaftar mengikut tahun; sasaran 20 dan 4', () => {
-  const mk = (n, st, d) => ok(g.api_save(adminToken, 'KAI4', { fakulti: 'FAI', nama_pelajar: n, no_matrik: n, status: st, tarikh_daftar: d }));
+  const mk = (n, st, d) => ok(g.api_save(adminToken, 'KAI4', { fakulti: 'FAI', nama_pelajar: n, no_kp: '990101-01-1234', no_matrik: n, status: st, tarikh_daftar: d }));
   mk('a', 'Mendaftar', '2026-03-01'); mk('b', 'Tamat', '2026-03-02'); mk('c', 'Memohon', ''); mk('d', 'Mendaftar', '2027-01-05');
   const c = card(dash(2026), 'KAI4');
   assert.strictEqual(c.value, 2); assert.strictEqual(c.target, 20);
@@ -857,6 +857,15 @@ test('CKAI 4: rakan kongsi (nama, no. matrik, no. KP), maksimum 12, selaras deng
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-804', bil_rakan_kongsi: 3, rakan_kongsi: p(3) })), /betulkan/); // 3 > 3-1
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-805', bil_rakan_kongsi: 2, rakan_kongsi: [{ nama: 'A', matrik: '', nokp: '12' }] })), /betulkan/);
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-806', bil_rakan_kongsi: 1 }))); // pemilik tunggal, tanpa senarai
+});
+
+test('KAI 4 (GiGA): No. KP / pasport wajib, disahkan dan sengkang dibuang', () => {
+  const b = { fakulti: 'FAI', nama_pelajar: 'Kp Uji', no_matrik: 'KP1', status: 'Memohon' };
+  fail(g.api_save(adminToken, 'KAI4', b), /betulkan/);
+  fail(g.api_save(adminToken, 'KAI4', Object.assign({}, b, { no_kp: '12' })), /betulkan/);
+  const r = ok(g.api_save(adminToken, 'KAI4', Object.assign({}, b, { no_kp: '000101-10-1234' })));
+  assert.strictEqual(String(ok(g.api_list(adminToken, 'KAI4', {})).rows.find(x => x.id === r.id).no_kp).replace(/^'/, ''), '000101101234');
+  assert.ok(!JSON.stringify(dash(2026)).includes('000101101234')); // tidak didedahkan kepada awam
 });
 
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');

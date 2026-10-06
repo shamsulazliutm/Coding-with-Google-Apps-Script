@@ -59,7 +59,7 @@ window.__demoSeed = function () {
 
   // ---- KAI 4 GiGAUTM Ascend, KAI 5 F-SIP, KAI 6 UTM AI Start Up
   for (i = 1; i <= 14; i++) {
-    save('KAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar GiGA Contoh', i), no_matrik: 'G24' + p2(i) + '001', status: i <= 12 ? 'Mendaftar' : 'Memohon', tarikh_daftar: i <= 12 ? ymd(2 + (i % 4), 5 + i) : '', bootcamp_status: i <= 6 ? 'Tamat' : 'Sedang berjalan', gig_diperoleh: i <= 3 ? 'Ya' : 'Tidak' });
+    save('KAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar GiGA Contoh', i), no_kp: '0001' + p2(i) + '10' + ('0000' + i).slice(-4), no_matrik: 'G24' + p2(i) + '001', status: i <= 12 ? 'Mendaftar' : 'Memohon', tarikh_daftar: i <= 12 ? ymd(2 + (i % 4), 5 + i) : '', bootcamp_status: i <= 6 ? 'Tamat' : 'Sedang berjalan', gig_diperoleh: i <= 3 ? 'Ya' : 'Tidak' });
   }
   for (i = 1; i <= 2; i++) save('KAI5', { fakulti: fac(i), nama_pelajar: nm('Pelajar F-SIP Contoh', i), no_matrik: 'F24' + p2(i) + '001', status: 'Mendaftar', tarikh_daftar: ymd(5, 10 + i), nama_startup: 'Startup F-SIP ' + i, kelulusan_caq: 'Diluluskan' });
   [['FAI', 4], ['FC', 3], ['FKE', 2], ['MJIIT', 2]].forEach(function (f, fi) {

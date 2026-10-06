@@ -26,7 +26,7 @@ function buildHtml() {
   g.api_saveUser(admin, { emel: 'pic.fai@utm.my', nama: 'Siti Aminah', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1,KAI4,KAI6', aktif: 'Ya' });
   // Data contoh untuk dashboard (hanya dalam ujian, bukan dalam produk).
   g.api_save(admin, 'KAI1', { aliran: 'Technology Startup', jenis: 'Inkubator Fakulti', fakulti: 'FC', nama_inkubator: 'Launchpad FC', didaftarkan: 'Ya', tarikh_pendaftaran: '2026-03-01', status: 'Beroperasi', tarikh_beroperasi: '2026-04-01' });
-  for (let i = 0; i < 6; i++) g.api_save(admin, 'KAI4', { fakulti: i % 2 ? 'FAI' : 'FC', nama_pelajar: 'Pelajar ' + i, no_matrik: 'A24' + i, status: 'Mendaftar', tarikh_daftar: '2026-03-0' + (i + 1) });
+  for (let i = 0; i < 6; i++) g.api_save(admin, 'KAI4', { fakulti: i % 2 ? 'FAI' : 'FC', nama_pelajar: 'Pelajar ' + i, no_kp: '99010101123' + i, no_matrik: 'A24' + i, status: 'Mendaftar', tarikh_daftar: '2026-03-0' + (i + 1) });
   for (let i = 0; i < 7; i++) g.api_save(admin, 'KAI6', { fakulti: ['FAI', 'FC', 'FKE', 'MJIIT'][i % 4], nama_pelajar: 'AI ' + i, no_matrik: 'B' + i, status: 'Dalam latihan', tarikh_mula_latihan: '2026-05-04', nama_startup: 'Startup ' + (i % 3) });
   const m2 = g.api_list(admin, 'KAI2', {}).data.rows[0];
   g.api_save(admin, 'KAI2', Object.assign({}, m2, { peratus_siap: 60, status: 'Dalam proses' }));
@@ -175,6 +175,7 @@ function buildHtml() {
     await page.click('#savebtn');
     await page.waitForSelector('.invalid .err:has-text("wajib")');
     await page.fill('#f_nama_pelajar', 'Nur Aina <b>x</b>');
+    await page.fill('#f_no_kp', '990101-01-1234');
     await page.fill('#f_no_matrik', 'A24CS0001');
     await page.selectOption('#f_status', 'Mendaftar');
     await page.click('#savebtn');
