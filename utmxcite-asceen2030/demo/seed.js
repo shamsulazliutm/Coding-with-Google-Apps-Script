@@ -103,7 +103,7 @@ window.__demoSeed = function () {
       save('CKAI6', { tempoh: ym(m), inkubator: inc, penyewa: 'Penyewa Contoh ' + (k + 1), jumlah_rm: 600 + k * 150, status_bayaran: late ? 'Belum dibayar' : 'Dibayar', tarikh_bayar: late ? '' : ymd(m, 7) });
     });
     biz.forEach(function (b, k) {
-      save('CKAI7', { fakulti: fac(k), tempoh: ym(m), nama_perniagaan: b, jenis_pendapatan: k % 2 ? 'Perkhidmatan / Gig' : 'Jualan produk', pendapatan_rm: 700 + m * 130 + k * (k === 3 ? 1100 : 220) });
+      save('CKAI7', { fakulti: fac(k), tempoh: ym(m), nama_perniagaan: b, no_kp: '0401' + p2(k + 1) + '100' + ('000' + k).slice(-3), jenis_pendapatan: k % 2 ? 'Perkhidmatan / Gig' : 'Jualan produk', pendapatan_rm: 700 + m * 130 + k * (k === 3 ? 1100 : 220) });
     });
   }
 

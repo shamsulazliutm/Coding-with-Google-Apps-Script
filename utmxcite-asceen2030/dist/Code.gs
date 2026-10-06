@@ -564,11 +564,13 @@ var KPIS = [
     listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
     statusField: 'jenis_pendapatan',
     rules: [],
+    validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
       F_('tempoh', 'Bulan', 'month', { required: true }),
       F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text'),
       F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
       F_('jenis_pendapatan', 'Jenis pendapatan', 'select', { required: true, options: ['Jualan produk', 'Perkhidmatan / Gig', 'Geran / Pembiayaan', 'Lain-lain'] }),
@@ -2085,13 +2087,13 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
 /**
  * Ukuran Pekerjaan Premium Tier 1: peratus usahawan pelajar yang PURATA pendapatan sebulan (jumlah pendapatan dibahagi
  * bilangan bulan dilaporkan dalam tahun itu) melebihi ambang RM4,000, daripada semua usahawan yang melaporkan pendapatan (CKAI 7).
- * Seorang usahawan dikenal pasti melalui no. matrik; jika tiada, melalui nama perniagaan dan fakulti.
+ * Seorang usahawan dikenal pasti melalui no. KP; jika tiada, no. matrik; jika tiada, nama perniagaan dan fakulti.
  */
 function premiumShare_(rows, year) {
   var people = {};
   rows.forEach(function (r) {
     if (yearOf_(r.tempoh) !== year) return;
-    var key = String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
+    var key = String(r.no_kp || '').replace(/^'/, '').trim().toLowerCase() || String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
     if (key === '|') return;
     var p = people[key] || (people[key] = { sum: 0, months: {} });
     p.sum += num_(r.pendapatan_rm); p.months[r.tempoh] = 1;

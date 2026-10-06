@@ -418,13 +418,16 @@ test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
   assert.match(c.title, /Sistem Syarikat Universiti/);
 });
 test('CKAI 7: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan disahkan', () => {
-  const r = { nama_perniagaan: 'Kedai A', jenis_pendapatan: 'Jualan produk' };
+  const r = { nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234', jenis_pendapatan: 'Jualan produk' };
   ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', tempoh: '2026-03', pendapatan_rm: 1500.5 }, r)));
   ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', tempoh: '2026-04', pendapatan_rm: 2000 }, r)));
-  ok(g.api_save(ckaiPicFc, 'CKAI7', Object.assign({ fakulti: 'FC', tempoh: '2026-04', pendapatan_rm: 499.5, nama_perniagaan: 'Gig B', jenis_pendapatan: 'Perkhidmatan / Gig' })));
+  ok(g.api_save(ckaiPicFc, 'CKAI7', Object.assign({ fakulti: 'FC', tempoh: '2026-04', pendapatan_rm: 499.5, nama_perniagaan: 'Gig B', no_kp: '000202-02-2222', jenis_pendapatan: 'Perkhidmatan / Gig' })));
   ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FC', tempoh: '2027-01', pendapatan_rm: 100 }, r)));
   ['2026-13', '2026-00', '26-03', '2026-3', 'bukan-bulan'].forEach(b => fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', tempoh: b, pendapatan_rm: 1 }, r)), /betulkan/));
   fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', tempoh: '2026-05', pendapatan_rm: -5 }, r)), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', tempoh: '2026-05', pendapatan_rm: 1, no_kp: '' })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', tempoh: '2026-05', pendapatan_rm: 1, no_kp: '12' })), /betulkan/);
+  assert.ok(ok(g.api_list(ckaiPic, 'CKAI7', {})).rows.every(x => String(x.no_kp).replace(/^'/, '') === '990101011234'));
   const c = card(dash(2026), 'CKAI7');
   assert.strictEqual(c.value, 4000); assert.strictEqual(c.format, 'rm');
   assert.strictEqual(c.secondary[0].value, 2); // dua perniagaan unik
@@ -905,13 +908,13 @@ test('setup() menamakan semula lajur kolej_fakulti kepada lokasi dengan data dik
 });
 
 test('Ukuran Pekerjaan Premium Tier 1: purata pendapatan sebulan > RM4,000 dibahagi semua usahawan yang melaporkan (CKAI 7)', () => {
-  const rec = (n, m, rm, mt) => ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', tempoh: m, nama_perniagaan: n, no_matrik: mt || '', jenis_pendapatan: 'Jualan produk', pendapatan_rm: rm }));
+  const rec = (n, m, rm, kp) => ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', tempoh: m, nama_perniagaan: n, no_kp: kp, jenis_pendapatan: 'Jualan produk', pendapatan_rm: rm }));
   assert.deepStrictEqual(JSON.parse(JSON.stringify({ t: dash(2029).premium.total, p: dash(2029).premium.pct })), { t: 0, p: 0 }); // tiada data: 0%
-  rec('Niaga A', '2029-01', 5000, 'M1'); rec('Niaga A', '2029-02', 3500, 'M1');   // purata 4250 > 4000: premium
-  rec('Niaga B', '2029-01', 2000, 'M2');                                            // 2000: bukan
-  rec('Niaga C', '2029-01', 4000, 'M3');                                            // tepat 4000: bukan (mesti lebih)
-  rec('Niaga D', '2029-03', 9000);                                                  // tanpa no. matrik: guna nama perniagaan
-  rec('Niaga A', '2030-01', 100, 'M1');                                             // tahun lain tidak dikira
+  rec('Niaga A', '2029-01', 5000, '000000000001'); rec('Niaga A', '2029-02', 3500, '000000000001');   // purata 4250 > 4000: premium
+  rec('Niaga B', '2029-01', 2000, '000000000002');                                            // 2000: bukan
+  rec('Niaga C', '2029-01', 4000, '000000000003');                                            // tepat 4000: bukan (mesti lebih)
+  rec('Niaga D', '2029-03', 9000, '000000000004');
+  rec('Niaga A', '2030-01', 100, '000000000001');                                             // tahun lain tidak dikira
   const p = dash(2029).premium;
   assert.strictEqual(p.total, 4); assert.strictEqual(p.premium, 2); assert.strictEqual(p.pct, 50);
   assert.strictEqual(p.thresholdRm, 4000); assert.strictEqual(p.targetPct, 40); assert.strictEqual(p.targetYear, 2030); assert.strictEqual(p.pctOfTarget, 125);

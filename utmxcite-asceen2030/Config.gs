@@ -563,11 +563,13 @@ var KPIS = [
     listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
     statusField: 'jenis_pendapatan',
     rules: [],
+    validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
       F_('tempoh', 'Bulan', 'month', { required: true }),
       F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text'),
       F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
       F_('jenis_pendapatan', 'Jenis pendapatan', 'select', { required: true, options: ['Jualan produk', 'Perkhidmatan / Gig', 'Geran / Pembiayaan', 'Lain-lain'] }),

@@ -253,6 +253,7 @@ function buildHtml() {
     await page.selectOption('#f_fakulti', 'FC');
     await page.fill('#f_tempoh', '2026-05');
     await page.fill('#f_nama_perniagaan', 'Kedai E2E');
+    await page.fill('#f_no_kp', '990101-01-1234');
     await page.selectOption('#f_jenis_pendapatan', 'Jualan produk');
     await page.fill('#f_pendapatan_rm', '1500.5');
     await page.screenshot({ path: path.join(out, '8-borang-ckai4.png'), fullPage: true });
