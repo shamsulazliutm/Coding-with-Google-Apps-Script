@@ -59,7 +59,6 @@
       '<li><b>PIC Fakulti AI:</b> sidebar hanya menunjukkan KPI yang dibenarkan. Buka <i>CKAI 1 Profiling</i> dan tambah satu profil (cuba persetujuan PDPA = Tidak).</li>' +
       '<li><b>Daftar program (CKAI 2/3):</b> tambah program Selesai dan lihat medan wajib (tarikh, tempat, penyertaan, kos, pendapatan).</li>' +
       '<li><b>Anugerah (CKAI 9):</b> tambah beberapa pelajar, muat naik sijil PDF, kemudian muat turun semula.</li>' +
-      '<li><b>Inovasi pelajar (CKAI 8):</b> tapis "Status peningkatan = Calon peningkatan" untuk melihat projek yang boleh dibawa ke peringkat lebih tinggi.</li>' +
       '<li><b>Sekatan akses:</b> PIC tidak boleh membuka CKAI 4 / 5 / 6 atau data fakulti lain.</li>' +
       '<li><b>Admin:</b> tukar ke Admin. Tunjukkan Urus Pengguna, Sasaran (isi sasaran CKAI) dan Log Audit.</li>' +
       '<li><b>Kembali ke dashboard awam:</b> angka dikemas kini serta-merta; tiada nama atau data peribadi dipaparkan.</li></ol>' +

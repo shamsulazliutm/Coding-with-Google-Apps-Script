@@ -32,9 +32,9 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     const h = await page.evaluate(() => sha256Hex_('abc'));
     assert.strictEqual(h, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
   });
-  await step('dashboard awam dengan data contoh: 16 kad dan nilai bukan sifar', async () => {
+  await step('dashboard awam dengan data contoh: 15 kad dan nilai bukan sifar', async () => {
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 16);
+    assert.strictEqual(await page.locator('.kcard').count(), 15);
     const t = await page.locator('.cont').innerText();
     assert.ok(/CKAI · PERINGKAT PUSAT/i.test(t));
     const vals = await page.locator('.kcard .v').allInnerTexts();
@@ -96,9 +96,9 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     const buf = require('fs').readFileSync(await dl.path());
     assert.ok(buf.slice(0, 5).toString() === '%PDF-', 'bukan PDF');
   });
-  await step('log masuk pantas sebagai Admin: 16 indikator dan menu Admin', async () => {
+  await step('log masuk pantas sebagai Admin: 15 indikator dan menu Admin', async () => {
     await quick('admin.demo@utm.my');
-    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 16);
+    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 15);
     assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 1);
     await goNav('Log Audit');
     await page.waitForSelector('td:has-text("TAMBAH")');

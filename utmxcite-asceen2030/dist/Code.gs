@@ -60,6 +60,9 @@ var FACULTY_SEED = [
 
 var YES_NO = ['Ya', 'Tidak'];
 
+/** KPI yang telah dikeluarkan: setup() membuang tab, baris sasaran dan akses pengguna yang berkaitan. */
+var RETIRED_KPIS = [{ id: 'CKAI8', sheet: 'CKAI8_Inovasi_Pelajar' }];
+
 var JENIS_PERNIAGAAN = ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Aksesori', 'Telefon Mudah Alih & Gajet', 'Komputer & Aksesori',
   'Kesihatan & Kecantikan', 'Permainan, Buku & Hobi', 'Penyemakan Bukti, Terjemahan & Penyuntingan', 'Reka Bentuk Grafik, Laman Web & Perkhidmatan Digital',
   'Pengangkutan', 'Pertanian', 'Pembinaan', 'Sukan & Luar', 'Percetakan 3D & Robotik', 'Lain-lain'];
@@ -575,46 +578,6 @@ var KPIS = [
     ]
   },
   {
-    id: 'CKAI8', prefix: 'IN', sheet: 'CKAI8_Inovasi_Pelajar', fungsi: 'pameran', group: 'Center', entry: 'faculty',
-    title: 'CKAI 8 · Bilangan inovasi pelajar yang dihasilkan', short: 'Inovasi Pelajar',
-    unit: 'inovasi menyertai pertandingan', measure: 'innovation', jenis: 'minimum',
-    // OD: projek inovasi pelajar yang TELAH menyertai pertandingan, sekurang-kurangnya peringkat Fakulti.
-    listColumns: ['id', 'tajuk_inovasi', 'fakulti', 'nama_pertandingan', 'peringkat', 'tarikh', 'pingat', 'status_peningkatan'],
-    statusField: 'peringkat', filter2: 'status_peningkatan',
-    rules: [
-      { when: { field: 'status_peningkatan', in: ['Calon peningkatan', 'Sedang disokong', 'Telah dibawa ke peringkat lebih tinggi'] }, require: ['peringkat_sasaran'] }
-    ],
-    fields: [
-      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Inovasi' }),
-      F_('tajuk_inovasi', 'Tajuk inovasi / projek', 'text', { required: true }),
-      F_('jenis_inovasi', 'Jenis inovasi', 'select', { required: true, options: ['Produk fizikal', 'Aplikasi / perisian', 'Perkhidmatan', 'Proses / kaedah', 'Model perniagaan', 'Lain-lain'] }),
-      F_('bidang', 'Bidang', 'select', { options: ['Kejuruteraan & Teknologi', 'Digital / AI', 'Sains & Kesihatan', 'Alam Bina & Kemampanan', 'Sosial & Pendidikan', 'Perniagaan & Keusahawanan', 'Lain-lain'] }),
-      F_('penerangan', 'Penerangan ringkas (masalah dan penyelesaian)', 'textarea', { full: true }),
-      F_('trl', 'Tahap kesediaan teknologi (TRL)', 'select', { options: ['TRL 1', 'TRL 2', 'TRL 3', 'TRL 4', 'TRL 5', 'TRL 6', 'TRL 7', 'TRL 8', 'TRL 9'] }),
-      F_('status_ip', 'Status harta intelek (IP)', 'select', { options: ['Tiada', 'Dalam proses permohonan', 'Didaftarkan (paten / hak cipta / reka bentuk)'] }),
-      F_('nama_pasukan', 'Nama pasukan', 'text', { sec: 'Pasukan' }),
-      F_('mentor', 'Nama mentor / penyelia', 'text', { required: true }),
-      F_('pelajar', 'Pelajar (nama dan no. matrik)', 'people', { required: true, full: true, kp: false }),
-      F_('status_penyertaan', 'Status penyertaan', 'select', { required: true, sec: 'Pertandingan', options: ['Akan menyertai', 'Telah menyertai'] }),
-      F_('nama_pertandingan', 'Nama pertandingan', 'text', { required: true }),
-      F_('penganjur_pertandingan', 'Penganjur pertandingan', 'text'),
-      F_('peringkat', 'Peringkat pertandingan', 'select', { required: true, options: ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'] }),
-      F_('tarikh', 'Tarikh pertandingan', 'date', { required: true }),
-      F_('lokasi', 'Tempat / negara', 'text'),
-      F_('pingat', 'Pingat / kedudukan (jika menang)', 'select', { sec: 'Anugerah (pilihan, jika menang)', options: ['Emas', 'Perak', 'Gangsa', 'Johan', 'Naib Johan', 'Tempat Ketiga', 'Anugerah Khas', 'Penghargaan / Pengiktirafan'] }),
-      F_('nama_anugerah', 'Nama anugerah', 'text'),
-      F_('nilai_hadiah_rm', 'Nilai hadiah / geran (RM)', 'number', { min: 0 }),
-      F_('sijil', 'Sijil (PDF, maksimum 5 MB)', 'file', { full: true }),
-      F_('status_peningkatan', 'Status peningkatan', 'select', { sec: 'Peningkatan ke peringkat lebih tinggi', options: ['Belum dinilai', 'Calon peningkatan', 'Sedang disokong', 'Telah dibawa ke peringkat lebih tinggi', 'Tidak diteruskan'] }),
-      F_('peringkat_sasaran', 'Peringkat sasaran seterusnya', 'select', { options: ['Universiti', 'Kebangsaan', 'Antarabangsa'] }),
-      F_('pertandingan_seterusnya', 'Pertandingan / program seterusnya', 'text'),
-      F_('tarikh_seterusnya', 'Tarikh seterusnya', 'date'),
-      F_('sokongan_diperlukan', 'Sokongan diperlukan (pembiayaan, mentor, IP, prototaip, dll.)', 'textarea', { full: true }),
-      F_('pautan_demo', 'Pautan video / demo / poster', 'url', { sec: 'Pengurusan' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
-    ]
-  },
-  {
     id: 'CKAI9', prefix: 'AN', sheet: 'CKAI9_Anugerah', fungsi: 'pameran', group: 'Center', entry: 'faculty',
     title: 'CKAI 9 · Anugerah & pengiktirafan inovasi dan keusahawanan', short: 'Anugerah & Pengiktirafan',
     unit: 'anugerah / pengiktirafan', measure: 'award', jenis: 'minimum',
@@ -684,7 +647,7 @@ function buildTargetSeed_() {
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
-  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9'].forEach(function (k) {
+  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI9'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
   });
   return rows;
@@ -986,6 +949,7 @@ function setup() {
   seedMilestones_(ss);
   backfillFileLinks_(ss);
   dropRetiredColumns_(ss);
+  removeRetiredKpis_(ss);
 
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
@@ -1204,6 +1168,40 @@ function renameColumns_(ss) {
       var i = hdr.indexOf(old);
       if (i >= 0 && hdr.indexOf(kpi.renamed[old]) < 0) { sh.getRange(1, i + 1).setValue(kpi.renamed[old]); audit_(null, 'LAJUR_DINAMA_SEMULA', kpi.id, '', old + ' -> ' + kpi.renamed[old]); }
     }
+  });
+}
+
+/** Buang KPI yang dikeluarkan (RETIRED_KPIS): tab data, baris sasaran dan kod akses pengguna. Data tab itu dipadam kekal. */
+function removeRetiredKpis_(ss) {
+  RETIRED_KPIS.forEach(function (rk) {
+    var done = [];
+    var sh = ss.getSheetByName(rk.sheet);
+    if (sh && ss.getSheets().length > 1) { ss.deleteSheet(sh); done.push('tab'); }
+
+    var tg = ss.getSheetByName(SHEETS.TARGETS);
+    if (tg && tg.getLastRow() > 1) {
+      var col = tg.getRange(1, 1, 1, tg.getLastColumn()).getValues()[0].map(String).indexOf('kpi');
+      if (col >= 0) {
+        var vals = tg.getRange(1, col + 1, tg.getLastRow(), 1).getValues(), n = 0;
+        for (var i = vals.length - 1; i >= 1; i--) { if (String(vals[i][0]) === rk.id) { tg.deleteRow(i + 1); n++; } }
+        if (n) done.push('sasaran');
+      }
+    }
+
+    var us = ss.getSheetByName(SHEETS.USERS);
+    if (us && us.getLastRow() > 1) {
+      var ucol = us.getRange(1, 1, 1, us.getLastColumn()).getValues()[0].map(String).indexOf('kpi_akses');
+      if (ucol >= 0) {
+        var range = us.getRange(2, ucol + 1, us.getLastRow() - 1, 1), uv = range.getValues(), changed = false;
+        for (var j = 0; j < uv.length; j++) {
+          var codes = String(uv[j][0]).replace(/^'/, '').split(',').map(function (c) { return c.trim(); }).filter(function (c) { return c; });
+          var kept = codes.filter(function (c) { return c.toUpperCase() !== rk.id; });
+          if (kept.length !== codes.length) { uv[j][0] = kept.join(','); changed = true; }
+        }
+        if (changed) { range.setValues(uv); done.push('akses'); }
+      }
+    }
+    if (done.length) audit_(null, 'KPI_DIKELUARKAN', rk.id, '', done.join(', '));
   });
 }
 
@@ -1910,32 +1908,6 @@ var MEASURES = {
         { label: 'Penyewa', value: distinctCount_(inYear, 'penyewa') }
       ],
       breakdown: [{ title: 'Sewaan diterima (RM) mengikut bulan', items: byMonth_(sumBy_(paid, function (r) { return r.tempoh; }, function (r) { return num_(r.jumlah_rm); })) }]
-    };
-  },
-
-  // CKAI 8: inovasi pelajar yang TELAH menyertai pertandingan (sekurang-kurangnya peringkat Fakulti) pada tahun itu.
-  innovation: function (kpi, rows, year) {
-    var done = rows.filter(function (r) { return r.status_penyertaan === 'Telah menyertai' && yearOf_(r.tarikh) === year; });
-    var order = ['Fakulti', 'Universiti', 'Kebangsaan', 'Antarabangsa'];
-    var students = 0;
-    done.forEach(function (r) { var p = parseJson_(r.pelajar, []); if (Array.isArray(p)) students += p.length; });
-    var pipeOrder = ['Belum dinilai', 'Calon peningkatan', 'Sedang disokong', 'Telah dibawa ke peringkat lebih tinggi', 'Tidak diteruskan'];
-    return {
-      value: done.length,
-      secondary: [
-        { label: 'Pelajar terlibat', value: students },
-        { label: 'Memenang anugerah / pingat', value: done.filter(function (r) { return !!r.pingat; }).length },
-        { label: 'Peringkat Universiti ke atas', value: done.filter(function (r) { return r.peringkat !== 'Fakulti'; }).length },
-        { label: 'Calon peningkatan / sedang disokong', value: done.filter(function (r) { return r.status_peningkatan === 'Calon peningkatan' || r.status_peningkatan === 'Sedang disokong'; }).length },
-        { label: 'Telah dibawa ke peringkat lebih tinggi', value: done.filter(function (r) { return r.status_peningkatan === 'Telah dibawa ke peringkat lebih tinggi'; }).length },
-        { label: 'Akan menyertai (dirancang)', value: rows.filter(function (r) { return r.status_penyertaan === 'Akan menyertai' && yearOf_(r.tarikh) === year; }).length }
-      ],
-      breakdown: [
-        { title: 'Mengikut peringkat pertandingan', items: countBy_(done, function (r) { return r.peringkat; }).sort(function (a, b) { return order.indexOf(a.label) - order.indexOf(b.label); }) },
-        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) },
-        { title: 'Mengikut jenis inovasi', items: sortDesc_(countBy_(done, function (r) { return r.jenis_inovasi; })) },
-        { title: 'Status peningkatan', items: countBy_(done, function (r) { return r.status_peningkatan || 'Belum dinilai'; }).sort(function (a, b) { return pipeOrder.indexOf(a.label) - pipeOrder.indexOf(b.label); }) }
-      ]
     };
   },
 
