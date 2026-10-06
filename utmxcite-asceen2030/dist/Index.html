@@ -470,7 +470,7 @@ label .req{color:var(--bad)}
       '<div class="seg" role="group" aria-label="Paparan dashboard"><button type="button" data-action="dview" data-view="level" class="' + (S.dashView === 'level' ? 'on' : '') + '" aria-pressed="' + (S.dashView === 'level') + '">Mengikut peringkat</button>' +
       '<button type="button" data-action="dview" data-view="fungsi" class="' + (S.dashView === 'fungsi' ? 'on' : '') + '" aria-pressed="' + (S.dashView === 'fungsi') + '">Mengikut fungsi</button></div>' +
       '<span class="grow sec2">Dikemas kini: ' + esc(String(d.generatedAt).replace('T', ' ')) + '</span></div>';
-    h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
+    h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + '</span><b>' + esc(d.ds.goal) + '</b>' +
       '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div>' +
       (d.premium ? '<div class="ds prem"><span>Ukuran Pekerjaan Premium Tier 1 · ' + d.year + '</span><b>' + d.premium.pct + '%</b>' +
         '<span>' + d.premium.premium + ' daripada ' + d.premium.total + ' usahawan melaporkan purata pendapatan sebulan melebihi RM' + String(d.premium.thresholdRm).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</span>' +

@@ -422,7 +422,7 @@ function computeDashboard_(year) {
   var meet = cards.filter(function (c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }).length;
   return {
     year: year, years: APP.YEARS, levels: LEVELS, functions: FUNCTIONS, generatedAt: nowIso_(),
-    ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)', owner: 'Pengarah UTMXCITE' },
+    ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)' },
     summary: { total: withTarget, meet: meet },
     premium: premiumShare_(readTable_('CKAI7_Pendapatan_Pelajar', typesFor_(getKpi_('CKAI7'))).rows, year),
     kpis: cards
