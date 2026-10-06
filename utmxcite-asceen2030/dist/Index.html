@@ -473,7 +473,7 @@ label .req{color:var(--bad)}
     h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
       '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div>' +
       (d.premium ? '<div class="ds prem"><span>Ukuran Pekerjaan Premium Tier 1 · ' + d.year + '</span><b>' + d.premium.pct + '%</b>' +
-        '<span>' + d.premium.premium + ' daripada ' + d.premium.total + ' usahawan melaporkan purata pendapatan sebulan melebihi RM' + String(d.premium.thresholdRm).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' (CKAI 7)</span>' +
+        '<span>' + d.premium.premium + ' daripada ' + d.premium.total + ' usahawan melaporkan purata pendapatan sebulan melebihi RM' + String(d.premium.thresholdRm).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</span>' +
         '<div class="pbar" title="' + d.premium.pctOfTarget + '% daripada sasaran"><i style="width:' + Math.min(100, d.premium.pctOfTarget) + '%"></i></div>' +
         '<span>Sasaran ' + d.premium.targetYear + ': ' + d.premium.targetPct + '%</span></div>' : '') + '</div>';
     function fnHead(f) { return '<div class="sub"><b>' + esc(fnLabel(f)) + '</b><span class="subms">' + esc(f.ms) + '</span></div>'; }
