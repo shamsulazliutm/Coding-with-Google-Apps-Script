@@ -139,12 +139,19 @@ function profilingValidate_(c, errors) {
   if (c.persetujuan === 'Tidak' && !errors.persetujuan) errors.persetujuan = 'Profiling hanya boleh didaftarkan dengan persetujuan pelajar (PDPA).';
 }
 
-function makerspaceValidate_(c, errors) {
+/** No. KP (12 digit, sengkang dibuang) atau no. pasport. */
+function icValidate_(c, errors) {
   var kp = String(c.no_kp || '').replace(/\s+/g, '').toUpperCase();
   if (kp && !errors.no_kp) {
     if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
     if (!/^[A-Z0-9-]{6,20}$/.test(kp)) errors.no_kp = 'No. KP / pasport tidak sah.'; else c.no_kp = kp;
   }
+}
+
+function ssuValidate_(c, errors) { icValidate_(c, errors); }
+
+function makerspaceValidate_(c, errors) {
+  icValidate_(c, errors);
   if (c.status_bayaran === 'Tiada Caj') c.bayaran_rm = 0;
   else if (c.status_bayaran && !errors.status_bayaran && (c.bayaran_rm === '' || c.bayaran_rm === undefined) && !errors.bayaran_rm) errors.bayaran_rm = 'Masukkan nilai bayaran (lalai RM5).';
   if (c.telefon && !errors.telefon && !/^[0-9+\-\s()]{7,20}$/.test(String(c.telefon))) errors.telefon = 'Nombor telefon tidak sah.';
@@ -464,9 +471,11 @@ var KPIS = [
     listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
     rules: [],
+    validate: ssuValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
