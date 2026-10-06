@@ -119,9 +119,11 @@ details.bd summary{cursor:pointer;color:var(--m);font-size:12.5px;font-weight:60
 .chk{list-style:none;margin:8px 0;padding:0}.chk li{padding:4px 0}.chk li[data-ok="0"]{color:#a4132f}.chk li[data-ok="1"]{color:#18703a}
 .panel h3{margin:12px 14px 0}.panel .acts{margin:10px 14px}.panel>p{margin:8px 14px 12px}
 .panel{background:#fff;border-radius:10px;box-shadow:0 1px 3px #0001;overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f0e7ea;text-align:left;padding:9px 12px;font-size:12px;color:var(--m);white-space:nowrap;position:sticky;top:0}
-td{padding:9px 12px;border-top:1px solid #eee;vertical-align:top}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#f0e7ea;text-align:left;padding:6px 8px;font-size:11.5px;color:var(--m);white-space:nowrap;position:sticky;top:0}
+td{padding:6px 8px;border-top:1px solid #eee;vertical-align:top}
+table.lst td{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.lst td.act,table.lst td.empty{max-width:none}
 td.act{white-space:nowrap;text-align:right}
 td.empty{text-align:center;color:var(--mut);padding:30px}
 .form{background:#fff;border-radius:10px;box-shadow:0 1px 3px #0001;padding:18px 20px}
@@ -869,24 +871,24 @@ var KPIS = [
     rules: [{ when: { field: 'peralatan', in: ['Lain-lain (Other)'] }, require: ['peralatan_lain'] }],
     validate: makerspaceValidate_,
     fields: [
-      F_('emel', 'E-mel (Email Address)', 'email', { required: true, sec: 'Pemohon' }),
-      F_('nama', 'Nama penuh (Full Name)', 'text', { required: true }),
-      F_('no_kp', 'No. kad pengenalan / no. pasport (Identity Card / Passport No.)', 'text', { required: true }),
-      F_('no_matrik', 'No. matrik staf / pelajar (Staff / Student Matric No.)', 'text', { required: true }),
-      F_('fakulti', 'Fakulti (Faculty)', 'faculty', { required: true }),
-      F_('kelas', 'Jabatan / unit / kelas (Department / Unit / Class)', 'text'),
-      F_('telefon', 'Nombor telefon (Phone Number)', 'text', { required: true }),
-      F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'select', { required: true, sec: 'Permohonan', options: ['3D Printer', 'Laser Cutter Machine', 'Peralatan Tangan (Tools)', 'Sewaan Ruang (Space Rental)', 'Lain-lain (Other)'] }),
-      F_('peralatan_lain', 'Nyatakan nama peralatan / jenis lain (Other, please specify)', 'text', { hint: 'Wajib jika memilih Lain-lain (Other).' }),
-      F_('tujuan', 'Tujuan permohonan (Purpose of Application)', 'textarea', { required: true, full: true }),
-      F_('bil_peserta', 'Bilangan peserta (Number of Participants)', 'number', { required: true, min: 1 }),
-      F_('tarikh_mula', 'Tarikh mula (Start Date)', 'date', { required: true, sec: 'Tarikh dan masa' }),
-      F_('tarikh_tamat', 'Tarikh tamat (End Date)', 'date', { required: true }),
-      F_('masa_mula', 'Masa mula (Start Time)', 'time', { required: true }),
-      F_('masa_tamat', 'Masa tamat (End Time)', 'time', { required: true }),
-      F_('status_bayaran', 'Bayaran caj perkhidmatan', 'select', { required: true, sec: 'Caj perkhidmatan', options: ['Bayar', 'Belum Dibayar', 'Tiada Caj'] }),
-      F_('bayaran_rm', 'Bayaran (RM)', 'number', { min: 0, def: 5, hint: 'Lalai RM5. Diset RM0 secara automatik jika "Tiada Caj".' }),
-      F_('borang', 'Muat naik borang permohonan (PDF, maksimum 5 MB)', 'file', { full: true, sec: 'Dokumen' })
+      F_('emel', 'E-mel', 'email', { required: true, sec: 'Pemohon' }),
+      F_('nama', 'Nama penuh', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
+      F_('no_matrik', 'No. matrik', 'text', { required: true }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true }),
+      F_('kelas', 'Jabatan / unit / kelas', 'text'),
+      F_('telefon', 'No. telefon', 'text', { required: true }),
+      F_('peralatan', 'Peralatan dipohon', 'select', { required: true, sec: 'Permohonan', options: ['3D Printer', 'Laser Cutter Machine', 'Peralatan Tangan (Tools)', 'Sewaan Ruang (Space Rental)', 'Lain-lain (Other)'] }),
+      F_('peralatan_lain', 'Nama peralatan lain', 'text', { hint: 'Wajib jika memilih Lain-lain (Other).' }),
+      F_('tujuan', 'Tujuan permohonan', 'textarea', { required: true, full: true }),
+      F_('bil_peserta', 'Bil. peserta', 'number', { required: true, min: 1 }),
+      F_('tarikh_mula', 'Tarikh mula', 'date', { required: true, sec: 'Tarikh dan masa' }),
+      F_('tarikh_tamat', 'Tarikh tamat', 'date', { required: true }),
+      F_('masa_mula', 'Masa mula', 'time', { required: true }),
+      F_('masa_tamat', 'Masa tamat', 'time', { required: true }),
+      F_('status_bayaran', 'Bayaran caj', 'select', { required: true, sec: 'Caj perkhidmatan', options: ['Bayar', 'Belum Dibayar', 'Tiada Caj'] }),
+      F_('bayaran_rm', 'Bayaran (RM)', 'number', { short: 'Bayaran RM', min: 0, def: 5, hint: 'Lalai RM5. Diset RM0 secara automatik jika "Tiada Caj".' }),
+      F_('borang', 'Borang permohonan (PDF)', 'file', { full: true, sec: 'Dokumen' })
     ]
   },
   {
@@ -3155,7 +3157,7 @@ window.__demoSeed = function () {
   }
 
   function fieldDef(k, key) { for (var i = 0; i < k.fields.length; i++) if (k.fields[i].key === key) return k.fields[i]; return null; }
-  function colLabel(k, key) { if (key === 'id') return 'ID'; var f = fieldDef(k, key); return f ? f.label : key; }
+  function colLabel(k, key) { if (key === 'id') return 'ID'; var f = fieldDef(k, key); return f ? (f.short || f.label.replace(/\s*\([^)]*\)/g, '')) : key; }
 
   function renderList(k) {
     var el = $('#content');
@@ -3171,10 +3173,10 @@ window.__demoSeed = function () {
         S.session.faculties.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (f.fakulti === x.kod ? ' selected' : '') + '>' + esc(x.kod) + '</option>'; }).join('') + '</select>' : '') +
       '<span class="grow"></span><button class="btn" data-action="new">＋ Rekod baharu</button></div>';
     if (!S.list) { el.innerHTML = h + '<p class="boot">Memuatkan…</p>'; loadList(k); return; }
-    h += '<div class="panel"><table><thead><tr>' + k.listColumns.map(function (c) { return '<th>' + esc(colLabel(k, c)) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
+    h += '<div class="panel"><table class="lst"><thead><tr>' + k.listColumns.map(function (c) { return '<th>' + esc(colLabel(k, c)) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
     if (!S.list.rows.length) h += '<tr><td class="empty" colspan="' + (k.listColumns.length + 1) + '">Tiada rekod.</td></tr>';
     S.list.rows.forEach(function (r) {
-      h += '<tr>' + k.listColumns.map(function (c) { return '<td>' + listCell(k, r, c) + '</td>'; }).join('') +
+      h += '<tr>' + k.listColumns.map(function (c) { var t = listCell(k, r, c); var plain = String(r[c] === undefined ? '' : r[c]); return '<td' + (plain.length > 18 && t.indexOf('<') < 0 ? ' title="' + esc(plain) + '"' : '') + '>' + t + '</td>'; }).join('') +
         '<td class="act"><button class="btn o sm" data-action="edit" data-id="' + esc(r.id) + '">Edit</button>' +
         (S.list.canDelete ? ' <button class="btn d sm" data-action="del" data-id="' + esc(r.id) + '">Padam</button>' : '') + '</td></tr>';
     });

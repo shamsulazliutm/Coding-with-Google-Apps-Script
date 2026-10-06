@@ -323,7 +323,7 @@
   }
 
   function fieldDef(k, key) { for (var i = 0; i < k.fields.length; i++) if (k.fields[i].key === key) return k.fields[i]; return null; }
-  function colLabel(k, key) { if (key === 'id') return 'ID'; var f = fieldDef(k, key); return f ? f.label : key; }
+  function colLabel(k, key) { if (key === 'id') return 'ID'; var f = fieldDef(k, key); return f ? (f.short || f.label.replace(/\s*\([^)]*\)/g, '')) : key; }
 
   function renderList(k) {
     var el = $('#content');
@@ -339,10 +339,10 @@
         S.session.faculties.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (f.fakulti === x.kod ? ' selected' : '') + '>' + esc(x.kod) + '</option>'; }).join('') + '</select>' : '') +
       '<span class="grow"></span><button class="btn" data-action="new">＋ Rekod baharu</button></div>';
     if (!S.list) { el.innerHTML = h + '<p class="boot">Memuatkan…</p>'; loadList(k); return; }
-    h += '<div class="panel"><table><thead><tr>' + k.listColumns.map(function (c) { return '<th>' + esc(colLabel(k, c)) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
+    h += '<div class="panel"><table class="lst"><thead><tr>' + k.listColumns.map(function (c) { return '<th>' + esc(colLabel(k, c)) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
     if (!S.list.rows.length) h += '<tr><td class="empty" colspan="' + (k.listColumns.length + 1) + '">Tiada rekod.</td></tr>';
     S.list.rows.forEach(function (r) {
-      h += '<tr>' + k.listColumns.map(function (c) { return '<td>' + listCell(k, r, c) + '</td>'; }).join('') +
+      h += '<tr>' + k.listColumns.map(function (c) { var t = listCell(k, r, c); var plain = String(r[c] === undefined ? '' : r[c]); return '<td' + (plain.length > 18 && t.indexOf('<') < 0 ? ' title="' + esc(plain) + '"' : '') + '>' + t + '</td>'; }).join('') +
         '<td class="act"><button class="btn o sm" data-action="edit" data-id="' + esc(r.id) + '">Edit</button>' +
         (S.list.canDelete ? ' <button class="btn d sm" data-action="del" data-id="' + esc(r.id) + '">Padam</button>' : '') + '</td></tr>';
     });
