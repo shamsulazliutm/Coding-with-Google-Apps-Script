@@ -492,8 +492,8 @@ var KPIS = [
       F_('nama', 'Nama penuh (Full Name)', 'text', { required: true }),
       F_('no_kp', 'No. kad pengenalan / no. pasport (Identity Card / Passport No.)', 'text', { required: true }),
       F_('no_matrik', 'No. matrik staf / pelajar (Staff / Student Matric No.)', 'text', { required: true }),
-      F_('fakulti', 'Fakulti / jabatan / unit (Faculty / Department / Unit)', 'faculty', { required: true }),
-      F_('kelas', 'Jabatan / unit / kelas (jika berkaitan)', 'text'),
+      F_('fakulti', 'Fakulti (Faculty)', 'faculty', { required: true }),
+      F_('kelas', 'Jabatan / unit / kelas (Department / Unit / Class)', 'text'),
       F_('telefon', 'Nombor telefon (Phone Number)', 'text', { required: true }),
       F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'select', { required: true, sec: 'Permohonan', options: ['3D Printer', 'Laser Cutter Machine', 'Peralatan Tangan (Tools)', 'Sewaan Ruang (Space Rental)', 'Lain-lain (Other)'] }),
       F_('peralatan_lain', 'Nyatakan nama peralatan / jenis lain (Other, please specify)', 'text', { hint: 'Wajib jika memilih Lain-lain (Other).' }),
@@ -1838,7 +1838,7 @@ var MEASURES = {
       ],
       breakdown: [
         { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },
-        { title: 'Penggunaan mengikut fakulti / unit', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) },
+        { title: 'Penggunaan mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) },
         { title: 'Peralatan paling banyak dipohon', items: sortDesc_(countBy_(inYear, function (r) { return String(r.peralatan || '').trim(); })).slice(0, 5) }
       ]
     };
