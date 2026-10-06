@@ -14,6 +14,9 @@ var APP = {
   SESSION_TTL: 21600,      // 6 jam (had maksimum CacheService)
   DASH_CACHE_TTL: 120,
   YEARS: [2026, 2027, 2028, 2029, 2030],
+  PREMIUM_INCOME_RM: 4000, // ambang purata pendapatan sebulan bagi "pekerjaan premium" (lebih daripada)
+  PREMIUM_TARGET_PCT: 40,  // sasaran 40% menjelang 2030
+  PREMIUM_TARGET_YEAR: 2030,
   ALLOWED_EMAIL_DOMAINS: [] // contoh: ['utm.my']; kosong = semua domain
 };
 
@@ -2079,6 +2082,35 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
   return card;
 }
 
+/**
+ * Ukuran Pekerjaan Premium Tier 1: peratus usahawan pelajar yang PURATA pendapatan sebulan (jumlah pendapatan dibahagi
+ * bilangan bulan dilaporkan dalam tahun itu) melebihi ambang RM4,000, daripada semua usahawan yang melaporkan pendapatan (CKAI 7).
+ * Seorang usahawan dikenal pasti melalui no. matrik; jika tiada, melalui nama perniagaan dan fakulti.
+ */
+function premiumShare_(rows, year) {
+  var people = {};
+  rows.forEach(function (r) {
+    if (yearOf_(r.tempoh) !== year) return;
+    var key = String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
+    if (key === '|') return;
+    var p = people[key] || (people[key] = { sum: 0, months: {} });
+    p.sum += num_(r.pendapatan_rm); p.months[r.tempoh] = 1;
+  });
+  var total = 0, premium = 0;
+  Object.keys(people).forEach(function (k) {
+    var n = Object.keys(people[k].months).length;
+    if (!n) return;
+    total++;
+    if (people[k].sum / n > APP.PREMIUM_INCOME_RM) premium++;
+  });
+  var pct = total ? round1_(premium * 100 / total) : 0;
+  return {
+    label: 'Pekerjaan Premium Tier 1', premium: premium, total: total, pct: pct,
+    thresholdRm: APP.PREMIUM_INCOME_RM, targetPct: APP.PREMIUM_TARGET_PCT, targetYear: APP.PREMIUM_TARGET_YEAR,
+    pctOfTarget: Math.round(pct * 100 / APP.PREMIUM_TARGET_PCT)
+  };
+}
+
 function computeDashboard_(year) {
   var targets = readTargets_();
   var ctx = { faculties: listFaculties_() };
@@ -2092,6 +2124,7 @@ function computeDashboard_(year) {
     year: year, years: APP.YEARS, levels: LEVELS, functions: FUNCTIONS, generatedAt: nowIso_(),
     ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)', owner: 'Pengarah UTMXCITE' },
     summary: { total: withTarget, meet: meet },
+    premium: premiumShare_(readTable_('CKAI7_Pendapatan_Pelajar', typesFor_(getKpi_('CKAI7'))).rows, year),
     kpis: cards
   };
 }

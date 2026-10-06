@@ -80,6 +80,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);outline-of
 .ds{background:var(--m);color:#fff;border-radius:10px;padding:12px 16px;flex:1;min-width:240px}
 .ds b{color:var(--gold);font-size:22px;display:block}
 .ds span{font-size:12px;opacity:.85}
+.ds.prem{background:#2b1a1f}
+.pbar{height:6px;background:#ffffff33;border-radius:3px;margin:6px 0;overflow:hidden}.pbar i{display:block;height:100%;background:var(--gold)}
 .grp{font-size:13px;font-weight:700;color:var(--m);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.8px}
 .seg{display:inline-flex;border:1px solid #cdbfc3;border-radius:6px;overflow:hidden;background:#fff}
 .seg button{border:0;background:#fff;padding:7px 12px;font-size:12.5px;cursor:pointer;color:var(--m)}
@@ -469,7 +471,11 @@ label .req{color:var(--bad)}
       '<button type="button" data-action="dview" data-view="fungsi" class="' + (S.dashView === 'fungsi' ? 'on' : '') + '" aria-pressed="' + (S.dashView === 'fungsi') + '">Mengikut fungsi</button></div>' +
       '<span class="grow sec2">Dikemas kini: ' + esc(String(d.generatedAt).replace('T', ' ')) + '</span></div>';
     h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
-      '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div></div>';
+      '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div>' +
+      (d.premium ? '<div class="ds prem"><span>Ukuran Pekerjaan Premium Tier 1 · ' + d.year + '</span><b>' + d.premium.pct + '%</b>' +
+        '<span>' + d.premium.premium + ' daripada ' + d.premium.total + ' usahawan melaporkan purata pendapatan sebulan melebihi RM' + String(d.premium.thresholdRm).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' (CKAI 7)</span>' +
+        '<div class="pbar" title="' + d.premium.pctOfTarget + '% daripada sasaran"><i style="width:' + Math.min(100, d.premium.pctOfTarget) + '%"></i></div>' +
+        '<span>Sasaran ' + d.premium.targetYear + ': ' + d.premium.targetPct + '%</span></div>' : '') + '</div>';
     function fnHead(f) { return '<div class="sub"><b>' + esc(fnLabel(f)) + '</b><span class="subms">' + esc(f.ms) + '</span></div>'; }
     if (S.dashView === 'fungsi') {
       // Paparan mengikut enam fungsi UTMXCITE: setiap fungsi menunjukkan semua indikator berkaitan (KAI, DKAI dan CKAI).

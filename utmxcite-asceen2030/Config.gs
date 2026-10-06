@@ -13,6 +13,9 @@ var APP = {
   SESSION_TTL: 21600,      // 6 jam (had maksimum CacheService)
   DASH_CACHE_TTL: 120,
   YEARS: [2026, 2027, 2028, 2029, 2030],
+  PREMIUM_INCOME_RM: 4000, // ambang purata pendapatan sebulan bagi "pekerjaan premium" (lebih daripada)
+  PREMIUM_TARGET_PCT: 40,  // sasaran 40% menjelang 2030
+  PREMIUM_TARGET_YEAR: 2030,
   ALLOWED_EMAIL_DOMAINS: [] // contoh: ['utm.my']; kosong = semua domain
 };
 

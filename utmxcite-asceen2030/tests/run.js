@@ -904,5 +904,20 @@ test('setup() menamakan semula lajur kolej_fakulti kepada lokasi dengan data dik
   assert.ok(ok(g.api_list(adminToken, 'KAI3', {})).rows.every(r => r.lokasi));
 });
 
+test('Ukuran Pekerjaan Premium Tier 1: purata pendapatan sebulan > RM4,000 dibahagi semua usahawan yang melaporkan (CKAI 7)', () => {
+  const rec = (n, m, rm, mt) => ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', tempoh: m, nama_perniagaan: n, no_matrik: mt || '', jenis_pendapatan: 'Jualan produk', pendapatan_rm: rm }));
+  assert.deepStrictEqual(JSON.parse(JSON.stringify({ t: dash(2029).premium.total, p: dash(2029).premium.pct })), { t: 0, p: 0 }); // tiada data: 0%
+  rec('Niaga A', '2029-01', 5000, 'M1'); rec('Niaga A', '2029-02', 3500, 'M1');   // purata 4250 > 4000: premium
+  rec('Niaga B', '2029-01', 2000, 'M2');                                            // 2000: bukan
+  rec('Niaga C', '2029-01', 4000, 'M3');                                            // tepat 4000: bukan (mesti lebih)
+  rec('Niaga D', '2029-03', 9000);                                                  // tanpa no. matrik: guna nama perniagaan
+  rec('Niaga A', '2030-01', 100, 'M1');                                             // tahun lain tidak dikira
+  const p = dash(2029).premium;
+  assert.strictEqual(p.total, 4); assert.strictEqual(p.premium, 2); assert.strictEqual(p.pct, 50);
+  assert.strictEqual(p.thresholdRm, 4000); assert.strictEqual(p.targetPct, 40); assert.strictEqual(p.targetYear, 2030); assert.strictEqual(p.pctOfTarget, 125);
+  const q = dash(2030).premium; assert.strictEqual(q.total, 1); assert.strictEqual(q.premium, 0);
+  assert.ok(!JSON.stringify(dash(2029)).includes('Niaga A')); // tiada nama perniagaan pada paparan awam
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);

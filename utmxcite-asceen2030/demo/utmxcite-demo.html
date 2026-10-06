@@ -79,6 +79,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);outline-of
 .ds{background:var(--m);color:#fff;border-radius:10px;padding:12px 16px;flex:1;min-width:240px}
 .ds b{color:var(--gold);font-size:22px;display:block}
 .ds span{font-size:12px;opacity:.85}
+.ds.prem{background:#2b1a1f}
+.pbar{height:6px;background:#ffffff33;border-radius:3px;margin:6px 0;overflow:hidden}.pbar i{display:block;height:100%;background:var(--gold)}
 .grp{font-size:13px;font-weight:700;color:var(--m);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.8px}
 .seg{display:inline-flex;border:1px solid #cdbfc3;border-radius:6px;overflow:hidden;background:#fff}
 .seg button{border:0;background:#fff;padding:7px 12px;font-size:12.5px;cursor:pointer;color:var(--m)}
@@ -398,6 +400,9 @@ var APP = {
   SESSION_TTL: 21600,      // 6 jam (had maksimum CacheService)
   DASH_CACHE_TTL: 120,
   YEARS: [2026, 2027, 2028, 2029, 2030],
+  PREMIUM_INCOME_RM: 4000, // ambang purata pendapatan sebulan bagi "pekerjaan premium" (lebih daripada)
+  PREMIUM_TARGET_PCT: 40,  // sasaran 40% menjelang 2030
+  PREMIUM_TARGET_YEAR: 2030,
   ALLOWED_EMAIL_DOMAINS: [] // contoh: ['utm.my']; kosong = semua domain
 };
 
@@ -2463,6 +2468,35 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
   return card;
 }
 
+/**
+ * Ukuran Pekerjaan Premium Tier 1: peratus usahawan pelajar yang PURATA pendapatan sebulan (jumlah pendapatan dibahagi
+ * bilangan bulan dilaporkan dalam tahun itu) melebihi ambang RM4,000, daripada semua usahawan yang melaporkan pendapatan (CKAI 7).
+ * Seorang usahawan dikenal pasti melalui no. matrik; jika tiada, melalui nama perniagaan dan fakulti.
+ */
+function premiumShare_(rows, year) {
+  var people = {};
+  rows.forEach(function (r) {
+    if (yearOf_(r.tempoh) !== year) return;
+    var key = String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
+    if (key === '|') return;
+    var p = people[key] || (people[key] = { sum: 0, months: {} });
+    p.sum += num_(r.pendapatan_rm); p.months[r.tempoh] = 1;
+  });
+  var total = 0, premium = 0;
+  Object.keys(people).forEach(function (k) {
+    var n = Object.keys(people[k].months).length;
+    if (!n) return;
+    total++;
+    if (people[k].sum / n > APP.PREMIUM_INCOME_RM) premium++;
+  });
+  var pct = total ? round1_(premium * 100 / total) : 0;
+  return {
+    label: 'Pekerjaan Premium Tier 1', premium: premium, total: total, pct: pct,
+    thresholdRm: APP.PREMIUM_INCOME_RM, targetPct: APP.PREMIUM_TARGET_PCT, targetYear: APP.PREMIUM_TARGET_YEAR,
+    pctOfTarget: Math.round(pct * 100 / APP.PREMIUM_TARGET_PCT)
+  };
+}
+
 function computeDashboard_(year) {
   var targets = readTargets_();
   var ctx = { faculties: listFaculties_() };
@@ -2476,6 +2510,7 @@ function computeDashboard_(year) {
     year: year, years: APP.YEARS, levels: LEVELS, functions: FUNCTIONS, generatedAt: nowIso_(),
     ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)', owner: 'Pengarah UTMXCITE' },
     summary: { total: withTarget, meet: meet },
+    premium: premiumShare_(readTable_('CKAI7_Pendapatan_Pelajar', typesFor_(getKpi_('CKAI7'))).rows, year),
     kpis: cards
   };
 }
@@ -2850,7 +2885,7 @@ window.__demoSeed = function () {
       save('CKAI6', { tempoh: ym(m), inkubator: inc, penyewa: 'Penyewa Contoh ' + (k + 1), jumlah_rm: 600 + k * 150, status_bayaran: late ? 'Belum dibayar' : 'Dibayar', tarikh_bayar: late ? '' : ymd(m, 7) });
     });
     biz.forEach(function (b, k) {
-      save('CKAI7', { fakulti: fac(k), tempoh: ym(m), nama_perniagaan: b, jenis_pendapatan: k % 2 ? 'Perkhidmatan / Gig' : 'Jualan produk', pendapatan_rm: 700 + m * 130 + k * 220 });
+      save('CKAI7', { fakulti: fac(k), tempoh: ym(m), nama_perniagaan: b, jenis_pendapatan: k % 2 ? 'Perkhidmatan / Gig' : 'Jualan produk', pendapatan_rm: 700 + m * 130 + k * (k === 3 ? 1100 : 220) });
     });
   }
 
@@ -3166,7 +3201,11 @@ window.__demoSeed = function () {
       '<button type="button" data-action="dview" data-view="fungsi" class="' + (S.dashView === 'fungsi' ? 'on' : '') + '" aria-pressed="' + (S.dashView === 'fungsi') + '">Mengikut fungsi</button></div>' +
       '<span class="grow sec2">Dikemas kini: ' + esc(String(d.generatedAt).replace('T', ' ')) + '</span></div>';
     h += '<div class="sumrow"><div class="ds"><span>' + esc(d.ds.label) + ' · Pemilik: ' + esc(d.ds.owner) + '</span><b>' + esc(d.ds.goal) + '</b>' +
-      '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div></div>';
+      '<span>' + d.summary.meet + ' daripada ' + d.summary.total + ' KPI mencapai sasaran ' + d.year + '</span></div>' +
+      (d.premium ? '<div class="ds prem"><span>Ukuran Pekerjaan Premium Tier 1 · ' + d.year + '</span><b>' + d.premium.pct + '%</b>' +
+        '<span>' + d.premium.premium + ' daripada ' + d.premium.total + ' usahawan melaporkan purata pendapatan sebulan melebihi RM' + String(d.premium.thresholdRm).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' (CKAI 7)</span>' +
+        '<div class="pbar" title="' + d.premium.pctOfTarget + '% daripada sasaran"><i style="width:' + Math.min(100, d.premium.pctOfTarget) + '%"></i></div>' +
+        '<span>Sasaran ' + d.premium.targetYear + ': ' + d.premium.targetPct + '%</span></div>' : '') + '</div>';
     function fnHead(f) { return '<div class="sub"><b>' + esc(fnLabel(f)) + '</b><span class="subms">' + esc(f.ms) + '</span></div>'; }
     if (S.dashView === 'fungsi') {
       // Paparan mengikut enam fungsi UTMXCITE: setiap fungsi menunjukkan semua indikator berkaitan (KAI, DKAI dan CKAI).
