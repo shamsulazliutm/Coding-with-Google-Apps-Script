@@ -482,8 +482,8 @@ var KPIS = [
       F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
-      F_('status_ssm', 'Status pendaftaran SSM', 'yesno', { required: true }),
-      F_('sijil_ssm', 'Sijil SSM (PDF)', 'file', { full: true, hint: 'Lampirkan jika sudah berdaftar dengan SSM. PDF sahaja, maksimum 5 MB.' }),
+      F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
+      F_('sijil_ssm', 'Sijil SSM (PDF)', 'file', { full: true, hint: 'Lampirkan jika status SSM Berdaftar. PDF sahaja, maksimum 5 MB.' }),
       F_('status', 'Status', 'select', { required: true, options: ['Berdaftar', 'Tidak aktif'] }),
       F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
