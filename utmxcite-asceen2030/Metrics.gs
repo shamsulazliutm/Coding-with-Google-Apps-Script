@@ -189,7 +189,9 @@ var MEASURES = {
       value: inYear.length,
       secondary: [
         { label: 'Pengguna unik', value: Object.keys(users).length },
-        { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') }
+        { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') },
+        { label: 'Caj diterima', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Bayar'; }), 'bayaran_rm')) },
+        { label: 'Caj belum dibayar', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Belum Dibayar'; }), 'bayaran_rm')) }
       ],
       breakdown: [
         { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },

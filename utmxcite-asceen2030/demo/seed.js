@@ -96,7 +96,7 @@ window.__demoSeed = function () {
     var eq = ['3D Printer', 'Laser Cutter Machine', 'Peralatan Tangan (Tools)', 'Sewaan Ruang (Space Rental)', 'Lain-lain (Other)'];
     for (var u = 0; u < 3 + (m % 3); u++) {
       save('CKAI5', { emel: 'pengguna' + u + '@graduate.utm.my', nama: nm('Pemohon Makerspace', m * 5 + u), no_kp: '9901' + p2(m) + '0' + u + '1234', no_matrik: 'A2' + p2(m) + 'EC' + p2(u + 1) + '1', fakulti: fac(m + u), kelas: 'Tahun ' + (1 + u % 4), telefon: '012-34567' + p2(m + u),
-        peralatan: eq[(m + u) % eq.length], peralatan_lain: eq[(m + u) % eq.length] === 'Lain-lain (Other)' ? 'Vacuum Former' : '', tujuan: 'Membangunkan prototaip projek contoh', bil_peserta: 1 + (u % 4), tarikh_mula: ymd(m, 3 + u * 5), tarikh_tamat: ymd(m, 3 + u * 5), masa_mula: '09:00', masa_tamat: '12:30' });
+        peralatan: eq[(m + u) % eq.length], peralatan_lain: eq[(m + u) % eq.length] === 'Lain-lain (Other)' ? 'Vacuum Former' : '', tujuan: 'Membangunkan prototaip projek contoh', bil_peserta: 1 + (u % 4), tarikh_mula: ymd(m, 3 + u * 5), tarikh_tamat: ymd(m, 3 + u * 5), masa_mula: '09:00', masa_tamat: '12:30', status_bayaran: u === 2 ? 'Tiada Caj' : (m === lastM ? 'Belum Dibayar' : 'Bayar'), bayaran_rm: 5 });
     }
     ['Launchpad FAI', 'Launchpad FC', 'Co-working UTMXCITE A'].forEach(function (inc, k) {
       var late = m === lastM && k === 2;

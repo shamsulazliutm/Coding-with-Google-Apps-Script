@@ -422,7 +422,7 @@ test('CKAI 7: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan
 });
 test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () => {
   const mk = (extra) => Object.assign({ emel: 'Ali@utm.my', nama: 'Ali Bin Abu', no_kp: '990101-01-1234', no_matrik: 'A23EC0001', fakulti: 'FC', kelas: 'Tahun 2', telefon: '012-3456789',
-    peralatan: '3D Printer', tujuan: 'Prototaip projek', bil_peserta: 3, tarikh_mula: '2026-01-10', tarikh_tamat: '2026-01-10', masa_mula: '09:00', masa_tamat: '12:00' }, extra);
+    peralatan: '3D Printer', tujuan: 'Prototaip projek', bil_peserta: 3, tarikh_mula: '2026-01-10', tarikh_tamat: '2026-01-10', masa_mula: '09:00', masa_tamat: '12:00', status_bayaran: 'Bayar', bayaran_rm: 5 }, extra);
   const r1 = ok(g.api_save(adminToken, 'CKAI5', mk({})));
   ok(g.api_save(adminToken, 'CKAI5', mk({ nama: 'Siti', no_matrik: 'A23EC0002', peralatan: 'Laser Cutter Machine', bil_peserta: 2, tarikh_mula: '2026-02-03', tarikh_tamat: '2026-02-04' })));
   ok(g.api_save(adminToken, 'CKAI5', mk({ tarikh_mula: '2026-02-20', tarikh_tamat: '2026-02-20' })));
@@ -434,6 +434,13 @@ test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () 
   deepEq(c.breakdown[0].items.map(i => i.label + ':' + i.value), ['2026-01:1', '2026-02:2']);
   assert.strictEqual(c.breakdown[1].items[0].label, 'FC');
   assert.strictEqual(c.breakdown[2].items[0].label, '3D Printer');
+  assert.strictEqual(c.secondary[2].value, 'RM 15.00'); assert.strictEqual(c.secondary[3].value, 'RM 0.00');
+  const free = ok(g.api_save(adminToken, 'CKAI5', mk({ status_bayaran: 'Tiada Caj', bayaran_rm: 5, tarikh_mula: '2026-03-03', tarikh_tamat: '2026-03-03' })));
+  assert.strictEqual(ok(g.api_list(adminToken, 'CKAI5', {})).rows.find(r => r.id === free.id).bayaran_rm, 0); // Tiada Caj = RM0
+  ok(g.api_save(adminToken, 'CKAI5', mk({ status_bayaran: 'Belum Dibayar', tarikh_mula: '2026-03-04', tarikh_tamat: '2026-03-04' })));
+  assert.strictEqual(card(dash(2026), 'CKAI5').secondary[3].value, 'RM 5.00');
+  fail(g.api_save(adminToken, 'CKAI5', mk({ status_bayaran: 'Bayar', bayaran_rm: '' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI5', mk({ status_bayaran: 'Percuma' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ fakulti: 'XYZ' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ peralatan: 'Mesin Rekaan' })), /betulkan/); // bukan pilihan
   fail(g.api_save(adminToken, 'CKAI5', mk({ peralatan: 'Lain-lain (Other)' })), /betulkan/); // mesti dinamakan

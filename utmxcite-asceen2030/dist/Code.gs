@@ -145,6 +145,8 @@ function makerspaceValidate_(c, errors) {
     if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
     if (!/^[A-Z0-9-]{6,20}$/.test(kp)) errors.no_kp = 'No. KP / pasport tidak sah.'; else c.no_kp = kp;
   }
+  if (c.status_bayaran === 'Tiada Caj') c.bayaran_rm = 0;
+  else if (c.status_bayaran && !errors.status_bayaran && (c.bayaran_rm === '' || c.bayaran_rm === undefined) && !errors.bayaran_rm) errors.bayaran_rm = 'Masukkan nilai bayaran (lalai RM5).';
   if (c.telefon && !errors.telefon && !/^[0-9+\-\s()]{7,20}$/.test(String(c.telefon))) errors.telefon = 'Nombor telefon tidak sah.';
   if (c.tarikh_mula && c.tarikh_tamat && !errors.tarikh_tamat && c.tarikh_tamat < c.tarikh_mula) errors.tarikh_tamat = 'Tarikh tamat mesti pada atau selepas tarikh mula.';
   if (c.tarikh_mula && c.tarikh_mula === c.tarikh_tamat && c.masa_mula && c.masa_tamat && !errors.masa_tamat && c.masa_tamat <= c.masa_mula) errors.masa_tamat = 'Masa tamat mesti selepas masa mula.';
@@ -481,8 +483,8 @@ var KPIS = [
     id: 'CKAI5', prefix: 'MS', sheet: 'CKAI5_Makerspace', fungsi: 'startup', group: 'Center', entry: 'admin',
     title: 'CKAI 5 · Bilangan penggunaan Makerspace (pembangunan prototaip)', short: 'Penggunaan Makerspace',
     unit: 'permohonan penggunaan', measure: 'makerspace', jenis: 'minimum',
-    listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'borang'],
-    statusField: null,
+    listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'status_bayaran', 'bayaran_rm', 'borang'],
+    statusField: 'status_bayaran',
     rules: [{ when: { field: 'peralatan', in: ['Lain-lain (Other)'] }, require: ['peralatan_lain'] }],
     validate: makerspaceValidate_,
     fields: [
@@ -501,6 +503,8 @@ var KPIS = [
       F_('tarikh_tamat', 'Tarikh tamat (End Date)', 'date', { required: true }),
       F_('masa_mula', 'Masa mula (Start Time)', 'time', { required: true }),
       F_('masa_tamat', 'Masa tamat (End Time)', 'time', { required: true }),
+      F_('status_bayaran', 'Bayaran caj perkhidmatan', 'select', { required: true, sec: 'Caj perkhidmatan', options: ['Bayar', 'Belum Dibayar', 'Tiada Caj'] }),
+      F_('bayaran_rm', 'Bayaran (RM)', 'number', { min: 0, def: 5, hint: 'Lalai RM5. Diset RM0 secara automatik jika "Tiada Caj".' }),
       F_('borang', 'Muat naik borang permohonan (PDF, maksimum 5 MB)', 'file', { full: true, sec: 'Dokumen' })
     ]
   },
@@ -1789,7 +1793,9 @@ var MEASURES = {
       value: inYear.length,
       secondary: [
         { label: 'Pengguna unik', value: Object.keys(users).length },
-        { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') }
+        { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') },
+        { label: 'Caj diterima', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Bayar'; }), 'bayaran_rm')) },
+        { label: 'Caj belum dibayar', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Belum Dibayar'; }), 'bayaran_rm')) }
       ],
       breakdown: [
         { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },
