@@ -276,7 +276,7 @@ var KPIS = [
   },
   {
     id: 'KAI4', prefix: 'G4', sheet: 'KAI4_GiGA', group: 'Transform', fungsi: 'latihan', entry: 'faculty',
-    title: 'KAI 4 · Premium Gig Academy (GiGAUTM Ascend)', short: 'GiGAUTM Ascend',
+    title: 'KAI 4 · Premium Gig Academy (GiGA)', short: 'GiGA',
     unit: 'pelajar mendaftar', measure: 'kai4', jenis: 'minimum', perFacultyTarget: 2,
     listColumns: ['id', 'nama_pelajar', 'no_matrik', 'fakulti', 'status', 'bootcamp_status'],
     statusField: 'status',

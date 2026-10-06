@@ -165,7 +165,7 @@ function buildHtml() {
     assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 3);
     assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 0);
     assert.strictEqual(await page.locator('.nav', { hasText: 'Makerspace' }).count(), 0);
-    await goNav('GiGAUTM');
+    await goNav('GiGA');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#kform');
@@ -232,7 +232,7 @@ function buildHtml() {
     assert.strictEqual(await page.locator('li[data-ok="0"]').count(), 0);
   });
   await step('Admin memadam rekod melalui dialog pengesahan (batal tidak memadam)', async () => {
-    await goNav('GiGAUTM');
+    await goNav('GiGA');
     await page.waitForSelector('table');
     const before = await page.locator('tbody tr').count();
     await page.click('button:has-text("Padam") >> nth=0');

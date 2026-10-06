@@ -37,7 +37,7 @@ KAI 6 terhad kepada **FAI, FC, FKE, MJIIT**. Semua semakan akses dibuat di pelay
 | KAI 1 UTM Launchpad | ≥ 20 setiap tahun (2026-2030) | Inkubator **aktif**: didaftarkan dan dalam pembangunan / beroperasi, termasuk yang sedia ada |
 | KAI 2 Makerspace | 60% (2026), 80% (2027), 100% (2028) | Kemajuan milestone berpemberat (4 fasa, 25% setiap satu secara lalai) |
 | KAI 3 Ruang Perniagaan | 25 (2026), +5 setahun hingga 45 (2030) | Ruang **ditawarkan** kepada pelajar untuk disewa (kumulatif); disewa dan kadar penggunaan ialah maklumat sokongan |
-| KAI 4 GiGAUTM Ascend | ≥ 20 setahun | Pelajar mendaftar pada tahun itu (cadangan 2 setiap fakulti) |
+| KAI 4 GiGA | ≥ 20 setahun | Pelajar mendaftar pada tahun itu (cadangan 2 setiap fakulti) |
 | KAI 5 F-SIP | ≥ 4 setahun | Pelajar mendaftar pada tahun itu |
 | KAI 6 UTM AI Start Up | ≥ 20 setahun, minimum 5 setiap fakulti | Pelajar dilatih membentuk startup AI pada tahun itu |
 | DKAI 1 Pelan Keusahawanan | 100% pada 2026 (sekali sahaja) | Milestone berpemberat (bengkel pra-pelan 50%, kelulusan JKE HEPA/JPU 50%) |
