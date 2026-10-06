@@ -151,6 +151,14 @@ function icValidate_(c, errors) {
   }
 }
 
+function kai3Validate_(c, errors) {
+  var kp = String(c.penyewa_kp || '').replace(/\s+/g, '').toUpperCase();
+  if (kp && !errors.penyewa_kp) {
+    if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
+    if (!/^[A-Z0-9-]{6,20}$/.test(kp)) errors.penyewa_kp = 'No. KP / pasport tidak sah.'; else c.penyewa_kp = kp;
+  }
+}
+
 function ssuValidate_(c, errors) {
   icValidate_(c, errors);
   var partners = parseJson_(c.rakan_kongsi, []) || [];
@@ -243,9 +251,10 @@ var KPIS = [
     statusField: 'status',
     rules: [
       { when: { field: 'status', in: ['Ditawarkan', 'Disewa'] }, require: ['tarikh_ditawarkan'] },
-      { when: { field: 'status', in: ['Disewa'] }, require: ['penyewa_nama', 'tarikh_mula_sewa'] },
+      { when: { field: 'status', in: ['Disewa'] }, require: ['penyewa_nama', 'penyewa_kp', 'tarikh_mula_sewa'] },
       { when: { field: 'diwartakan', in: ['Ya'] }, require: ['tarikh_diwartakan'] }
     ],
+    validate: kai3Validate_,
     fields: [
       F_('kod_lot', 'Nama / kod lot', 'text', { required: true, sec: 'Identiti' }),
       F_('jenis_ruang', 'Jenis ruang', 'select', { required: true, options: ['Student Mall', 'Student Union Building (SUB)', 'Kiosk / Lot Mudah Alih', 'Bilik / Ruang Perniagaan', 'Lain-lain'] }),
@@ -260,7 +269,7 @@ var KPIS = [
       F_('tarikh_diwartakan', 'Tarikh diwartakan', 'date'),
       F_('penyewa_nama', 'Nama pelajar / pasukan penyewa', 'text', { sec: 'Sewaan' }),
       F_('penyewa_matrik', 'No. matrik penyewa', 'text'),
-      F_('penyewa_fakulti', 'Fakulti penyewa', 'faculty'),
+      F_('penyewa_kp', 'No. KP penyewa', 'text', { hint: 'No. KP 12 digit (tanpa sengkang) atau no. pasport. Wajib jika status Disewa.' }),
       F_('nama_perniagaan', 'Nama perniagaan', 'text'),
       F_('tarikh_mula_sewa', 'Tarikh mula sewa', 'date'),
       F_('tarikh_tamat_sewa', 'Tarikh tamat sewa', 'date'),

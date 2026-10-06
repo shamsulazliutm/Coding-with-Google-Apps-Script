@@ -260,7 +260,7 @@ test('KAI2: siap 100% = Selesai; amaran jika pemberat bukan 100%', () => {
 test('KAI3: ruang ditawarkan (kumulatif) + penggunaan; sasaran +5 setahun', () => {
   const mk = (kod, st, extra) => ok(g.api_save(adminToken, 'KAI3', Object.assign({ kod_lot: kod, jenis_ruang: 'Kiosk / Lot Mudah Alih', kolej_fakulti: 'KTDI', status: st }, extra)));
   mk('L-1', 'Ditawarkan', { tarikh_ditawarkan: '2026-03-01' });
-  mk('L-2', 'Disewa', { tarikh_ditawarkan: '2026-03-01', penyewa_nama: 'Ali', tarikh_mula_sewa: '2026-04-01' });
+  mk('L-2', 'Disewa', { tarikh_ditawarkan: '2026-03-01', penyewa_nama: 'Ali', penyewa_kp: '990101-01-1234', tarikh_mula_sewa: '2026-04-01' });
   mk('L-3', 'Siap', {});
   mk('L-4', 'Ditawarkan', { tarikh_ditawarkan: '2027-02-01' });
   fail(g.api_save(adminToken, 'KAI3', { kod_lot: 'L-5', jenis_ruang: 'Student Mall', kolej_fakulti: 'X', status: 'Disewa', tarikh_ditawarkan: '2026-01-01' }), /betulkan/);
@@ -866,6 +866,14 @@ test('KAI 4 (GiGA): No. KP / pasport wajib, disahkan dan sengkang dibuang', () =
   const r = ok(g.api_save(adminToken, 'KAI4', Object.assign({}, b, { no_kp: '000101-10-1234' })));
   assert.strictEqual(String(ok(g.api_list(adminToken, 'KAI4', {})).rows.find(x => x.id === r.id).no_kp).replace(/^'/, ''), '000101101234');
   assert.ok(!JSON.stringify(dash(2026)).includes('000101101234')); // tidak didedahkan kepada awam
+});
+
+test('KAI 3: No. KP penyewa wajib bila Disewa, disahkan dan sengkang dibuang', () => {
+  const b = { kod_lot: 'L-KP', jenis_ruang: 'Student Mall', kolej_fakulti: 'KTDI', status: 'Disewa', tarikh_ditawarkan: '2025-01-01', penyewa_nama: 'Ali', tarikh_mula_sewa: '2025-02-01' };
+  fail(g.api_save(adminToken, 'KAI3', b), /betulkan/);
+  fail(g.api_save(adminToken, 'KAI3', Object.assign({}, b, { penyewa_kp: '12' })), /betulkan/);
+  const r = ok(g.api_save(adminToken, 'KAI3', Object.assign({}, b, { penyewa_kp: '000101-10-1234' })));
+  assert.strictEqual(String(ok(g.api_list(adminToken, 'KAI3', {})).rows.find(x => x.id === r.id).penyewa_kp).replace(/^'/, ''), '000101101234');
 });
 
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
