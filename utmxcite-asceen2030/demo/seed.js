@@ -22,11 +22,11 @@ window.__demoSeed = function () {
   function fac(i) { return FAC[i % FAC.length]; }
 
   // ---- Pengguna contoh
-  saveUser_(tok, { emel: 'pic.fai@utm.my', nama: 'PIC Fakulti AI (contoh)', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI9', aktif: 'Ya' });
-  saveUser_(tok, { emel: 'pic.fc@utm.my', nama: 'PIC Fakulti Komputeran (contoh)', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI9', aktif: 'Ya' });
+  saveUser_(tok, { emel: 'pic.fai@utm.my', nama: 'PIC Fakulti AI (contoh)', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI8,CKAI9', aktif: 'Ya' });
+  saveUser_(tok, { emel: 'pic.fc@utm.my', nama: 'PIC Fakulti Komputeran (contoh)', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI8,CKAI9', aktif: 'Ya' });
 
   // ---- Sasaran CKAI (contoh sahaja; sasaran sebenar akan ditetapkan oleh UTMXCITE)
-  [['CKAI1', 120], ['CKAI2', 10], ['CKAI3', 8], ['CKAI4', 30], ['CKAI5', 600], ['CKAI6', 60000], ['CKAI7', 120000], ['CKAI9', 8]].forEach(function (t) {
+  [['CKAI1', 120], ['CKAI2', 10], ['CKAI3', 8], ['CKAI4', 30], ['CKAI5', 600], ['CKAI6', 60000], ['CKAI7', 120000], ['CKAI8', 12], ['CKAI9', 8]].forEach(function (t) {
     saveTarget_(tok, { kpi: t[0], tahun: Y, sasaran: t[1], catatan: 'Sasaran CONTOH untuk demo' });
   });
 
@@ -106,6 +106,20 @@ window.__demoSeed = function () {
       save('CKAI7', { fakulti: fac(k), tempoh: ym(m), nama_perniagaan: b, jenis_pendapatan: k % 2 ? 'Perkhidmatan / Gig' : 'Jualan produk', pendapatan_rm: 700 + m * 130 + k * 220 });
     });
   }
+
+  // ---- CKAI 8 Inovasi pelajar (dengan penjejakan peningkatan)
+  var pipe = ['Calon peningkatan', 'Sedang disokong', 'Telah dibawa ke peringkat lebih tinggi', 'Belum dinilai', 'Calon peningkatan', 'Belum dinilai', 'Tidak diteruskan', 'Calon peningkatan', 'Belum dinilai'];
+  var levels = ['Fakulti', 'Universiti', 'Kebangsaan', 'Fakulti', 'Fakulti', 'Universiti', 'Fakulti', 'Kebangsaan', 'Fakulti'];
+  for (i = 0; i < 9; i++) {
+    var inn = { fakulti: fac(i), tajuk_inovasi: 'Inovasi Contoh ' + (i + 1), jenis_inovasi: ['Produk fizikal', 'Aplikasi / perisian', 'Perkhidmatan'][i % 3], bidang: 'Digital / AI', trl: 'TRL ' + (3 + (i % 4)), mentor: 'Dr. Mentor Contoh ' + (1 + (i % 3)),
+      pelajar: [{ nama: nm('Pelajar Inovasi Contoh', i * 2 + 1), matrik: 'N24' + p2(i + 1) + '01' }, { nama: nm('Pelajar Inovasi Contoh', i * 2 + 2), matrik: 'N24' + p2(i + 1) + '02' }],
+      status_penyertaan: 'Telah menyertai', nama_pertandingan: 'Pertandingan ' + levels[i] + ' Contoh', peringkat: levels[i], tarikh: ymd(2 + (i % 6), 12),
+      status_peningkatan: pipe[i], peringkat_sasaran: pipe[i] === 'Belum dinilai' || pipe[i] === 'Tidak diteruskan' ? '' : (levels[i] === 'Fakulti' ? 'Universiti' : 'Kebangsaan') };
+    if (i === 1 || i === 2 || i === 7) { inn.pingat = i === 2 ? 'Emas' : 'Perak'; inn.nama_anugerah = 'Anugerah Inovasi Contoh'; }
+    if (i === 0 || i === 7) inn.sokongan_diperlukan = 'Pembiayaan prototaip dan mentor industri (contoh)';
+    save('CKAI8', inn);
+  }
+  save('CKAI8', { fakulti: 'FAI', tajuk_inovasi: 'Inovasi Akan Datang', jenis_inovasi: 'Produk fizikal', mentor: 'Dr. Mentor Contoh 1', pelajar: [{ nama: 'Pelajar Inovasi Contoh 99', matrik: 'N2499' + '01' }], status_penyertaan: 'Akan menyertai', nama_pertandingan: 'Pertandingan Kebangsaan Contoh', peringkat: 'Kebangsaan', tarikh: ymd(12, 1) });
 
   // ---- CKAI 9 Anugerah (satu rekod dengan sijil PDF contoh)
   var pdfBody = 'BT /F1 18 Tf 40 100 Td (SIJIL CONTOH - DATA DEMO) Tj ET';

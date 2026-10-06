@@ -35,7 +35,6 @@ function setup() {
   seedMilestones_(ss);
   backfillFileLinks_(ss);
   dropRetiredColumns_(ss);
-  removeRetiredKpis_(ss);
 
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) { try { ss.deleteSheet(first); } catch (e) { /* abaikan */ } }
@@ -254,39 +253,5 @@ function renameColumns_(ss) {
       var i = hdr.indexOf(old);
       if (i >= 0 && hdr.indexOf(kpi.renamed[old]) < 0) { sh.getRange(1, i + 1).setValue(kpi.renamed[old]); audit_(null, 'LAJUR_DINAMA_SEMULA', kpi.id, '', old + ' -> ' + kpi.renamed[old]); }
     }
-  });
-}
-
-/** Buang KPI yang dikeluarkan (RETIRED_KPIS): tab data, baris sasaran dan kod akses pengguna. Data tab itu dipadam kekal. */
-function removeRetiredKpis_(ss) {
-  RETIRED_KPIS.forEach(function (rk) {
-    var done = [];
-    var sh = ss.getSheetByName(rk.sheet);
-    if (sh && ss.getSheets().length > 1) { ss.deleteSheet(sh); done.push('tab'); }
-
-    var tg = ss.getSheetByName(SHEETS.TARGETS);
-    if (tg && tg.getLastRow() > 1) {
-      var col = tg.getRange(1, 1, 1, tg.getLastColumn()).getValues()[0].map(String).indexOf('kpi');
-      if (col >= 0) {
-        var vals = tg.getRange(1, col + 1, tg.getLastRow(), 1).getValues(), n = 0;
-        for (var i = vals.length - 1; i >= 1; i--) { if (String(vals[i][0]) === rk.id) { tg.deleteRow(i + 1); n++; } }
-        if (n) done.push('sasaran');
-      }
-    }
-
-    var us = ss.getSheetByName(SHEETS.USERS);
-    if (us && us.getLastRow() > 1) {
-      var ucol = us.getRange(1, 1, 1, us.getLastColumn()).getValues()[0].map(String).indexOf('kpi_akses');
-      if (ucol >= 0) {
-        var range = us.getRange(2, ucol + 1, us.getLastRow() - 1, 1), uv = range.getValues(), changed = false;
-        for (var j = 0; j < uv.length; j++) {
-          var codes = String(uv[j][0]).replace(/^'/, '').split(',').map(function (c) { return c.trim(); }).filter(function (c) { return c; });
-          var kept = codes.filter(function (c) { return c.toUpperCase() !== rk.id; });
-          if (kept.length !== codes.length) { uv[j][0] = kept.join(','); changed = true; }
-        }
-        if (changed) { range.setValues(uv); done.push('akses'); }
-      }
-    }
-    if (done.length) audit_(null, 'KPI_DIKELUARKAN', rk.id, '', done.join(', '));
   });
 }
