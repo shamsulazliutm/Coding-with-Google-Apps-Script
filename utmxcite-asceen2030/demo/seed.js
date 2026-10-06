@@ -87,7 +87,7 @@ window.__demoSeed = function () {
 
   // ---- CKAI 4 SSU
   for (i = 1; i <= 14; i++) {
-    save('CKAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar SSU Contoh', i), no_kp: '0201' + p2(i) + '10' + ('0000' + i).slice(-4), no_matrik: 'S24' + p2(i) + '001', nama_syarikat: 'Syarikat Contoh ' + p2(i) + ' Sdn Bhd', jenis_perniagaan: ['Teknologi', 'F&B', 'Fesyen', 'Perkhidmatan', 'Pendidikan'][i % 5], no_ssu: 'SSU-' + Y + '-' + ('000' + i).slice(-4), tarikh_daftar: ymd(1 + (i % lastM), 8 + (i % 15)), status: i === 14 ? 'Tidak aktif' : 'Berdaftar' });
+    save('CKAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar SSU Contoh', i), no_kp: '0201' + p2(i) + '10' + ('0000' + i).slice(-4), no_matrik: 'S24' + p2(i) + '001', nama_syarikat: 'Syarikat Contoh ' + p2(i) + ' Sdn Bhd', jenis_perniagaan: ['Teknologi', 'F&B', 'Fesyen', 'Perkhidmatan', 'Pendidikan'][i % 5], status_ssm: i % 3 === 0 ? 'Tidak' : 'Ya', no_ssu: 'SSU-' + Y + '-' + ('000' + i).slice(-4), tarikh_daftar: ymd(1 + (i % lastM), 8 + (i % 15)), status: i === 14 ? 'Tidak aktif' : 'Berdaftar' });
   }
 
   // ---- CKAI 5 Makerspace, CKAI 6 Sewaan inkubator, CKAI 7 Pendapatan

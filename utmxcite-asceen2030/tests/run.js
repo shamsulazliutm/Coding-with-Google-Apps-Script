@@ -394,11 +394,14 @@ test('Program: laporan PDF pilihan; boleh dimuat naik dan dimuat turun oleh PIC 
   fail(g.api_uploadFile(ckaiPic, 'CKAI4', 'lampiran', { name: 'x.pdf', data: pdf }), /Akses ditolak/);
 });
 test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
-  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Berdaftar' };
+  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', status_ssm: 'Ya', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Berdaftar' };
   ok(g.api_save(adminToken, 'CKAI4', r));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat B', no_ssu: 'SSU-002', status: 'Tidak aktif' })));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat C', no_ssu: 'SSU-003', tarikh_daftar: '2027-01-01' })));
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: '' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', status_ssm: '' })), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', status_ssm: 'Mungkin' })), /betulkan/);
+  ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-010', status_ssm: 'Tidak', tarikh_daftar: '2025-06-01' })));
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', no_kp: '' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', no_kp: '12' })), /betulkan/);
   assert.strictEqual(ok(g.api_list(adminToken, 'CKAI4', {})).rows[0].no_kp.replace(/^'/, ''), '990101011234'); // sengkang dibuang

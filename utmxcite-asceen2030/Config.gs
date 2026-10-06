@@ -482,6 +482,7 @@ var KPIS = [
       F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
+      F_('status_ssm', 'Status pendaftaran SSM', 'yesno', { required: true }),
       F_('status', 'Status', 'select', { required: true, options: ['Berdaftar', 'Tidak aktif'] }),
       F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
