@@ -422,19 +422,20 @@ var AUDIT_COLS = ['masa', 'emel', 'tindakan', 'kpi', 'rekod_id', 'ringkasan'];
  * 'UTMXCITE' disertakan supaya Admin boleh merekod entiti pusat (contoh: ruang co-working).
  */
 var FACULTY_SEED = [
+  ['AHIBS', 'Azman Hashim International Business School'],
+  ['FABU', 'Fakulti Alam Bina dan Ukur'],
   ['FAI', 'Fakulti Kecerdasan Buatan'],
   ['FC', 'Fakulti Komputeran'],
-  ['FKE', 'Fakulti Kejuruteraan Elektrik'],
-  ['MJIIT', 'Malaysia-Japan International Institute of Technology'],
+  ['FEST', 'Fakulti Sains Pendidikan dan Teknologi'],
   ['FKA', 'Fakulti Kejuruteraan Awam'],
+  ['FKE', 'Fakulti Kejuruteraan Elektrik'],
   ['FKM', 'Fakulti Kejuruteraan Mekanikal'],
   ['FKT', 'Fakulti Kejuruteraan Kimia dan Tenaga'],
-  ['FS', 'Fakulti Sains'],
-  ['FAB', 'Fakulti Alam Bina dan Ukur'],
   ['FM', 'Fakulti Pengurusan'],
-  ['FSSH', 'Fakulti Sains Sosial dan Kemanusiaan'],
-  ['FP', 'Fakulti Pendidikan'],
-  ['FBME', 'Fakulti Kejuruteraan Biosains dan Perubatan'],
+  ['FS', 'Fakulti Sains'],
+  ['FSSK', 'Fakulti Sains Sosial dan Kemanusiaan'],
+  ['MJIIT', 'Malaysia-Japan International Institute of Technology'],
+  ['SPACE', 'UTM School of Professional and Continuing Education (UTMSPACE)'],
   ['UTMXCITE', 'UTMXCITE (Pusat)']
 ];
 
@@ -870,7 +871,8 @@ var KPIS = [
       F_('nama', 'Nama penuh (Full Name)', 'text', { required: true }),
       F_('no_kp', 'No. kad pengenalan / no. pasport (Identity Card / Passport No.)', 'text', { required: true }),
       F_('no_matrik', 'No. matrik staf / pelajar (Staff / Student Matric No.)', 'text', { required: true }),
-      F_('fakulti_unit', 'Fakulti / jabatan / unit / kelas (Faculty / Department / Unit / Class)', 'text', { required: true }),
+      F_('fakulti', 'Fakulti / jabatan / unit (Faculty / Department / Unit)', 'faculty', { required: true }),
+      F_('kelas', 'Jabatan / unit / kelas (jika berkaitan)', 'text'),
       F_('telefon', 'Nombor telefon (Phone Number)', 'text', { required: true }),
       F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'text', { required: true, full: true, sec: 'Permohonan' }),
       F_('tujuan', 'Tujuan permohonan (Purpose of Application)', 'textarea', { required: true, full: true }),
@@ -2171,6 +2173,7 @@ var MEASURES = {
       ],
       breakdown: [
         { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },
+        { title: 'Penggunaan mengikut fakulti / unit', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) },
         { title: 'Peralatan paling banyak dipohon', items: sortDesc_(countBy_(inYear, function (r) { return String(r.peralatan || '').trim(); })).slice(0, 5) }
       ]
     };
@@ -2736,7 +2739,7 @@ window.__demoSeed = function () {
   for (var m = 1; m <= lastM; m++) {
     var eq = ['3D Printer', 'Laser Cutter', 'CNC Router', 'Soldering Station', 'Vinyl Cutter'];
     for (var u = 0; u < 3 + (m % 3); u++) {
-      save('CKAI5', { emel: 'pengguna' + u + '@graduate.utm.my', nama: nm('Pemohon Makerspace', m * 5 + u), no_kp: '9901' + p2(m) + '0' + u + '1234', no_matrik: 'A2' + p2(m) + 'EC' + p2(u + 1) + '1', fakulti_unit: fac(m + u) + ' / Tahun ' + (1 + u % 4), telefon: '012-34567' + p2(m + u),
+      save('CKAI5', { emel: 'pengguna' + u + '@graduate.utm.my', nama: nm('Pemohon Makerspace', m * 5 + u), no_kp: '9901' + p2(m) + '0' + u + '1234', no_matrik: 'A2' + p2(m) + 'EC' + p2(u + 1) + '1', fakulti: fac(m + u), kelas: 'Tahun ' + (1 + u % 4), telefon: '012-34567' + p2(m + u),
         peralatan: eq[(m + u) % eq.length], tujuan: 'Membangunkan prototaip projek contoh', bil_peserta: 1 + (u % 4), tarikh_mula: ymd(m, 3 + u * 5), tarikh_tamat: ymd(m, 3 + u * 5), masa_mula: '09:00', masa_tamat: '12:30' });
     }
     ['Launchpad FAI', 'Launchpad FC', 'Co-working UTMXCITE A'].forEach(function (inc, k) {

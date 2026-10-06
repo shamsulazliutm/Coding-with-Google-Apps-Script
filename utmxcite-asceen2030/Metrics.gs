@@ -193,6 +193,7 @@ var MEASURES = {
       ],
       breakdown: [
         { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },
+        { title: 'Penggunaan mengikut fakulti / unit', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) },
         { title: 'Peralatan paling banyak dipohon', items: sortDesc_(countBy_(inYear, function (r) { return String(r.peralatan || '').trim(); })).slice(0, 5) }
       ]
     };

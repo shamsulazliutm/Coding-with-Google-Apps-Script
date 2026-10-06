@@ -421,7 +421,7 @@ test('CKAI 7: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan
   const byFak = c.breakdown[0].items; assert.strictEqual(byFak[0].label, 'FKE'); assert.strictEqual(byFak[0].value, 3500.5);
 });
 test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () => {
-  const mk = (extra) => Object.assign({ emel: 'Ali@utm.my', nama: 'Ali Bin Abu', no_kp: '990101-01-1234', no_matrik: 'A23EC0001', fakulti_unit: 'FC / Tahun 2', telefon: '012-3456789',
+  const mk = (extra) => Object.assign({ emel: 'Ali@utm.my', nama: 'Ali Bin Abu', no_kp: '990101-01-1234', no_matrik: 'A23EC0001', fakulti: 'FC', kelas: 'Tahun 2', telefon: '012-3456789',
     peralatan: '3D Printer', tujuan: 'Prototaip projek', bil_peserta: 3, tarikh_mula: '2026-01-10', tarikh_tamat: '2026-01-10', masa_mula: '09:00', masa_tamat: '12:00' }, extra);
   const r1 = ok(g.api_save(adminToken, 'CKAI5', mk({})));
   ok(g.api_save(adminToken, 'CKAI5', mk({ nama: 'Siti', no_matrik: 'A23EC0002', peralatan: 'Laser Cutter', bil_peserta: 2, tarikh_mula: '2026-02-03', tarikh_tamat: '2026-02-04' })));
@@ -432,7 +432,9 @@ test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () 
   const c = card(dash(2026), 'CKAI5');
   assert.strictEqual(c.value, 3); assert.strictEqual(c.secondary[0].value, 2); assert.strictEqual(c.secondary[1].value, 8);
   deepEq(c.breakdown[0].items.map(i => i.label + ':' + i.value), ['2026-01:1', '2026-02:2']);
-  assert.strictEqual(c.breakdown[1].items[0].label, '3D Printer');
+  assert.strictEqual(c.breakdown[1].items[0].label, 'FC');
+  assert.strictEqual(c.breakdown[2].items[0].label, '3D Printer');
+  fail(g.api_save(adminToken, 'CKAI5', mk({ fakulti: 'XYZ' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ tarikh_tamat: '2026-01-09' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ masa_tamat: '08:00' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ masa_mula: '25:61' })), /betulkan/);

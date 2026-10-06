@@ -40,19 +40,20 @@ var AUDIT_COLS = ['masa', 'emel', 'tindakan', 'kpi', 'rekod_id', 'ringkasan'];
  * 'UTMXCITE' disertakan supaya Admin boleh merekod entiti pusat (contoh: ruang co-working).
  */
 var FACULTY_SEED = [
+  ['AHIBS', 'Azman Hashim International Business School'],
+  ['FABU', 'Fakulti Alam Bina dan Ukur'],
   ['FAI', 'Fakulti Kecerdasan Buatan'],
   ['FC', 'Fakulti Komputeran'],
-  ['FKE', 'Fakulti Kejuruteraan Elektrik'],
-  ['MJIIT', 'Malaysia-Japan International Institute of Technology'],
+  ['FEST', 'Fakulti Sains Pendidikan dan Teknologi'],
   ['FKA', 'Fakulti Kejuruteraan Awam'],
+  ['FKE', 'Fakulti Kejuruteraan Elektrik'],
   ['FKM', 'Fakulti Kejuruteraan Mekanikal'],
   ['FKT', 'Fakulti Kejuruteraan Kimia dan Tenaga'],
-  ['FS', 'Fakulti Sains'],
-  ['FAB', 'Fakulti Alam Bina dan Ukur'],
   ['FM', 'Fakulti Pengurusan'],
-  ['FSSH', 'Fakulti Sains Sosial dan Kemanusiaan'],
-  ['FP', 'Fakulti Pendidikan'],
-  ['FBME', 'Fakulti Kejuruteraan Biosains dan Perubatan'],
+  ['FS', 'Fakulti Sains'],
+  ['FSSK', 'Fakulti Sains Sosial dan Kemanusiaan'],
+  ['MJIIT', 'Malaysia-Japan International Institute of Technology'],
+  ['SPACE', 'UTM School of Professional and Continuing Education (UTMSPACE)'],
   ['UTMXCITE', 'UTMXCITE (Pusat)']
 ];
 
@@ -488,7 +489,8 @@ var KPIS = [
       F_('nama', 'Nama penuh (Full Name)', 'text', { required: true }),
       F_('no_kp', 'No. kad pengenalan / no. pasport (Identity Card / Passport No.)', 'text', { required: true }),
       F_('no_matrik', 'No. matrik staf / pelajar (Staff / Student Matric No.)', 'text', { required: true }),
-      F_('fakulti_unit', 'Fakulti / jabatan / unit / kelas (Faculty / Department / Unit / Class)', 'text', { required: true }),
+      F_('fakulti', 'Fakulti / jabatan / unit (Faculty / Department / Unit)', 'faculty', { required: true }),
+      F_('kelas', 'Jabatan / unit / kelas (jika berkaitan)', 'text'),
       F_('telefon', 'Nombor telefon (Phone Number)', 'text', { required: true }),
       F_('peralatan', 'Jenis / peralatan yang dipohon (Type / Equipment Applied)', 'text', { required: true, full: true, sec: 'Permohonan' }),
       F_('tujuan', 'Tujuan permohonan (Purpose of Application)', 'textarea', { required: true, full: true }),
