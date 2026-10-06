@@ -53,7 +53,7 @@ Enam fungsi ialah mandat peringkat Universiti kepada UTMXCITE dan menjadi **alir
 | **1 · Identify Student Entrepreneurship Interest** (kenal pasti minat) | | CKAI 1 · Bilangan **profiling pelajar yang didaftarkan** | PIC fakulti dan Admin |
 | **2 · Conduct Entrepreneurship Training** (latihan) | KAI 4 | CKAI 2 · Bilangan program keusahawanan | PIC fakulti dan Admin |
 | **3 · Support Student Business Ideation** (pengideaan) | | CKAI 3 · Bilangan program inovasi | PIC fakulti dan Admin |
-| **4 · Facilitate Student Startup Development** (pembangunan startup) | KAI 1, 2, 3, 5, 6 | CKAI 4 · Pendaftaran SSU; CKAI 5 · Penggunaan Makerspace (pembangunan prototaip); CKAI 6 · Pendapatan sewaan inkubator | Admin |
+| **4 · Facilitate Student Startup Development** (pembangunan startup) | KAI 1, 2, 3, 5, 6 | CKAI 4 · Pendaftaran SSU; CKAI 5 · Penggunaan Makerspace; CKAI 6 · Pendapatan sewaan inkubator | Admin |
 | **5 · Monitor Student Enterprise Performance** (pantau prestasi) | | CKAI 7 · Pendapatan usahawan pelajar | PIC fakulti dan Admin |
 | **6 · Showcase Student Innovation Venture** (pameran inovasi) | | CKAI 8 · Inovasi pelajar yang dihasilkan; CKAI 9 · Anugerah & pengiktirafan | PIC fakulti dan Admin |
 | Merentas fungsi | DKAI 1 | | |
