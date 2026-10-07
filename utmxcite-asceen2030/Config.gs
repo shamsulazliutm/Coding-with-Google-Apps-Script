@@ -574,7 +574,8 @@ var KPIS = [
       F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
       F_('jenis_pendapatan', 'Jenis pendapatan', 'select', { required: true, options: ['Jualan produk', 'Perkhidmatan / Gig', 'Geran / Pembiayaan', 'Lain-lain'] }),
       F_('pendapatan_rm', 'Pendapatan (RM)', 'number', { required: true, min: 0 }),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('laporan_kewangan', 'Attach your Monthly Financial Report', 'file', { full: true, sec: 'Dokumen', hint: 'Laporan kewangan bulanan dalam format PDF, maksimum 5 MB.' }),
+      F_('lampiran', 'Pautan lampiran bukti', 'url', {}),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
   },

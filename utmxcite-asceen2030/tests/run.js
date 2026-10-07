@@ -933,5 +933,16 @@ test('Trend Infografik (awam): nilai agregat setiap tahun, tiada data peribadi',
   assert.strictEqual(ok(g.api_trend())[2].premiumTotal, 1); // cache trend dibatalkan selepas tulis
 });
 
+test('CKAI 7: lampiran Monthly Financial Report (PDF) disimpan, boleh dimuat turun, pautan Drive dalam Sheet', () => {
+  const up = ok(g.api_uploadFile(ckaiPic, 'CKAI7', 'laporan_kewangan', { name: 'laporan-mac.pdf', data: PDF('kewangan') }));
+  const rec = ok(g.api_save(ckaiPic, 'CKAI7', { fakulti: 'FKE', tempoh: '2026-08', nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234', jenis_pendapatan: 'Jualan produk', pendapatan_rm: 10, laporan_kewangan: { id: up.id, name: up.name } }));
+  assert.strictEqual(ok(g.api_downloadFile(ckaiPic, 'CKAI7', rec.id, 'laporan_kewangan')).base64, PDF('kewangan'));
+  fail(g.api_downloadFile(ckaiPicFc, 'CKAI7', rec.id, 'laporan_kewangan'), /fakulti lain/);
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI7_Pendapatan_Pelajar');
+  const row = sh.data.find(x => x[0] === rec.id);
+  assert.strictEqual(row[sh.data[0].indexOf('laporan_kewangan_pautan')], 'https://drive.google.com/file/d/' + up.id + '/view');
+  fail(g.api_uploadFile(ckaiPic, 'CKAI7', 'laporan_kewangan', { name: 'x.pdf', data: Buffer.from('bukan pdf').toString('base64') }), /PDF/);
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);
