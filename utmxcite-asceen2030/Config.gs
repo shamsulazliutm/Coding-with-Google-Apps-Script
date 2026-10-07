@@ -62,6 +62,10 @@ var FACULTY_SEED = [
 
 var YES_NO = ['Ya', 'Tidak'];
 
+var LOKASI_PERNIAGAAN = ['SUB - Lot 1', 'SUB - Lot 2', 'SUB - Lot 3', 'SUB - Lot 4', 'SUB - Lot 5',
+  'Student Mall - Lot 1', 'Student Mall - Lot 2', 'Student Mall - Lot 3', 'Student Mall - Lot 4', 'Student Mall - Lot 5',
+  'Student Mall - Lot 6', 'Student Mall - Lot 7', 'Student Mall - Lot 8', 'Student Mall - Lot 9', 'Student Mall - Lot 10', 'Lain-lain'];
+
 var JENIS_PERNIAGAAN = ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Aksesori', 'Telefon Mudah Alih & Gajet', 'Komputer & Aksesori',
   'Kesihatan & Kecantikan', 'Permainan, Buku & Hobi', 'Penyemakan Bukti, Terjemahan & Penyuntingan', 'Reka Bentuk Grafik, Laman Web & Perkhidmatan Digital',
   'Pengangkutan', 'Pertanian', 'Pembinaan', 'Sukan & Luar', 'Percetakan 3D & Robotik', 'Lain-lain'];
@@ -562,12 +566,14 @@ var KPIS = [
     unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
     listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
     statusField: 'jenis_pendapatan',
-    rules: [],
+    rules: [{ when: { field: 'lokasi_perniagaan', in: ['Lain-lain'] }, require: ['lokasi_perniagaan_lain'] }],
     validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
       F_('tempoh', 'Bulan', 'month', { required: true }),
       F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true }),
+      F_('lokasi_perniagaan', 'Lokasi perniagaan', 'select', { options: LOKASI_PERNIAGAAN }),
+      F_('lokasi_perniagaan_lain', 'Nama lokasi lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text'),

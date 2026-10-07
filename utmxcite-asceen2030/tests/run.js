@@ -944,5 +944,16 @@ test('CKAI 7: lampiran Monthly Financial Report (PDF) disimpan, boleh dimuat tur
   fail(g.api_uploadFile(ckaiPic, 'CKAI7', 'laporan_kewangan', { name: 'x.pdf', data: Buffer.from('bukan pdf').toString('base64') }), /PDF/);
 });
 
+test('CKAI 7: lokasi perniagaan drop-down (lot SUB / Student Mall), Lain-lain wajib dinamakan', () => {
+  const b = { fakulti: 'FKE', tempoh: '2026-09', nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234', jenis_pendapatan: 'Jualan produk', pendapatan_rm: 10 };
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { lokasi_perniagaan: 'SUB - Lot 3' })));
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { tempoh: '2026-10', lokasi_perniagaan: 'Student Mall - Lot 10' })));
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { tempoh: '2026-11' }))); // tidak wajib
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { lokasi_perniagaan: 'SUB - Lot 6' })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { lokasi_perniagaan: 'Student Mall - Lot 11' })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { lokasi_perniagaan: 'Lain-lain' })), /betulkan/);
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { tempoh: '2026-12', lokasi_perniagaan: 'Lain-lain', lokasi_perniagaan_lain: 'Kafe Fakulti' })));
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);
