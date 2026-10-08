@@ -172,3 +172,12 @@ Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, pe
 ## Infografik (menu awam)
 
 Menu **Infografik** (di bawah Dashboard, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, pencapaian mengikut tiga peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).
+
+## CKAI 10 · Jumlah perbelanjaan operasi (Cross-cutting)
+
+Laporan bulanan kedudukan kewangan tabung amanah UTMXCITE (berdasarkan laporan "Kedudukan Kewangan Baki Tabung Amanah"). **Admin sahaja** mengisi; satu rekod bagi setiap tabung setiap bulan.
+
+- **Medan:** bulan laporan, nama tabung (lima tabung disenaraikan atau **Lain-lain** yang mesti dinamakan dan diberi chargeline), no. chargeline (automatik bagi tabung disenaraikan), peruntukan / baki awal (a), komitmen (b), perbelanjaan terkumpul sehingga bulan itu (c), lampiran laporan (PDF, tidak wajib) dan catatan. **Baki tabung d = a − (b + c)** dikira oleh sistem.
+- **Dashboard awam:** hanya jumlah perbelanjaan, jumlah peruntukan, komitmen, baki, peratus penggunaan dan trend bulanan. Nama tabung, no. chargeline dan angka setiap tabung hanya dalam senarai Admin.
+- Maklumat perolehan tidak termasuk dalam KPI ini.
+- Tambah tabung tetap baharu dengan menyunting `TABUNG_AMANAH` dalam `Config.gs`.

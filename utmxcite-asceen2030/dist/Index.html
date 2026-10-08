@@ -707,6 +707,7 @@ label .req{color:var(--bad)}
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
     k.fields.forEach(function (fd) {
+      if (fd.hidden) return;
       if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
       h += '<div class="' + (fd.full ? 'full' : '') + '" data-field="' + fd.key + '"><label for="f_' + fd.key + '">' + esc(fd.label) + (fd.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
         inputFor(k, fd, (!S.editing && rec[fd.key] === undefined && fd.def !== undefined) ? fd.def : rec[fd.key]) + (fd.hint ? '<div class="hint">' + esc(fd.hint) + '</div>' : '') + '<div class="err" role="alert"></div></div>';
@@ -940,6 +941,14 @@ label .req{color:var(--bad)}
     // Trend ukuran premium (hanya tahun yang ada data)
     var yrs = tr.filter(function (t) { return t.premiumTotal > 0; }).map(function (t) { return { label: String(t.year), value: t.premiumPct }; });
     h += panel('Trend ukuran premium', (yrs.length ? areaSvg(yrs, { label: 'Trend peratus pekerjaan premium', fmt: function (v) { return v + '%'; }, xlabel: function (l) { return l; }, target: pr.targetPct, targetLabel: 'Sasaran ' + pr.targetPct + '%', valueLabels: true }) : '<p class="igs">Belum ada data pendapatan (CKAI 7) untuk dipaparkan.</p>') + '<p class="igs">Hanya tahun yang ada laporan pendapatan dipaparkan.</p>', 'c4');
+
+    var tb = byId.CKAI10;
+    if (tb) {
+      var tsec = {}; (tb.secondary || []).forEach(function (x) { tsec[x.label] = x.value; });
+      var use = parseFloat(String(tsec['Penggunaan peruntukan'] || '0').replace('%', '')) || 0;
+      h += panel('Penggunaan tabung amanah', '<div class="prem2">' + ringSvg(use, { size: 130, label: 'Penggunaan peruntukan', text: use + '%', color: COL.teal }) +
+        '<div class="pt"><b>' + esc(fmtVal(tb, tb.value)) + '</b><span>perbelanjaan operasi terkumpul ' + esc(d.year) + '</span><span>Peruntukan: ' + esc(tsec['Jumlah peruntukan / baki awal'] || '-') + '</span><span>Baki tabung: ' + esc(tsec['Baki tabung'] || '-') + '</span></div></div>', 'c4');
+    }
 
     // 5) Enam fungsi
     h += panel('Enam fungsi UTMXCITE', '<div class="rrow six">' + d.functions.filter(function (f) { return f.no; }).map(function (f) {

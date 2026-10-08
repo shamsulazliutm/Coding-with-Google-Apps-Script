@@ -123,7 +123,7 @@ test('menu PIC hanya KPI yang dibenarkan; Admin nampak semua 7', () => {
   const p = ok(g.api_session(picToken));
   deepEq(p.kpis.map(k => k.id), ['KAI1', 'KAI4', 'KAI6']);
   const a = ok(g.api_session(adminToken));
-  assert.strictEqual(a.kpis.length, 16);
+  assert.strictEqual(a.kpis.length, 17);
 });
 test('PIC ditolak mengakses KPI Admin sahaja (baca & tulis)', () => {
   fail(g.api_list(picToken, 'KAI2', {}), /Akses ditolak/);
@@ -193,11 +193,11 @@ test('ID berjujukan tidak berulang selepas padam', () => {
 console.log('Dashboard');
 const dash = (y) => ok(g.api_dashboard(y));
 const card = (d, id) => d.kpis.find(k => k.id === id);
-test('dashboard awam tanpa log masuk: 7 KPI + 9 CKAI', () => {
+test('dashboard awam tanpa log masuk: 7 KPI + 10 CKAI', () => {
   const d = dash(2026);
-  assert.strictEqual(d.kpis.length, 16);
-  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Department', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
-  deepEq(d.kpis.map(k => k.level), ['KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
+  assert.strictEqual(d.kpis.length, 17);
+  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Department', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
+  deepEq(d.kpis.map(k => k.level), ['KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
   deepEq(d.levels.map(l => l.label), ['KAI · Peringkat Universiti', 'DKAI · Peringkat Jabatan (JTNC HEPA)', 'CKAI · Peringkat Pusat (UTMXCITE)']);
   assert.ok(!JSON.stringify(d).includes('Internal'));
   // Enam fungsi UTMXCITE = aliran proses kerja; setiap indikator ditanda dengan satu fungsi
@@ -205,7 +205,7 @@ test('dashboard awam tanpa log masuk: 7 KPI + 9 CKAI', () => {
   deepEq(d.functions.map(x => x.no), [1, 2, 3, 4, 5, 6, null]);
   deepEq(d.kpis.map(k => k.id + ':' + k.fungsi), [
     'KAI1:startup', 'KAI2:startup', 'KAI3:startup', 'KAI4:latihan', 'KAI5:startup', 'KAI6:startup', 'DKAI1:rentas',
-    'CKAI1:minat', 'CKAI2:latihan', 'CKAI3:ideasi', 'CKAI4:startup', 'CKAI5:startup', 'CKAI6:startup', 'CKAI7:prestasi', 'CKAI8:pameran', 'CKAI9:pameran']);
+    'CKAI1:minat', 'CKAI2:latihan', 'CKAI3:ideasi', 'CKAI4:startup', 'CKAI5:startup', 'CKAI6:startup', 'CKAI7:prestasi', 'CKAI8:pameran', 'CKAI9:pameran', 'CKAI10:rentas']);
   const titles = Object.fromEntries(d.kpis.map(k => [k.id, k.title]));
   assert.match(titles.CKAI1, /profiling pelajar yang didaftarkan/); assert.match(titles.CKAI4, /pendaftaran SSU/); assert.match(titles.CKAI5, /Makerspace/); assert.match(titles.CKAI9, /Anugerah/);
   deepEq(ok(g.api_session(adminToken)).functions.map(x => x.id), ['minat', 'latihan', 'ideasi', 'startup', 'prestasi', 'pameran', 'rentas']);
@@ -213,7 +213,7 @@ test('dashboard awam tanpa log masuk: 7 KPI + 9 CKAI', () => {
   ['minat', 'latihan', 'ideasi', 'startup', 'prestasi', 'pameran'].forEach(f => assert.ok(d.kpis.some(k => k.level === 'CKAI' && k.fungsi === f), 'fungsi tiada CKAI: ' + f));
   // tab Sheet mengikut nombor baharu
   const names = env.spreadsheets[env.props.SHEET_ID].sheets.map(x => x.name);
-  ['CKAI1_Profiling_Pelajar', 'CKAI2_Program_Keusahawanan', 'CKAI3_Program_Inovasi', 'CKAI4_SSU', 'CKAI5_Makerspace', 'CKAI6_Sewaan_Inkubator', 'CKAI7_Pendapatan_Pelajar', 'CKAI8_Inovasi_Pelajar', 'CKAI9_Anugerah']
+  ['CKAI1_Profiling_Pelajar', 'CKAI2_Program_Keusahawanan', 'CKAI3_Program_Inovasi', 'CKAI4_SSU', 'CKAI5_Makerspace', 'CKAI6_Sewaan_Inkubator', 'CKAI7_Pendapatan_Pelajar', 'CKAI8_Inovasi_Pelajar', 'CKAI9_Anugerah', 'CKAI10_Perbelanjaan_Operasi']
     .forEach(n => assert.ok(names.includes(n), 'tab tiada: ' + n));
 });
 test('KAI1: aktif = didaftarkan + dalam pembangunan/beroperasi (2 daripada 3), sasaran 20', () => {
@@ -706,7 +706,7 @@ test('CKAI 1: dashboard mengira profiling mengikut tahun; paparan awam tiada nam
   assert.strictEqual(card(dash(2026), 'CKAI1').status, 'Melebihi sasaran');
 });
 test('sasaran CKAI diisi Admin: status dan peratus dikira (boleh melebihi 100%)', () => {
-  assert.ok(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length >= 45);
+  assert.ok(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length >= 50);
   ok(g.api_saveTarget(adminToken, { kpi: 'CKAI7', tahun: 2026, sasaran: 3000 }));
   const c = card(dash(2026), 'CKAI7');
   assert.strictEqual(c.status, 'Melebihi sasaran'); assert.ok(Math.abs(c.pct - 133.3) < 0.1);
@@ -725,9 +725,9 @@ test('setup() dijalankan semula pada pemasangan lama menambah baris sasaran CKAI
   sh.data = sh.data.filter((row, i) => i === 0 || !/^CKAI/.test(String(row[0])));
   g.setup();
   const rows = ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi));
-  assert.strictEqual(rows.length, 45);
+  assert.strictEqual(rows.length, 50);
   g.setup();
-  assert.strictEqual(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length, 45);
+  assert.strictEqual(ok(g.api_listTargets(adminToken)).filter(t => /^CKAI/.test(t.kpi)).length, 50);
 });
 
 console.log('Sasaran (Admin)');
@@ -751,7 +751,7 @@ test('peranan/aktif ditaip manual (huruf kecil, ada ruang) tetap berfungsi', () 
   sh.appendRow(['  Manual.Admin@UTM.my ', 'Manual', ' admin ', 'UTMXCITE', '', ' ya ', '']);
   const t = login('manual.admin@utm.my');
   assert.strictEqual(ok(g.api_session(t)).user.peranan, 'Admin');
-  assert.strictEqual(ok(g.api_session(t)).kpis.length, 16);
+  assert.strictEqual(ok(g.api_session(t)).kpis.length, 17);
 });
 test('peranan kosong atau salah: tiada OTP dan tiada akses (bukan PIC secara lalai)', () => {
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Pengguna');
@@ -953,6 +953,33 @@ test('CKAI 7: lokasi perniagaan drop-down (lot SUB / Student Mall), Lain-lain wa
   fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { lokasi_perniagaan: 'Student Mall - Lot 11' })), /betulkan/);
   fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { lokasi_perniagaan: 'Lain-lain' })), /betulkan/);
   ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, b, { tempoh: '2026-12', lokasi_perniagaan: 'Lain-lain', lokasi_perniagaan_lain: 'Kafe Fakulti' })));
+});
+
+test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan; baki dikira; satu rekod setiap tabung setiap bulan; Admin sahaja', () => {
+  const r = (extra) => g.api_save(adminToken, 'CKAI10', Object.assign({ tempoh: '2027-03', tabung: 'Tabung Induk UTM XCITE', peruntukan_awal: 118602.64, komitmen: 0, perbelanjaan: 57641.95 }, extra));
+  const a = ok(r({}));
+  assert.strictEqual(a.no_chargeline, 'A.J060000.6600.07078'); // diisi automatik
+  assert.strictEqual(a.baki, 60960.69);                          // d = a - (b + c)
+  const b = ok(r({ tabung: 'Tabung Khas Program Keusahawanan KPM - UTM XCITE', peruntukan_awal: 1217006.43, perbelanjaan: 157938.9, komitmen: 1000 }));
+  assert.strictEqual(b.baki, 1058067.53);
+  fail(r({}), /betulkan/);                                         // bulan + tabung sama: pendua
+  fail(r({ tabung: 'Tabung Rekaan' }), /betulkan/);                // bukan pilihan
+  fail(r({ tabung: 'Lain-lain' }), /betulkan/);                    // mesti dinamakan
+  fail(r({ tabung: 'Lain-lain', tabung_lain: 'Tabung Baharu' }), /betulkan/); // chargeline wajib
+  ok(r({ tabung: 'Lain-lain', tabung_lain: 'Tabung Baharu', no_chargeline: 'X.1.2' }));
+  fail(r({ tempoh: '2027-04', perbelanjaan: -1 }), /betulkan/);
+  ok(r({ tempoh: '2027-06', perbelanjaan: 60000 }));              // bulan terkini bagi tabung induk
+  fail(g.api_save(picToken, 'CKAI10', { tempoh: '2027-03' }), /Akses ditolak/);
+  assert.strictEqual(ok(g.api_list(adminToken, 'CKAI10', {})).rows.length, 4);
+  const c = card(dash(2027), 'CKAI10');
+  // tabung induk (Jun: 60000) + khas (Mac: 157938.9) + baharu (Mac: 57641.95)
+  assert.strictEqual(c.value, 275580.85); assert.strictEqual(c.format, 'rm');
+  const lab = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
+  assert.strictEqual(lab['Bilangan tabung dilaporkan'], 3);
+  assert.ok(String(lab['Penggunaan peruntukan']).endsWith('%'));
+  // paparan awam: jumlah sahaja; tiada nama tabung atau chargeline
+  const sj = JSON.stringify(dash(2027));
+  ['Tabung Induk', 'Tabung Baharu', 'A.J060000', 'MAKMUM', 'X.1.2'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
 });
 
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');

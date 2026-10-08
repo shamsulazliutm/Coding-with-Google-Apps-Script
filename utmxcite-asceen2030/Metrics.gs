@@ -242,6 +242,32 @@ var MEASURES = {
     };
   },
 
+  // CKAI 10: jumlah perbelanjaan operasi tabung amanah. Bagi setiap tabung, rekod bulan terkini dalam tahun itu (angka terkumpul sejak awal tahun).
+  // Paparan awam hanya jumlah keseluruhan; maklumat setiap tabung dan chargeline hanya dalam senarai Admin.
+  tabung: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
+    var latest = {};
+    inYear.forEach(function (r) {
+      var k = String(r.kunci).split('|')[1] || String(r.tabung);
+      if (!latest[k] || String(r.tempoh) > String(latest[k].tempoh)) latest[k] = r;
+    });
+    var a = 0, b = 0, c = 0, d = 0, n = 0;
+    Object.keys(latest).forEach(function (k) { var r = latest[k]; a += num_(r.peruntukan_awal); b += num_(r.komitmen); c += num_(r.perbelanjaan); d += num_(r.baki); n++; });
+    var perMonth = {};
+    inYear.forEach(function (r) { perMonth[r.tempoh] = (perMonth[r.tempoh] || 0) + num_(r.perbelanjaan); });
+    return {
+      value: round2_(c),
+      secondary: [
+        { label: 'Jumlah peruntukan / baki awal', value: rm_(a) },
+        { label: 'Komitmen', value: rm_(b) },
+        { label: 'Baki tabung', value: rm_(d) },
+        { label: 'Penggunaan peruntukan', value: (a ? round1_(c * 100 / a) : 0) + '%' },
+        { label: 'Bilangan tabung dilaporkan', value: n }
+      ],
+      breakdown: [{ title: 'Perbelanjaan terkumpul (RM) mengikut bulan', items: byMonth_(Object.keys(perMonth).map(function (m) { return { label: m, value: round2_(perMonth[m]) }; })) }]
+    };
+  },
+
   // CKAI 9: anugerah dan pengiktirafan inovasi / keusahawanan yang diterima pada tahun itu.
   award: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });

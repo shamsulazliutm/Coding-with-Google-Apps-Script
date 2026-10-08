@@ -121,6 +121,12 @@ window.__demoSeed = function () {
   }
   save('CKAI8', { fakulti: 'FAI', tajuk_inovasi: 'Inovasi Akan Datang', jenis_inovasi: 'Produk fizikal', mentor: 'Dr. Mentor Contoh 1', pelajar: [{ nama: 'Pelajar Inovasi Contoh 99', matrik: 'N2499' + '01' }], status_penyertaan: 'Akan menyertai', nama_pertandingan: 'Pertandingan Kebangsaan Contoh', peringkat: 'Kebangsaan', tarikh: ymd(12, 1) });
 
+  // ---- CKAI 10 Perbelanjaan operasi (kedudukan tabung amanah; angka contoh berdasarkan susunan laporan)
+  [['Tabung Induk UTM XCITE', 118602.64, 57641.95], ['Tabung Khas Program Keusahawanan KPM - UTM XCITE', 1217006.43, 157938.9], ['Majlis Keusahawanan Universiti Awam Malaysia (MAKMUM)', 190384.28, 21440],
+    ['UMUM-Tabung Usahawan Urusetia HEP', 265986.75, 40440.05], ['Tabung Program Mikro Kredit Pelajar UTM - MTDC', 132335, 0]].forEach(function (t) {
+    for (var m = 1; m <= lastM; m++) save('CKAI10', { tempoh: ym(m), tabung: t[0], peruntukan_awal: t[1], komitmen: 0, perbelanjaan: Math.round(t[2] * m / lastM * 100) / 100 });
+  });
+
   // ---- CKAI 9 Anugerah (satu rekod dengan sijil PDF contoh)
   var pdfBody = 'BT /F1 18 Tf 40 100 Td (SIJIL CONTOH - DATA DEMO) Tj ET';
   var pdf = '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 400 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length ' + pdfBody.length + '>>stream\n' + pdfBody + '\nendstream endobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF';

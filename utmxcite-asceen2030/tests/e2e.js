@@ -71,12 +71,12 @@ function buildHtml() {
   const text = async (sel) => (await page.locator(sel).innerText());
 
   console.log('Pelayar (Chromium)');
-  await step('dashboard awam dimuatkan tanpa log masuk (16 kad: 7 KPI + 9 CKAI)', async () => {
+  await step('dashboard awam dimuatkan tanpa log masuk (17 kad: 7 KPI + 10 CKAI)', async () => {
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 16);
+    assert.strictEqual(await page.locator('.kcard').count(), 17);
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.toUpperCase());
     deepEq(heads, ['KAI · PERINGKAT UNIVERSITI', 'DKAI · PERINGKAT JABATAN (JTNC HEPA)', 'CKAI · PERINGKAT PUSAT (UTMXCITE)']);
-    deepEq((await page.locator('.sub b').allInnerTexts()).map(t => t.toUpperCase()), ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE']);
+    deepEq((await page.locator('.sub b').allInnerTexts()).map(t => t.toUpperCase()), ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE', 'CROSS-CUTTING']);
     assert.ok((await text('.cont')).includes('Kenal pasti minat keusahawanan pelajar'), 'terjemahan Melayu fungsi tiada');
     assert.strictEqual(await page.locator('.tag', { hasText: 'Department' }).count(), 1);
     assert.strictEqual(await page.locator('.tag', { hasText: 'Internal' }).count(), 0);
@@ -121,7 +121,7 @@ function buildHtml() {
     await page.click('button:has-text("Sahkan dan Log Masuk")');
     await page.waitForSelector('.prof >> text=admin@utm.my');
     assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 1); // dalam kumpulan Admin (dilipat)
-    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 16);
+    assert.strictEqual(await page.locator('.nav', { hasText: 'KAI' }).count(), 17);
     // kumpulan dilipat secara lalai; klik untuk membuka dan menutup
     // Satu bahagian "PERINGKAT" dengan tiga kumpulan boleh dilipat (+ bahagian Admin)
     deepEq((await page.locator('.mod').allInnerTexts()).map(x => x.toUpperCase()), ['PERINGKAT', 'ADMIN']);
@@ -134,8 +134,8 @@ function buildHtml() {
     assert.strictEqual(await page.locator('.gh[data-g="KAI"]').getAttribute('aria-expanded'), 'true');
     deepEq((await page.locator('.gb[data-g="KAI"] .stagelbl').allInnerTexts()).map(x => x.toUpperCase()), ['GROWTH', 'TRANSFORM']);
     await page.click('.gh[data-g="CKAI"]');
-    assert.strictEqual(await page.locator('.gb[data-g="CKAI"] .nav').count(), 9); // CKAI 1-9
-    deepEq((await page.locator('.gb[data-g="CKAI"] .stagelbl').allInnerTexts()).map(x => x.toUpperCase()), ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE']);
+    assert.strictEqual(await page.locator('.gb[data-g="CKAI"] .nav').count(), 10); // CKAI 1-10
+    deepEq((await page.locator('.gb[data-g="CKAI"] .stagelbl').allInnerTexts()).map(x => x.toUpperCase()), ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE', 'CROSS-CUTTING']);
     await page.click('.gh[data-g="CKAI"]');
     await page.screenshot({ path: path.join(out, '2-dashboard-admin.png') });
     await page.click('.gh[data-g="KAI"]');
@@ -414,7 +414,7 @@ function buildHtml() {
     await page.click('[data-action="dview"][data-view="fungsi"]');
     await page.waitForSelector('.grp:has-text("Cross-cutting")');
     assert.strictEqual(await page.locator('.grp').count(), 7);
-    assert.strictEqual(await page.locator('.kcard').count(), 16); // semua indikator, dikelompokkan semula
+    assert.strictEqual(await page.locator('.kcard').count(), 17); // semua indikator, dikelompokkan semula
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.split('\n')[0].toUpperCase());
     deepEq(heads, ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE', 'CROSS-CUTTING']);
     // fungsi 4 menghimpun KAI 1, 2, 3, 5, 6 dan CKAI 4, 5, 6

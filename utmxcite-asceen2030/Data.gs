@@ -209,7 +209,8 @@ function saveRecord_(token, kpiId, rec) {
         var dupFields = {};
         // ID rekod hanya didedahkan kepada Admin atau PIC fakulti yang sama (elak mendedahkan rekod fakulti lain).
         var sameScope = !isPic || dup.fakulti === undefined || dup.fakulti === user.fakulti;
-        dupFields[key] = 'Sudah didaftarkan' + (sameScope ? ' (' + dup.id + ')' : '') + '.';
+        var dupFd = kpi.fields.filter(function (f) { return f.key === key; })[0];
+        dupFields[(dupFd && dupFd.errorOn) || key] = 'Sudah didaftarkan' + (sameScope ? ' (' + dup.id + ')' : '') + '.';
         throw userError_('Sila betulkan medan yang bertanda.', { fields: dupFields });
       }
     });

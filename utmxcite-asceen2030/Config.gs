@@ -62,6 +62,25 @@ var FACULTY_SEED = [
 
 var YES_NO = ['Ya', 'Tidak'];
 
+/** Tabung amanah UTMXCITE (laporan kedudukan kewangan). Tabung lain dipilih melalui "Lain-lain" dan dinamakan. */
+var TABUNG_AMANAH = [
+  { nama: 'Tabung Induk UTM XCITE', chargeline: 'A.J060000.6600.07078' },
+  { nama: 'Tabung Khas Program Keusahawanan KPM - UTM XCITE', chargeline: 'A.J060000.6800.08990' },
+  { nama: 'Majlis Keusahawanan Universiti Awam Malaysia (MAKMUM)', chargeline: 'A.J061100.6700.09641' },
+  { nama: 'UMUM-Tabung Usahawan Urusetia HEP', chargeline: 'A.J060000.5700.08004' },
+  { nama: 'Tabung Program Mikro Kredit Pelajar UTM - MTDC', chargeline: 'A.J060000.6700.08117' }
+];
+
+function tabungValidate_(c, errors) {
+  var listed = TABUNG_AMANAH.filter(function (t) { return t.nama === c.tabung; })[0];
+  var name = c.tabung === 'Lain-lain' ? String(c.tabung_lain || '').trim() : (listed ? listed.nama : '');
+  if (listed) c.no_chargeline = listed.chargeline;                       // diisi automatik bagi tabung yang disenaraikan
+  if (c.komitmen === '' || c.komitmen === undefined) c.komitmen = 0;
+  var a = Number(c.peruntukan_awal) || 0, b = Number(c.komitmen) || 0, p = Number(c.perbelanjaan) || 0;
+  c.baki = Math.round((a - (b + p)) * 100) / 100;                       // d = a - (b + c)
+  c.kunci = String(c.tempoh || '') + '|' + name.toLowerCase();           // satu rekod bagi setiap tabung setiap bulan
+}
+
 var LOKASI_PERNIAGAAN = ['SUB - Lot 1', 'SUB - Lot 2', 'SUB - Lot 3', 'SUB - Lot 4', 'SUB - Lot 5',
   'Student Mall - Lot 1', 'Student Mall - Lot 2', 'Student Mall - Lot 3', 'Student Mall - Lot 4', 'Student Mall - Lot 5',
   'Student Mall - Lot 6', 'Student Mall - Lot 7', 'Student Mall - Lot 8', 'Student Mall - Lot 9', 'Student Mall - Lot 10', 'Lain-lain'];
@@ -652,6 +671,29 @@ var KPIS = [
       F_('pautan_media', 'Pautan berita / media', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
+  },
+  {
+    id: 'CKAI10', prefix: 'TA', sheet: 'CKAI10_Perbelanjaan_Operasi', fungsi: 'rentas', group: 'Center', entry: 'admin',
+    title: 'CKAI 10 · Jumlah perbelanjaan operasi', short: 'Perbelanjaan Operasi',
+    unit: 'RM perbelanjaan tabung', measure: 'tabung', jenis: 'minimum', valueFormat: 'rm',
+    listColumns: ['id', 'tempoh', 'tabung', 'no_chargeline', 'peruntukan_awal', 'komitmen', 'perbelanjaan', 'baki'],
+    statusField: null,
+    unique: ['kunci'],
+    rules: [{ when: { field: 'tabung', in: ['Lain-lain'] }, require: ['tabung_lain', 'no_chargeline'] }],
+    validate: tabungValidate_,
+    fields: [
+      F_('tempoh', 'Bulan laporan', 'month', { required: true, sec: 'Kedudukan kewangan tabung', hint: 'Perbelanjaan dilaporkan terkumpul sehingga bulan ini (sejak awal tahun).' }),
+      F_('tabung', 'Nama tabung', 'select', { required: true, errorOn: 'tabung', options: TABUNG_AMANAH.map(function (t) { return t.nama; }).concat(['Lain-lain']) }),
+      F_('tabung_lain', 'Nama tabung lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
+      F_('no_chargeline', 'No. chargeline', 'text', { short: 'Chargeline', hint: 'Diisi automatik bagi tabung yang disenaraikan. Wajib bagi Lain-lain.' }),
+      F_('peruntukan_awal', 'Peruntukan / baki awal (a)', 'number', { required: true, min: 0, short: 'Peruntukan (a)' }),
+      F_('komitmen', 'Komitmen (b)', 'number', { min: 0, def: 0, short: 'Komitmen (b)' }),
+      F_('perbelanjaan', 'Perbelanjaan sehingga bulan ini (c)', 'number', { required: true, min: 0, short: 'Belanja (c)' }),
+      F_('baki', 'Baki tabung d = a - (b + c)', 'number', { hidden: true, short: 'Baki (d)' }),
+      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'tabung' }),
+      F_('lampiran', 'Lampiran laporan (PDF)', 'file', { full: true, sec: 'Dokumen', hint: 'Laporan kedudukan kewangan dalam format PDF, maksimum 5 MB.' }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
+    ]
   }
 ];
 
@@ -695,7 +737,7 @@ function buildTargetSeed_() {
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
-  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9'].forEach(function (k) {
+  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9', 'CKAI10'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
   });
   return rows;
