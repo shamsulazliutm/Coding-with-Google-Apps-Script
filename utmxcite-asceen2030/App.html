@@ -227,7 +227,7 @@
   }
   function money(n) { return 'RM ' + Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function fmtVal(c, v) { return c.format === 'rm' ? money(v) : (c.jenis === 'kemajuan' || c.jenis === 'penggunaan') ? fmtNum(v) + '%' : fmtNum(v); }
-  function fmtItem(c, v) { return c.format === 'rm' ? money(v) : fmtNum(v); }
+  function fmtItem(c, v, title) { if (/\(%\)/.test(title || '')) return fmtNum(v) + '%'; if (/\(RM\)/.test(title || '')) return money(v); return c.format === 'rm' ? money(v) : fmtNum(v); }
 
   function progressBar(pct) {
     if (pct === null || pct === undefined) return '<div class="track" aria-hidden="true"></div>';
@@ -259,10 +259,11 @@
         if (!b.items.length) return;
         h += '<h4>' + esc(b.title) + '</h4>';
         var max = Math.max.apply(null, b.items.map(function (i) { return Math.max(i.value, i.target || 0); }).concat([1]));
+        if (/\(%\)/.test(b.title)) max = Math.max(100, max);
         b.items.forEach(function (i) {
-          h += '<div class="bi"><span class="l" title="' + esc(i.label) + '">' + esc(i.label) + '</span>' +
+          h += '<div class="bi' + (String(i.label).length > 16 ? ' long' : '') + '"><span class="l" title="' + esc(i.label) + '">' + esc(i.label) + '</span>' +
             '<span class="mini"><i style="width:' + Math.min(100, i.value / max * 100).toFixed(0) + '%"></i></span>' +
-            '<span class="n">' + esc(fmtItem(c, i.value)) + (i.target ? ' / ' + esc(i.target) : '') + '</span></div>';
+            '<span class="n">' + esc(fmtItem(c, i.value, b.title)) + (i.target ? ' / ' + esc(i.target) : '') + '</span></div>';
         });
       });
       h += '</details>';
@@ -743,6 +744,9 @@
       h += panel('Penggunaan tabung amanah', '<div class="prem2">' + ringSvg(Math.min(100, tb.value), { size: 130, label: 'Penggunaan peruntukan', text: fmtNum(tb.value) + '%', color: COL.teal, tick: tb.target !== '' ? tb.target : 0 }) +
         '<div class="pt"><b>' + esc(tsec['Jumlah perbelanjaan terkumpul'] || '-') + '</b><span>perbelanjaan operasi terkumpul ' + esc(d.year) + '</span><span>Peruntukan: ' + esc(tsec['Jumlah peruntukan / baki awal'] || '-') + '</span><span>Baki tabung: ' + esc(tsec['Baki tabung'] || '-') + '</span>' + jimat + '</div></div>', 'c4');
     }
+
+    var tbItems = bdOf(byId.CKAI10, /mengikut tabung/i);
+    if (tbItems) h += panel('Penggunaan peruntukan mengikut tabung', hbarsHtml(bdOf(byId.CKAI10, /\(%\) mengikut tabung/i) || tbItems, function (v) { return fmtNum(v) + '%'; }, 8), 'c8');
 
     // 5) Enam fungsi
     h += panel('Enam fungsi UTMXCITE', '<div class="rrow six">' + d.functions.filter(function (f) { return f.no; }).map(function (f) {

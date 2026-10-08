@@ -108,6 +108,7 @@ details.bd summary{cursor:pointer;color:var(--m);font-size:12.5px;font-weight:60
 .bd h4{font-size:12px;margin:10px 0 4px;color:var(--mut)}
 .bi{display:grid;grid-template-columns:minmax(80px,1.3fr) 2fr auto;gap:8px;align-items:center;font-size:12px;margin:3px 0}
 .bi .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bi.long{grid-template-columns:1fr auto;row-gap:2px}.bi.long .l{white-space:normal;grid-column:1/-1}.bi.long .mini{grid-column:1}.bi.long .n{grid-column:2}
 .bi .mini{height:6px;background:#eadfe2;border-radius:3px;overflow:hidden}
 .bi .mini i{display:block;height:100%;background:var(--m2)}
 .bi .n{font-variant-numeric:tabular-nums;color:var(--mut)}

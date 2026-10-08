@@ -982,7 +982,11 @@ test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan;
   assert.ok(!('Penjimatan berbanding bajet' in lab)); // tiada bajet disasarkan
   // paparan awam: jumlah sahaja; tiada nama tabung atau chargeline
   const sj = JSON.stringify(dash(2027));
-  ['Tabung Induk', 'Tabung Baharu', 'A.J060000', 'MAKMUM', 'X.1.2'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+  ['A.J060000', 'X.1.2', 'peruntukan_awal', 'no_chargeline', 'kunci'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x)); // chargeline tidak didedahkan
+  const byTb = c.breakdown.find(b => /mengikut tabung/.test(b.title) && /\(%\)/.test(b.title)).items;
+  deepEq(byTb.map(i => i.label).sort(), ['Tabung Baharu', 'Tabung Induk UTM XCITE', 'Tabung Khas Program Keusahawanan KPM - UTM XCITE']);
+  assert.strictEqual(byTb.find(i => i.label === 'Tabung Induk UTM XCITE').value, Math.round(60000 / 118602.64 * 1000) / 10);
+  assert.strictEqual(c.breakdown.find(b => /\(RM\) mengikut tabung/.test(b.title)).items.find(i => i.label === 'Tabung Induk UTM XCITE').value, 60000);
 });
 
 test('CKAI 10: % perbelanjaan setiap tabung, bajet disasarkan dan penjimatan; melebihi peruntukan ditandakan', () => {
