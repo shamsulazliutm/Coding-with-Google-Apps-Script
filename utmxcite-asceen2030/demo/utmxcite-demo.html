@@ -3781,7 +3781,7 @@ window.__demoSeed = function () {
 
     // 4) Nombor utama
     var tiles = [['KAI1', 'Inkubator aktif'], ['KAI3', 'Ruang perniagaan'], ['KAI4', 'Pelajar GiGA'], ['KAI6', 'Startup AI'], ['CKAI1', 'Profiling pelajar'], ['CKAI4', 'Pendaftaran SSU'], ['CKAI5', 'Penggunaan Makerspace'], ['CKAI9', 'Anugerah']].filter(function (t) { return byId[t[0]]; });
-    h += panel('Nombor utama', '<div class="tiles">' + tiles.map(function (t) {
+    h += panel('Rumusan pencapaian', '<div class="tiles">' + tiles.map(function (t) {
       var c = byId[t[0]];
       return '<div class="tile"><b>' + esc(fmtVal(c, c.value)) + '</b><span>' + esc(t[1]) + '</span>' + (c.pct !== null ? '<div class="pbar2"><i style="width:' + Math.min(100, c.pct) + '%"></i></div><small>' + fmtNum(c.pct) + '% daripada sasaran ' + esc(fmtVal(c, c.target)) + '</small>' : '<small>Tiada sasaran ditetapkan</small>') + '</div>';
     }).join('') + '</div>', 'c8');
