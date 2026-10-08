@@ -988,6 +988,7 @@ test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan;
   assert.strictEqual(byTb.find(i => i.label === '07078').value, Math.round(60000 / 118602.64 * 1000) / 10);
   assert.strictEqual(c.breakdown.find(b => /\(RM\) mengikut tabung/.test(b.title)).items.find(i => i.label === '07078').value, 60000);
   assert.ok(!sj.includes('Tabung Induk') && !sj.includes('Tabung Baharu')); // nama tabung tidak dipaparkan kepada umum
+  assert.ok(!c.breakdown.some(b => /bulan/i.test(b.title))); // butiran mengikut bulan tidak diperlukan
 });
 
 test('CKAI 10: % perbelanjaan setiap tabung, bajet disasarkan dan penjimatan; melebihi peruntukan ditandakan', () => {

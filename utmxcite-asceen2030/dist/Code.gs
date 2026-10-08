@@ -2037,8 +2037,6 @@ var MEASURES = {
       var r = latest[k]; a += num_(r.peruntukan_awal); b += num_(r.komitmen); c += num_(r.perbelanjaan); d += num_(r.baki); n++;
       if (num_(r.bajet_sasaran) > 0) { bj += num_(r.bajet_sasaran); cBj += num_(r.perbelanjaan); }
     });
-    var perMonth = {}, perMonthA = {};
-    inYear.forEach(function (r) { perMonth[r.tempoh] = (perMonth[r.tempoh] || 0) + num_(r.perbelanjaan); perMonthA[r.tempoh] = (perMonthA[r.tempoh] || 0) + num_(r.peruntukan_awal); });
     var sec = [
       { label: 'Jumlah perbelanjaan terkumpul', value: rm_(c) },
       { label: 'Jumlah peruntukan / baki awal', value: rm_(a) },
@@ -2056,8 +2054,7 @@ var MEASURES = {
       secondary: sec,
       breakdown: [
         { title: '% Penggunaan Tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: kod(r), value: num_(r.peruntukan_awal) ? round1_(num_(r.perbelanjaan) * 100 / num_(r.peruntukan_awal)) : 0 }; })) },
-        { title: 'Perbelanjaan (RM) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: kod(r), value: round2_(num_(r.perbelanjaan)) }; })) },
-        { title: 'Penggunaan peruntukan (%) mengikut bulan', items: byMonth_(Object.keys(perMonth).map(function (m) { return { label: m, value: perMonthA[m] ? round1_(perMonth[m] * 100 / perMonthA[m]) : 0 }; })) }
+        { title: 'Perbelanjaan (RM) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: kod(r), value: round2_(num_(r.perbelanjaan)) }; })) }
       ]
     };
   },
