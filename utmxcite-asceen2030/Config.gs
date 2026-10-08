@@ -702,7 +702,7 @@ var KPIS = [
       F_('tempoh', 'Bulan laporan', 'month', { required: true, sec: 'Kedudukan kewangan tabung', hint: 'Perbelanjaan dilaporkan terkumpul sehingga bulan ini (sejak awal tahun).' }),
       F_('tabung', 'Nama tabung', 'select', { required: true, errorOn: 'tabung', options: TABUNG_AMANAH.map(function (t) { return t.nama; }).concat(['Lain-lain']) }),
       F_('tabung_lain', 'Nama tabung lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
-      F_('no_chargeline', 'No. chargeline', 'text', { short: 'Chargeline', hint: 'Diisi automatik bagi tabung yang disenaraikan. Wajib bagi Lain-lain.' }),
+      F_('no_chargeline', 'No. chargeline', 'text', { short: 'Chargeline', autoFrom: 'tabung', autoMap: TABUNG_AMANAH.reduce(function (m, t) { m[t.nama] = t.chargeline; return m; }, {}), hint: 'Diisi automatik apabila tabung yang disenaraikan dipilih. Isi sendiri hanya bagi Lain-lain.' }),
       F_('peruntukan_awal', 'Peruntukan / baki awal (a)', 'number', { min: 0, short: 'Peruntukan (a)', hint: 'Isi sekali sahaja pada laporan pertama tabung bagi setiap tahun. Bulan seterusnya diisi automatik.' }),
       F_('komitmen', 'Komitmen (b)', 'number', { min: 0, short: 'Komitmen (b)', hint: 'Isi hanya jika berubah. Jika kosong, nilai bulan sebelumnya digunakan.' }),
       F_('perbelanjaan', 'Perbelanjaan sehingga bulan ini (c)', 'number', { required: true, min: 0, short: 'Belanja (c)' }),

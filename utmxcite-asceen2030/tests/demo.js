@@ -114,6 +114,23 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await page.waitForSelector('text=Semakan sistem');
     assert.strictEqual(await page.locator('li[data-ok="0"]').count(), 0);
   });
+  await step('CKAI 10: no. chargeline diisi automatik apabila tabung dipilih (dikunci), Lain-lain boleh diisi sendiri', async () => {
+    await goNav('CKAI 10');
+    await page.waitForSelector('table');
+    await page.click('[data-action="new"]');
+    await page.waitForSelector('#f_tabung');
+    await page.selectOption('#f_tabung', 'Tabung Induk UTM XCITE');
+    assert.strictEqual(await page.inputValue('#f_no_chargeline'), 'A.J060000.6600.07078');
+    assert.strictEqual(await page.locator('#f_no_chargeline').evaluate((e) => e.readOnly), true);
+    await page.selectOption('#f_tabung', 'Tabung Program Mikro Kredit Pelajar UTM - MTDC');
+    assert.strictEqual(await page.inputValue('#f_no_chargeline'), 'A.J060000.6700.08117');
+    await page.selectOption('#f_tabung', 'Lain-lain');
+    assert.strictEqual(await page.inputValue('#f_no_chargeline'), '');
+    assert.strictEqual(await page.locator('#f_no_chargeline').evaluate((e) => e.readOnly), false);
+    await page.fill('#f_no_chargeline', 'X.1.2');
+    assert.strictEqual(await page.inputValue('#f_no_chargeline'), 'X.1.2');
+    await page.click('[data-action="cancelform"]');
+  });
   await step('paparan mengikut fungsi dan sidebar PERINGKAT', async () => {
     await page.click('.nav:has-text("Dashboard")');
     await page.click('[data-action="dview"][data-view="fungsi"]');

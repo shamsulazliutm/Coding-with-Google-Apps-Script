@@ -189,6 +189,7 @@ label .req{color:var(--bad)}
 @media(max-width:1000px){.igp.c4{grid-column:span 6}.igp.c8{grid-column:span 12}.rrow.six{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:620px){.igp.c4,.igp.c8,.igp.c12{grid-column:span 12}.tiles{grid-template-columns:repeat(2,1fr)}.kl{grid-template-columns:1fr auto}.kl .mini{grid-column:1/-1;order:3}}
 @media print{.side,.top,.igctl,.scrim,#toast,#demobar{display:none!important}.main{width:100%}.igp{break-inside:avoid}}
+.form input.ro{background:#f3eef0;color:#5a4a4f}
 .otp{letter-spacing:6px;font-size:20px;text-align:center}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2b1a1f;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:90vw}
 #toast.show{opacity:1}
@@ -715,7 +716,21 @@ label .req{color:var(--bad)}
     h += '</div><div class="acts"><button class="btn" type="submit" id="savebtn">Simpan</button>' +
       '<button class="btn o" type="button" data-action="cancelform">Batal</button></div></form>';
     $('#content').innerHTML = h;
+    initAutofill(k);
   }
+
+  // Isi automatik medan (contoh: no. chargeline) apabila medan sumber (contoh: nama tabung) dipilih; medan dikunci jika ada padanan.
+  function applyAutofill(k, srcKey) {
+    k.fields.forEach(function (fd) {
+      if (fd.autoFrom !== srcKey || !fd.autoMap) return;
+      var src = document.getElementById('f_' + srcKey), el = document.getElementById('f_' + fd.key);
+      if (!src || !el) return;
+      var mapped = fd.autoMap[src.value];
+      if (mapped) { el.value = mapped; el.readOnly = true; el.classList.add('ro'); }
+      else { if (el.readOnly) el.value = ''; el.readOnly = false; el.classList.remove('ro'); }
+    });
+  }
+  function initAutofill(k) { k.fields.forEach(function (fd) { if (fd.autoFrom) applyAutofill(k, fd.autoFrom); }); }
 
   function collectForm(k) {
     var rec = {};
@@ -1187,6 +1202,7 @@ label .req{color:var(--bad)}
   });
 
   document.addEventListener('change', function (ev) {
+    if (ev.target.id && ev.target.id.indexOf('f_') === 0 && S.view.name === 'kpi') { var ak = kpiById(S.view.id); if (ak) applyAutofill(ak, ev.target.id.slice(2)); }
     var c = ev.target.getAttribute && ev.target.getAttribute('data-change');
     if (!c) return;
     if (c === 'fupload') { var kk = kpiById(S.view.id); if (kk) uploadPdf(kk, ev.target.getAttribute('data-key'), ev.target.files && ev.target.files[0]); return; }

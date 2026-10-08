@@ -495,7 +495,21 @@
     h += '</div><div class="acts"><button class="btn" type="submit" id="savebtn">Simpan</button>' +
       '<button class="btn o" type="button" data-action="cancelform">Batal</button></div></form>';
     $('#content').innerHTML = h;
+    initAutofill(k);
   }
+
+  // Isi automatik medan (contoh: no. chargeline) apabila medan sumber (contoh: nama tabung) dipilih; medan dikunci jika ada padanan.
+  function applyAutofill(k, srcKey) {
+    k.fields.forEach(function (fd) {
+      if (fd.autoFrom !== srcKey || !fd.autoMap) return;
+      var src = document.getElementById('f_' + srcKey), el = document.getElementById('f_' + fd.key);
+      if (!src || !el) return;
+      var mapped = fd.autoMap[src.value];
+      if (mapped) { el.value = mapped; el.readOnly = true; el.classList.add('ro'); }
+      else { if (el.readOnly) el.value = ''; el.readOnly = false; el.classList.remove('ro'); }
+    });
+  }
+  function initAutofill(k) { k.fields.forEach(function (fd) { if (fd.autoFrom) applyAutofill(k, fd.autoFrom); }); }
 
   function collectForm(k) {
     var rec = {};
@@ -967,6 +981,7 @@
   });
 
   document.addEventListener('change', function (ev) {
+    if (ev.target.id && ev.target.id.indexOf('f_') === 0 && S.view.name === 'kpi') { var ak = kpiById(S.view.id); if (ak) applyAutofill(ak, ev.target.id.slice(2)); }
     var c = ev.target.getAttribute && ev.target.getAttribute('data-change');
     if (!c) return;
     if (c === 'fupload') { var kk = kpiById(S.view.id); if (kk) uploadPdf(kk, ev.target.getAttribute('data-key'), ev.target.files && ev.target.files[0]); return; }
