@@ -181,7 +181,13 @@ function linkSistem() {
   var url = webUrl_();
   if (!/^https:\/\/script\.google\.com\//.test(url)) throw new Error('Pautan web app belum ditetapkan (APP.WEB_URL dalam Config.gs).');
   var html = "<script>window.open(" + JSON.stringify(url) + ");google.script.host.close();<\/script>";
-  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(html).setWidth(1).setHeight(1), 'Dashboard KPI UTMXCITE JTNCHEPA');
+  var ui;
+  try { ui = SpreadsheetApp.getUi(); } catch (e) { ui = null; }
+  if (!ui) {   // dijalankan dari editor Apps Script (tiada antara muka Sheet)
+    console.log('Pautan dashboard: ' + url);
+    throw new Error('linkSistem() hanya berfungsi apabila dijalankan dari dalam Google Sheet (menu atau butang). Pautan: ' + url);
+  }
+  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(1).setHeight(1), 'Dashboard KPI UTMXCITE JTNCHEPA');
 }
 
 /** Jika ID/pautan folder lampiran ditampal pada tab Persediaan, gunakan folder itu (mesti boleh dicapai oleh pemilik skrip). */

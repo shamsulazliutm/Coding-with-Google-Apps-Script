@@ -1028,5 +1028,11 @@ test('CKAI 10: peruntukan (a) dan komitmen (b) diisi sekali; bulan seterusnya di
   assert.strictEqual(l2.peruntukan_awal, 300); assert.strictEqual(l1.baki, 200);
 });
 
+test('linkSistem dari editor (tanpa antara muka Sheet) memberi mesej jelas dengan pautan', () => {
+  const env2 = require('./mock').loadGas({ now: Date.UTC(2026, 4, 15, 4, 0, 0) });
+  env2.g.SpreadsheetApp.getUi = () => { throw new Error('Cannot call SpreadsheetApp.getUi() from this context.'); };
+  assert.throws(() => env2.g.linkSistem(), /hanya berfungsi apabila dijalankan dari dalam Google Sheet.*https:\/\/script\.google\.com/);
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);
