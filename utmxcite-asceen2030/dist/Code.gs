@@ -72,15 +72,31 @@ var TABUNG_AMANAH = [
   { nama: 'Tabung Program Mikro Kredit Pelajar UTM - MTDC', chargeline: 'A.J060000.6700.08117' }
 ];
 
-function tabungValidate_(c, errors) {
+function tabungValidate_(c, errors, rows, existing) {
   var listed = TABUNG_AMANAH.filter(function (t) { return t.nama === c.tabung; })[0];
   var name = c.tabung === 'Lain-lain' ? String(c.tabung_lain || '').trim() : (listed ? listed.nama : '');
   if (listed) c.no_chargeline = listed.chargeline;                       // diisi automatik bagi tabung yang disenaraikan
-  if (c.komitmen === '' || c.komitmen === undefined) c.komitmen = 0;
+  c.kunci = String(c.tempoh || '') + '|' + name.toLowerCase();           // satu rekod bagi setiap tabung setiap bulan
+
+  // Peruntukan (a) dan komitmen (b) tidak perlu diisi setiap bulan: jika kosong, gunakan nilai rekod terdahulu bagi tabung yang sama dalam tahun yang sama.
+  var prev = null;
+  if (name && c.tempoh && !errors.tempoh) {
+    (rows || []).forEach(function (r) {
+      if (existing && r.id === existing.id) return;
+      if (String(r.kunci).split('|')[1] !== name.toLowerCase()) return;
+      if (String(r.tempoh).slice(0, 4) !== String(c.tempoh).slice(0, 4) || String(r.tempoh) >= String(c.tempoh)) return;
+      if (!prev || String(r.tempoh) > String(prev.tempoh)) prev = r;
+    });
+  }
+  var blank = function (v) { return v === '' || v === undefined || v === null; };
+  if (blank(c.peruntukan_awal)) {
+    if (prev) c.peruntukan_awal = Number(prev.peruntukan_awal) || 0;
+    else if (!errors.peruntukan_awal) errors.peruntukan_awal = 'Wajib diisi pada laporan pertama tabung ini bagi tahun tersebut (bulan seterusnya diisi automatik).';
+  }
+  if (blank(c.komitmen)) c.komitmen = prev ? (Number(prev.komitmen) || 0) : 0;
   var a = Number(c.peruntukan_awal) || 0, b = Number(c.komitmen) || 0, p = Number(c.perbelanjaan) || 0;
   c.baki = Math.round((a - (b + p)) * 100) / 100;                       // d = a - (b + c)
   c.peratus = a ? Math.round(p / a * 1000) / 10 : 0;                    // % perbelanjaan daripada peruntukan
-  c.kunci = String(c.tempoh || '') + '|' + name.toLowerCase();           // satu rekod bagi setiap tabung setiap bulan
 }
 
 var LOKASI_PERNIAGAAN = ['SUB - Lot 1', 'SUB - Lot 2', 'SUB - Lot 3', 'SUB - Lot 4', 'SUB - Lot 5',
@@ -688,8 +704,8 @@ var KPIS = [
       F_('tabung', 'Nama tabung', 'select', { required: true, errorOn: 'tabung', options: TABUNG_AMANAH.map(function (t) { return t.nama; }).concat(['Lain-lain']) }),
       F_('tabung_lain', 'Nama tabung lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('no_chargeline', 'No. chargeline', 'text', { short: 'Chargeline', hint: 'Diisi automatik bagi tabung yang disenaraikan. Wajib bagi Lain-lain.' }),
-      F_('peruntukan_awal', 'Peruntukan / baki awal (a)', 'number', { required: true, min: 0, short: 'Peruntukan (a)' }),
-      F_('komitmen', 'Komitmen (b)', 'number', { min: 0, def: 0, short: 'Komitmen (b)' }),
+      F_('peruntukan_awal', 'Peruntukan / baki awal (a)', 'number', { min: 0, short: 'Peruntukan (a)', hint: 'Isi sekali sahaja pada laporan pertama tabung bagi setiap tahun. Bulan seterusnya diisi automatik.' }),
+      F_('komitmen', 'Komitmen (b)', 'number', { min: 0, short: 'Komitmen (b)', hint: 'Isi hanya jika berubah. Jika kosong, nilai bulan sebelumnya digunakan.' }),
       F_('perbelanjaan', 'Perbelanjaan sehingga bulan ini (c)', 'number', { required: true, min: 0, short: 'Belanja (c)' }),
       F_('bajet_sasaran', 'Bajet disasarkan sehingga bulan ini (RM)', 'number', { min: 0, short: 'Bajet sasaran', hint: 'Pilihan. Digunakan untuk mengira penjimatan berbanding bajet yang disasarkan.' }),
       F_('baki', 'Baki tabung d = a - (b + c)', 'number', { hidden: true, short: 'Baki (d)' }),
@@ -1461,7 +1477,7 @@ function listRecords_(token, kpiId, filters) {
   return { rows: rows.map(stripRow_), canEdit: true, canDelete: user.peranan === ROLES.ADMIN };
 }
 
-function validateRecord_(kpi, rec, faculties, user, existing) {
+function validateRecord_(kpi, rec, faculties, user, existing, rows) {
   var errors = {}, clean = {};
   var facCodes = faculties.map(function (f) { return f.kod; });
 
@@ -1566,7 +1582,7 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
       });
     }
   });
-  if (kpi.validate) kpi.validate(clean, errors);
+  if (kpi.validate) kpi.validate(clean, errors, rows || [], existing || null);
   return { clean: clean, errors: errors };
 }
 
@@ -1609,7 +1625,7 @@ function saveRecord_(token, kpiId, rec) {
       if (isPic && kpi.entry === 'faculty' && existing.fakulti !== user.fakulti) throw userError_('Akses ditolak: rekod ini milik fakulti lain.');
     }
 
-    var v = validateRecord_(kpi, input, listFaculties_(), user, existing);
+    var v = validateRecord_(kpi, input, listFaculties_(), user, existing, table.rows);
     if (Object.keys(v.errors).length) throw userError_('Sila betulkan medan yang bertanda.', { fields: v.errors });
 
     // Medan unik (contoh: satu profil bagi setiap no. matrik).

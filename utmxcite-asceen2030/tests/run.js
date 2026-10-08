@@ -1007,5 +1007,26 @@ test('CKAI 10: % perbelanjaan setiap tabung, bajet disasarkan dan penjimatan; me
   assert.strictEqual(lab['Lebihan berbanding bajet'], 'RM 400.00'); // bajet 1800, belanja 2200
 });
 
+test('CKAI 10: peruntukan (a) dan komitmen (b) diisi sekali; bulan seterusnya diwarisi daripada rekod terdahulu', () => {
+  const save = (extra) => g.api_save(adminToken, 'CKAI10', Object.assign({ tempoh: '2030-01', tabung: 'Majlis Keusahawanan Universiti Awam Malaysia (MAKMUM)', perbelanjaan: 1000 }, extra));
+  fail(save({}), /betulkan/);                                                    // laporan pertama tahun: peruntukan wajib
+  const jan = ok(save({ peruntukan_awal: 10000, komitmen: 500 }));
+  assert.strictEqual(jan.baki, 8500);
+  const feb = ok(save({ tempoh: '2030-02', perbelanjaan: 3000 }));               // a dan b tidak diisi
+  assert.strictEqual(feb.peruntukan_awal, 10000); assert.strictEqual(feb.komitmen, 500); assert.strictEqual(feb.baki, 6500); assert.strictEqual(feb.peratus, 30);
+  const mac = ok(save({ tempoh: '2030-03', perbelanjaan: 4000, komitmen: 1200 })); // komitmen berubah: nilai baharu
+  assert.strictEqual(mac.peruntukan_awal, 10000); assert.strictEqual(mac.komitmen, 1200);
+  const apr = ok(save({ tempoh: '2030-04', perbelanjaan: 5000 }));                // mewarisi komitmen terkini (1200)
+  assert.strictEqual(apr.komitmen, 1200); assert.strictEqual(apr.baki, 3800);
+  fail(save({ tempoh: '2031-01', perbelanjaan: 10 }), /betulkan/);               // tahun baharu: peruntukan wajib semula
+  ok(save({ tempoh: '2031-01', perbelanjaan: 10, peruntukan_awal: 20000 }));
+  const c = card(dash(2030), 'CKAI10');
+  assert.strictEqual(c.value, 50); // 5000 / 10000 (rekod terkini: April)
+  // tabung lain mewarisi dengan nama yang sama
+  const l1 = ok(save({ tabung: 'Lain-lain', tabung_lain: 'Tabung Uji', no_chargeline: 'U.1', peruntukan_awal: 300, perbelanjaan: 100 }));
+  const l2 = ok(save({ tabung: 'Lain-lain', tabung_lain: 'tabung uji', no_chargeline: 'U.1', tempoh: '2030-02', perbelanjaan: 200 }));
+  assert.strictEqual(l2.peruntukan_awal, 300); assert.strictEqual(l1.baki, 200);
+});
+
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
 process.exit(failed ? 1 : 0);

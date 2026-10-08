@@ -49,7 +49,7 @@ function listRecords_(token, kpiId, filters) {
   return { rows: rows.map(stripRow_), canEdit: true, canDelete: user.peranan === ROLES.ADMIN };
 }
 
-function validateRecord_(kpi, rec, faculties, user, existing) {
+function validateRecord_(kpi, rec, faculties, user, existing, rows) {
   var errors = {}, clean = {};
   var facCodes = faculties.map(function (f) { return f.kod; });
 
@@ -154,7 +154,7 @@ function validateRecord_(kpi, rec, faculties, user, existing) {
       });
     }
   });
-  if (kpi.validate) kpi.validate(clean, errors);
+  if (kpi.validate) kpi.validate(clean, errors, rows || [], existing || null);
   return { clean: clean, errors: errors };
 }
 
@@ -197,7 +197,7 @@ function saveRecord_(token, kpiId, rec) {
       if (isPic && kpi.entry === 'faculty' && existing.fakulti !== user.fakulti) throw userError_('Akses ditolak: rekod ini milik fakulti lain.');
     }
 
-    var v = validateRecord_(kpi, input, listFaculties_(), user, existing);
+    var v = validateRecord_(kpi, input, listFaculties_(), user, existing, table.rows);
     if (Object.keys(v.errors).length) throw userError_('Sila betulkan medan yang bertanda.', { fields: v.errors });
 
     // Medan unik (contoh: satu profil bagi setiap no. matrik).
