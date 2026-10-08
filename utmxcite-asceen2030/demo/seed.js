@@ -124,7 +124,7 @@ window.__demoSeed = function () {
   // ---- CKAI 10 Perbelanjaan operasi (kedudukan tabung amanah; angka contoh berdasarkan susunan laporan)
   [['Tabung Induk UTM XCITE', 118602.64, 57641.95], ['Tabung Khas Program Keusahawanan KPM - UTM XCITE', 1217006.43, 157938.9], ['Majlis Keusahawanan Universiti Awam Malaysia (MAKMUM)', 190384.28, 21440],
     ['UMUM-Tabung Usahawan Urusetia HEP', 265986.75, 40440.05], ['Tabung Program Mikro Kredit Pelajar UTM - MTDC', 132335, 0]].forEach(function (t) {
-    for (var m = 1; m <= lastM; m++) save('CKAI10', { tempoh: ym(m), tabung: t[0], peruntukan_awal: t[1], komitmen: 0, perbelanjaan: Math.round(t[2] * m / lastM * 100) / 100 });
+    for (var m = 1; m <= lastM; m++) save('CKAI10', { tempoh: ym(m), tabung: t[0], peruntukan_awal: t[1], komitmen: 0, perbelanjaan: Math.round(t[2] * m / lastM * 100) / 100, bajet_sasaran: Math.round(t[1] * m / 12 * 100) / 100 });
   });
 
   // ---- CKAI 9 Anugerah (satu rekod dengan sijil PDF contoh)

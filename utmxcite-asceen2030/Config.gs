@@ -78,6 +78,7 @@ function tabungValidate_(c, errors) {
   if (c.komitmen === '' || c.komitmen === undefined) c.komitmen = 0;
   var a = Number(c.peruntukan_awal) || 0, b = Number(c.komitmen) || 0, p = Number(c.perbelanjaan) || 0;
   c.baki = Math.round((a - (b + p)) * 100) / 100;                       // d = a - (b + c)
+  c.peratus = a ? Math.round(p / a * 1000) / 10 : 0;                    // % perbelanjaan daripada peruntukan
   c.kunci = String(c.tempoh || '') + '|' + name.toLowerCase();           // satu rekod bagi setiap tabung setiap bulan
 }
 
@@ -675,8 +676,8 @@ var KPIS = [
   {
     id: 'CKAI10', prefix: 'TA', sheet: 'CKAI10_Perbelanjaan_Operasi', fungsi: 'rentas', group: 'Center', entry: 'admin',
     title: 'CKAI 10 · Jumlah perbelanjaan operasi', short: 'Perbelanjaan Operasi',
-    unit: 'RM perbelanjaan tabung', measure: 'tabung', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'tempoh', 'tabung', 'no_chargeline', 'peruntukan_awal', 'komitmen', 'perbelanjaan', 'baki'],
+    unit: '% peruntukan digunakan', measure: 'tabung', jenis: 'penggunaan',
+    listColumns: ['id', 'tempoh', 'tabung', 'no_chargeline', 'peruntukan_awal', 'komitmen', 'perbelanjaan', 'baki', 'peratus'],
     statusField: null,
     unique: ['kunci'],
     rules: [{ when: { field: 'tabung', in: ['Lain-lain'] }, require: ['tabung_lain', 'no_chargeline'] }],
@@ -689,7 +690,9 @@ var KPIS = [
       F_('peruntukan_awal', 'Peruntukan / baki awal (a)', 'number', { required: true, min: 0, short: 'Peruntukan (a)' }),
       F_('komitmen', 'Komitmen (b)', 'number', { min: 0, def: 0, short: 'Komitmen (b)' }),
       F_('perbelanjaan', 'Perbelanjaan sehingga bulan ini (c)', 'number', { required: true, min: 0, short: 'Belanja (c)' }),
+      F_('bajet_sasaran', 'Bajet disasarkan sehingga bulan ini (RM)', 'number', { min: 0, short: 'Bajet sasaran', hint: 'Pilihan. Digunakan untuk mengira penjimatan berbanding bajet yang disasarkan.' }),
       F_('baki', 'Baki tabung d = a - (b + c)', 'number', { hidden: true, short: 'Baki (d)' }),
+      F_('peratus', '% perbelanjaan daripada peruntukan', 'number', { hidden: true, short: '% belanja' }),
       F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'tabung' }),
       F_('lampiran', 'Lampiran laporan (PDF)', 'file', { full: true, sec: 'Dokumen', hint: 'Laporan kedudukan kewangan dalam format PDF, maksimum 5 MB.' }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
@@ -737,9 +740,10 @@ function buildTargetSeed_() {
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
-  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9', 'CKAI10'].forEach(function (k) {
+  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
   });
+  [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add('CKAI10', y, 100, [], 'penggunaan', '', y === 2026 ? 'Sasaran 100% penggunaan peruntukan tabung: makin hampir 100% makin cekap' : ''); });
   return rows;
 }
 

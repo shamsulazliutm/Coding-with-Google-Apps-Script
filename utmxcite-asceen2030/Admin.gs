@@ -85,7 +85,7 @@ function saveTarget_(token, input) {
   }
   var sasaran = numOrBlank(input.sasaran, 'sasaran');
   if (sasaran === '') throw userError_('Sasaran tahunan wajib diisi.');
-  if (kpi.jenis === 'kemajuan' && sasaran > 100) throw userError_('Sasaran kemajuan tidak boleh melebihi 100%.');
+  if ((kpi.jenis === 'kemajuan' || kpi.jenis === 'penggunaan') && sasaran > 100) throw userError_('Sasaran peratus tidak boleh melebihi 100%.');
   var q = [numOrBlank(input.q1, 'Q1'), numOrBlank(input.q2, 'Q2'), numOrBlank(input.q3, 'Q3'), numOrBlank(input.q4, 'Q4')];
   var obj = { kpi: kpi.id, tahun: year, sasaran: sasaran, q1: q[0], q2: q[1], q3: q[2], q4: q[3], jenis: kpi.jenis, bajet_rm: numOrBlank(input.bajet_rm, 'bajet'), catatan: sanitizeText_(String(input.catatan || '').slice(0, 500)) };
 

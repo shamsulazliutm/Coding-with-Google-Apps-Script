@@ -79,6 +79,7 @@ function tabungValidate_(c, errors) {
   if (c.komitmen === '' || c.komitmen === undefined) c.komitmen = 0;
   var a = Number(c.peruntukan_awal) || 0, b = Number(c.komitmen) || 0, p = Number(c.perbelanjaan) || 0;
   c.baki = Math.round((a - (b + p)) * 100) / 100;                       // d = a - (b + c)
+  c.peratus = a ? Math.round(p / a * 1000) / 10 : 0;                    // % perbelanjaan daripada peruntukan
   c.kunci = String(c.tempoh || '') + '|' + name.toLowerCase();           // satu rekod bagi setiap tabung setiap bulan
 }
 
@@ -676,8 +677,8 @@ var KPIS = [
   {
     id: 'CKAI10', prefix: 'TA', sheet: 'CKAI10_Perbelanjaan_Operasi', fungsi: 'rentas', group: 'Center', entry: 'admin',
     title: 'CKAI 10 · Jumlah perbelanjaan operasi', short: 'Perbelanjaan Operasi',
-    unit: 'RM perbelanjaan tabung', measure: 'tabung', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'tempoh', 'tabung', 'no_chargeline', 'peruntukan_awal', 'komitmen', 'perbelanjaan', 'baki'],
+    unit: '% peruntukan digunakan', measure: 'tabung', jenis: 'penggunaan',
+    listColumns: ['id', 'tempoh', 'tabung', 'no_chargeline', 'peruntukan_awal', 'komitmen', 'perbelanjaan', 'baki', 'peratus'],
     statusField: null,
     unique: ['kunci'],
     rules: [{ when: { field: 'tabung', in: ['Lain-lain'] }, require: ['tabung_lain', 'no_chargeline'] }],
@@ -690,7 +691,9 @@ var KPIS = [
       F_('peruntukan_awal', 'Peruntukan / baki awal (a)', 'number', { required: true, min: 0, short: 'Peruntukan (a)' }),
       F_('komitmen', 'Komitmen (b)', 'number', { min: 0, def: 0, short: 'Komitmen (b)' }),
       F_('perbelanjaan', 'Perbelanjaan sehingga bulan ini (c)', 'number', { required: true, min: 0, short: 'Belanja (c)' }),
+      F_('bajet_sasaran', 'Bajet disasarkan sehingga bulan ini (RM)', 'number', { min: 0, short: 'Bajet sasaran', hint: 'Pilihan. Digunakan untuk mengira penjimatan berbanding bajet yang disasarkan.' }),
       F_('baki', 'Baki tabung d = a - (b + c)', 'number', { hidden: true, short: 'Baki (d)' }),
+      F_('peratus', '% perbelanjaan daripada peruntukan', 'number', { hidden: true, short: '% belanja' }),
       F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'tabung' }),
       F_('lampiran', 'Lampiran laporan (PDF)', 'file', { full: true, sec: 'Dokumen', hint: 'Laporan kedudukan kewangan dalam format PDF, maksimum 5 MB.' }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
@@ -738,9 +741,10 @@ function buildTargetSeed_() {
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
-  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9', 'CKAI10'].forEach(function (k) {
+  ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
   });
+  [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add('CKAI10', y, 100, [], 'penggunaan', '', y === 2026 ? 'Sasaran 100% penggunaan peruntukan tabung: makin hampir 100% makin cekap' : ''); });
   return rows;
 }
 
@@ -2004,20 +2008,29 @@ var MEASURES = {
       var k = String(r.kunci).split('|')[1] || String(r.tabung);
       if (!latest[k] || String(r.tempoh) > String(latest[k].tempoh)) latest[k] = r;
     });
-    var a = 0, b = 0, c = 0, d = 0, n = 0;
-    Object.keys(latest).forEach(function (k) { var r = latest[k]; a += num_(r.peruntukan_awal); b += num_(r.komitmen); c += num_(r.perbelanjaan); d += num_(r.baki); n++; });
-    var perMonth = {};
-    inYear.forEach(function (r) { perMonth[r.tempoh] = (perMonth[r.tempoh] || 0) + num_(r.perbelanjaan); });
+    var a = 0, b = 0, c = 0, d = 0, n = 0, bj = 0, cBj = 0;
+    Object.keys(latest).forEach(function (k) {
+      var r = latest[k]; a += num_(r.peruntukan_awal); b += num_(r.komitmen); c += num_(r.perbelanjaan); d += num_(r.baki); n++;
+      if (num_(r.bajet_sasaran) > 0) { bj += num_(r.bajet_sasaran); cBj += num_(r.perbelanjaan); }
+    });
+    var perMonth = {}, perMonthA = {};
+    inYear.forEach(function (r) { perMonth[r.tempoh] = (perMonth[r.tempoh] || 0) + num_(r.perbelanjaan); perMonthA[r.tempoh] = (perMonthA[r.tempoh] || 0) + num_(r.peruntukan_awal); });
+    var sec = [
+      { label: 'Jumlah perbelanjaan terkumpul', value: rm_(c) },
+      { label: 'Jumlah peruntukan / baki awal', value: rm_(a) },
+      { label: 'Komitmen', value: rm_(b) },
+      { label: 'Baki tabung', value: rm_(d) }
+    ];
+    if (bj > 0) {
+      sec.push({ label: 'Bajet disasarkan', value: rm_(bj) });
+      sec.push({ label: bj >= cBj ? 'Penjimatan berbanding bajet' : 'Lebihan berbanding bajet', value: rm_(Math.abs(bj - cBj)) });
+      sec.push({ label: 'Perbelanjaan daripada bajet disasarkan', value: round1_(cBj * 100 / bj) + '%' });
+    }
+    sec.push({ label: 'Bilangan tabung dilaporkan', value: n });
     return {
-      value: round2_(c),
-      secondary: [
-        { label: 'Jumlah peruntukan / baki awal', value: rm_(a) },
-        { label: 'Komitmen', value: rm_(b) },
-        { label: 'Baki tabung', value: rm_(d) },
-        { label: 'Penggunaan peruntukan', value: (a ? round1_(c * 100 / a) : 0) + '%' },
-        { label: 'Bilangan tabung dilaporkan', value: n }
-      ],
-      breakdown: [{ title: 'Perbelanjaan terkumpul (RM) mengikut bulan', items: byMonth_(Object.keys(perMonth).map(function (m) { return { label: m, value: round2_(perMonth[m]) }; })) }]
+      value: a ? round1_(c * 100 / a) : 0,
+      secondary: sec,
+      breakdown: [{ title: 'Penggunaan peruntukan (%) mengikut bulan', items: byMonth_(Object.keys(perMonth).map(function (m) { return { label: m, value: perMonthA[m] ? round1_(perMonth[m] * 100 / perMonthA[m]) : 0 }; })) }]
     };
   },
 
@@ -2125,6 +2138,10 @@ function readTargets_() {
 
 function statusFor_(kpi, value, target) {
   if (target === '' || target === undefined || target === null) return 'Tiada sasaran';
+  if (kpi.jenis === 'penggunaan') {   // peratus peruntukan digunakan: makin hampir 100% makin cekap; lebih 100% = melebihi peruntukan
+    if (value > 100) return 'Melebihi peruntukan';
+    return value >= target ? 'Capai sasaran' : 'Di bawah sasaran';
+  }
   if (kpi.jenis === 'kemajuan') {
     if (value >= 100) return 'Selesai';
     return value >= target ? 'Capai sasaran' : 'Di bawah sasaran';
@@ -2324,7 +2341,7 @@ function saveTarget_(token, input) {
   }
   var sasaran = numOrBlank(input.sasaran, 'sasaran');
   if (sasaran === '') throw userError_('Sasaran tahunan wajib diisi.');
-  if (kpi.jenis === 'kemajuan' && sasaran > 100) throw userError_('Sasaran kemajuan tidak boleh melebihi 100%.');
+  if ((kpi.jenis === 'kemajuan' || kpi.jenis === 'penggunaan') && sasaran > 100) throw userError_('Sasaran peratus tidak boleh melebihi 100%.');
   var q = [numOrBlank(input.q1, 'Q1'), numOrBlank(input.q2, 'Q2'), numOrBlank(input.q3, 'Q3'), numOrBlank(input.q4, 'Q4')];
   var obj = { kpi: kpi.id, tahun: year, sasaran: sasaran, q1: q[0], q2: q[1], q3: q[2], q4: q[3], jenis: kpi.jenis, bajet_rm: numOrBlank(input.bajet_rm, 'bajet'), catatan: sanitizeText_(String(input.catatan || '').slice(0, 500)) };
 

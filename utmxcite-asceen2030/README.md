@@ -179,5 +179,6 @@ Laporan bulanan kedudukan kewangan tabung amanah UTMXCITE (berdasarkan laporan "
 
 - **Medan:** bulan laporan, nama tabung (lima tabung disenaraikan atau **Lain-lain** yang mesti dinamakan dan diberi chargeline), no. chargeline (automatik bagi tabung disenaraikan), peruntukan / baki awal (a), komitmen (b), perbelanjaan terkumpul sehingga bulan itu (c), lampiran laporan (PDF, tidak wajib) dan catatan. **Baki tabung d = a − (b + c)** dikira oleh sistem.
 - **Dashboard awam:** hanya jumlah perbelanjaan, jumlah peruntukan, komitmen, baki, peratus penggunaan dan trend bulanan. Nama tabung, no. chargeline dan angka setiap tabung hanya dalam senarai Admin.
+- **Ukuran dan sasaran:** nilai KPI ialah **% perbelanjaan daripada peruntukan** (jumlah perbelanjaan terkumpul ÷ jumlah peruntukan tabung, rekod bulan terkini setiap tabung). Sasaran lalai **100%** (boleh diubah dalam Admin > Sasaran, maksimum 100%): makin hampir 100% makin cekap; lebih 100% ditandakan "Melebihi peruntukan". Medan pilihan **bajet disasarkan** membolehkan kiraan **penjimatan** (atau lebihan) berbanding bajet. % setiap tabung dipaparkan dalam senarai Admin.
 - Maklumat perolehan tidak termasuk dalam KPI ini.
 - Tambah tabung tetap baharu dengan menyunting `TABUNG_AMANAH` dalam `Config.gs`.

@@ -442,11 +442,11 @@ label .req{color:var(--bad)}
   }
 
   function statusChip(s) {
-    var cls = s === 'Melebihi sasaran' || s === 'Selesai' ? 'over' : s === 'Capai sasaran' ? 'meet' : s === 'Di bawah sasaran' ? 'below' : 'none';
+    var cls = s === 'Melebihi sasaran' || s === 'Selesai' ? 'over' : s === 'Capai sasaran' ? 'meet' : s === 'Di bawah sasaran' || s === 'Melebihi peruntukan' ? 'below' : 'none';
     return '<span class="chip ' + cls + '">' + esc(s) + '</span>';
   }
   function money(n) { return 'RM ' + Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function fmtVal(c, v) { return c.format === 'rm' ? money(v) : c.jenis === 'kemajuan' ? fmtNum(v) + '%' : fmtNum(v); }
+  function fmtVal(c, v) { return c.format === 'rm' ? money(v) : (c.jenis === 'kemajuan' || c.jenis === 'penggunaan') ? fmtNum(v) + '%' : fmtNum(v); }
   function fmtItem(c, v) { return c.format === 'rm' ? money(v) : fmtNum(v); }
 
   function progressBar(pct) {
@@ -463,7 +463,7 @@ label .req{color:var(--bad)}
   function renderCard(c) {
     var h = '<article class="kcard"><span class="tag ' + esc(c.group) + '">' + esc(c.group) + '</span>' +
       '<div class="t">' + esc(c.title) + '</div>' +
-      '<div class="v">' + esc(fmtVal(c, c.value)) + (c.target !== '' ? ' <small>/ ' + esc(fmtVal(c, c.target)) + (c.jenis === 'kemajuan' ? '' : ' minimum') + '</small>' : ' <small>' + esc(c.unit) + '</small>') + '</div>' +
+      '<div class="v">' + esc(fmtVal(c, c.value)) + (c.target !== '' ? ' <small>/ ' + esc(fmtVal(c, c.target)) + (c.jenis === 'kemajuan' || c.jenis === 'penggunaan' ? '' : ' minimum') + '</small>' : ' <small>' + esc(c.unit) + '</small>') + '</div>' +
       progressBar(c.pct) +
       '<div class="chips">' + statusChip(c.status) + (c.pct !== null ? '<span class="sec2"><b>' + esc(fmtNum(c.pct)) + '%</b> daripada sasaran ' + esc(S.year) + '</span>' : '') + '</div>';
     if (c.quarter) {
@@ -792,7 +792,7 @@ label .req{color:var(--bad)}
         .catch(function (e) { if (!authFail(e)) toast(e.message, true); });
       return;
     }
-    var h = '<div class="pub">Semua sasaran ialah <b>minimum</b> (boleh dilebihi), kecuali KAI 2 dan DKAI 1 yang berakhir pada 100%. Sasaran suku tahun (Q1-Q4) bersifat kumulatif dan boleh dikosongkan (N/A).</div>' +
+    var h = '<div class="pub">Semua sasaran ialah <b>minimum</b> (boleh dilebihi), kecuali KAI 2 dan DKAI 1 yang berakhir pada 100%, dan CKAI 10 (peratus penggunaan peruntukan tabung; makin hampir 100% makin cekap). Sasaran suku tahun (Q1-Q4) bersifat kumulatif dan boleh dikosongkan (N/A).</div>' +
       '<div class="panel"><table><thead><tr><th>KPI</th><th>Tahun</th><th>Sasaran</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Bajet (RM)</th><th>Catatan</th><th></th></tr></thead><tbody>';
     S.targets.forEach(function (t, i) {
       function inp(k, w) { return '<input type="number" step="any" min="0" style="width:' + w + 'px" data-t="' + i + '" data-k="' + k + '" value="' + esc(t[k]) + '" aria-label="' + k + ' ' + esc(t.kpi) + ' ' + esc(t.tahun) + '">'; }
@@ -945,9 +945,9 @@ label .req{color:var(--bad)}
     var tb = byId.CKAI10;
     if (tb) {
       var tsec = {}; (tb.secondary || []).forEach(function (x) { tsec[x.label] = x.value; });
-      var use = parseFloat(String(tsec['Penggunaan peruntukan'] || '0').replace('%', '')) || 0;
-      h += panel('Penggunaan tabung amanah', '<div class="prem2">' + ringSvg(use, { size: 130, label: 'Penggunaan peruntukan', text: use + '%', color: COL.teal }) +
-        '<div class="pt"><b>' + esc(fmtVal(tb, tb.value)) + '</b><span>perbelanjaan operasi terkumpul ' + esc(d.year) + '</span><span>Peruntukan: ' + esc(tsec['Jumlah peruntukan / baki awal'] || '-') + '</span><span>Baki tabung: ' + esc(tsec['Baki tabung'] || '-') + '</span></div></div>', 'c4');
+      var jimat = tsec['Penjimatan berbanding bajet'] ? '<span>Penjimatan berbanding bajet: ' + esc(tsec['Penjimatan berbanding bajet']) + '</span>' : (tsec['Lebihan berbanding bajet'] ? '<span>Lebihan berbanding bajet: ' + esc(tsec['Lebihan berbanding bajet']) + '</span>' : '');
+      h += panel('Penggunaan tabung amanah', '<div class="prem2">' + ringSvg(Math.min(100, tb.value), { size: 130, label: 'Penggunaan peruntukan', text: fmtNum(tb.value) + '%', color: COL.teal, tick: tb.target !== '' ? tb.target : 0 }) +
+        '<div class="pt"><b>' + esc(tsec['Jumlah perbelanjaan terkumpul'] || '-') + '</b><span>perbelanjaan operasi terkumpul ' + esc(d.year) + '</span><span>Peruntukan: ' + esc(tsec['Jumlah peruntukan / baki awal'] || '-') + '</span><span>Baki tabung: ' + esc(tsec['Baki tabung'] || '-') + '</span>' + jimat + '</div></div>', 'c4');
     }
 
     // 5) Enam fungsi

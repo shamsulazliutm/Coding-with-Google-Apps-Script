@@ -972,14 +972,39 @@ test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan;
   fail(g.api_save(picToken, 'CKAI10', { tempoh: '2027-03' }), /Akses ditolak/);
   assert.strictEqual(ok(g.api_list(adminToken, 'CKAI10', {})).rows.length, 4);
   const c = card(dash(2027), 'CKAI10');
-  // tabung induk (Jun: 60000) + khas (Mac: 157938.9) + baharu (Mac: 57641.95)
-  assert.strictEqual(c.value, 275580.85); assert.strictEqual(c.format, 'rm');
+  // tabung induk (Jun) + khas (Mac) + baharu (Mac): perbelanjaan 275,580.85 daripada peruntukan 118,602.64 + 1,217,006.43 + 118,602.64
+  assert.strictEqual(c.jenis, 'penggunaan'); assert.strictEqual(c.target, 100);
   const lab = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
+  assert.strictEqual(lab['Jumlah perbelanjaan terkumpul'], 'RM 275,580.85');
   assert.strictEqual(lab['Bilangan tabung dilaporkan'], 3);
-  assert.ok(String(lab['Penggunaan peruntukan']).endsWith('%'));
+  assert.strictEqual(c.value, Math.round(275580.85 / (118602.64 + 1217006.43 + 118602.64) * 1000) / 10);
+  assert.strictEqual(c.status, 'Di bawah sasaran');
+  assert.ok(!('Penjimatan berbanding bajet' in lab)); // tiada bajet disasarkan
   // paparan awam: jumlah sahaja; tiada nama tabung atau chargeline
   const sj = JSON.stringify(dash(2027));
   ['Tabung Induk', 'Tabung Baharu', 'A.J060000', 'MAKMUM', 'X.1.2'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+});
+
+test('CKAI 10: % perbelanjaan setiap tabung, bajet disasarkan dan penjimatan; melebihi peruntukan ditandakan', () => {
+  const r = (extra) => ok(g.api_save(adminToken, 'CKAI10', Object.assign({ tempoh: '2028-06', tabung: 'Tabung Induk UTM XCITE', peruntukan_awal: 1000, komitmen: 0, perbelanjaan: 900, bajet_sasaran: 1000 }, extra)));
+  const a = r({});
+  assert.strictEqual(a.peratus, 90); assert.strictEqual(a.baki, 100);
+  r({ tabung: 'Tabung Program Mikro Kredit Pelajar UTM - MTDC', peruntukan_awal: 1000, perbelanjaan: 700, bajet_sasaran: 800 });
+  let c = card(dash(2028), 'CKAI10');
+  assert.strictEqual(c.value, 80); // 1600 / 2000
+  assert.strictEqual(c.status, 'Di bawah sasaran'); // sasaran 100%
+  let lab = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
+  assert.strictEqual(lab['Bajet disasarkan'], 'RM 1,800.00');
+  assert.strictEqual(lab['Penjimatan berbanding bajet'], 'RM 200.00'); // 1800 - 1600
+  assert.strictEqual(lab['Perbelanjaan daripada bajet disasarkan'], '88.9%');
+  ok(g.api_saveTarget(adminToken, { kpi: 'CKAI10', tahun: 2028, sasaran: 80 }));
+  assert.strictEqual(card(dash(2028), 'CKAI10').status, 'Capai sasaran');
+  fail(g.api_saveTarget(adminToken, { kpi: 'CKAI10', tahun: 2028, sasaran: 120 }), /tidak boleh melebihi 100/);
+  r({ tempoh: '2028-09', tabung: 'Tabung Induk UTM XCITE', perbelanjaan: 1500, bajet_sasaran: 1000 });
+  c = card(dash(2028), 'CKAI10');
+  lab = Object.fromEntries(c.secondary.map(x => [x.label, x.value]));
+  assert.strictEqual(c.value, 110); assert.strictEqual(c.status, 'Melebihi peruntukan'); // 2200 / 2000
+  assert.strictEqual(lab['Lebihan berbanding bajet'], 'RM 400.00'); // bajet 1800, belanja 2200
 });
 
 console.log('\n' + passed + ' lulus, ' + failed + ' gagal');
