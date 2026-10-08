@@ -71,7 +71,14 @@ function buildHtml() {
   const text = async (sel) => (await page.locator(sel).innerText());
 
   console.log('Pelayar (Chromium)');
+  await step('halaman pertama ialah Infografik; menu Infografik sebelum Dashboard', async () => {
+    await page.waitForSelector('.ig .igp');
+    assert.ok((await text('.top h1')).includes('Infografik'));
+    const navs = await page.locator('.side .nav').allInnerTexts();
+    assert.ok(navs.findIndex(t => /Infografik/.test(t)) >= 0 && navs.findIndex(t => /Infografik/.test(t)) < navs.findIndex(t => /Dashboard/.test(t)));
+  });
   await step('dashboard awam dimuatkan tanpa log masuk (17 kad: 7 KPI + 10 CKAI)', async () => {
+    await page.click('.nav:has-text("Dashboard")');
     await page.waitForSelector('.kcard');
     assert.strictEqual(await page.locator('.kcard').count(), 17);
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.toUpperCase());
@@ -495,6 +502,10 @@ function buildHtml() {
       window.google = { script: { run: makeRunner(null, null) } };
     });
     await mp.goto('file://' + htmlPath);
+    await mp.waitForSelector('.ig .igp');
+    const igOverflow = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(igOverflow <= 1, 'infografik melimpah mendatar: ' + igOverflow + 'px');
+    await mp.click('.burger'); await mp.click('.side .nav:has-text("Dashboard")');
     await mp.waitForSelector('.kcard');
     const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     assert.ok(overflow <= 1, 'melimpah mendatar: ' + overflow + 'px');

@@ -24,7 +24,7 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     if (!(await item.isVisible())) { const g = await item.evaluate((el) => el.closest('.gb').getAttribute('data-g')); await page.click('.gh[data-g="' + g + '"]'); }
     await item.click();
   };
-  const quick = async (email) => { if (!(await page.locator('#demobar.open').count())) await page.click('#demobar .dh'); await page.click(email ? '[data-d="' + email + '"]' : '[data-d=""]'); await page.waitForSelector('.kcard'); };
+  const quick = async (email) => { if (!(await page.locator('#demobar.open').count())) await page.click('#demobar .dh'); await page.click(email ? '[data-d="' + email + '"]' : '[data-d=""]'); await page.waitForSelector('.prof'); await page.click('.nav:has-text("Dashboard")'); await page.waitForSelector('.kcard'); };
 
   console.log('Prototaip pra-demo (file:// tanpa pelayan)');
   await page.goto(file);
@@ -33,6 +33,8 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     assert.strictEqual(h, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
   });
   await step('dashboard awam dengan data contoh: 17 kad dan nilai bukan sifar', async () => {
+    await page.waitForSelector('.ig .igp'); // halaman pertama = Infografik
+    await page.click('.nav:has-text("Dashboard")');
     await page.waitForSelector('.kcard');
     assert.strictEqual(await page.locator('.kcard').count(), 17);
     const t = await page.locator('.cont').innerText();
@@ -91,7 +93,7 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await page.waitForSelector('td:has-text("Pelajar Demo Baharu")');
     assert.ok((await page.locator('tbody tr').count()) === before + 1);
     await page.reload();
-    await page.waitForSelector('.kcard'); // sesi dan data kekal (localStorage)
+    await page.waitForSelector('.ig .igp'); // sesi dan data kekal (localStorage); halaman pertama = Infografik
     assert.ok((await page.locator('.prof').innerText()).includes('pic.fai@utm.my'));
     await goNav('CKAI 1');
     await page.waitForSelector('td:has-text("Pelajar Demo Baharu")');
@@ -147,7 +149,7 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await page.click('#demomodal button');
     page.once('dialog', (d) => d.accept());
     await page.click('[data-a="reset"]');
-    await page.waitForSelector('.kcard');
+    await page.waitForSelector('.ig .igp');
     await quick('pic.fai@utm.my');
     await goNav('CKAI 1');
     await page.waitForSelector('table');
@@ -155,7 +157,7 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
   });
   await step('paparan telefon tidak melimpah mendatar', async () => {
     const m = await browser.newContext({ viewport: { width: 390, height: 800 } });
-    const mp = await m.newPage(); await mp.goto(file); await mp.waitForSelector('.kcard');
+    const mp = await m.newPage(); await mp.goto(file); await mp.waitForSelector('.ig .igp'); await mp.click('.burger'); await mp.click('.side .nav:has-text("Dashboard")'); await mp.waitForSelector('.kcard');
     const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     assert.ok(overflow <= 1, 'melimpah ' + overflow + 'px');
     await mp.screenshot({ path: path.join(out, 'demo-4-telefon.png') });

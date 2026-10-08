@@ -171,7 +171,7 @@ Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, pe
 
 ## Infografik (menu awam)
 
-Menu **Infografik** (di bawah Dashboard, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, pencapaian mengikut tiga peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).
+Menu **Infografik** (menu pertama, sebelum Dashboard; ia juga halaman pertama apabila pautan dibuka, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, pencapaian mengikut tiga peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).
 
 ## CKAI 10 · Jumlah perbelanjaan operasi (Cross-cutting)
 

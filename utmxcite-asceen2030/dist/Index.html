@@ -228,7 +228,7 @@ label .req{color:var(--bad)}
   var DASH_TITLE = 'Dashboard KPI UTMXCITE JTNCHEPA';
   var S = {
     token: null, session: null,
-    view: { name: 'dashboard' },
+    view: { name: 'infografik' },
     year: null, dash: null,
     list: null, listFilters: {}, editing: null,
     users: null, targets: null, audit: null,
@@ -276,7 +276,7 @@ label .req{color:var(--bad)}
   function authFail(e) {
     if (e && e.auth) {
       S.token = null; S.session = null; store('del', 'utmx_token');
-      S.view = { name: 'dashboard' };
+      S.view = { name: 'infografik' };
       toast(e.message, true);
       render();
       return true;
@@ -375,8 +375,8 @@ label .req{color:var(--bad)}
     h += u
       ? '<div class="prof"><div class="av">' + esc(initials(u.nama, u.emel)) + '</div><div><b>' + esc(u.nama || u.emel) + '</b><small>' + esc(u.emel) + '</small></div></div>'
       : '<div class="prof"><div class="av">?</div><div><b>Pengunjung</b><small>Belum log masuk</small></div></div>';
-    h += navBtn('dashboard', ico('grid'), 'Dashboard', S.view.name === 'dashboard');
     h += navBtn('infografik', ico('chart'), 'Infografik', S.view.name === 'infografik');
+    h += navBtn('dashboard', ico('grid'), 'Dashboard', S.view.name === 'dashboard');
     if (u) {
       h += '<div class="mod">Peringkat</div>';
       S.session.levels.forEach(function (lv) {
@@ -426,7 +426,7 @@ label .req{color:var(--bad)}
     var v = S.view;
     if (v.name === 'dashboard') return renderDashboard();
     if (v.name === 'infografik') return renderInfo();
-    if (!S.session) { S.view = { name: 'dashboard' }; return renderDashboard(); }
+    if (!S.session) { S.view = { name: 'infografik' }; return renderInfo(); }
     if (v.name === 'kpi') return renderKpi();
     if (v.name === 'users') return renderUsers();
     if (v.name === 'targets') return renderTargets();
@@ -1081,7 +1081,7 @@ label .req{color:var(--bad)}
       S.login = null;
       return call('api_session', S.token);
     }).then(function (sess) {
-      S.session = sess; S.view = { name: 'dashboard' }; S.dash = null;
+      S.session = sess; S.view = { name: 'infografik' }; S.dash = null;
       toast('Selamat datang, ' + (sess.user.nama || sess.user.emel) + '.');
       render();
     }).catch(function (e) { L.busy = false; L.error = e.message; L.code = ''; renderLogin(); });
@@ -1090,7 +1090,7 @@ label .req{color:var(--bad)}
   function doLogout() {
     var t = S.token;
     S.token = null; S.session = null; store('del', 'utmx_token');
-    S.view = { name: 'dashboard' }; S.list = S.users = S.targets = S.audit = null; S.editing = null; S.dash = null;
+    S.view = { name: 'infografik' }; S.list = S.users = S.targets = S.audit = null; S.editing = null; S.dash = null;
     if (t) call('api_logout', t).catch(function () {});
     toast('Anda telah log keluar.');
     render();
