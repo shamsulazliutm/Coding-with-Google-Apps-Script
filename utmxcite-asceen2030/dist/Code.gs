@@ -112,12 +112,12 @@ var JENIS_PERNIAGAAN = ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Akseso
  * ditanda dengan satu `fungsi`. DKAI 1 ialah pelan merentas semua fungsi.
  */
 var FUNCTIONS = [
-  { id: 'minat', no: 1, short: 'Identify Interest', label: 'Identify Student Entrepreneurship Interest', ms: 'Kenal pasti minat keusahawanan pelajar' },
-  { id: 'latihan', no: 2, short: 'Entrepreneurship Training', label: 'Conduct Entrepreneurship Training', ms: 'Jalankan latihan keusahawanan' },
-  { id: 'ideasi', no: 3, short: 'Business Ideation', label: 'Support Student Business Ideation', ms: 'Sokong pengideaan perniagaan pelajar' },
-  { id: 'startup', no: 4, short: 'Startup Development', label: 'Facilitate Student Startup Development', ms: 'Fasilitasi pembangunan startup pelajar' },
-  { id: 'prestasi', no: 5, short: 'Enterprise Performance', label: 'Monitor Student Enterprise Performance', ms: 'Pantau prestasi perusahaan pelajar' },
-  { id: 'pameran', no: 6, short: 'Showcase Innovation', label: 'Showcase Student Innovation Venture', ms: 'Pamerkan inovasi dan venture pelajar' },
+  { id: 'minat', nama: 'Kenal pasti minat', no: 1, short: 'Identify Interest', label: 'Identify Student Entrepreneurship Interest', ms: 'Kenal pasti minat keusahawanan pelajar' },
+  { id: 'latihan', nama: 'Latihan keusahawanan', no: 2, short: 'Entrepreneurship Training', label: 'Conduct Entrepreneurship Training', ms: 'Jalankan latihan keusahawanan' },
+  { id: 'ideasi', nama: 'Sokong pengideaan perniagaan', no: 3, short: 'Business Ideation', label: 'Support Student Business Ideation', ms: 'Sokong pengideaan perniagaan pelajar' },
+  { id: 'startup', nama: 'Bangunkan startup pelajar', no: 4, short: 'Startup Development', label: 'Facilitate Student Startup Development', ms: 'Fasilitasi pembangunan startup pelajar' },
+  { id: 'prestasi', nama: 'Pantau prestasi usahawan', no: 5, short: 'Enterprise Performance', label: 'Monitor Student Enterprise Performance', ms: 'Pantau prestasi perusahaan pelajar' },
+  { id: 'pameran', nama: 'Pameran inovasi pelajar', no: 6, short: 'Showcase Innovation', label: 'Showcase Student Innovation Venture', ms: 'Pamerkan inovasi dan venture pelajar' },
   { id: 'rentas', no: null, label: 'Cross-cutting', ms: 'Pelan dan tadbir urus merentas fungsi' }
 ];
 
@@ -580,14 +580,14 @@ var KPIS = [
   },
   {
     id: 'CKAI6', prefix: 'SI', sheet: 'CKAI6_Sewaan_Inkubator', fungsi: 'startup', group: 'Center', entry: 'admin',
-    title: 'CKAI 6 · Pendapatan sewaan inkubator', short: 'Sewaan Inkubator',
+    title: 'CKAI 6 · Pendapatan sewaan ruang niaga', short: 'Sewaan ruang niaga',
     unit: 'RM sewaan diterima', measure: 'rent', jenis: 'minimum', valueFormat: 'rm',
     listColumns: ['id', 'tempoh', 'inkubator', 'penyewa', 'jumlah_rm', 'status_bayaran'],
     statusField: 'status_bayaran',
     rules: [{ when: { field: 'status_bayaran', in: ['Dibayar'] }, require: ['tarikh_bayar'] }],
     fields: [
       F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Sewaan bulanan' }),
-      F_('inkubator', 'Inkubator / ruang', 'text', { required: true }),
+      F_('inkubator', 'Ruang niaga', 'text', { required: true }),
       F_('penyewa', 'Penyewa (syarikat / pasukan)', 'text', { required: true }),
       F_('jumlah_rm', 'Jumlah sewa (RM)', 'number', { required: true, min: 0 }),
       F_('status_bayaran', 'Status bayaran', 'select', { required: true, options: ['Dibayar', 'Belum dibayar', 'Tertunggak'] }),
@@ -1980,7 +1980,7 @@ var MEASURES = {
     };
   },
 
-  // CKAI 6: pendapatan sewaan inkubator yang DITERIMA (status Dibayar) pada tahun itu.
+  // CKAI 6: pendapatan sewaan ruang niaga yang DITERIMA (status Dibayar) pada tahun itu.
   rent: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
     var paid = inYear.filter(function (r) { return r.status_bayaran === 'Dibayar'; });

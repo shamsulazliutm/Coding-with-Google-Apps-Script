@@ -90,7 +90,7 @@ window.__demoSeed = function () {
     save('CKAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar SSU Contoh', i), no_kp: '0201' + p2(i) + '10' + ('0000' + i).slice(-4), no_matrik: 'S24' + p2(i) + '001', nama_syarikat: 'Syarikat Contoh ' + p2(i) + ' Sdn Bhd', jenis_perniagaan: ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Aksesori', 'Reka Bentuk Grafik, Laman Web & Perkhidmatan Digital', 'Lain-lain'][i % 5], jenis_perniagaan_lain: i % 5 === 4 ? 'Akuaponik' : '', bil_rakan_kongsi: 1 + (i % 4), rakan_kongsi: i % 4 === 0 ? [] : Array.apply(null, Array(i % 4)).map(function (_, j) { return { nama: nm('Rakan Contoh', i * 3 + j), matrik: 'S25' + p2(i) + '0' + (j + 1), nokp: '0301' + p2(i) + '10' + ('0000' + (i * 3 + j)).slice(-4) }; }), status_ssm: i % 3 === 0 ? 'Tidak Berdaftar' : 'Berdaftar', tarikh_ssm: i % 3 === 0 ? '' : ymd(1 + (i % lastM), 2), no_ssu: 'SSU-' + Y + '-' + ('000' + i).slice(-4), tarikh_daftar: ymd(1 + (i % lastM), 8 + (i % 15)), status: i === 14 ? 'Tidak Aktif' : 'Aktif' });
   }
 
-  // ---- CKAI 5 Makerspace, CKAI 6 Sewaan inkubator, CKAI 7 Pendapatan
+  // ---- CKAI 5 Makerspace, CKAI 6 Sewaan ruang niaga, CKAI 7 Pendapatan
   var biz = ['Kedai Contoh A', 'Gig Contoh B', 'Kraf Contoh C', 'Aplikasi Contoh D'];
   for (var m = 1; m <= lastM; m++) {
     var eq = ['3D Printer', 'Laser Cutter Machine', 'Peralatan Tangan (Tools)', 'Sewaan Ruang (Space Rental)', 'Lain-lain (Other)'];
@@ -98,7 +98,7 @@ window.__demoSeed = function () {
       save('CKAI5', { emel: 'pengguna' + u + '@graduate.utm.my', nama: nm('Pemohon Makerspace', m * 5 + u), no_kp: '9901' + p2(m) + '0' + u + '1234', no_matrik: 'A2' + p2(m) + 'EC' + p2(u + 1) + '1', fakulti: fac(m + u), kelas: 'Tahun ' + (1 + u % 4), telefon: '012-34567' + p2(m + u),
         peralatan: eq[(m + u) % eq.length], peralatan_lain: eq[(m + u) % eq.length] === 'Lain-lain (Other)' ? 'Vacuum Former' : '', tujuan: 'Membangunkan prototaip projek contoh', bil_peserta: 1 + (u % 4), tarikh_mula: ymd(m, 3 + u * 5), tarikh_tamat: ymd(m, 3 + u * 5), masa_mula: '09:00', masa_tamat: '12:30', status_bayaran: u === 2 ? 'Tiada Caj' : (m === lastM ? 'Belum Dibayar' : 'Bayar'), bayaran_rm: 5 });
     }
-    ['Launchpad FAI', 'Launchpad FC', 'Co-working UTMXCITE A'].forEach(function (inc, k) {
+    ['SUB - Lot 1', 'Student Mall - Lot 2', 'Student Mall - Lot 7'].forEach(function (inc, k) {
       var late = m === lastM && k === 2;
       save('CKAI6', { tempoh: ym(m), inkubator: inc, penyewa: 'Penyewa Contoh ' + (k + 1), jumlah_rm: 600 + k * 150, status_bayaran: late ? 'Belum dibayar' : 'Dibayar', tarikh_bayar: late ? '' : ymd(m, 7) });
     });

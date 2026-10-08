@@ -53,7 +53,7 @@ Enam fungsi ialah mandat peringkat Universiti kepada UTMXCITE dan menjadi **alir
 | **1 · Identify Student Entrepreneurship Interest** (kenal pasti minat) | | CKAI 1 · Bilangan **profiling pelajar yang didaftarkan** | PIC fakulti dan Admin |
 | **2 · Conduct Entrepreneurship Training** (latihan) | KAI 4 | CKAI 2 · Bilangan program keusahawanan | PIC fakulti dan Admin |
 | **3 · Support Student Business Ideation** (pengideaan) | | CKAI 3 · Bilangan program inovasi | PIC fakulti dan Admin |
-| **4 · Facilitate Student Startup Development** (pembangunan startup) | KAI 1, 2, 3, 5, 6 | CKAI 4 · Pendaftaran SSU; CKAI 5 · Penggunaan Makerspace; CKAI 6 · Pendapatan sewaan inkubator | Admin |
+| **4 · Facilitate Student Startup Development** (pembangunan startup) | KAI 1, 2, 3, 5, 6 | CKAI 4 · Pendaftaran SSU; CKAI 5 · Penggunaan Makerspace; CKAI 6 · Pendapatan sewaan ruang niaga | Admin |
 | **5 · Monitor Student Enterprise Performance** (pantau prestasi) | | CKAI 7 · Pendapatan usahawan pelajar | PIC fakulti dan Admin |
 | **6 · Showcase Student Innovation Venture** (pameran inovasi) | | CKAI 8 · Inovasi pelajar yang dihasilkan; CKAI 9 · Anugerah & pengiktirafan | PIC fakulti dan Admin |
 | Merentas fungsi | DKAI 1 | | |
@@ -67,7 +67,7 @@ Semua CKAI ialah sasaran **minimum** dan **belum ditetapkan**: isi melalui menu 
 | 2, 3 Program | Satu program | Program berstatus **Selesai** pada tahun tarikh tamat |
 | 4 SSU | Satu syarikat / perniagaan pelajar | Pendaftaran pada tahun tarikh daftar |
 | 5 Makerspace | Satu baris sebulan | Jumlah penggunaan bagi bulan dalam tahun itu |
-| 6 Sewaan inkubator | Satu baris sebulan bagi setiap penyewa | Jumlah RM berstatus **Dibayar** (belum bayar / tertunggak dipaparkan berasingan) |
+| 6 Sewaan ruang niaga | Satu baris sebulan bagi setiap penyewa | Jumlah RM berstatus **Dibayar** (belum bayar / tertunggak dipaparkan berasingan) |
 | 7 Pendapatan usahawan | Satu baris sebulan bagi setiap perniagaan | Jumlah RM bagi bulan dalam tahun itu |
 | 8 Inovasi pelajar | Satu projek inovasi | Projek yang **telah menyertai pertandingan** (sekurang-kurangnya peringkat Fakulti) pada tahun tarikh pertandingan |
 | 9 Anugerah | Satu anugerah / pengiktirafan | Bilangan yang diterima pada tahun tarikh |
@@ -171,7 +171,7 @@ Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, pe
 
 ## Infografik (menu awam)
 
-Menu **Infografik** (menu pertama, sebelum Dashboard; ia juga halaman pertama apabila pautan dibuka, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, pencapaian mengikut tiga peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).
+Menu **Infografik** (tajuk halaman: **Laporan Prestasi UTMXCITE**; menu pertama, sebelum Dashboard; ia juga halaman pertama apabila pautan dibuka, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, pencapaian mengikut tiga peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).
 
 ## CKAI 10 · Jumlah perbelanjaan operasi (Cross-cutting)
 

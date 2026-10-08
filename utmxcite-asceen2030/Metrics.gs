@@ -201,7 +201,7 @@ var MEASURES = {
     };
   },
 
-  // CKAI 6: pendapatan sewaan inkubator yang DITERIMA (status Dibayar) pada tahun itu.
+  // CKAI 6: pendapatan sewaan ruang niaga yang DITERIMA (status Dibayar) pada tahun itu.
   rent: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
     var paid = inYear.filter(function (r) { return r.status_bayaran === 'Dibayar'; });

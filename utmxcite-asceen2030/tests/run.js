@@ -467,8 +467,8 @@ test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () 
   fail(g.api_save(adminToken, 'CKAI5', mk({ telefon: 'abc' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ bil_peserta: 0 })), /betulkan/);
 });
-test('CKAI 6 (sewaan inkubator): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
-  const r = { tempoh: '2026-03', inkubator: 'Launchpad FC', penyewa: 'Syarikat A', jumlah_rm: 500 };
+test('CKAI 6 (sewaan ruang niaga): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
+  const r = { tempoh: '2026-03', inkubator: 'Student Mall - Lot 2', penyewa: 'Syarikat A', jumlah_rm: 500 };
   fail(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar' }, r)), /betulkan/); // tarikh bayar wajib
   ok(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar', tarikh_bayar: '2026-03-05' }, r)));
   ok(g.api_save(adminToken, 'CKAI6', Object.assign({}, r, { tempoh: '2026-04', jumlah_rm: 700, status_bayaran: 'Tertunggak' })));

@@ -178,7 +178,7 @@ label .req{color:var(--bad)}
 .pt{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--mut);min-width:140px;flex:1}.pt b{font-size:26px;color:var(--ink)}.pt .gold{color:#8a6410;font-weight:600}
 .rrow{display:flex;gap:10px;justify-content:space-around}.rrow:not(.six) .rtile{flex:1 1 0}.rrow.six{display:grid;grid-template-columns:repeat(6,1fr)}
 .rtile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;min-width:0}.rtile .ring{max-width:104px}.rrow.six .ring{max-width:88px}
-.rtile b{font-size:12.5px;color:var(--ink)}.rtile small{font-size:11px;color:var(--mut)}
+.rtile b{font-size:12.5px;color:var(--ink)}.rtile i{font-size:11px;color:var(--mut);font-style:italic}.rtile small{font-size:11px;color:var(--mut)}
 .bigs{display:flex;gap:16px;justify-content:space-between}.bigs div{display:flex;flex-direction:column}.bigs b{font-size:30px;color:var(--m);line-height:1.1}.bigs b small{font-size:15px;color:var(--mut);font-weight:400}.bigs span{font-size:12px;color:var(--mut)}
 .pbar2{height:6px;background:var(--track,#efe6e9);border-radius:3px;margin:8px 0 4px;overflow:hidden}.pbar2 i{display:block;height:100%;background:var(--m);border-radius:3px}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -417,7 +417,7 @@ label .req{color:var(--bad)}
   function pageTitle() {
     var v = S.view;
     if (v.name === 'dashboard') return DASH_TITLE;
-    if (v.name === 'infografik') return 'Infografik Pencapaian UTMXCITE';
+    if (v.name === 'infografik') return 'Laporan Prestasi UTMXCITE';
     if (v.name === 'kpi') { var k = kpiById(v.id); return k ? k.title : 'KPI'; }
     return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit', setup: 'Persediaan & Pautan' }[v.name] || APP_NAME;
   }
@@ -859,7 +859,7 @@ label .req{color:var(--bad)}
     return h + '<text x="' + cx + '" y="' + (cx + size * 0.07) + '" text-anchor="middle" class="rv" style="font-size:' + Math.round(size * 0.22) + 'px">' + esc(o.text) + '</text></svg>';
   }
   function ringTile(pct, o) {
-    return '<div class="rtile">' + ringSvg(pct, o) + '<b>' + esc(o.label) + '</b>' + (o.sub ? '<small>' + esc(o.sub) + '</small>' : '') + '</div>';
+    return '<div class="rtile">' + ringSvg(pct, o) + '<b>' + esc(o.label) + '</b>' + (o.en ? '<i>(' + esc(o.en) + ')</i>' : '') + (o.sub ? '<small>' + esc(o.sub) + '</small>' : '') + '</div>';
   }
 
   // Carta bar menegak (satu paksi); item = {label, value}
@@ -924,7 +924,7 @@ label .req{color:var(--bad)}
     var byId = {}; d.kpis.forEach(function (c) { byId[c.id] = c; });
     var cs = d.kpis, withT = cs.filter(function (c) { return c.target !== ''; });
     function avgPct(list) { var v = list.map(pctCap).filter(function (x) { return x !== null; }); return v.length ? Math.round(v.reduce(function (a, b) { return a + b; }, 0) / v.length) : null; }
-    var h = '<div class="igtop"><div><h2 class="igh">Infografik Pencapaian UTMXCITE</h2><p class="igs">' + esc(d.ds.label) + ' · tahun ' + esc(d.year) + ' · data ringkasan, tiada maklumat peribadi</p></div>' +
+    var h = '<div class="igtop"><div><h2 class="igh">Laporan Prestasi UTMXCITE</h2><p class="igs">' + esc(d.ds.label) + ' · tahun ' + esc(d.year) + ' · data ringkasan, tiada maklumat peribadi</p></div>' +
       '<div class="igctl"><label for="iy" style="margin:0">Tahun</label><select id="iy" data-change="iyear">' + d.years.map(function (y) { return '<option' + (y === d.year ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
       '<button class="btn o sm" type="button" data-action="print">Cetak / PDF</button></div></div><div class="ig">';
 
@@ -973,13 +973,13 @@ label .req{color:var(--bad)}
     // 5) Enam fungsi
     h += panel('Enam fungsi UTMXCITE', '<div class="rrow six">' + d.functions.filter(function (f) { return f.no; }).map(function (f) {
       var list = cs.filter(function (c) { return c.fungsi === f.id; }), t = list.filter(function (c) { return c.target !== ''; }), p = avgPct(t);
-      return ringTile(p === null ? 0 : p, { size: 88, label: f.no + ' · ' + f.short, text: p === null ? '–' : p + '%', sub: list.length + ' indikator' });
+      return ringTile(p === null ? 0 : p, { size: 88, label: f.no + ' · ' + (f.nama || f.short), en: f.nama ? f.short : '', text: p === null ? '–' : p + '%', sub: list.length + ' indikator' });
     }).join('') + '</div>', 'c12');
 
     // 7) Carta bulanan (RM dan bilangan)
     var inc = bdOf(byId.CKAI7, /bulan/i), rent = bdOf(byId.CKAI6, /bulan/i), ms = bdOf(byId.CKAI5, /bulan/i);
     if (inc) h += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c4');
-    if (rent) h += panel('Sewaan inkubator diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan inkubator bulanan', fmt: money }), 'c4');
+    if (rent) h += panel('Sewaan ruang niaga diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan ruang niaga bulanan', fmt: money }), 'c4');
     if (ms) h += panel('Penggunaan Makerspace mengikut bulan', '<div class="big1">' + esc(fmtNum(byId.CKAI5.value)) + ' <small>penggunaan</small></div>' + barsSvg(ms, { label: 'Penggunaan Makerspace bulanan', fmt: function (v) { return v + ' penggunaan'; } }), 'c4');
 
     // 8) Fakulti
@@ -1165,7 +1165,9 @@ label .req{color:var(--bad)}
         break;
       case 'uclear': $('#uform').reset(); break;
       case 'copy': copyText(a.getAttribute('data-v')); break;
-      case 'print': window.print(); break;
+      case 'print':   // tajuk dokumen (dan nama fail PDF) = Laporan Prestasi UTMXCITE
+        var oldTitle = document.title; document.title = 'Laporan Prestasi UTMXCITE' + (S.dash ? ' ' + S.dash.year : '');
+        window.print(); document.title = oldTitle; break;
       case 'runsetup':
         askConfirm('Jalankan persediaan semula? Tab/lajur yang tiada akan ditambah; data sedia ada tidak dipadam.', 'Ya, jalankan').then(function (yes) {
           if (!yes) return;

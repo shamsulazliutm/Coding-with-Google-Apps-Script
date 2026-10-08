@@ -73,7 +73,7 @@ function buildHtml() {
   console.log('Pelayar (Chromium)');
   await step('halaman pertama ialah Infografik; menu Infografik sebelum Dashboard', async () => {
     await page.waitForSelector('.ig .igp');
-    assert.ok((await text('.top h1')).includes('Infografik'));
+    assert.ok((await text('.top h1')).includes('Laporan Prestasi UTMXCITE'));
     const navs = await page.locator('.side .nav').allInnerTexts();
     assert.ok(navs.findIndex(t => /Infografik/.test(t)) >= 0 && navs.findIndex(t => /Infografik/.test(t)) < navs.findIndex(t => /Dashboard/.test(t)));
   });
@@ -407,8 +407,8 @@ function buildHtml() {
     assert.ok((await page.locator('.igp').count()) >= 6);
     assert.ok((await page.locator('svg.ring').count()) >= 10); // premium + 3 peringkat + 6 fungsi
     assert.ok((await page.locator('svg.chart').count()) >= 1);
-    const txt = await page.locator('.ig').innerText();
-    ['Pekerjaan Premium Tier 1', 'Sasaran 2030: 40%', 'Enam fungsi UTMXCITE', 'Semua indikator'].forEach(x => assert.ok(txt.toLowerCase().includes(x.toLowerCase()), 'infografik tiada: ' + x));
+    const txt = await page.locator('.cont').innerText();
+    ['Laporan Prestasi UTMXCITE', 'Pekerjaan Premium Tier 1', 'Sasaran 2030: 40%', 'Enam fungsi UTMXCITE', 'Semua indikator', 'Kenal pasti minat', '(Identify Interest)', 'Pameran inovasi pelajar', '(Showcase Innovation)'].forEach(x => assert.ok(txt.toLowerCase().includes(x.toLowerCase()), 'infografik tiada: ' + x));
     await page.selectOption('#iy', '2027');
     await page.waitForSelector('.igs:has-text("tahun 2027")');
     await page.selectOption('#iy', '2026');

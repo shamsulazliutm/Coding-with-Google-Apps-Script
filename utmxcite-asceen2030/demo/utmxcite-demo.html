@@ -177,7 +177,7 @@ label .req{color:var(--bad)}
 .pt{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--mut);min-width:140px;flex:1}.pt b{font-size:26px;color:var(--ink)}.pt .gold{color:#8a6410;font-weight:600}
 .rrow{display:flex;gap:10px;justify-content:space-around}.rrow:not(.six) .rtile{flex:1 1 0}.rrow.six{display:grid;grid-template-columns:repeat(6,1fr)}
 .rtile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;min-width:0}.rtile .ring{max-width:104px}.rrow.six .ring{max-width:88px}
-.rtile b{font-size:12.5px;color:var(--ink)}.rtile small{font-size:11px;color:var(--mut)}
+.rtile b{font-size:12.5px;color:var(--ink)}.rtile i{font-size:11px;color:var(--mut);font-style:italic}.rtile small{font-size:11px;color:var(--mut)}
 .bigs{display:flex;gap:16px;justify-content:space-between}.bigs div{display:flex;flex-direction:column}.bigs b{font-size:30px;color:var(--m);line-height:1.1}.bigs b small{font-size:15px;color:var(--mut);font-weight:400}.bigs span{font-size:12px;color:var(--mut)}
 .pbar2{height:6px;background:var(--track,#efe6e9);border-radius:3px;margin:8px 0 4px;overflow:hidden}.pbar2 i{display:block;height:100%;background:var(--m);border-radius:3px}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -526,12 +526,12 @@ var JENIS_PERNIAGAAN = ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Akseso
  * ditanda dengan satu `fungsi`. DKAI 1 ialah pelan merentas semua fungsi.
  */
 var FUNCTIONS = [
-  { id: 'minat', no: 1, short: 'Identify Interest', label: 'Identify Student Entrepreneurship Interest', ms: 'Kenal pasti minat keusahawanan pelajar' },
-  { id: 'latihan', no: 2, short: 'Entrepreneurship Training', label: 'Conduct Entrepreneurship Training', ms: 'Jalankan latihan keusahawanan' },
-  { id: 'ideasi', no: 3, short: 'Business Ideation', label: 'Support Student Business Ideation', ms: 'Sokong pengideaan perniagaan pelajar' },
-  { id: 'startup', no: 4, short: 'Startup Development', label: 'Facilitate Student Startup Development', ms: 'Fasilitasi pembangunan startup pelajar' },
-  { id: 'prestasi', no: 5, short: 'Enterprise Performance', label: 'Monitor Student Enterprise Performance', ms: 'Pantau prestasi perusahaan pelajar' },
-  { id: 'pameran', no: 6, short: 'Showcase Innovation', label: 'Showcase Student Innovation Venture', ms: 'Pamerkan inovasi dan venture pelajar' },
+  { id: 'minat', nama: 'Kenal pasti minat', no: 1, short: 'Identify Interest', label: 'Identify Student Entrepreneurship Interest', ms: 'Kenal pasti minat keusahawanan pelajar' },
+  { id: 'latihan', nama: 'Latihan keusahawanan', no: 2, short: 'Entrepreneurship Training', label: 'Conduct Entrepreneurship Training', ms: 'Jalankan latihan keusahawanan' },
+  { id: 'ideasi', nama: 'Sokong pengideaan perniagaan', no: 3, short: 'Business Ideation', label: 'Support Student Business Ideation', ms: 'Sokong pengideaan perniagaan pelajar' },
+  { id: 'startup', nama: 'Bangunkan startup pelajar', no: 4, short: 'Startup Development', label: 'Facilitate Student Startup Development', ms: 'Fasilitasi pembangunan startup pelajar' },
+  { id: 'prestasi', nama: 'Pantau prestasi usahawan', no: 5, short: 'Enterprise Performance', label: 'Monitor Student Enterprise Performance', ms: 'Pantau prestasi perusahaan pelajar' },
+  { id: 'pameran', nama: 'Pameran inovasi pelajar', no: 6, short: 'Showcase Innovation', label: 'Showcase Student Innovation Venture', ms: 'Pamerkan inovasi dan venture pelajar' },
   { id: 'rentas', no: null, label: 'Cross-cutting', ms: 'Pelan dan tadbir urus merentas fungsi' }
 ];
 
@@ -994,14 +994,14 @@ var KPIS = [
   },
   {
     id: 'CKAI6', prefix: 'SI', sheet: 'CKAI6_Sewaan_Inkubator', fungsi: 'startup', group: 'Center', entry: 'admin',
-    title: 'CKAI 6 · Pendapatan sewaan inkubator', short: 'Sewaan Inkubator',
+    title: 'CKAI 6 · Pendapatan sewaan ruang niaga', short: 'Sewaan ruang niaga',
     unit: 'RM sewaan diterima', measure: 'rent', jenis: 'minimum', valueFormat: 'rm',
     listColumns: ['id', 'tempoh', 'inkubator', 'penyewa', 'jumlah_rm', 'status_bayaran'],
     statusField: 'status_bayaran',
     rules: [{ when: { field: 'status_bayaran', in: ['Dibayar'] }, require: ['tarikh_bayar'] }],
     fields: [
       F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Sewaan bulanan' }),
-      F_('inkubator', 'Inkubator / ruang', 'text', { required: true }),
+      F_('inkubator', 'Ruang niaga', 'text', { required: true }),
       F_('penyewa', 'Penyewa (syarikat / pasukan)', 'text', { required: true }),
       F_('jumlah_rm', 'Jumlah sewa (RM)', 'number', { required: true, min: 0 }),
       F_('status_bayaran', 'Status bayaran', 'select', { required: true, options: ['Dibayar', 'Belum dibayar', 'Tertunggak'] }),
@@ -2394,7 +2394,7 @@ var MEASURES = {
     };
   },
 
-  // CKAI 6: pendapatan sewaan inkubator yang DITERIMA (status Dibayar) pada tahun itu.
+  // CKAI 6: pendapatan sewaan ruang niaga yang DITERIMA (status Dibayar) pada tahun itu.
   rent: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
     var paid = inYear.filter(function (r) { return r.status_bayaran === 'Dibayar'; });
@@ -3037,7 +3037,7 @@ window.__demoSeed = function () {
     save('CKAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar SSU Contoh', i), no_kp: '0201' + p2(i) + '10' + ('0000' + i).slice(-4), no_matrik: 'S24' + p2(i) + '001', nama_syarikat: 'Syarikat Contoh ' + p2(i) + ' Sdn Bhd', jenis_perniagaan: ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Aksesori', 'Reka Bentuk Grafik, Laman Web & Perkhidmatan Digital', 'Lain-lain'][i % 5], jenis_perniagaan_lain: i % 5 === 4 ? 'Akuaponik' : '', bil_rakan_kongsi: 1 + (i % 4), rakan_kongsi: i % 4 === 0 ? [] : Array.apply(null, Array(i % 4)).map(function (_, j) { return { nama: nm('Rakan Contoh', i * 3 + j), matrik: 'S25' + p2(i) + '0' + (j + 1), nokp: '0301' + p2(i) + '10' + ('0000' + (i * 3 + j)).slice(-4) }; }), status_ssm: i % 3 === 0 ? 'Tidak Berdaftar' : 'Berdaftar', tarikh_ssm: i % 3 === 0 ? '' : ymd(1 + (i % lastM), 2), no_ssu: 'SSU-' + Y + '-' + ('000' + i).slice(-4), tarikh_daftar: ymd(1 + (i % lastM), 8 + (i % 15)), status: i === 14 ? 'Tidak Aktif' : 'Aktif' });
   }
 
-  // ---- CKAI 5 Makerspace, CKAI 6 Sewaan inkubator, CKAI 7 Pendapatan
+  // ---- CKAI 5 Makerspace, CKAI 6 Sewaan ruang niaga, CKAI 7 Pendapatan
   var biz = ['Kedai Contoh A', 'Gig Contoh B', 'Kraf Contoh C', 'Aplikasi Contoh D'];
   for (var m = 1; m <= lastM; m++) {
     var eq = ['3D Printer', 'Laser Cutter Machine', 'Peralatan Tangan (Tools)', 'Sewaan Ruang (Space Rental)', 'Lain-lain (Other)'];
@@ -3045,7 +3045,7 @@ window.__demoSeed = function () {
       save('CKAI5', { emel: 'pengguna' + u + '@graduate.utm.my', nama: nm('Pemohon Makerspace', m * 5 + u), no_kp: '9901' + p2(m) + '0' + u + '1234', no_matrik: 'A2' + p2(m) + 'EC' + p2(u + 1) + '1', fakulti: fac(m + u), kelas: 'Tahun ' + (1 + u % 4), telefon: '012-34567' + p2(m + u),
         peralatan: eq[(m + u) % eq.length], peralatan_lain: eq[(m + u) % eq.length] === 'Lain-lain (Other)' ? 'Vacuum Former' : '', tujuan: 'Membangunkan prototaip projek contoh', bil_peserta: 1 + (u % 4), tarikh_mula: ymd(m, 3 + u * 5), tarikh_tamat: ymd(m, 3 + u * 5), masa_mula: '09:00', masa_tamat: '12:30', status_bayaran: u === 2 ? 'Tiada Caj' : (m === lastM ? 'Belum Dibayar' : 'Bayar'), bayaran_rm: 5 });
     }
-    ['Launchpad FAI', 'Launchpad FC', 'Co-working UTMXCITE A'].forEach(function (inc, k) {
+    ['SUB - Lot 1', 'Student Mall - Lot 2', 'Student Mall - Lot 7'].forEach(function (inc, k) {
       var late = m === lastM && k === 2;
       save('CKAI6', { tempoh: ym(m), inkubator: inc, penyewa: 'Penyewa Contoh ' + (k + 1), jumlah_rm: 600 + k * 150, status_bayaran: late ? 'Belum dibayar' : 'Dibayar', tarikh_bayar: late ? '' : ymd(m, 7) });
     });
@@ -3290,7 +3290,7 @@ window.__demoSeed = function () {
   function pageTitle() {
     var v = S.view;
     if (v.name === 'dashboard') return DASH_TITLE;
-    if (v.name === 'infografik') return 'Infografik Pencapaian UTMXCITE';
+    if (v.name === 'infografik') return 'Laporan Prestasi UTMXCITE';
     if (v.name === 'kpi') { var k = kpiById(v.id); return k ? k.title : 'KPI'; }
     return { users: 'Urus Pengguna', targets: 'Sasaran', audit: 'Log Audit', setup: 'Persediaan & Pautan' }[v.name] || APP_NAME;
   }
@@ -3732,7 +3732,7 @@ window.__demoSeed = function () {
     return h + '<text x="' + cx + '" y="' + (cx + size * 0.07) + '" text-anchor="middle" class="rv" style="font-size:' + Math.round(size * 0.22) + 'px">' + esc(o.text) + '</text></svg>';
   }
   function ringTile(pct, o) {
-    return '<div class="rtile">' + ringSvg(pct, o) + '<b>' + esc(o.label) + '</b>' + (o.sub ? '<small>' + esc(o.sub) + '</small>' : '') + '</div>';
+    return '<div class="rtile">' + ringSvg(pct, o) + '<b>' + esc(o.label) + '</b>' + (o.en ? '<i>(' + esc(o.en) + ')</i>' : '') + (o.sub ? '<small>' + esc(o.sub) + '</small>' : '') + '</div>';
   }
 
   // Carta bar menegak (satu paksi); item = {label, value}
@@ -3797,7 +3797,7 @@ window.__demoSeed = function () {
     var byId = {}; d.kpis.forEach(function (c) { byId[c.id] = c; });
     var cs = d.kpis, withT = cs.filter(function (c) { return c.target !== ''; });
     function avgPct(list) { var v = list.map(pctCap).filter(function (x) { return x !== null; }); return v.length ? Math.round(v.reduce(function (a, b) { return a + b; }, 0) / v.length) : null; }
-    var h = '<div class="igtop"><div><h2 class="igh">Infografik Pencapaian UTMXCITE</h2><p class="igs">' + esc(d.ds.label) + ' · tahun ' + esc(d.year) + ' · data ringkasan, tiada maklumat peribadi</p></div>' +
+    var h = '<div class="igtop"><div><h2 class="igh">Laporan Prestasi UTMXCITE</h2><p class="igs">' + esc(d.ds.label) + ' · tahun ' + esc(d.year) + ' · data ringkasan, tiada maklumat peribadi</p></div>' +
       '<div class="igctl"><label for="iy" style="margin:0">Tahun</label><select id="iy" data-change="iyear">' + d.years.map(function (y) { return '<option' + (y === d.year ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
       '<button class="btn o sm" type="button" data-action="print">Cetak / PDF</button></div></div><div class="ig">';
 
@@ -3846,13 +3846,13 @@ window.__demoSeed = function () {
     // 5) Enam fungsi
     h += panel('Enam fungsi UTMXCITE', '<div class="rrow six">' + d.functions.filter(function (f) { return f.no; }).map(function (f) {
       var list = cs.filter(function (c) { return c.fungsi === f.id; }), t = list.filter(function (c) { return c.target !== ''; }), p = avgPct(t);
-      return ringTile(p === null ? 0 : p, { size: 88, label: f.no + ' · ' + f.short, text: p === null ? '–' : p + '%', sub: list.length + ' indikator' });
+      return ringTile(p === null ? 0 : p, { size: 88, label: f.no + ' · ' + (f.nama || f.short), en: f.nama ? f.short : '', text: p === null ? '–' : p + '%', sub: list.length + ' indikator' });
     }).join('') + '</div>', 'c12');
 
     // 7) Carta bulanan (RM dan bilangan)
     var inc = bdOf(byId.CKAI7, /bulan/i), rent = bdOf(byId.CKAI6, /bulan/i), ms = bdOf(byId.CKAI5, /bulan/i);
     if (inc) h += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c4');
-    if (rent) h += panel('Sewaan inkubator diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan inkubator bulanan', fmt: money }), 'c4');
+    if (rent) h += panel('Sewaan ruang niaga diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan ruang niaga bulanan', fmt: money }), 'c4');
     if (ms) h += panel('Penggunaan Makerspace mengikut bulan', '<div class="big1">' + esc(fmtNum(byId.CKAI5.value)) + ' <small>penggunaan</small></div>' + barsSvg(ms, { label: 'Penggunaan Makerspace bulanan', fmt: function (v) { return v + ' penggunaan'; } }), 'c4');
 
     // 8) Fakulti
@@ -4038,7 +4038,9 @@ window.__demoSeed = function () {
         break;
       case 'uclear': $('#uform').reset(); break;
       case 'copy': copyText(a.getAttribute('data-v')); break;
-      case 'print': window.print(); break;
+      case 'print':   // tajuk dokumen (dan nama fail PDF) = Laporan Prestasi UTMXCITE
+        var oldTitle = document.title; document.title = 'Laporan Prestasi UTMXCITE' + (S.dash ? ' ' + S.dash.year : '');
+        window.print(); document.title = oldTitle; break;
       case 'runsetup':
         askConfirm('Jalankan persediaan semula? Tab/lajur yang tiada akan ditambah; data sedia ada tidak dipadam.', 'Ya, jalankan').then(function (yes) {
           if (!yes) return;
