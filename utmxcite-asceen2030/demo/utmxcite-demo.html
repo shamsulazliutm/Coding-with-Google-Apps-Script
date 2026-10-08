@@ -2438,6 +2438,8 @@ var MEASURES = {
   // CKAI 10: jumlah perbelanjaan operasi tabung amanah. Bagi setiap tabung, rekod bulan terkini dalam tahun itu (angka terkumpul sejak awal tahun).
   // Paparan awam: jumlah keseluruhan dan butiran mengikut nama tabung (% dan RM perbelanjaan). Chargeline dan peruntukan/baki setiap tabung hanya dalam senarai Admin.
   tabung: function (kpi, rows, year) {
+    // Label tabung pada paparan awam = 5 aksara terakhir no. chargeline (contoh A.J060000.6600.07078 -> 07078)
+    function kod(r) { var c = String(r.no_chargeline || '').replace(/[.\s]/g, ''); return c ? c.slice(-5) : String(r.tabung === 'Lain-lain' ? (r.tabung_lain || 'Lain-lain') : r.tabung); }
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
     var latest = {};
     inYear.forEach(function (r) {
@@ -2467,8 +2469,8 @@ var MEASURES = {
       value: a ? round1_(c * 100 / a) : 0,
       secondary: sec,
       breakdown: [
-        { title: 'Penggunaan peruntukan (%) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: String(r.tabung === 'Lain-lain' ? (r.tabung_lain || 'Lain-lain') : r.tabung), value: num_(r.peruntukan_awal) ? round1_(num_(r.perbelanjaan) * 100 / num_(r.peruntukan_awal)) : 0 }; })) },
-        { title: 'Perbelanjaan (RM) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: String(r.tabung === 'Lain-lain' ? (r.tabung_lain || 'Lain-lain') : r.tabung), value: round2_(num_(r.perbelanjaan)) }; })) },
+        { title: '% Penggunaan Tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: kod(r), value: num_(r.peruntukan_awal) ? round1_(num_(r.perbelanjaan) * 100 / num_(r.peruntukan_awal)) : 0 }; })) },
+        { title: 'Perbelanjaan (RM) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: kod(r), value: round2_(num_(r.perbelanjaan)) }; })) },
         { title: 'Penggunaan peruntukan (%) mengikut bulan', items: byMonth_(Object.keys(perMonth).map(function (m) { return { label: m, value: perMonthA[m] ? round1_(perMonth[m] * 100 / perMonthA[m]) : 0 }; })) }
       ]
     };
@@ -3323,7 +3325,7 @@ window.__demoSeed = function () {
   }
   function money(n) { return 'RM ' + Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function fmtVal(c, v) { return c.format === 'rm' ? money(v) : (c.jenis === 'kemajuan' || c.jenis === 'penggunaan') ? fmtNum(v) + '%' : fmtNum(v); }
-  function fmtItem(c, v, title) { if (/\(%\)/.test(title || '')) return fmtNum(v) + '%'; if (/\(RM\)/.test(title || '')) return money(v); return c.format === 'rm' ? money(v) : fmtNum(v); }
+  function fmtItem(c, v, title) { if (/\(%\)|^%/.test(title || '')) return fmtNum(v) + '%'; if (/\(RM\)/.test(title || '')) return money(v); return c.format === 'rm' ? money(v) : fmtNum(v); }
 
   function progressBar(pct) {
     if (pct === null || pct === undefined) return '<div class="track" aria-hidden="true"></div>';
@@ -3355,7 +3357,7 @@ window.__demoSeed = function () {
         if (!b.items.length) return;
         h += '<h4>' + esc(b.title) + '</h4>';
         var max = Math.max.apply(null, b.items.map(function (i) { return Math.max(i.value, i.target || 0); }).concat([1]));
-        if (/\(%\)/.test(b.title)) max = Math.max(100, max);
+        if (/\(%\)|^%/.test(b.title)) max = Math.max(100, max);
         b.items.forEach(function (i) {
           h += '<div class="bi' + (String(i.label).length > 16 ? ' long' : '') + '"><span class="l" title="' + esc(i.label) + '">' + esc(i.label) + '</span>' +
             '<span class="mini"><i style="width:' + Math.min(100, i.value / max * 100).toFixed(0) + '%"></i></span>' +
@@ -3841,8 +3843,8 @@ window.__demoSeed = function () {
         '<div class="pt"><b>' + esc(tsec['Jumlah perbelanjaan terkumpul'] || '-') + '</b><span>perbelanjaan operasi terkumpul ' + esc(d.year) + '</span><span>Peruntukan: ' + esc(tsec['Jumlah peruntukan / baki awal'] || '-') + '</span><span>Baki tabung: ' + esc(tsec['Baki tabung'] || '-') + '</span>' + jimat + '</div></div>', 'c4');
     }
 
-    var tbItems = bdOf(byId.CKAI10, /mengikut tabung/i);
-    if (tbItems) h += panel('Penggunaan peruntukan mengikut tabung', hbarsHtml(bdOf(byId.CKAI10, /\(%\) mengikut tabung/i) || tbItems, function (v) { return fmtNum(v) + '%'; }, 8), 'c8');
+    var tbItems = bdOf(byId.CKAI10, /% Penggunaan Tabung/i);
+    if (tbItems) h += panel('% Penggunaan Tabung', hbarsHtml(tbItems, function (v) { return fmtNum(v) + '%'; }, 8), 'c8');
 
     // 5) Enam fungsi
     h += panel('Enam fungsi UTMXCITE', '<div class="rrow six">' + d.functions.filter(function (f) { return f.no; }).map(function (f) {

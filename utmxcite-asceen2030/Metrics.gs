@@ -245,6 +245,8 @@ var MEASURES = {
   // CKAI 10: jumlah perbelanjaan operasi tabung amanah. Bagi setiap tabung, rekod bulan terkini dalam tahun itu (angka terkumpul sejak awal tahun).
   // Paparan awam: jumlah keseluruhan dan butiran mengikut nama tabung (% dan RM perbelanjaan). Chargeline dan peruntukan/baki setiap tabung hanya dalam senarai Admin.
   tabung: function (kpi, rows, year) {
+    // Label tabung pada paparan awam = 5 aksara terakhir no. chargeline (contoh A.J060000.6600.07078 -> 07078)
+    function kod(r) { var c = String(r.no_chargeline || '').replace(/[.\s]/g, ''); return c ? c.slice(-5) : String(r.tabung === 'Lain-lain' ? (r.tabung_lain || 'Lain-lain') : r.tabung); }
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
     var latest = {};
     inYear.forEach(function (r) {
@@ -274,8 +276,8 @@ var MEASURES = {
       value: a ? round1_(c * 100 / a) : 0,
       secondary: sec,
       breakdown: [
-        { title: 'Penggunaan peruntukan (%) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: String(r.tabung === 'Lain-lain' ? (r.tabung_lain || 'Lain-lain') : r.tabung), value: num_(r.peruntukan_awal) ? round1_(num_(r.perbelanjaan) * 100 / num_(r.peruntukan_awal)) : 0 }; })) },
-        { title: 'Perbelanjaan (RM) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: String(r.tabung === 'Lain-lain' ? (r.tabung_lain || 'Lain-lain') : r.tabung), value: round2_(num_(r.perbelanjaan)) }; })) },
+        { title: '% Penggunaan Tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: kod(r), value: num_(r.peruntukan_awal) ? round1_(num_(r.perbelanjaan) * 100 / num_(r.peruntukan_awal)) : 0 }; })) },
+        { title: 'Perbelanjaan (RM) mengikut tabung', items: sortDesc_(Object.keys(latest).map(function (k) { var r = latest[k]; return { label: kod(r), value: round2_(num_(r.perbelanjaan)) }; })) },
         { title: 'Penggunaan peruntukan (%) mengikut bulan', items: byMonth_(Object.keys(perMonth).map(function (m) { return { label: m, value: perMonthA[m] ? round1_(perMonth[m] * 100 / perMonthA[m]) : 0 }; })) }
       ]
     };

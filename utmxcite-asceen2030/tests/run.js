@@ -983,10 +983,11 @@ test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan;
   // paparan awam: jumlah sahaja; tiada nama tabung atau chargeline
   const sj = JSON.stringify(dash(2027));
   ['A.J060000', 'X.1.2', 'peruntukan_awal', 'no_chargeline', 'kunci'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x)); // chargeline tidak didedahkan
-  const byTb = c.breakdown.find(b => /mengikut tabung/.test(b.title) && /\(%\)/.test(b.title)).items;
-  deepEq(byTb.map(i => i.label).sort(), ['Tabung Baharu', 'Tabung Induk UTM XCITE', 'Tabung Khas Program Keusahawanan KPM - UTM XCITE']);
-  assert.strictEqual(byTb.find(i => i.label === 'Tabung Induk UTM XCITE').value, Math.round(60000 / 118602.64 * 1000) / 10);
-  assert.strictEqual(c.breakdown.find(b => /\(RM\) mengikut tabung/.test(b.title)).items.find(i => i.label === 'Tabung Induk UTM XCITE').value, 60000);
+  const byTb = c.breakdown.find(b => b.title === '% Penggunaan Tabung').items;
+  deepEq(byTb.map(i => i.label).sort(), ['07078', '08990', 'X12']); // 5 aksara terakhir no. chargeline
+  assert.strictEqual(byTb.find(i => i.label === '07078').value, Math.round(60000 / 118602.64 * 1000) / 10);
+  assert.strictEqual(c.breakdown.find(b => /\(RM\) mengikut tabung/.test(b.title)).items.find(i => i.label === '07078').value, 60000);
+  assert.ok(!sj.includes('Tabung Induk') && !sj.includes('Tabung Baharu')); // nama tabung tidak dipaparkan kepada umum
 });
 
 test('CKAI 10: % perbelanjaan setiap tabung, bajet disasarkan dan penjimatan; melebihi peruntukan ditandakan', () => {
