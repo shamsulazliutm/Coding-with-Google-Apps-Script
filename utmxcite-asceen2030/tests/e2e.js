@@ -406,6 +406,49 @@ function buildHtml() {
     const ct = await card.innerText();
     ['Pelajar terlibat: 1', 'Memenang anugerah / pingat: 0', 'Calon peningkatan / sedang disokong: 1'].forEach(x => assert.ok(ct.includes(x), 'kad tiada: ' + x + ' => ' + ct));
   });
+  await step('Muat naik pukal (KPT 4): muat turun templat, muat naik CSV, laporan baris gagal', async () => {
+    await goNav('KPT 4');
+    await page.click('.tab:has-text("Muat Naik Pukal")');
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-action="bulkdl"]')]);
+    const tp = path.join(out, 'templat-kpt4.csv'); await dl.saveAs(tp);
+    const tpl = fs.readFileSync(tp, 'utf8');
+    assert.ok(tpl.includes('[no_matrik]') && tpl.includes('#PANDUAN') && tpl.includes('TRL 1 / TRL 2 / TRL 3'), tpl);
+    // isi templat: dua baris sah (satu guna tarikh d/m/y dan pilihan huruf kecil) + satu baris TRL tidak sah
+    const csv = tpl.trim().split(/\r?\n/).slice(0, 1).concat([
+      '"FAI","Pukal A","000101105555","PK-A","Projek A","trl 1","15/03/2026"',
+      '"FC","Pukal B","000202106666","PK-B","Projek B","TRL 2","2026-03-16"',
+      '"FC","Pukal C","000303107777","PK-C","Projek C","TRL 9","2026-03-17"']).join('\r\n');
+    const head = tpl.trim().split(/\r?\n/)[0];
+    assert.ok(head.indexOf('[fakulti]') === 0 || head.includes('[fakulti]'));
+    const cols = head.split('","').map(x => x.replace(/"/g, ''));
+    const order = cols.map(c => /\[(\w+)\]/.exec(c)[1]);
+    const rowOf = (o) => order.map(k => '"' + (o[k] || '') + '"').join(',');
+    const fp = path.join(out, 'pukal-kpt4.csv');
+    fs.writeFileSync(fp, '﻿' + head + '\r\n' + [
+      rowOf({ fakulti: 'FAI', nama: 'Pukal A', no_kp: '000101105555', no_matrik: 'PK-A', projek: 'Projek A', trl: 'trl 1', tarikh: '15/03/2026' }),
+      rowOf({ fakulti: 'FC', nama: 'Pukal B', no_kp: '000202106666', no_matrik: 'PK-B', projek: 'Projek B', trl: 'TRL 2', tarikh: '2026-03-16' }),
+      rowOf({ fakulti: 'FC', nama: 'Pukal C', no_kp: '000303107777', no_matrik: 'PK-C', projek: 'Projek C', trl: 'TRL 9', tarikh: '2026-03-17' })].join('\r\n'));
+    await page.setInputFiles('#bulkfile', fp);
+    await page.waitForSelector('[data-action="bulkgo"]');
+    assert.ok((await text('.cont')).includes('3 baris data dikesan'));
+    await page.click('[data-action="bulkgo"]');
+    await page.waitForSelector('text=2 rekod berjaya disimpan');
+    assert.ok((await text('.cont')).includes('1 baris gagal'));
+    assert.ok((await text('.cont')).includes('trl'));
+    const [er] = await Promise.all([page.waitForEvent('download'), page.click('[data-action="bulkerr"]')]);
+    const ep = path.join(out, 'gagal.csv'); await er.saveAs(ep);
+    assert.ok(fs.readFileSync(ep, 'utf8').includes('PK-C') && fs.readFileSync(ep, 'utf8').includes('RALAT'));
+    await page.click('.tab:has-text("Senarai")');
+    await page.waitForSelector('td:has-text("Pukal A")');
+    assert.ok((await text('.cont')).includes('Pukal B') && !(await text('.cont')).includes('Pukal C'));
+    // lajur wajib tiada ditolak
+    await page.click('.tab:has-text("Muat Naik Pukal")');
+    fs.writeFileSync(fp, 'Nama [nama]\r\nX\r\n');
+    await page.setInputFiles('#bulkfile', fp);
+    await page.waitForSelector('text=Lajur wajib tiada');
+    assert.strictEqual(await page.locator('[data-action="bulkgo"]').count(), 0);
+    await page.screenshot({ path: path.join(out, '18-muat-naik-pukal.png'), fullPage: true });
+  });
   await step('Infografik (awam): panel, cincin dan carta dipaparkan; tukar tahun', async () => {
     await goNav('Infografik');
     await page.waitForSelector('.ig .igp');

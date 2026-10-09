@@ -327,9 +327,184 @@
     var tab = S.view.tab || 'list';
     $('#tabs').innerHTML = '<div class="tabs" role="tablist">' +
       '<button class="tab' + (tab === 'list' ? ' act' : '') + '" role="tab" data-action="tab" data-tab="list">▤ Senarai</button>' +
-      '<button class="tab' + (tab === 'form' ? ' act' : '') + '" role="tab" data-action="tab" data-tab="form">＋ ' + (S.editing ? 'Edit Rekod' : 'Masuk Data') + '</button></div>';
+      '<button class="tab' + (tab === 'form' ? ' act' : '') + '" role="tab" data-action="tab" data-tab="form">＋ ' + (S.editing ? 'Edit Rekod' : 'Masuk Data') + '</button>' +
+      '<button class="tab' + (tab === 'bulk' ? ' act' : '') + '" role="tab" data-action="tab" data-tab="bulk">⬆ Muat Naik Pukal</button></div>';
     if (tab === 'list') return renderList(k);
+    if (tab === 'bulk') return renderBulk(k);
     return renderForm(k);
+  }
+
+
+  // ------------------------------------------------------------------ muat naik pukal (CSV)
+  var BULK_MAX_ROWS = 500, BULK_CHUNK = 40;
+  function bulkFields(k) {
+    return k.fields.filter(function (f) { return f.type !== 'file' && !f.hidden && !(f.key === 'fakulti' && !isAdmin()); });
+  }
+  function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
+  function csvText(rows) { return '﻿' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n'; }
+  function saveCsv(name, text) {
+    var url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+    var a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 15000);
+  }
+  function exampleFor(f) {
+    if (f.type === 'date') return '2026-03-15';
+    if (f.type === 'month') return '2026-03';
+    if (f.type === 'number') return f.min > 0 ? String(f.min) : '0';
+    if (f.type === 'yesno') return 'Ya';
+    if (f.type === 'select') return f.options[0];
+    if (f.type === 'faculty') return 'FAI';
+    if (f.type === 'email') return 'nama@utm.my';
+    if (f.type === 'url') return 'https://contoh.my';
+    if (f.type === 'time') return '09:00';
+    if (f.type === 'people') return 'Nama Pelajar|A24XX0001' + (f.kp === false ? '' : '|010203105555') + '##Nama Kedua|A24XX0002' + (f.kp === false ? '' : '|010304106666');
+    return 'contoh';
+  }
+  function guideFor(f) {
+    var g = f.required ? 'WAJIB' : 'pilihan';
+    if (f.type === 'date') g += ' · YYYY-MM-DD';
+    else if (f.type === 'month') g += ' · YYYY-MM';
+    else if (f.type === 'number') g += ' · nombor';
+    else if (f.type === 'yesno') g += ' · Ya / Tidak';
+    else if (f.type === 'select') g += ' · ' + f.options.join(' / ');
+    else if (f.type === 'faculty') g += ' · kod fakulti';
+    else if (f.type === 'people') g += ' · nama|no. matrik' + (f.kp === false ? '' : '|no. KP') + ', pisahkan orang dengan ##';
+    return g;
+  }
+  function downloadTemplate(k) {
+    var fs = bulkFields(k);
+    saveCsv(k.id + '_templat.csv', csvText([
+      fs.map(function (f) { return f.label + ' [' + f.key + ']'; }),
+      fs.map(guideFor).map(function (g, i) { return (i === 0 ? '#PANDUAN: ' : '') + g; }),
+      fs.map(exampleFor).map(function (g, i) { return (i === 0 ? '#CONTOH: ' : '') + g; })
+    ]));
+  }
+  // Pengurai CSV (pembatas , atau ; dikesan daripada baris pertama; sokong petikan dan baris baharu dalam sel)
+  function parseCsv(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    var first = text.split(/\r?\n/)[0] || '';
+    var delim = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',';
+    var rows = [], row = [], cell = '', q = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+      else if (c === '"') q = true;
+      else if (c === delim) { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  function normCell(f, raw) {
+    var v = String(raw === undefined || raw === null ? '' : raw).trim(), m, lo;
+    if (v === '') return '';
+    function p2(n) { return ('0' + n).slice(-2); }
+    function y4(y) { y = parseInt(y, 10); return y < 100 ? 2000 + y : y; }
+    if (f.type === 'date') {
+      if ((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/.exec(v))) return y4(m[3]) + '-' + p2(m[2]) + '-' + p2(m[1]);
+      if ((m = /^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/.exec(v)) || (m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(v))) return m[1] + '-' + p2(m[2]) + '-' + p2(m[3]);
+    } else if (f.type === 'month') {
+      if ((m = /^(\d{1,2})[\/.-](\d{4})$/.exec(v))) return m[2] + '-' + p2(m[1]);
+      if ((m = /^(\d{4})[\/.-](\d{1,2})$/.exec(v))) return m[1] + '-' + p2(m[2]);
+      if ((m = /^\d{1,2}[\/.-](\d{1,2})[\/.-](\d{4})$/.exec(v))) return m[2] + '-' + p2(m[1]);
+      if ((m = /^(\d{4})-(\d{1,2})-\d{1,2}$/.exec(v))) return m[1] + '-' + p2(m[2]);
+    } else if (f.type === 'number') {
+      return v.replace(/^RM\s*/i, '').replace(/[\s,]/g, '');
+    } else if (f.type === 'yesno') {
+      lo = v.toLowerCase();
+      if (['ya', 'y', 'yes', '1', 'true'].indexOf(lo) >= 0) return 'Ya';
+      if (['tidak', 't', 'no', 'n', '0', 'false'].indexOf(lo) >= 0) return 'Tidak';
+    } else if (f.type === 'select') {
+      lo = v.toLowerCase();
+      for (var i = 0; i < f.options.length; i++) if (f.options[i].toLowerCase() === lo) return f.options[i];
+    } else if (f.type === 'faculty') {
+      return v.toUpperCase();
+    } else if (f.type === 'people') {
+      return v.split('##').map(function (x) { var a = x.split('|'); return { nama: (a[0] || '').trim(), matrik: (a[1] || '').trim(), nokp: (a[2] || '').trim() }; }).filter(function (x) { return x.nama || x.matrik || x.nokp; });
+    }
+    return v;
+  }
+  function readBulkFile(k, file) {
+    if (!file) return;
+    if (file.size > 1048576) { toast('Fail terlalu besar (maksimum 1 MB).', true); return; }
+    var rd = new FileReader();
+    rd.onload = function () {
+      var all = parseCsv(String(rd.result)), fs = bulkFields(k), b = { kpiId: k.id, file: file.name, rows: [], problems: [], raws: {}, headers: [] };
+      var hi = -1;
+      for (var i = 0; i < all.length; i++) { if (all[i].some(function (c) { return String(c).trim() !== ''; }) && String(all[i][0]).trim().charAt(0) !== '#') { hi = i; break; } }
+      if (hi < 0) { b.problems.push('Fail kosong.'); S.bulk = b; renderBulk(k); return; }
+      var cols = all[hi].map(function (h) { var m = /\[([A-Za-z0-9_]+)\]\s*$/.exec(String(h)); return m ? m[1] : String(h).trim(); });
+      var byKey = {}; fs.forEach(function (f) { byKey[f.key] = f; });
+      var known = cols.filter(function (c) { return byKey[c]; });
+      b.headers = cols;
+      fs.filter(function (f) { return f.required && cols.indexOf(f.key) < 0; }).forEach(function (f) { b.problems.push('Lajur wajib tiada: ' + f.label + ' [' + f.key + ']'); });
+      cols.filter(function (c) { return !byKey[c]; }).forEach(function (c) { b.problems.push('Lajur tidak dikenali (diabaikan): ' + c); });
+      for (var r = hi + 1; r < all.length; r++) {
+        var cells = all[r];
+        if (!cells.some(function (c) { return String(c).trim() !== ''; }) || String(cells[0]).trim().charAt(0) === '#') continue;
+        var rec = {};
+        cols.forEach(function (c, j) { if (byKey[c]) { var v = normCell(byKey[c], cells[j]); if (v !== '' && !(Array.isArray(v) && !v.length)) rec[c] = v; } });
+        b.rows.push({ n: r + 1, rec: rec }); b.raws[r + 1] = cells;
+      }
+      if (b.rows.length > BULK_MAX_ROWS) { b.problems.push('Terlalu banyak baris (' + b.rows.length + '). Maksimum ' + BULK_MAX_ROWS + ' baris setiap muat naik.'); b.rows = []; }
+      if (!b.rows.length && !b.problems.length) b.problems.push('Tiada baris data dijumpai selepas baris tajuk.');
+      b.fatal = b.problems.some(function (p) { return /^(Fail|Lajur wajib|Terlalu|Tiada baris)/.test(p); });
+      S.bulk = b; renderBulk(k);
+    };
+    rd.onerror = function () { toast('Fail tidak dapat dibaca.', true); };
+    rd.readAsText(file, 'utf-8');
+  }
+  function runBulk(k) {
+    var b = S.bulk; if (!b || b.busy || b.fatal || !b.rows.length) return;
+    b.busy = true; b.done = 0; b.results = []; renderBulk(k);
+    var i = 0;
+    (function next() {
+      if (i >= b.rows.length) { b.busy = false; b.finished = true; S.list = null; renderBulk(k); return; }
+      var chunk = b.rows.slice(i, i + BULK_CHUNK);
+      call('api_bulkSave', S.token, k.id, chunk).then(function (r) {
+        b.results = b.results.concat(r.results); i += BULK_CHUNK; b.done = Math.min(i, b.rows.length);
+        var el = $('#bulkprog'); if (el) el.textContent = b.done + ' / ' + b.rows.length + ' baris diproses…';
+        next();
+      }).catch(function (e) { b.busy = false; if (!authFail(e)) { toast(e.message, true); b.finished = true; renderBulk(k); } });
+    })();
+  }
+  function downloadBulkErrors(k) {
+    var b = S.bulk; if (!b || !b.results) return;
+    var bad = b.results.filter(function (r) { return !r.ok; });
+    var out = [b.headers.concat(['RALAT'])];
+    bad.forEach(function (r) { out.push((b.raws[r.n] || []).concat([r.error + (r.fields ? ': ' + Object.keys(r.fields).map(function (x) { return x + ' - ' + r.fields[x]; }).join('; ') : '')])); });
+    saveCsv(k.id + '_baris_gagal.csv', csvText(out));
+  }
+  function renderBulk(k) {
+    var fs = bulkFields(k), b = S.bulk && S.bulk.kpiId === k.id ? S.bulk : null, h = '';
+    h += '<div class="panel"><h3>1. Muat turun templat</h3><p class="muted">Templat CSV mengandungi tajuk lajur, satu baris panduan (wajib / pilihan dan nilai dibenarkan) dan satu baris contoh. Baris bermula dengan # diabaikan semasa muat naik. Isi data di bawah baris tajuk, simpan sebagai <b>CSV</b>.</p>' +
+      '<p class="muted">Lajur: ' + fs.map(function (f) { return esc(f.label) + (f.required ? '*' : ''); }).join(' · ') + '.</p>' +
+      '<p class="muted">Lampiran PDF tidak boleh dimuat naik secara pukal; tambah melalui Senarai &gt; Edit rekod. Tarikh: YYYY-MM-DD (format hari/bulan/tahun diterima). Formatkan lajur no. KP / no. matrik sebagai Teks dalam Excel supaya sifar di hadapan tidak hilang.</p>' +
+      '<button class="btn" type="button" data-action="bulkdl">⬇ Muat turun templat (' + esc(k.id) + ')</button></div>';
+    h += '<div class="panel"><h3>2. Muat naik fail CSV</h3>' +
+      (isAdmin() || k.entry !== 'faculty' ? '' : '<p class="muted">Semua rekod akan direkodkan bagi fakulti anda (' + esc(S.session.user.fakulti) + ').</p>') +
+      '<input type="file" id="bulkfile" accept=".csv,text/csv" data-change="bulkfile" aria-label="Pilih fail CSV"' + (b && b.busy ? ' disabled' : '') + '>';
+    if (b) {
+      h += '<p><b>' + esc(b.file) + '</b> · ' + b.rows.length + ' baris data dikesan.</p>';
+      if (b.problems.length) h += '<ul class="chk">' + b.problems.map(function (p) { return '<li data-ok="0">' + esc(p) + '</li>'; }).join('') + '</ul>';
+      if (!b.finished && !b.busy && !b.fatal && b.rows.length) h += '<button class="btn" type="button" data-action="bulkgo">Simpan ' + b.rows.length + ' rekod</button> <span class="muted">Setiap baris disemak seperti borang tunggal. Baris yang sah disimpan; baris yang gagal dilaporkan.</span>';
+      if (b.busy) h += '<p id="bulkprog" role="status">' + (b.done || 0) + ' / ' + b.rows.length + ' baris diproses…</p>';
+      if (b.finished) {
+        var okN = b.results.filter(function (r) { return r.ok; }).length, bad = b.results.filter(function (r) { return !r.ok; });
+        h += '<p role="status"><b>' + okN + ' rekod berjaya disimpan</b>' + (bad.length ? ', <b style="color:var(--bad)">' + bad.length + ' baris gagal</b>' : '') + '.</p>';
+        if (bad.length) {
+          h += '<p class="muted">Betulkan baris yang gagal dan muat naik semula <b>hanya baris tersebut</b> (jangan muat naik baris yang sudah berjaya).</p>' +
+            '<div class="tablewrap"><table><thead><tr><th>Baris</th><th>Masalah</th></tr></thead><tbody>' +
+            bad.slice(0, 200).map(function (r) {
+              return '<tr><td>' + r.n + '</td><td>' + esc(r.error) + (r.fields ? '<div class="muted">' + Object.keys(r.fields).map(function (x) { return esc(x) + ': ' + esc(r.fields[x]); }).join('<br>') + '</div>' : '') + '</td></tr>';
+            }).join('') + '</tbody></table></div>' +
+            '<button class="btn o" type="button" data-action="bulkerr">⬇ Muat turun baris gagal (CSV)</button> ';
+        }
+        h += '<button class="btn o" type="button" data-action="bulkreset">Muat naik fail lain</button> <button class="btn" type="button" data-action="tab" data-tab="list">Lihat senarai</button>';
+      }
+    }
+    $('#content').innerHTML = h + '</div>';
   }
 
   function loadList(k) {
@@ -945,6 +1120,10 @@
       case 'pdel': syncPeople(a.getAttribute('data-key')); S.people[a.getAttribute('data-key')].splice(parseInt(a.getAttribute('data-i'), 10), 1); redrawPeople(a.getAttribute('data-key')); break;
       case 'fdl': if (k) downloadPdf(k, a.getAttribute('data-id'), a.getAttribute('data-key')); break;
       case 'tab': S.view.tab = a.getAttribute('data-tab'); if (S.view.tab === 'list') S.editing = null; renderKpi(); break;
+      case 'bulkdl': downloadTemplate(kpiById(S.view.id)); break;
+      case 'bulkgo': runBulk(kpiById(S.view.id)); break;
+      case 'bulkerr': downloadBulkErrors(kpiById(S.view.id)); break;
+      case 'bulkreset': S.bulk = null; renderKpi(); break;
       case 'new': S.editing = null; S.view.tab = 'form'; renderKpi(); break;
       case 'cancelform': S.editing = null; S.view.tab = 'list'; renderKpi(); break;
       case 'edit':
@@ -1018,6 +1197,7 @@
     var c = ev.target.getAttribute && ev.target.getAttribute('data-change');
     if (!c) return;
     if (c === 'fupload') { var kk = kpiById(S.view.id); if (kk) uploadPdf(kk, ev.target.getAttribute('data-key'), ev.target.files && ev.target.files[0]); return; }
+    if (c === 'bulkfile') { var bk = kpiById(S.view.id); if (bk) readBulkFile(bk, ev.target.files && ev.target.files[0]); return; }
     if (c === 'year') { S.dash = null; loadDashboard(parseInt(ev.target.value, 10)); }
     if (c === 'iyear') { S.dash = null; loadInfo(parseInt(ev.target.value, 10)); }
     if (c === 'fstatus') { S.listFilters.status = ev.target.value; S.list = null; renderKpi(); }

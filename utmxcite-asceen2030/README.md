@@ -34,6 +34,10 @@ Dashboard, sidebar dan Infografik dikelompokkan mengikut empat peringkat ini; KP
 
 Sasaran tahunan 2026-2030 disemai daripada kamus semasa `setup()`. Tab baharu: `KPT2_Graduan_Usahawan`, `KPT3_Tenaga_Pengajar`, `KPT4_Pelajar_Inovasi`, `KPT6_Kolaborasi`, `KPT7_Pembiayaan` (KPT 1 dan KPT 5 tiada tab). Dashboard dan Infografik awam hanya menunjukkan agregat; nama dan no. KP hanya dalam Sheet dan senarai Admin / PIC. PIC diberi akses melalui `kpi_akses`: `KPT2,KPT3,KPT4,KPT6,KPT7`.
 
+## Muat naik pukal (CSV)
+
+Setiap KPI yang boleh diisi mempunyai dua cara kemasukan data: **Masuk Data** (satu rekod, borang sedia ada) dan **Muat Naik Pukal** (tab ketiga). Admin dan PIC fakulti (bagi KPI yang diberi akses, hanya untuk fakulti sendiri) boleh muat turun **templat CSV** (tajuk lajur, baris panduan, baris contoh), mengisinya dalam Excel dan memuat naiknya. Setiap baris melalui pengesahan, pemeriksaan unik dan peraturan yang sama seperti borang tunggal; baris yang sah disimpan, baris yang gagal dilaporkan mengikut nombor baris dan boleh dimuat turun sebagai CSV untuk dibetulkan. Maksimum 500 baris dan 1 MB setiap fail. Format tarikh hari/bulan/tahun, pilihan huruf kecil dan Ya/Tidak diterima. Lampiran PDF tidak dimuat naik secara pukal (tambah melalui Edit rekod). Medan ramai orang ditulis `nama|no. matrik|no. KP` dan dipisahkan dengan `##`. Muat naik pukal hanya menambah rekod baharu; ia tidak mengubah rekod sedia ada. Setiap muat naik direkod dalam Log Audit (`MUAT_NAIK_PUKAL`).
+
 ## Peranan dan akses
 
 | Peranan | Dashboard | KAI 1, 4, 6 (fakulti) | KAI 2, 3, 5, DKAI 1 | Urus pengguna / sasaran / audit |

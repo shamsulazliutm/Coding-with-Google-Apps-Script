@@ -37,6 +37,7 @@ function api_logout(token) { return wrap_(function () { return logout_(str_(toke
 function api_session(token) { return wrap_(function () { return sessionInfo_(str_(token, 200)); }); }
 function api_list(token, kpiId, filters) { return wrap_(function () { return listRecords_(str_(token, 200), str_(kpiId, 20), filters); }); }
 function api_save(token, kpiId, rec) { return wrap_(function () { return saveRecord_(str_(token, 200), str_(kpiId, 20), rec); }); }
+function api_bulkSave(token, kpiId, rows) { return wrap_(function () { return bulkSave_(str_(token, 200), str_(kpiId, 20), rows); }); }
 function api_uploadFile(token, kpiId, fieldKey, payload) { return wrap_(function () { return uploadFile_(str_(token, 200), str_(kpiId, 20), str_(fieldKey, 60), payload); }); }
 function api_downloadFile(token, kpiId, recordId, fieldKey) { return wrap_(function () { return downloadFile_(str_(token, 200), str_(kpiId, 20), str_(recordId, 40), str_(fieldKey, 60)); }); }
 function api_delete(token, kpiId, id) { return wrap_(function () { return deleteRecord_(str_(token, 200), str_(kpiId, 20), str_(id, 40)); }); }

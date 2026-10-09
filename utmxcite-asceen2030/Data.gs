@@ -247,6 +247,40 @@ function saveRecord_(token, kpiId, rec) {
   }
 }
 
+
+/**
+ * Muat naik pukal (CSV): setiap baris melalui pengesahan dan pemeriksaan unik yang sama seperti borang tunggal (saveRecord_).
+ * Baris yang gagal dilaporkan dengan nombor baris; baris yang sah disimpan. Rekod sedia ada tidak boleh diubah melalui pukal.
+ */
+var BULK_MAX_PER_CALL = 40;
+function bulkSave_(token, kpiId, rows) {
+  var user = requireUser_(token);
+  var kpi = getKpi_(String(kpiId));
+  if (!canAccessKpi_(user, kpi)) throw userError_('Akses ditolak bagi KPI ini.');
+  if (!Array.isArray(rows) || !rows.length) throw userError_('Tiada baris untuk dimuat naik.');
+  if (rows.length > BULK_MAX_PER_CALL) throw userError_('Terlalu banyak baris dalam satu panggilan (maksimum ' + BULK_MAX_PER_CALL + ').');
+  var out = [], okCount = 0;
+  rows.forEach(function (item) {
+    var n = item && item.n, rec = {};
+    try {
+      var src = (item && item.rec) || {};
+      kpi.fields.forEach(function (f) {
+        if (f.type === 'file' || f.hidden) return;   // lampiran dimuat naik melalui Edit rekod
+        if (src[f.key] !== undefined) rec[f.key] = src[f.key];
+      });
+      var saved = saveRecord_(token, kpi.id, rec);
+      okCount++;
+      out.push({ n: n, ok: true, id: saved.id });
+    } catch (e) {
+      if (!(e && e.user)) throw e;
+      if (e.auth) throw e;
+      out.push({ n: n, ok: false, error: e.message, fields: e.fields || null });
+    }
+  });
+  audit_(user, 'MUAT_NAIK_PUKAL', kpi.id, '', okCount + ' berjaya, ' + (rows.length - okCount) + ' gagal');
+  return { results: out, saved: okCount };
+}
+
 /** Ringkasan rekod untuk log audit: tiada nama pelajar, no. KP atau lampiran. */
 function auditSummary_(kpi, row) {
   var parts = [];

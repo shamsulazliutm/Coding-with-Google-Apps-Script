@@ -1829,6 +1829,40 @@ function saveRecord_(token, kpiId, rec) {
   }
 }
 
+
+/**
+ * Muat naik pukal (CSV): setiap baris melalui pengesahan dan pemeriksaan unik yang sama seperti borang tunggal (saveRecord_).
+ * Baris yang gagal dilaporkan dengan nombor baris; baris yang sah disimpan. Rekod sedia ada tidak boleh diubah melalui pukal.
+ */
+var BULK_MAX_PER_CALL = 40;
+function bulkSave_(token, kpiId, rows) {
+  var user = requireUser_(token);
+  var kpi = getKpi_(String(kpiId));
+  if (!canAccessKpi_(user, kpi)) throw userError_('Akses ditolak bagi KPI ini.');
+  if (!Array.isArray(rows) || !rows.length) throw userError_('Tiada baris untuk dimuat naik.');
+  if (rows.length > BULK_MAX_PER_CALL) throw userError_('Terlalu banyak baris dalam satu panggilan (maksimum ' + BULK_MAX_PER_CALL + ').');
+  var out = [], okCount = 0;
+  rows.forEach(function (item) {
+    var n = item && item.n, rec = {};
+    try {
+      var src = (item && item.rec) || {};
+      kpi.fields.forEach(function (f) {
+        if (f.type === 'file' || f.hidden) return;   // lampiran dimuat naik melalui Edit rekod
+        if (src[f.key] !== undefined) rec[f.key] = src[f.key];
+      });
+      var saved = saveRecord_(token, kpi.id, rec);
+      okCount++;
+      out.push({ n: n, ok: true, id: saved.id });
+    } catch (e) {
+      if (!(e && e.user)) throw e;
+      if (e.auth) throw e;
+      out.push({ n: n, ok: false, error: e.message, fields: e.fields || null });
+    }
+  });
+  audit_(user, 'MUAT_NAIK_PUKAL', kpi.id, '', okCount + ' berjaya, ' + (rows.length - okCount) + ' gagal');
+  return { results: out, saved: okCount };
+}
+
 /** Ringkasan rekod untuk log audit: tiada nama pelajar, no. KP atau lampiran. */
 function auditSummary_(kpi, row) {
   var parts = [];
@@ -2788,6 +2822,7 @@ function api_logout(token) { return wrap_(function () { return logout_(str_(toke
 function api_session(token) { return wrap_(function () { return sessionInfo_(str_(token, 200)); }); }
 function api_list(token, kpiId, filters) { return wrap_(function () { return listRecords_(str_(token, 200), str_(kpiId, 20), filters); }); }
 function api_save(token, kpiId, rec) { return wrap_(function () { return saveRecord_(str_(token, 200), str_(kpiId, 20), rec); }); }
+function api_bulkSave(token, kpiId, rows) { return wrap_(function () { return bulkSave_(str_(token, 200), str_(kpiId, 20), rows); }); }
 function api_uploadFile(token, kpiId, fieldKey, payload) { return wrap_(function () { return uploadFile_(str_(token, 200), str_(kpiId, 20), str_(fieldKey, 60), payload); }); }
 function api_downloadFile(token, kpiId, recordId, fieldKey) { return wrap_(function () { return downloadFile_(str_(token, 200), str_(kpiId, 20), str_(recordId, 40), str_(fieldKey, 60)); }); }
 function api_delete(token, kpiId, id) { return wrap_(function () { return deleteRecord_(str_(token, 200), str_(kpiId, 20), str_(id, 40)); }); }

@@ -1036,6 +1036,39 @@ test('CKAI 10: peruntukan (a) dan komitmen (b) diisi sekali; bulan seterusnya di
   assert.strictEqual(l2.peruntukan_awal, 300); assert.strictEqual(l1.baki, 200);
 });
 
+console.log('Muat naik pukal');
+test('pukal: baris sah disimpan, baris gagal dilaporkan, unik dan akses dihormati', () => {
+  const rows = [
+    { n: 2, rec: { fakulti: 'FAI', nama: 'Bulk Satu', no_kp: '000101105555', no_matrik: 'BK1', projek: 'P1', trl: 'TRL 1', tarikh: '2026-03-01' } },
+    { n: 3, rec: { fakulti: 'FAI', nama: 'Bulk Dua', no_kp: '000202106666', no_matrik: 'BK2', projek: 'P2', trl: 'TRL 9', tarikh: '2026-03-02', id: 'K4-001' } },   // TRL tidak sah; id diabaikan
+    { n: 4, rec: { fakulti: 'FAI', nama: 'Bulk Satu Lagi', no_kp: '000303107777', no_matrik: 'BK1', projek: 'P3', trl: 'TRL 2', tarikh: '2026-03-03' } },     // no. matrik pendua
+    { n: 5, rec: { fakulti: 'FC', nama: 'Bulk Tiga', no_kp: '000404108888', no_matrik: 'BK3', projek: 'P4', trl: 'TRL 3', tarikh: '2026-03-04' } }
+  ];
+  const r = ok(g.api_bulkSave(adminToken, 'KPT4', rows));
+  assert.strictEqual(r.saved, 2);
+  deepEq(r.results.map(x => x.ok), [true, false, false, true]);
+  assert.ok(r.results[1].fields.trl && r.results[2].fields.no_matrik);
+  const list = ok(g.api_list(adminToken, 'KPT4', {})).rows;
+  assert.ok(list.some(x => x.no_matrik === 'BK3') && !list.some(x => x.nama === 'Bulk Dua'));
+  assert.ok(ok(g.api_listAudit(adminToken, 50)).some(a => a.tindakan === 'MUAT_NAIK_PUKAL' && a.kpi === 'KPT4'));
+  // PIC: fakulti dipaksa kepada fakulti sendiri; KPI tanpa akses ditolak; KPI auto ditolak
+  ok(g.api_saveUser(adminToken, { emel: 'pic.bulk.fai@utm.my', nama: 'PIC Bulk', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KPT4', aktif: 'Ya' }));
+  const t = login('pic.bulk.fai@utm.my');
+  const r2 = ok(g.api_bulkSave(t, 'KPT4', [{ n: 2, rec: { fakulti: 'FC', nama: 'PIC Bulk', no_kp: '000505109999', no_matrik: 'BK9', projek: 'P', trl: 'TRL 1', tarikh: '2026-03-05' } }]));
+  assert.strictEqual(r2.saved, 1);
+  assert.strictEqual(ok(g.api_list(t, 'KPT4', {})).rows.find(x => x.no_matrik === 'BK9').fakulti, 'FAI');
+  fail(g.api_bulkSave(t, 'KPT1', rows), /Akses ditolak/);
+  fail(g.api_bulkSave(t, 'KAI2', rows), /Akses ditolak/);
+  fail(g.api_bulkSave(adminToken, 'KPT4', []), /Tiada baris/);
+  fail(g.api_bulkSave(adminToken, 'KPT4', Array.from({ length: 41 }, (_, i) => ({ n: i, rec: {} }))), /Terlalu banyak/);
+  fail(g.api_bulkSave('x'.repeat(40), 'KPT4', rows), /./);
+});
+test('pukal: CKAI 10 mewarisi peruntukan antara baris mengikut turutan', () => {
+  const mk = (tempoh, extra) => ({ n: 2, rec: Object.assign({ tempoh, tabung: 'Lain-lain', tabung_lain: 'Tabung Pukal', no_chargeline: 'PK.1', perbelanjaan: 100 }, extra) });
+  const r = ok(g.api_bulkSave(adminToken, 'CKAI10', [mk('2030-01', { peruntukan_awal: 1000 }), Object.assign(mk('2030-02', {}), { n: 3 })]));
+  assert.strictEqual(r.saved, 2);
+});
+
 console.log('KPT (peringkat Kementerian)');
 const failF = (r, key) => { fail(r, /betulkan/); assert.ok(r.fields[key], 'ralat medan tiada: ' + key); };
 test('KPT: PIC fakulti boleh diberi KPT2-KPT7 tetapi bukan KPT1/KPT5 (auto)', () => {
