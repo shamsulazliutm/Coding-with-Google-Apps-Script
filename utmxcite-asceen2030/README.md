@@ -28,7 +28,7 @@ Dashboard, sidebar dan Infografik dikelompokkan mengikut empat peringkat ini; KP
 | **KPT 2** · % graduan menceburi keusahawanan | 1 | Daftar graduan (nama, no. KP, no. matrik, perniagaan berdaftar, kategori, sijil PDF) + rekod **penyebut tahunan** (bilangan usahawan pelajar tahun akhir) setiap fakulti | PIC fakulti dan Admin |
 | **KPT 3** · % tenaga pengajar dalam program kompetensi | 1 | Daftar staf (seorang sekali setahun); % = terlibat ÷ berdaftar | PIC fakulti dan Admin |
 | **KPT 4** · Pelajar memanfaatkan inovasi dan teknologi (TRL 1-3) | 2 | Daftar KPT 4 + pelajar **CKAI 8** (TRL 1-3). Setiap pelajar (no. matrik) dikira **sekali sahaja**, pada tahun kemunculan pertama | PIC fakulti dan Admin |
-| **KPT 5** · Syarikat pemula berasaskan inovasi dan teknologi | 2 | **Automatik** daripada CKAI 4 (SSU aktif, *berasaskan inovasi* = Ya, TRL 4-6). CKAI 4 kekal Admin sahaja; datanya akan diimport daripada sistem pendaftaran SSU | Tiada borang |
+| **KPT 5** · Syarikat pemula berasaskan inovasi dan teknologi | 2 | **Automatik** daripada CKAI 4 (SSU aktif, *berasaskan inovasi* = Ya, TRL 4-6). CKAI 4 kekal cara lama: Admin sahaja, data dimasukkan secara manual (tiada import daripada sistem SSU) | Tiada borang |
 | **KPT 6** · Projek / aktiviti kolaborasi rasmi | 3 | Daftar (MoU, MoA, LoA, LoI, geran), tempatan / antarabangsa, impak, lampiran | PIC fakulti dan Admin |
 | **KPT 7** · Syarikat / projek dibiayai | 3 | Daftar KPT 7 + hadiah pertandingan **CKAI 9** (nilai hadiah > RM0). Satu syarikat dikira sekali setahun | PIC fakulti dan Admin |
 
