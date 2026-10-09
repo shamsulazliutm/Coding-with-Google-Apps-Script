@@ -21,6 +21,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
   renameColumns_(ss);
   KPIS.forEach(function (kpi) {
+    if (!kpi.sheet) return;
     ensureSheet_(ss, kpi.sheet, kpiColumns_(kpi), kpi.fields.concat([{ key: 'id', type: 'text' }].concat(SYS_COLS.map(function (k) { return { key: k, type: 'text' }; }))));
   });
 
@@ -209,6 +210,7 @@ function adoptFolderFromTab_(ss) {
 /** Isi lajur pautan Drive bagi rekod lama yang sudah ada fail lampiran tetapi belum ada pautan. */
 function backfillFileLinks_(ss) {
   KPIS.forEach(function (kpi) {
+    if (!kpi.sheet) return;
     var fileFields = kpi.fields.filter(function (f) { return f.type === 'file'; });
     var sh = ss.getSheetByName(kpi.sheet);
     if (!fileFields.length || !sh || sh.getLastRow() < 2) return;
@@ -234,7 +236,7 @@ function backfillFileLinks_(ss) {
  */
 function dropRetiredColumns_(ss) {
   KPIS.forEach(function (kpi) {
-    if (!kpi.retired || !kpi.retired.length) return;
+    if (!kpi.sheet || !kpi.retired || !kpi.retired.length) return;
     var sh = ss.getSheetByName(kpi.sheet);
     if (!sh || sh.getLastColumn() < 1) return;
     var current = kpiColumns_(kpi);
@@ -250,7 +252,7 @@ function dropRetiredColumns_(ss) {
 /** Namakan semula tajuk lajur lama (KPI.renamed: {lama: baharu}) supaya data dikekalkan. */
 function renameColumns_(ss) {
   KPIS.forEach(function (kpi) {
-    if (!kpi.renamed) return;
+    if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);
     if (!sh || sh.getLastColumn() < 1) return;
     var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);

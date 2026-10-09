@@ -119,11 +119,12 @@ test('pengguna dinyahaktifkan: sesi sedia ada terbatal serta-merta dan OTP bahar
 });
 
 console.log('Akses & rekod');
-test('menu PIC hanya KPI yang dibenarkan; Admin nampak semua 7', () => {
+test('menu PIC hanya KPI yang dibenarkan; Admin nampak semua (5 daftar KPT + 17)', () => {
   const p = ok(g.api_session(picToken));
   deepEq(p.kpis.map(k => k.id), ['KAI1', 'KAI4', 'KAI6']);
   const a = ok(g.api_session(adminToken));
-  assert.strictEqual(a.kpis.length, 17);
+  assert.strictEqual(a.kpis.length, 22);
+  assert.ok(!a.kpis.some(k => k.entry === 'auto'), 'KPT1/KPT5 auto tiada borang');
 });
 test('PIC ditolak mengakses KPI Admin sahaja (baca & tulis)', () => {
   fail(g.api_list(picToken, 'KAI2', {}), /Akses ditolak/);
@@ -193,17 +194,18 @@ test('ID berjujukan tidak berulang selepas padam', () => {
 console.log('Dashboard');
 const dash = (y) => ok(g.api_dashboard(y));
 const card = (d, id) => d.kpis.find(k => k.id === id);
-test('dashboard awam tanpa log masuk: 7 KPI + 10 CKAI', () => {
+test('dashboard awam tanpa log masuk: 7 KPT + 7 KPI + 10 CKAI', () => {
   const d = dash(2026);
-  assert.strictEqual(d.kpis.length, 17);
-  deepEq(d.kpis.map(k => k.group), ['Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Department', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
-  deepEq(d.kpis.map(k => k.level), ['KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
-  deepEq(d.levels.map(l => l.label), ['KAI · Peringkat Universiti', 'DKAI · Peringkat Jabatan (JTNC HEPA)', 'CKAI · Peringkat Pusat (UTMXCITE)']);
+  assert.strictEqual(d.kpis.length, 24);
+  deepEq(d.kpis.map(k => k.group), ['KPT', 'KPT', 'KPT', 'KPT', 'KPT', 'KPT', 'KPT', 'Growth', 'Growth', 'Growth', 'Transform', 'Transform', 'Transform', 'Department', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center', 'Center']);
+  deepEq(d.kpis.map(k => k.level), ['KPT', 'KPT', 'KPT', 'KPT', 'KPT', 'KPT', 'KPT', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'KAI', 'DKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI', 'CKAI']);
+  deepEq(d.levels.map(l => l.label), ['KPT · Peringkat Kementerian (KPI Keusahawanan IPT)', 'KAI · Peringkat Universiti', 'DKAI · Peringkat Jabatan (JTNC HEPA)', 'CKAI · Peringkat Pusat (UTMXCITE)']);
   assert.ok(!JSON.stringify(d).includes('Internal'));
   // Enam fungsi UTMXCITE = aliran proses kerja; setiap indikator ditanda dengan satu fungsi
   deepEq(d.functions.map(x => x.label), ['Identify Student Entrepreneurship Interest', 'Conduct Entrepreneurship Training', 'Support Student Business Ideation', 'Facilitate Student Startup Development', 'Monitor Student Enterprise Performance', 'Showcase Student Innovation Venture', 'Cross-cutting']);
   deepEq(d.functions.map(x => x.no), [1, 2, 3, 4, 5, 6, null]);
   deepEq(d.kpis.map(k => k.id + ':' + k.fungsi), [
+    'KPT1:null', 'KPT2:null', 'KPT3:null', 'KPT4:null', 'KPT5:null', 'KPT6:null', 'KPT7:null',
     'KAI1:startup', 'KAI2:startup', 'KAI3:startup', 'KAI4:latihan', 'KAI5:startup', 'KAI6:startup', 'DKAI1:rentas',
     'CKAI1:minat', 'CKAI2:latihan', 'CKAI3:ideasi', 'CKAI4:startup', 'CKAI5:startup', 'CKAI6:startup', 'CKAI7:prestasi', 'CKAI8:pameran', 'CKAI9:pameran', 'CKAI10:rentas']);
   const titles = Object.fromEntries(d.kpis.map(k => [k.id, k.title]));
@@ -478,7 +480,7 @@ test('CKAI 6 (sewaan ruang niaga): hanya yang DIBAYAR dikira; tertunggak dipapar
 const PDF = (extra = '') => Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\n' + extra + '\n%%EOF').toString('base64');
 let awardPic, awardPicFc, awardRec;
 const award = (over = {}) => Object.assign({
-  fakulti: 'FM', nama_anugerah: 'Anugerah Inovasi Fakulti', tarikh: '2026-04-20', agensi: 'Kementerian Pendidikan Tinggi', peringkat: 'Fakulti', kategori: 'Inovasi',
+  fakulti: 'FM', nama_anugerah: 'Anugerah Inovasi Fakulti', tarikh: '2026-04-20', agensi: 'Agensi Rahsia Persekutuan', peringkat: 'Fakulti', kategori: 'Inovasi',
   program: 'GiGAUTM Ascend (GiGA)', mentor: 'Dr. Mentor', pingat: 'Emas',
   pelajar: [{ nama: 'Ali Anugerah', matrik: 'A24FM0001', nokp: '900101-14-5678' }, { nama: 'Siti Anugerah', matrik: 'A24FM0002', nokp: '010203-10-1234' }]
 }, over);
@@ -575,7 +577,7 @@ test('CKAI 9: dashboard mengira anugerah mengikut tarikh; paparan awam tiada nam
   assert.ok(c.secondary.some(x => x.label === 'Pelajar penerima' && x.value >= 3));
   assert.ok(c.breakdown.some(b => b.title === 'Mengikut program'));
   const sj = JSON.stringify(dash(2026));
-  ['Rahsia Pelajar', 'RHS001', '880808088888', 'Ali Anugerah', 'A24FM0001', 'Kementerian', '"id":"FILE'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+  ['Rahsia Pelajar', 'RHS001', '880808088888', 'Ali Anugerah', 'A24FM0001', 'Agensi Rahsia', '"id":"FILE'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
   assert.strictEqual(card(dash(2027), 'CKAI9').value, 1);
 });
 test('susunan lajur Sheet tidak penting: tab Pengguna dan KPI ditulis mengikut nama tajuk', () => {
@@ -751,7 +753,7 @@ test('peranan/aktif ditaip manual (huruf kecil, ada ruang) tetap berfungsi', () 
   sh.appendRow(['  Manual.Admin@UTM.my ', 'Manual', ' admin ', 'UTMXCITE', '', ' ya ', '']);
   const t = login('manual.admin@utm.my');
   assert.strictEqual(ok(g.api_session(t)).user.peranan, 'Admin');
-  assert.strictEqual(ok(g.api_session(t)).kpis.length, 17);
+  assert.strictEqual(ok(g.api_session(t)).kpis.length, 22);
 });
 test('peranan kosong atau salah: tiada OTP dan tiada akses (bukan PIC secara lalai)', () => {
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Pengguna');
@@ -1032,6 +1034,91 @@ test('CKAI 10: peruntukan (a) dan komitmen (b) diisi sekali; bulan seterusnya di
   const l1 = ok(save({ tabung: 'Lain-lain', tabung_lain: 'Tabung Uji', no_chargeline: 'U.1', peruntukan_awal: 300, perbelanjaan: 100 }));
   const l2 = ok(save({ tabung: 'Lain-lain', tabung_lain: 'tabung uji', no_chargeline: 'U.1', tempoh: '2030-02', perbelanjaan: 200 }));
   assert.strictEqual(l2.peruntukan_awal, 300); assert.strictEqual(l1.baki, 200);
+});
+
+console.log('KPT (peringkat Kementerian)');
+const failF = (r, key) => { fail(r, /betulkan/); assert.ok(r.fields[key], 'ralat medan tiada: ' + key); };
+test('KPT: PIC fakulti boleh diberi KPT2-KPT7 tetapi bukan KPT1/KPT5 (auto)', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'pic.kpt.fai@utm.my', nama: 'PIC KPT', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KPT2,KPT3,KPT4,KPT6,KPT7', aktif: 'Ya' }));
+  fail(g.api_saveUser(adminToken, { emel: 'pic.kpt.x@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KPT1', aktif: 'Ya' }), /tidak sah/);
+  fail(g.api_saveUser(adminToken, { emel: 'pic.kpt.x@utm.my', nama: 'X', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KPT5', aktif: 'Ya' }), /tidak sah/);
+  const t = login('pic.kpt.fai@utm.my');
+  deepEq(ok(g.api_session(t)).kpis.map(k => k.id), ['KPT2', 'KPT3', 'KPT4', 'KPT6', 'KPT7']);
+  fail(g.api_list(adminToken, 'KPT1', {}), /Akses ditolak/);
+  fail(g.api_save(adminToken, 'KPT5', {}), /Akses ditolak/);
+  assert.strictEqual(ok(g.api_session(adminToken)).teras.length, 3);
+});
+test('KPT1: jualan agregat CKAI 7 tanpa geran / pembiayaan', () => {
+  const sv = (o) => ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FM', tempoh: '2026-02', nama_perniagaan: 'Kopi KPT', no_kp: '990101-01-1111', no_matrik: 'KPT-M1', jenis_pendapatan: 'Jualan produk', pendapatan_rm: 1000 }, o)));
+  sv({ tempoh: '2026-03' }); sv({ jenis_pendapatan: 'Geran / Pembiayaan', pendapatan_rm: 5000, tempoh: '2026-04' });
+  const c = card(dash(2026), 'KPT1');
+  assert.ok(c.value >= 1000 && c.format === 'rm');
+  const base = c.value;
+  sv({ tempoh: '2026-05', pendapatan_rm: 250 });
+  assert.strictEqual(card(dash(2026), 'KPT1').value, base + 250);
+  assert.ok(!JSON.stringify(c).includes('KPT-M1') && !JSON.stringify(c).includes('990101'));
+});
+test('KPT2: % graduan usahawan = graduan / penyebut; senarai bernama tetapi paparan awam agregat', () => {
+  const grad = (o) => g.api_save(adminToken, 'KPT2', Object.assign({ jenis_rekod: 'Graduan usahawan', fakulti: 'FAI', nama: 'Siti Graduan', no_kp: '950505-05-5555', no_matrik: 'A20', tarikh_tamat: '2026-03-01', nama_perniagaan: 'Siti Enterprise', no_pendaftaran: 'SSM1', tarikh_penubuhan: '2026-06-01', kategori: 'Menubuhkan perniagaan berdaftar' }, o));
+  ok(grad({}));
+  failF(grad({ nama: 'Siti Lagi' }), 'jenis_rekod');                              // no. KP sama = orang sama
+  ok(grad({ nama: 'Ali Graduan', no_kp: '960606-06-6666', no_matrik: 'A21' }));
+  failF(grad({ nama: 'Awal', no_kp: '970707-07-7777', tarikh_penubuhan: '2027-06-01' }), 'tarikh_penubuhan'); // penubuhan > 6 bulan sebelum tamat
+  ok(g.api_save(adminToken, 'KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: 'FAI', tahun: 2026, bil_penyebut: 40 }));
+  failF(g.api_save(adminToken, 'KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: 'FAI', tahun: 2026, bil_penyebut: 41 }), 'jenis_rekod');
+  ok(g.api_save(adminToken, 'KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: 'FC', tahun: 2026, bil_penyebut: 60 }));
+  const d = dash(2026), c = card(d, 'KPT2');
+  assert.strictEqual(c.value, 2); assert.strictEqual(c.format, 'pct');          // 2 / 100
+  const sj = JSON.stringify(d);
+  ['Siti Graduan', 'Ali Graduan', '950505', 'A20', 'Siti Enterprise'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+});
+test('KPT3: % tenaga pengajar terlibat; seorang staf sekali setahun', () => {
+  const st = (o) => g.api_save(adminToken, 'KPT3', Object.assign({ tahun: 2026, fakulti: 'FAI', nama: 'Dr A', no_staf: 'S1', no_kp: '800101-01-1010', jenis_staf: 'Staf akademik', terlibat: 'Ya', peranan: 'Mentor', program: 'Inkubator', tarikh_program: '2026-04-01' }, o));
+  ok(st({})); failF(st({ nama: 'Dr A lagi' }), 'no_staf');
+  ok(st({ nama: 'Dr B', no_staf: 'S2', no_kp: '810202-02-2020', terlibat: 'Tidak', peranan: '', program: '', tarikh_program: '' }));
+  failF(st({ nama: 'Dr C', no_staf: 'S3', no_kp: '820303-03-3030', peranan: '' }), 'peranan');
+  ok(st({ tahun: 2027 }));                                                   // tahun lain dibenarkan
+  const c = card(dash(2026), 'KPT3');
+  assert.strictEqual(c.value, 50);
+  assert.ok(!JSON.stringify(dash(2026)).includes('Dr A'));
+});
+test('KPT4: pelajar dikira sekali (no. matrik) merentas daftar dan CKAI 8 (TRL 1-3)', () => {
+  const kp = (o) => g.api_save(adminToken, 'KPT4', Object.assign({ fakulti: 'FAI', nama: 'Pelajar Satu', no_kp: '000101-01-0101', no_matrik: 'K4-1', projek: 'Aplikasi', trl: 'TRL 2', tarikh: '2026-02-01' }, o));
+  const base = card(dash(2026), 'KPT4').value;
+  ok(kp({})); failF(kp({ tarikh: '2027-02-01' }), 'no_matrik');
+  assert.strictEqual(card(dash(2026), 'KPT4').value, base + 1);
+  ok(g.api_save(adminToken, 'CKAI8', inno({ tajuk_inovasi: 'Robot KPT', trl: 'TRL 3', tarikh: '2026-05-01', pelajar: [{ nama: 'Pelajar Satu', matrik: 'K4-1' }, { nama: 'Pelajar Dua', matrik: 'K4-2' }] })));
+  assert.strictEqual(card(dash(2026), 'KPT4').value, base + 2);               // K4-1 tidak dikira dua kali
+  assert.strictEqual(card(dash(2027), 'KPT4').value, 0);
+  assert.ok(!JSON.stringify(dash(2026)).includes('Pelajar Dua'));
+});
+test('KPT5: SSU aktif berasaskan inovasi, TRL 4-6 (auto daripada CKAI 4)', () => {
+  const ssu = (o) => g.api_save(adminToken, 'CKAI4', Object.assign({ fakulti: 'FKE', nama_pelajar: 'Pemilik', no_kp: '010101-01-0101', no_matrik: 'S5', nama_syarikat: 'Tech Sdn', jenis_perniagaan: 'Runcit', bil_rakan_kongsi: 1, no_ssu: 'SSU-K5', tarikh_daftar: '2026-03-01', status_ssm: 'Tidak Berdaftar', status: 'Aktif', berasaskan_inovasi: 'Ya', trl_syarikat: 'TRL 5' }, o));
+  const base = card(dash(2026), 'KPT5').value;
+  failF(ssu({ trl_syarikat: '' }), 'trl_syarikat');
+  ok(ssu({ no_ssu: 'SSU-K5' })); ok(ssu({ no_ssu: 'SSU-K6', nama_syarikat: 'Bukan Inovasi', berasaskan_inovasi: 'Tidak', trl_syarikat: '' }));
+  ok(ssu({ no_ssu: 'SSU-K7', nama_syarikat: 'Tidak Aktif', status: 'Tidak Aktif' }));
+  assert.strictEqual(card(dash(2026), 'KPT5').value, base + 1);
+});
+test('KPT6: kolaborasi rasmi dikira mengikut tahun dokumen', () => {
+  const kb = (o) => ok(g.api_save(adminToken, 'KPT6', Object.assign({ fakulti: 'FM', tajuk: 'Projek A', rakan: 'Syarikat X', skop: 'Tempatan', jenis_dokumen: 'MoU', tarikh: '2026-04-01' }, o)));
+  kb({}); kb({ tajuk: 'Projek B', skop: 'Antarabangsa', tarikh: '2027-01-01' });
+  const c = card(dash(2026), 'KPT6'); assert.strictEqual(c.value, 1);
+  assert.strictEqual(card(dash(2027), 'KPT6').value, 1);
+});
+test('KPT7: syarikat dibiayai unik setahun; hadiah CKAI 9 (>RM0) turut dikira', () => {
+  const by = (o) => g.api_save(adminToken, 'KPT7', Object.assign({ fakulti: 'FM', nama_syarikat: 'Firma Dana', jenis_pembiaya: 'Geran agensi kerajaan', jumlah_rm: 10000, tarikh: '2026-03-01' }, o));
+  ok(by({})); failF(by({ jumlah_rm: 5000 }), 'nama_syarikat');
+  const up7 = (n) => { const r = ok(g.api_uploadFile(adminToken, 'CKAI9', 'sijil', { name: n + '.pdf', data: PDF(n) })); return { id: r.id, name: r.name }; };
+  const base = card(dash(2026), 'KPT7').value;
+  ok(g.api_save(adminToken, 'CKAI9', award({ nama_anugerah: 'Hadiah Besar', tarikh: '2026-06-01', produk_projek: 'Firma Dana', nilai_hadiah_rm: 2000, sijil: up7('k7') })));
+  assert.strictEqual(card(dash(2026), 'KPT7').value, base);               // nama sama = syarikat sama
+  ok(g.api_save(adminToken, 'CKAI9', award({ nama_anugerah: 'Hadiah Lain', tarikh: '2026-07-01', produk_projek: 'Projek Baharu', nilai_hadiah_rm: 500, sijil: up7('k7b') })));
+  assert.strictEqual(card(dash(2026), 'KPT7').value, base + 1);
+});
+test('KPT: sasaran 2026-2030 disemai dan setiap KPT ada sasaran', () => {
+  const d = dash(2030);
+  ['KPT1', 'KPT2', 'KPT3', 'KPT4', 'KPT5', 'KPT6', 'KPT7'].forEach(id => assert.ok(card(d, id).target !== '', 'tiada sasaran: ' + id));
 });
 
 test('linkSistem dari editor (tanpa antara muka Sheet) memberi mesej jelas dengan pautan', () => {

@@ -140,7 +140,7 @@ function getSetupInfo_(token) {
   if (ss) {
     var missingTabs = [], missingCols = [];
     var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS]]
-      .concat(KPIS.map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
+      .concat(KPIS.filter(function (k) { return k.sheet; }).map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
     specs.forEach(function (sp) {
       var sh = ss.getSheetByName(sp[0]);
       if (!sh) { missingTabs.push(sp[0]); return; }

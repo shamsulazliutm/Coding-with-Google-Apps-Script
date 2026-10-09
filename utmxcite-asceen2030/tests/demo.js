@@ -32,27 +32,28 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     const h = await page.evaluate(() => sha256Hex_('abc'));
     assert.strictEqual(h, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
   });
-  await step('dashboard awam dengan data contoh: 17 kad dan nilai bukan sifar', async () => {
+  await step('dashboard awam dengan data contoh: 24 kad (7 KPT + 17) dan nilai bukan sifar', async () => {
     await page.waitForSelector('.ig .igp'); // halaman pertama = Infografik
     await page.click('.nav:has-text("Dashboard")');
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 17);
+    assert.strictEqual(await page.locator('.kcard').count(), 24);
     const t = await page.locator('.cont').innerText();
     assert.ok(/CKAI · PERINGKAT PUSAT/i.test(t));
     const vals = await page.locator('.kcard .v').allInnerTexts();
-    assert.ok(vals.filter((v) => /[1-9]/.test(v)).length >= 14, 'kebanyakan kad patut ada nilai: ' + vals.join(' | '));
+    assert.ok(vals.filter((v) => /[1-9]/.test(v)).length >= 20, 'kebanyakan kad patut ada nilai: ' + vals.join(' | '));
     assert.ok((await page.locator('#demobar').innerText()).toUpperCase().includes('PROTOTAIP PRA-DEMO'));
     await page.screenshot({ path: path.join(out, 'demo-1-dashboard-awam.png'), fullPage: true });
   });
   await step('tiada data peribadi atau permintaan rangkaian luar pada halaman awam', async () => {
     const t = await page.locator('.cont').innerText();
-    ['Pelajar Profil Contoh', 'Pelajar Anugerah', 'P24', '000101', '@utm.my'].forEach((x) => assert.ok(!t.includes(x), 'bocor: ' + x));
+    ['Pelajar Profil Contoh', 'Pelajar Anugerah', 'Graduan Usahawan Contoh', 'Tenaga Pengajar Contoh', 'Pelajar Inovasi Contoh', 'Perniagaan Graduan', 'P24', '000101', '@utm.my'].forEach((x) => assert.ok(!t.includes(x), 'bocor: ' + x));
     assert.deepStrictEqual(reqs, [], 'permintaan luar: ' + reqs.join(','));
   });
   await step('Infografik awam dipaparkan dengan data contoh', async () => {
     await page.click('.nav:has-text("Infografik")');
     await page.waitForSelector('.ig .igp');
-    assert.ok((await page.locator('svg.ring').count()) >= 10);
+    assert.ok((await page.locator('svg.ring').count()) >= 18);
+    assert.strictEqual(await page.locator('.kpti').count(), 7);
     await page.click('.nav:has-text("Dashboard")');
     await page.waitForSelector('.kcard');
   });

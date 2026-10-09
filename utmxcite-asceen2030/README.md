@@ -9,15 +9,30 @@ Rujukan sebenar: Dokumen Pelan Tindakan UTMXCITE (PDF).
 - **Sub-tab Senarai / Masuk Data** pada bar atas setiap KAI, DKAI dan CKAI.
 - Semua data disimpan dalam satu Google Sheet, **satu tab bagi setiap KPI**.
 
-## Tiga peringkat penunjuk
+## Empat peringkat penunjuk
 
 | Peringkat | KPI | Tag kad |
 |---|---|---|
+| **KPT · Peringkat Kementerian** | KPT 1 hingga KPT 7 (KPI Keusahawanan IPT 2026-2030, dikelompokkan mengikut tiga Teras) | KPT |
 | **KAI · Peringkat Universiti** | KAI 1 hingga KAI 6 | Growth (KAI 1-3), Transform (KAI 4-6) |
 | **DKAI · Peringkat Jabatan (JTNC HEPA)** | DKAI 1 | Department |
 | **CKAI · Peringkat Pusat (UTMXCITE)** | CKAI 1 hingga CKAI 9 (dikelompokkan mengikut enam fungsi) | Center |
 
-Dashboard dan sidebar dikelompokkan mengikut tiga peringkat ini.
+Dashboard, sidebar dan Infografik dikelompokkan mengikut empat peringkat ini; KPT dipaparkan dahulu.
+
+## KPT · Peringkat Kementerian (Kamus KPI Keusahawanan PTK-IPT 2026-2030)
+
+| KPT | Teras | Sumber data | Pengisian |
+|---|---|---|---|
+| **KPT 1** · Jumlah jualan agregat usahawan pelajar | 1 | **Automatik** daripada CKAI 7 (jenis pendapatan *Geran / Pembiayaan* dikecualikan) | Tiada borang |
+| **KPT 2** · % graduan menceburi keusahawanan | 1 | Daftar graduan (nama, no. KP, no. matrik, perniagaan berdaftar, kategori, sijil PDF) + rekod **penyebut tahunan** (bilangan usahawan pelajar tahun akhir) setiap fakulti | PIC fakulti dan Admin |
+| **KPT 3** · % tenaga pengajar dalam program kompetensi | 1 | Daftar staf (seorang sekali setahun); % = terlibat ÷ berdaftar | PIC fakulti dan Admin |
+| **KPT 4** · Pelajar memanfaatkan inovasi dan teknologi (TRL 1-3) | 2 | Daftar KPT 4 + pelajar **CKAI 8** (TRL 1-3). Setiap pelajar (no. matrik) dikira **sekali sahaja**, pada tahun kemunculan pertama | PIC fakulti dan Admin |
+| **KPT 5** · Syarikat pemula berasaskan inovasi dan teknologi | 2 | **Automatik** daripada CKAI 4 (SSU aktif, *berasaskan inovasi* = Ya, TRL 4-6). CKAI 4 kekal Admin sahaja; datanya akan diimport daripada sistem pendaftaran SSU | Tiada borang |
+| **KPT 6** · Projek / aktiviti kolaborasi rasmi | 3 | Daftar (MoU, MoA, LoA, LoI, geran), tempatan / antarabangsa, impak, lampiran | PIC fakulti dan Admin |
+| **KPT 7** · Syarikat / projek dibiayai | 3 | Daftar KPT 7 + hadiah pertandingan **CKAI 9** (nilai hadiah > RM0). Satu syarikat dikira sekali setahun | PIC fakulti dan Admin |
+
+Sasaran tahunan 2026-2030 disemai daripada kamus semasa `setup()`. Tab baharu: `KPT2_Graduan_Usahawan`, `KPT3_Tenaga_Pengajar`, `KPT4_Pelajar_Inovasi`, `KPT6_Kolaborasi`, `KPT7_Pembiayaan` (KPT 1 dan KPT 5 tiada tab). Dashboard dan Infografik awam hanya menunjukkan agregat; nama dan no. KP hanya dalam Sheet dan senarai Admin / PIC. PIC diberi akses melalui `kpi_akses`: `KPT2,KPT3,KPT4,KPT6,KPT7`.
 
 ## Peranan dan akses
 
@@ -171,7 +186,7 @@ Ujian tidak menggantikan ujian sebenar dalam Google (contoh: kebenaran OAuth, pe
 
 ## Infografik (menu awam)
 
-Menu **Infografik** (tajuk halaman: **Laporan Prestasi UTMXCITE**; menu pertama, sebelum Dashboard; ia juga halaman pertama apabila pautan dibuka, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, pencapaian mengikut tiga peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).
+Menu **Infografik** (tajuk halaman: **Laporan Prestasi UTMXCITE**; menu pertama, sebelum Dashboard; ia juga halaman pertama apabila pautan dibuka, tanpa log masuk) memaparkan pencapaian UTMXCITE secara visual daripada data dashboard: cincin Pekerjaan Premium Tier 1 berbanding sasaran 40%, panel **KPT** (cincin setiap KPI mengikut tiga Teras), pencapaian mengikut empat peringkat dan enam fungsi, nombor utama, trend premium, carta bulanan (pendapatan, sewaan, Makerspace), pecahan mengikut fakulti dan senarai semua indikator. Tahun boleh ditukar dan halaman boleh dicetak (butang Cetak / PDF). Hanya data agregat dipaparkan (titik akhir `api_trend` dan `api_dashboard`).
 
 ## CKAI 10 · Jumlah perbelanjaan operasi (Cross-cutting)
 

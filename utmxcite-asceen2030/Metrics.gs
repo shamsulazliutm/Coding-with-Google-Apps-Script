@@ -60,6 +60,133 @@ function countedInYear_(rows, statuses, dateField, year) {
 }
 
 var MEASURES = {
+  // ---- KPT: KPI peringkat Kementerian (Kamus KPI Keusahawanan IPT 2026-2030). Paparan awam: agregat sahaja. ----
+  // KPT 1: jumlah jualan agregat usahawan pelajar (CKAI 7), tidak termasuk geran / pembiayaan.
+  kpt1: function (kpi, rows, year, ctx) {
+    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.tempoh) === year && r.jenis_pendapatan !== 'Geran / Pembiayaan'; });
+    var total = sumOf_(sales, 'pendapatan_rm');
+    return {
+      value: round2_(total),
+      secondary: [
+        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') },
+        { label: 'Geran / pembiayaan (dikecualikan)', value: rm_(sumOf_(ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.tempoh) === year && r.jenis_pendapatan === 'Geran / Pembiayaan'; }), 'pendapatan_rm')) }
+      ],
+      breakdown: [
+        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_rm); })) },
+        { title: 'Jualan (RM) mengikut jenis pendapatan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_pendapatan; }, function (r) { return num_(r.pendapatan_rm); })) }
+      ]
+    };
+  },
+
+  // KPT 2: % graduan usahawan (menubuhkan perniagaan berdaftar / menjana pekerjaan) daripada usahawan pelajar tahun akhir.
+  kpt2: function (kpi, rows, year) {
+    var grads = rows.filter(function (r) { return r.jenis_rekod === 'Graduan usahawan' && yearOf_(r.tarikh_tamat) === year; });
+    var den = 0;
+    rows.forEach(function (r) { if (r.jenis_rekod === 'Penyebut tahunan' && num_(r.tahun) === year) den += num_(r.bil_penyebut); });
+    var w = [];
+    if (!den && grads.length) w.push('Penyebut (bilangan usahawan pelajar tahun akhir) belum dilaporkan untuk tahun ini.');
+    return {
+      value: den ? round1_(grads.length * 100 / den) : 0,
+      secondary: [{ label: 'Graduan usahawan', value: grads.length }, { label: 'Usahawan pelajar tahun akhir (penyebut)', value: den }],
+      breakdown: [
+        { title: 'Graduan mengikut kategori', items: countBy_(grads, function (r) { return r.kategori; }) },
+        { title: 'Graduan mengikut fakulti', items: sortDesc_(countBy_(grads, function (r) { return r.fakulti; })) }
+      ],
+      warnings: w
+    };
+  },
+
+  // KPT 3: % tenaga pengajar keusahawanan yang terlibat dalam program peningkatan kompetensi.
+  kpt3: function (kpi, rows, year) {
+    var all = rows.filter(function (r) { return num_(r.tahun) === year; });
+    var done = all.filter(function (r) { return r.terlibat === 'Ya'; });
+    return {
+      value: all.length ? round1_(done.length * 100 / all.length) : 0,
+      secondary: [{ label: 'Tenaga pengajar berdaftar', value: all.length }, { label: 'Terlibat dalam program', value: done.length }],
+      breakdown: [
+        { title: 'Terlibat mengikut program', items: sortDesc_(countBy_(done, function (r) { return r.program; })) },
+        { title: 'Terlibat mengikut peranan', items: sortDesc_(countBy_(done, function (r) { return r.peranan; })) },
+        { title: 'Terlibat mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
+  // KPT 4: pelajar memanfaatkan inovasi dan teknologi (TRL 1-3), dikira sekali sahaja (tahun kemunculan pertama).
+  // Sumber: daftar KPT 4 + pelajar dalam CKAI 8 (inovasi pelajar) yang TRL 1-3.
+  kpt4: function (kpi, rows, year, ctx) {
+    var first = {};
+    function add(key, y, fakulti, sumber) {
+      key = String(key || '').replace(/^'/, '').trim().toLowerCase();
+      if (!key || !y) return;
+      if (!first[key] || y < first[key].y) first[key] = { y: y, fakulti: fakulti, sumber: sumber };
+    }
+    rows.forEach(function (r) { add(r.no_matrik, yearOf_(r.tarikh), r.fakulti, 'Daftar fakulti (KPT 4)'); });
+    ctx.rows('CKAI8').forEach(function (r) {
+      if (['TRL 1', 'TRL 2', 'TRL 3'].indexOf(r.trl) < 0) return;
+      var p = parseJson_(r.pelajar, []);
+      if (Array.isArray(p)) p.forEach(function (x) { add(x && x.matrik, yearOf_(r.tarikh), r.fakulti, 'Inovasi pelajar (CKAI 8)'); });
+    });
+    var counted = Object.keys(first).map(function (k) { return first[k]; }).filter(function (x) { return x.y === year; });
+    return {
+      value: counted.length,
+      secondary: [{ label: 'Terkumpul sehingga tahun ini', value: Object.keys(first).filter(function (k) { return first[k].y <= year; }).length }],
+      breakdown: [
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(counted, function (x) { return x.fakulti; })) },
+        { title: 'Mengikut sumber data', items: countBy_(counted, function (x) { return x.sumber; }) }
+      ]
+    };
+  },
+
+  // KPT 5: syarikat pemula (SSU aktif) berasaskan inovasi dan teknologi, TRL 4-6, didaftarkan pada tahun itu.
+  kpt5: function (kpi, rows, year, ctx) {
+    var cs = ctx.rows('CKAI4').filter(function (r) {
+      return r.status === 'Aktif' && r.berasaskan_inovasi === 'Ya' && ['TRL 4', 'TRL 5', 'TRL 6'].indexOf(r.trl_syarikat) >= 0 && yearOf_(r.tarikh_daftar) === year;
+    });
+    return {
+      value: cs.length,
+      secondary: [{ label: 'Berdaftar SSM', value: cs.filter(function (r) { return r.status_ssm === 'Berdaftar'; }).length }],
+      breakdown: [
+        { title: 'Mengikut TRL', items: countBy_(cs, function (r) { return r.trl_syarikat; }).sort(function (a, b) { return a.label.localeCompare(b.label); }) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(cs, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
+  // KPT 6: projek / aktiviti berimpak daripada kolaborasi rasmi pada tahun itu.
+  kpt6: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
+    return {
+      value: inYear.length,
+      secondary: [
+        { label: 'Tempatan', value: inYear.filter(function (r) { return r.skop === 'Tempatan'; }).length },
+        { label: 'Antarabangsa', value: inYear.filter(function (r) { return r.skop === 'Antarabangsa'; }).length }
+      ],
+      breakdown: [
+        { title: 'Mengikut dokumen rasmi', items: sortDesc_(countBy_(inYear, function (r) { return r.jenis_dokumen; })) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
+  // KPT 7: syarikat / projek dibiayai (unik setiap tahun). Sumber: daftar KPT 7 + hadiah pertandingan (CKAI 9, nilai hadiah > 0).
+  kpt7: function (kpi, rows, year, ctx) {
+    var items = [];
+    rows.forEach(function (r) { if (yearOf_(r.tarikh) === year) items.push({ name: r.nama_syarikat, jenis: r.jenis_pembiaya, rm: num_(r.jumlah_rm), fakulti: r.fakulti }); });
+    ctx.rows('CKAI9').forEach(function (r) {
+      if (yearOf_(r.tarikh) === year && num_(r.nilai_hadiah_rm) > 0) items.push({ name: r.produk_projek || r.nama_anugerah, jenis: 'Hadiah pertandingan keusahawanan', rm: num_(r.nilai_hadiah_rm), fakulti: r.fakulti });
+    });
+    var seen = {}, uniq = [];
+    items.forEach(function (x) { var k = String(x.name || '').trim().toLowerCase(); if (k && !seen[k]) { seen[k] = 1; uniq.push(x); } });
+    return {
+      value: uniq.length,
+      secondary: [{ label: 'Jumlah nilai pembiayaan', value: rm_(sumOf_(items, 'rm')) }],
+      breakdown: [
+        { title: 'Mengikut jenis pembiayaan', items: sortDesc_(countBy_(items, function (x) { return x.jenis; })) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(uniq, function (x) { return x.fakulti; })) }
+      ]
+    };
+  },
+
   // KAI 1: inkubator aktif = didaftarkan DAN (dalam pembangunan atau beroperasi); sasaran minimum 20 setiap tahun.
   kai1: function (kpi, rows, year, ctx) {
     var active = rows.filter(function (r) {
@@ -405,7 +532,7 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
   var t = (targets[kpi.id] || {})[year] || null;
   var target = t && t.sasaran !== '' ? t.sasaran : '';
   var card = {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, fungsi: kpi.fungsi || null, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, teras: kpi.teras || null, fungsi: kpi.fungsi || null, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
     value: m.value, target: target,
     pct: target !== '' && target > 0 ? round1_(m.value / target * 100) : null,
     status: statusFor_(kpi, m.value, target),
@@ -455,18 +582,23 @@ function premiumShare_(rows, year) {
 
 function computeDashboard_(year) {
   var targets = readTargets_();
-  var ctx = { faculties: listFaculties_() };
+  var cache = {};
+  function tableRows(id) {
+    var k = getKpi_(id);
+    if (!k.sheet) return [];
+    return cache[id] || (cache[id] = readTable_(k.sheet, typesFor_(k)).rows);
+  }
+  var ctx = { faculties: listFaculties_(), rows: tableRows };
   var cards = KPIS.map(function (kpi) {
-    var rows = readTable_(kpi.sheet, typesFor_(kpi)).rows;
-    return buildKpiCard_(kpi, rows, year, targets, ctx);
+    return buildKpiCard_(kpi, tableRows(kpi.id), year, targets, ctx);
   });
   var withTarget = cards.filter(function (c) { return c.target !== ''; }).length;
   var meet = cards.filter(function (c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }).length;
   return {
-    year: year, years: APP.YEARS, levels: LEVELS, functions: FUNCTIONS, generatedAt: nowIso_(),
+    year: year, years: APP.YEARS, levels: LEVELS, teras: TERAS, functions: FUNCTIONS, generatedAt: nowIso_(),
     ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)' },
     summary: { total: withTarget, meet: meet },
-    premium: premiumShare_(readTable_('CKAI7_Pendapatan_Pelajar', typesFor_(getKpi_('CKAI7'))).rows, year),
+    premium: premiumShare_(tableRows('CKAI7'), year),
     kpis: cards
   };
 }

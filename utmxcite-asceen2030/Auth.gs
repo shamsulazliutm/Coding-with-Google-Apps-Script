@@ -130,6 +130,7 @@ function facultyAllowedForKpi_(kpi, fakulti) {
 }
 
 function canAccessKpi_(user, kpi) {
+  if (kpi.entry === 'auto') return false;   // dikira automatik daripada KPI lain; tiada borang
   if (user.peranan === ROLES.ADMIN) return true;
   return kpi.entry === 'faculty' && user.kpiAkses.indexOf(kpi.id) >= 0 && facultyAllowedForKpi_(kpi, user.fakulti);
 }

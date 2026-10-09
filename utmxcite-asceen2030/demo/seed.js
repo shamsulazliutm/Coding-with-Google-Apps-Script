@@ -22,8 +22,8 @@ window.__demoSeed = function () {
   function fac(i) { return FAC[i % FAC.length]; }
 
   // ---- Pengguna contoh
-  saveUser_(tok, { emel: 'pic.fai@utm.my', nama: 'PIC Fakulti AI (contoh)', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI8,CKAI9', aktif: 'Ya' });
-  saveUser_(tok, { emel: 'pic.fc@utm.my', nama: 'PIC Fakulti Komputeran (contoh)', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI8,CKAI9', aktif: 'Ya' });
+  saveUser_(tok, { emel: 'pic.fai@utm.my', nama: 'PIC Fakulti AI (contoh)', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI8,CKAI9,KPT2,KPT3,KPT4,KPT6,KPT7', aktif: 'Ya' });
+  saveUser_(tok, { emel: 'pic.fc@utm.my', nama: 'PIC Fakulti Komputeran (contoh)', peranan: 'PIC', fakulti: 'FC', kpi_akses: 'KAI1,KAI4,KAI6,CKAI1,CKAI2,CKAI3,CKAI7,CKAI8,CKAI9,KPT2,KPT3,KPT4,KPT6,KPT7', aktif: 'Ya' });
 
   // ---- Sasaran CKAI (contoh sahaja; sasaran sebenar akan ditetapkan oleh UTMXCITE)
   [['CKAI1', 120], ['CKAI2', 10], ['CKAI3', 8], ['CKAI4', 30], ['CKAI5', 600], ['CKAI6', 60000], ['CKAI7', 120000], ['CKAI8', 12], ['CKAI9', 8]].forEach(function (t) {
@@ -87,7 +87,7 @@ window.__demoSeed = function () {
 
   // ---- CKAI 4 SSU
   for (i = 1; i <= 14; i++) {
-    save('CKAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar SSU Contoh', i), no_kp: '0201' + p2(i) + '10' + ('0000' + i).slice(-4), no_matrik: 'S24' + p2(i) + '001', nama_syarikat: 'Syarikat Contoh ' + p2(i) + ' Sdn Bhd', jenis_perniagaan: ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Aksesori', 'Reka Bentuk Grafik, Laman Web & Perkhidmatan Digital', 'Lain-lain'][i % 5], jenis_perniagaan_lain: i % 5 === 4 ? 'Akuaponik' : '', bil_rakan_kongsi: 1 + (i % 4), rakan_kongsi: i % 4 === 0 ? [] : Array.apply(null, Array(i % 4)).map(function (_, j) { return { nama: nm('Rakan Contoh', i * 3 + j), matrik: 'S25' + p2(i) + '0' + (j + 1), nokp: '0301' + p2(i) + '10' + ('0000' + (i * 3 + j)).slice(-4) }; }), status_ssm: i % 3 === 0 ? 'Tidak Berdaftar' : 'Berdaftar', tarikh_ssm: i % 3 === 0 ? '' : ymd(1 + (i % lastM), 2), no_ssu: 'SSU-' + Y + '-' + ('000' + i).slice(-4), tarikh_daftar: ymd(1 + (i % lastM), 8 + (i % 15)), status: i === 14 ? 'Tidak Aktif' : 'Aktif' });
+    save('CKAI4', { fakulti: fac(i), nama_pelajar: nm('Pelajar SSU Contoh', i), no_kp: '0201' + p2(i) + '10' + ('0000' + i).slice(-4), no_matrik: 'S24' + p2(i) + '001', nama_syarikat: 'Syarikat Contoh ' + p2(i) + ' Sdn Bhd', jenis_perniagaan: ['Runcit', 'Makanan & Minuman', 'Fesyen, Pakaian & Aksesori', 'Reka Bentuk Grafik, Laman Web & Perkhidmatan Digital', 'Lain-lain'][i % 5], jenis_perniagaan_lain: i % 5 === 4 ? 'Akuaponik' : '', bil_rakan_kongsi: 1 + (i % 4), rakan_kongsi: i % 4 === 0 ? [] : Array.apply(null, Array(i % 4)).map(function (_, j) { return { nama: nm('Rakan Contoh', i * 3 + j), matrik: 'S25' + p2(i) + '0' + (j + 1), nokp: '0301' + p2(i) + '10' + ('0000' + (i * 3 + j)).slice(-4) }; }), status_ssm: i % 3 === 0 ? 'Tidak Berdaftar' : 'Berdaftar', tarikh_ssm: i % 3 === 0 ? '' : ymd(1 + (i % lastM), 2), no_ssu: 'SSU-' + Y + '-' + ('000' + i).slice(-4), tarikh_daftar: ymd(1 + (i % lastM), 8 + (i % 15)), status: i === 14 ? 'Tidak Aktif' : 'Aktif', berasaskan_inovasi: i % 3 === 1 ? 'Ya' : 'Tidak', trl_syarikat: i % 3 === 1 ? ['TRL 4', 'TRL 5', 'TRL 6'][i % 3 + (i % 2)] || 'TRL 5' : '' });
   }
 
   // ---- CKAI 5 Makerspace, CKAI 6 Sewaan ruang niaga, CKAI 7 Pendapatan
@@ -138,6 +138,19 @@ window.__demoSeed = function () {
     if (k === 0) rec.sijil = { id: up.id, name: up.name };
     else { var u2 = uploadFile_(tok, 'CKAI9', 'sijil', { name: 'sijil-contoh-' + (k + 1) + '.pdf', data: btoa(pdf) }); rec.sijil = { id: u2.id, name: u2.name }; }
     save('CKAI9', rec);
+  });
+
+  // ---- KPT (peringkat Kementerian): daftar contoh. KPT 1 dan KPT 5 dikira automatik daripada CKAI 7 dan CKAI 4.
+  FAC.forEach(function (f, i) { save('KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: f, tahun: Y, bil_penyebut: 20 + i * 3 }); });
+  for (i = 1; i <= 14; i++) save('KPT2', { jenis_rekod: 'Graduan usahawan', fakulti: fac(i), nama: nm('Graduan Usahawan Contoh', i), no_kp: '9501' + p2(i) + '105' + ('000' + i).slice(-3), no_matrik: 'GR' + p2(i) + '001', tarikh_tamat: ymd(2, 10 + (i % 10)), nama_perniagaan: 'Perniagaan Graduan ' + p2(i), no_pendaftaran: 'SSM-' + p2(i) + '0001', tarikh_penubuhan: ymd(3, 5 + (i % 10)), kategori: ['Menubuhkan perniagaan berdaftar', 'Menjana peluang pekerjaan', 'Berkembang daripada projek pelajar', 'Model perniagaan inovatif (IP-based startup / gig bernilai tinggi)'][i % 4] });
+  for (i = 1; i <= 24; i++) save('KPT3', { tahun: Y, fakulti: fac(i), nama: nm('Tenaga Pengajar Contoh', i), no_staf: 'ST' + p2(i) + '01', no_kp: '7501' + p2(i) + '105' + ('000' + i).slice(-3), jenis_staf: i % 5 === 0 ? 'Staf bukan akademik' : 'Staf akademik',
+    terlibat: i <= 15 ? 'Ya' : 'Tidak', peranan: i <= 15 ? ['Mentor', 'Pengasas bersama', 'Penyelidik komersialisasi', 'Pembimbing inkubator'][i % 4] : '', program: i <= 15 ? ['Inkubator', 'Pemecut (accelerator)', 'Pemula', 'Spin-off', 'Kolaborasi industri'][i % 5] : '', tarikh_program: i <= 15 ? ymd(3, 3 + (i % 20)) : '' });
+  for (i = 1; i <= 9; i++) save('KPT4', { fakulti: fac(i), nama: nm('Pelajar Inovasi Contoh', i), no_kp: '0301' + p2(i) + '105' + ('000' + i).slice(-3), no_matrik: 'KP4' + p2(i) + '001', projek: 'Projek teknologi contoh ' + i, trl: ['TRL 1', 'TRL 2', 'TRL 3'][i % 3], tarikh: ymd(2 + (i % 3), 6 + i) });
+  [['FAI', 'MoU', 'Tempatan'], ['FC', 'MoA', 'Antarabangsa'], ['FKE', 'LoI', 'Tempatan'], ['MJIIT', 'Geran penyelidikan', 'Antarabangsa'], ['FKM', 'MoU', 'Tempatan']].forEach(function (a, k) {
+    save('KPT6', { fakulti: a[0], tajuk: 'Projek kolaborasi contoh ' + (k + 1), rakan: 'Rakan Industri Contoh ' + (k + 1), skop: a[2], jenis_dokumen: a[1], tarikh: ymd(2 + k, 12), penerangan_impak: 'Impak contoh.' });
+  });
+  [['FAI', 'Pelabur budiman (angel investor)', 30000], ['FC', 'Geran agensi kerajaan', 50000], ['FKE', 'Pemodal teroka (venture capital)', 120000], ['MJIIT', 'Hadiah pertandingan keusahawanan', 5000]].forEach(function (a, k) {
+    save('KPT7', { fakulti: a[0], nama_syarikat: 'Syarikat Dibiayai Contoh ' + (k + 1), jenis_pembiaya: a[1], jumlah_rm: a[2], tarikh: ymd(3 + k, 9) });
   });
   CacheService.getScriptCache().remove('sess:' + sha256Hex_(tok));
 };

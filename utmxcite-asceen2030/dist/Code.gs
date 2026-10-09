@@ -122,7 +122,15 @@ var FUNCTIONS = [
 ];
 
 /** Tiga peringkat penunjuk. Setiap KPI tergolong dalam satu peringkat mengikut awalan ID (KAI / DKAI / CKAI). */
+/** Tiga teras Kamus KPI Keusahawanan IPT 2026-2030 (peringkat KPT). */
+var TERAS = [
+  { id: 't1', no: 1, label: 'Ekosistem keusahawanan pelajar yang berdaya saing' },
+  { id: 't2', no: 2, label: 'Inovasi dan teknologi dalam keusahawanan' },
+  { id: 't3', no: 3, label: 'Kolaborasi berimpak tinggi' }
+];
+
 var LEVELS = [
+  { id: 'KPT', label: 'KPT · Peringkat Kementerian (KPI Keusahawanan IPT)', short: 'KPT · Kementerian', section: 'Peringkat Kementerian · KPT' },
   { id: 'KAI', label: 'KAI · Peringkat Universiti', short: 'KAI · Universiti', section: 'Peringkat Universiti · KAI' },
   { id: 'DKAI', label: 'DKAI · Peringkat Jabatan (JTNC HEPA)', short: 'DKAI · Jabatan (JTNC HEPA)', section: 'Peringkat Jabatan · DKAI (JTNC HEPA)' },
   { id: 'CKAI', label: 'CKAI · Peringkat Pusat (UTMXCITE)', short: 'CKAI · Pusat (UTMXCITE)', section: 'Peringkat Pusat · CKAI (UTMXCITE)' }
@@ -219,12 +227,151 @@ function makerspaceValidate_(c, errors) {
   if (c.tarikh_mula && c.tarikh_mula === c.tarikh_tamat && c.masa_mula && c.masa_tamat && !errors.masa_tamat && c.masa_tamat <= c.masa_mula) errors.masa_tamat = 'Masa tamat mesti selepas masa mula.';
 }
 
+function addMonthsIso_(iso, n) {
+  var y = parseInt(iso.slice(0, 4), 10), m = parseInt(iso.slice(5, 7), 10) - 1 + n, d = iso.slice(8, 10);
+  y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+  return y + '-' + ('0' + (m + 1)).slice(-2) + '-' + d;
+}
+
+/** KPT2: dua jenis rekod (graduan usahawan / penyebut tahunan bagi fakulti). Graduan dikira sekali (no. KP). */
+function kpt2Validate_(c, errors) {
+  icValidate_(c, errors);
+  var fak = c.fakulti || '';
+  if (c.jenis_rekod === 'Penyebut tahunan') {
+    c.kunci = 'p|' + c.tahun + '|' + fak;
+  } else {
+    c.kunci = 'g|' + String(c.no_kp || '').toLowerCase();
+    if (c.tarikh_tamat && c.tarikh_penubuhan && !errors.tarikh_penubuhan && c.tarikh_penubuhan > addMonthsIso_(c.tarikh_tamat, 6))
+      errors.tarikh_penubuhan = 'Perniagaan mesti ditubuhkan dalam tempoh 6 bulan selepas tamat pengajian (atau lebih awal).';
+  }
+}
+
+/** KPT3: satu rekod bagi setiap staf setiap tahun. */
+function kpt3Validate_(c, errors) {
+  icValidate_(c, errors);
+  c.kunci = String(c.tahun || '') + '|' + String(c.no_staf || '').trim().toLowerCase();
+}
+
+/** KPT7: satu syarikat/projek dikira sekali bagi setiap tahun pelaporan. */
+function kpt7Validate_(c, errors) {
+  c.kunci = String(c.tarikh || '').slice(0, 4) + '|' + String(c.nama_syarikat || '').trim().toLowerCase();
+}
+
 var PROGRAM_DONE_REQUIRE = ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'];
 
 // ---------------------------------------------------------------------------
 // Definisi KPI. entry: 'faculty' = PIC fakulti + Admin; 'admin' = Admin sahaja.
 // ---------------------------------------------------------------------------
 var KPIS = [
+  {
+    id: 'KPT1', sheet: null, auto: true, group: 'KPT', teras: 't1', entry: 'auto',
+    title: 'KPT 1 · Jumlah jualan agregat usahawan pelajar', short: 'Jualan agregat usahawan',
+    unit: 'RM jualan setahun', measure: 'kpt1', jenis: 'minimum', valueFormat: 'rm', listColumns: [], statusField: null, rules: [], fields: []
+  },
+  {
+    id: 'KPT2', prefix: 'K2', sheet: 'KPT2_Graduan_Usahawan', group: 'KPT', teras: 't1', entry: 'faculty',
+    title: 'KPT 2 · Peratus graduan yang menceburi keusahawanan dan mewujudkan peluang pekerjaan', short: '% graduan berusahawan',
+    unit: '% graduan usahawan', measure: 'kpt2', jenis: 'minimum', valueFormat: 'pct',
+    listColumns: ['id', 'jenis_rekod', 'fakulti', 'nama', 'tarikh_tamat', 'kategori', 'tahun', 'bil_penyebut'],
+    statusField: 'jenis_rekod', unique: ['kunci'], validate: kpt2Validate_,
+    rules: [
+      { when: { field: 'jenis_rekod', in: ['Graduan usahawan'] }, require: ['nama', 'no_kp', 'no_matrik', 'tarikh_tamat', 'nama_perniagaan', 'no_pendaftaran', 'tarikh_penubuhan', 'kategori'] },
+      { when: { field: 'jenis_rekod', in: ['Penyebut tahunan'] }, require: ['tahun', 'bil_penyebut'] }
+    ],
+    fields: [
+      F_('jenis_rekod', 'Jenis rekod', 'select', { required: true, sec: 'Rekod', options: ['Graduan usahawan', 'Penyebut tahunan'], hint: 'Penyebut tahunan = bilangan usahawan pelajar tahun akhir bagi fakulti anda (satu rekod setahun).' }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true }),
+      F_('nama', 'Nama graduan', 'text', { sec: 'Graduan usahawan' }),
+      F_('no_kp', 'No. KP / pasport', 'text'),
+      F_('no_matrik', 'No. matrik', 'text'),
+      F_('tarikh_tamat', 'Tarikh tamat pengajian', 'date'),
+      F_('nama_perniagaan', 'Nama perniagaan', 'text'),
+      F_('no_pendaftaran', 'No. pendaftaran SSM / SKM / PBT', 'text'),
+      F_('tarikh_penubuhan', 'Tarikh penubuhan perniagaan', 'date'),
+      F_('kategori', 'Kategori', 'select', { options: ['Menubuhkan perniagaan berdaftar', 'Menjana peluang pekerjaan', 'Berkembang daripada projek pelajar', 'Model perniagaan inovatif (IP-based startup / gig bernilai tinggi)'] }),
+      F_('lampiran', 'Sijil SSM / SKM / lesen PBT (PDF)', 'file', { full: true }),
+      F_('tahun', 'Tahun', 'number', { min: 2026, max: 2030, sec: 'Penyebut tahunan' }),
+      F_('bil_penyebut', 'Bilangan usahawan pelajar tahun akhir', 'number', { min: 0 }),
+      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'jenis_rekod' })
+    ]
+  },
+  {
+    id: 'KPT3', prefix: 'K3', sheet: 'KPT3_Tenaga_Pengajar', group: 'KPT', teras: 't1', entry: 'faculty',
+    title: 'KPT 3 · Peratus tenaga pengajar keusahawanan dalam program peningkatan kompetensi', short: '% tenaga pengajar terlibat',
+    unit: '% tenaga pengajar terlibat', measure: 'kpt3', jenis: 'minimum', valueFormat: 'pct',
+    listColumns: ['id', 'tahun', 'fakulti', 'nama', 'no_staf', 'terlibat', 'program'],
+    statusField: 'terlibat', unique: ['kunci'], validate: kpt3Validate_,
+    rules: [{ when: { field: 'terlibat', in: ['Ya'] }, require: ['peranan', 'program', 'tarikh_program'] }],
+    fields: [
+      F_('tahun', 'Tahun', 'number', { required: true, min: 2026, max: 2030, sec: 'Tenaga pengajar keusahawanan (berdaftar dengan Pusat)' }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true }),
+      F_('nama', 'Nama', 'text', { required: true }),
+      F_('no_staf', 'No. staf', 'text', { required: true, errorOn: 'no_staf' }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
+      F_('jenis_staf', 'Jenis staf', 'select', { required: true, options: ['Staf akademik', 'Staf bukan akademik'] }),
+      F_('terlibat', 'Terlibat dalam program peningkatan kompetensi?', 'yesno', { required: true, sec: 'Penglibatan' }),
+      F_('peranan', 'Peranan', 'select', { options: ['Mentor', 'Pengasas bersama', 'Penyelidik komersialisasi', 'Pembimbing inkubator'] }),
+      F_('program', 'Program', 'select', { options: ['Inkubator', 'Pemecut (accelerator)', 'Pemula', 'Spin-off', 'Kolaborasi industri'] }),
+      F_('tarikh_program', 'Tarikh penglibatan', 'date'),
+      F_('lampiran', 'Surat lantikan / sijil kompetensi (PDF)', 'file', { full: true }),
+      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'no_staf' })
+    ]
+  },
+  {
+    id: 'KPT4', prefix: 'K4', sheet: 'KPT4_Pelajar_Inovasi', group: 'KPT', teras: 't2', entry: 'faculty',
+    title: 'KPT 4 · Jumlah pelajar yang memanfaatkan inovasi dan teknologi dalam keusahawanan', short: 'Pelajar inovasi dan teknologi',
+    unit: 'pelajar', measure: 'kpt4', jenis: 'minimum',
+    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'projek', 'trl', 'tarikh'],
+    statusField: 'trl', unique: ['no_matrik'], validate: icValidate_, rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
+      F_('nama', 'Nama pelajar', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
+      F_('no_matrik', 'No. matrik', 'text', { required: true, hint: 'Setiap pelajar dikira sekali sahaja sepanjang pengajian.' }),
+      F_('projek', 'Inovasi / teknologi / projek', 'text', { required: true, sec: 'Inovasi dan teknologi' }),
+      F_('trl', 'Tahap kesediaan teknologi (TRL 1 hingga 3)', 'select', { required: true, options: ['TRL 1', 'TRL 2', 'TRL 3'], short: 'TRL' }),
+      F_('tarikh', 'Tarikh penyertaan', 'date', { required: true }),
+      F_('lampiran', 'Bukti penyertaan / penilaian TRL atau CRL (PDF)', 'file', { full: true, sec: 'Dokumen' })
+    ]
+  },
+  {
+    id: 'KPT5', sheet: null, auto: true, group: 'KPT', teras: 't2', entry: 'auto',
+    title: 'KPT 5 · Jumlah syarikat pemula pelajar / graduan berasaskan inovasi dan teknologi', short: 'Syarikat pemula inovasi dan teknologi',
+    unit: 'syarikat pemula', measure: 'kpt5', jenis: 'minimum', listColumns: [], statusField: null, rules: [], fields: []
+  },
+  {
+    id: 'KPT6', prefix: 'K6', sheet: 'KPT6_Kolaborasi', group: 'KPT', teras: 't3', entry: 'faculty',
+    title: 'KPT 6 · Bilangan projek / aktiviti berimpak daripada kolaborasi rasmi (tempatan dan antarabangsa)', short: 'Kolaborasi berimpak',
+    unit: 'projek / aktiviti', measure: 'kpt6', jenis: 'minimum',
+    listColumns: ['id', 'tajuk', 'rakan', 'skop', 'jenis_dokumen', 'fakulti', 'tarikh'],
+    statusField: 'skop', rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Projek / aktiviti' }),
+      F_('tajuk', 'Tajuk projek / aktiviti', 'text', { required: true, full: true }),
+      F_('rakan', 'Rakan kolaborasi', 'text', { required: true }),
+      F_('skop', 'Tempatan atau antarabangsa', 'select', { required: true, options: ['Tempatan', 'Antarabangsa'] }),
+      F_('jenis_dokumen', 'Dokumen rasmi', 'select', { required: true, options: ['MoU', 'MoA', 'LoA', 'LoI', 'Geran penyelidikan'] }),
+      F_('tarikh', 'Tarikh dokumen / mula projek', 'date', { required: true }),
+      F_('penerangan_impak', 'Penerangan impak', 'textarea', { full: true }),
+      F_('lampiran', 'Dokumen rasmi / laporan / sijil (PDF)', 'file', { full: true, sec: 'Dokumen' })
+    ]
+  },
+  {
+    id: 'KPT7', prefix: 'K7', sheet: 'KPT7_Pembiayaan', group: 'KPT', teras: 't3', entry: 'faculty',
+    title: 'KPT 7 · Jumlah syarikat, perusahaan atau projek perniagaan yang dibiayai', short: 'Syarikat atau projek dibiayai',
+    unit: 'syarikat / projek dibiayai', measure: 'kpt7', jenis: 'minimum',
+    listColumns: ['id', 'nama_syarikat', 'jenis_pembiaya', 'jumlah_rm', 'fakulti', 'tarikh'],
+    statusField: 'jenis_pembiaya', unique: ['kunci'], validate: kpt7Validate_, rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pembiayaan' }),
+      F_('nama_syarikat', 'Nama syarikat / perusahaan / projek', 'text', { required: true, full: true, errorOn: 'nama_syarikat' }),
+      F_('jenis_pembiaya', 'Jenis pembiayaan', 'select', { required: true, options: ['Pelabur budiman (angel investor)', 'Pemodal teroka (venture capital)', 'Entiti pendanaan awam', 'Geran agensi kerajaan', 'Hadiah pertandingan keusahawanan', 'Pembiayaan in-kind'] }),
+      F_('jumlah_rm', 'Nilai pembiayaan (RM)', 'number', { required: true, min: 0 }),
+      F_('tarikh', 'Tarikh terima', 'date', { required: true }),
+      F_('lampiran', 'Surat tawaran / rekod penerimaan / pengesahan (PDF)', 'file', { full: true, sec: 'Dokumen' }),
+      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'nama_syarikat' })
+    ]
+  },
   {
     id: 'KAI1', prefix: 'L1', sheet: 'KAI1_Launchpad', group: 'Growth', fungsi: 'startup', entry: 'faculty',
     title: 'KAI 1 · Menggiatkan semula UTM Launchpad', short: 'UTM Launchpad',
@@ -526,7 +673,8 @@ var KPIS = [
     listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
     rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] },
-      { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] }],
+      { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] },
+      { when: { field: 'berasaskan_inovasi', in: ['Ya'] }, require: ['trl_syarikat'] }],
     validate: ssuValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pemilik' }),
@@ -546,6 +694,8 @@ var KPIS = [
       F_('tarikh_ssm', 'Tarikh pendaftaran SSM', 'date', { hint: 'Wajib jika status SSM Berdaftar.' }),
       F_('sijil_ssm', 'Attachment SSM (PDF)', 'file', { full: true, hint: 'Sijil / bukti pendaftaran SSM. PDF sahaja, maksimum 5 MB.' }),
       F_('status', 'Status', 'select', { required: true, options: ['Aktif', 'Tidak Aktif'] }),
+      F_('berasaskan_inovasi', 'Berasaskan inovasi dan teknologi?', 'yesno', { sec: 'KPT 5 · inovasi dan teknologi' }),
+      F_('trl_syarikat', 'TRL syarikat (TRL 4 hingga 6)', 'select', { options: ['TRL 4', 'TRL 5', 'TRL 6'], short: 'TRL' }),
       F_('catatan', 'Catatan', 'textarea', { full: true, sec: 'Pengurusan' })
     ]
   },
@@ -756,6 +906,9 @@ function buildTargetSeed_() {
     add('KAI6', y, 20, [], 'minimum', y === 2026 ? 400000 : '', y === 2026 ? 'Minimum 5 pelajar setiap fakulti (FAI, FC, FKE, MJIIT). Sasaran sekunder startup AI: Q1 0, Q2 1, Q3 2, Q4 3' : '');
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
+  // KPT: sasaran tahunan mengikut Kamus KPI Keusahawanan IPT 2026-2030
+  var kptT = { KPT1: [80000, 85000, 90000, 95000, 100000], KPT2: [10, 10.5, 11, 11.5, 12], KPT3: [10, 10.5, 11, 11.5, 12], KPT4: [600, 700, 800, 900, 1000], KPT5: [60, 65, 70, 75, 80], KPT6: [80, 85, 90, 95, 100], KPT7: [210, 220, 230, 240, 250] };
+  Object.keys(kptT).forEach(function (k) { kptT[k].forEach(function (t, i) { add(k, 2026 + i, t, [], 'minimum', '', i === 0 ? 'Sasaran mengikut Kamus KPI Keusahawanan IPT 2026-2030' : ''); }); });
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
   ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
@@ -786,8 +939,6 @@ var RISK_SEED = [
   ['KAI6', 'Pelajar menarik diri daripada program', 'Customer / Student', 'Proses pemilihan berstruktur serta pemantauan dan sokongan berterusan.'],
   ['KAI6', 'Komitmen mentor yang rendah', 'External Fraud', 'Pemantauan berkala dan mekanisme pengiktirafan mentor.']
 ];
-
-
 // ===== Util.gs =====
 /** Utiliti umum: ralat pengguna, hash, tarikh, akses Sheet. */
 
@@ -1021,8 +1172,6 @@ function clearDashCache_() {
   APP.YEARS.forEach(function (y) { cache.remove('dash:' + y); });
   cache.remove('trend');
 }
-
-
 // ===== Setup.gs =====
 /**
  * Persediaan: cipta (atau gunakan semula) Google Sheet laporan dan semua tab.
@@ -1047,6 +1196,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
   renameColumns_(ss);
   KPIS.forEach(function (kpi) {
+    if (!kpi.sheet) return;
     ensureSheet_(ss, kpi.sheet, kpiColumns_(kpi), kpi.fields.concat([{ key: 'id', type: 'text' }].concat(SYS_COLS.map(function (k) { return { key: k, type: 'text' }; }))));
   });
 
@@ -1235,6 +1385,7 @@ function adoptFolderFromTab_(ss) {
 /** Isi lajur pautan Drive bagi rekod lama yang sudah ada fail lampiran tetapi belum ada pautan. */
 function backfillFileLinks_(ss) {
   KPIS.forEach(function (kpi) {
+    if (!kpi.sheet) return;
     var fileFields = kpi.fields.filter(function (f) { return f.type === 'file'; });
     var sh = ss.getSheetByName(kpi.sheet);
     if (!fileFields.length || !sh || sh.getLastRow() < 2) return;
@@ -1260,7 +1411,7 @@ function backfillFileLinks_(ss) {
  */
 function dropRetiredColumns_(ss) {
   KPIS.forEach(function (kpi) {
-    if (!kpi.retired || !kpi.retired.length) return;
+    if (!kpi.sheet || !kpi.retired || !kpi.retired.length) return;
     var sh = ss.getSheetByName(kpi.sheet);
     if (!sh || sh.getLastColumn() < 1) return;
     var current = kpiColumns_(kpi);
@@ -1276,7 +1427,7 @@ function dropRetiredColumns_(ss) {
 /** Namakan semula tajuk lajur lama (KPI.renamed: {lama: baharu}) supaya data dikekalkan. */
 function renameColumns_(ss) {
   KPIS.forEach(function (kpi) {
-    if (!kpi.renamed) return;
+    if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);
     if (!sh || sh.getLastColumn() < 1) return;
     var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
@@ -1287,8 +1438,6 @@ function renameColumns_(ss) {
     }
   });
 }
-
-
 // ===== Auth.gs =====
 /**
  * Pengesahan: log masuk e-mel + OTP, sesi berasaskan token, semakan peranan.
@@ -1422,6 +1571,7 @@ function facultyAllowedForKpi_(kpi, fakulti) {
 }
 
 function canAccessKpi_(user, kpi) {
+  if (kpi.entry === 'auto') return false;   // dikira automatik daripada KPI lain; tiada borang
   if (user.peranan === ROLES.ADMIN) return true;
   return kpi.entry === 'faculty' && user.kpiAkses.indexOf(kpi.id) >= 0 && facultyAllowedForKpi_(kpi, user.fakulti);
 }
@@ -1429,14 +1579,12 @@ function canAccessKpi_(user, kpi) {
 function accessibleKpis_(user) {
   return KPIS.filter(function (k) { return canAccessKpi_(user, k); });
 }
-
-
 // ===== Data.gs =====
 /** Operasi rekod KPI: senarai, simpan (tambah/kemas kini), padam. Semua semakan akses dibuat di sini (pelayan). */
 
 function kpiSchema_(kpi) {
   return {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, fungsi: kpi.fungsi || null, unit: kpi.unit, entry: kpi.entry,
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, teras: kpi.teras || null, fungsi: kpi.fungsi || null, unit: kpi.unit, entry: kpi.entry,
     listColumns: kpi.listColumns, statusField: kpi.statusField, filter2: kpi.filter2 || null, facultyWhitelist: kpi.facultyWhitelist || null,
     fields: kpi.fields
   };
@@ -1448,6 +1596,7 @@ function sessionInfo_(token) {
     user: publicUser_(user),
     faculties: listFaculties_(),
     levels: LEVELS,
+    teras: TERAS,
     functions: FUNCTIONS,
     kpis: accessibleKpis_(user).map(kpiSchema_)
   };
@@ -1710,8 +1859,6 @@ function deleteRecord_(token, kpiId, id) {
     lock.releaseLock();
   }
 }
-
-
 // ===== Files.gs =====
 /**
  * Lampiran PDF (sijil). Fail disimpan dalam satu folder Drive peribadi milik pemilik skrip dan TIDAK dikongsi.
@@ -1774,8 +1921,6 @@ function downloadFile_(token, kpiId, recordId, fieldKey) {
   audit_(user, 'MUAT_TURUN', kpi.id, row.id, ref.name || '');
   return { name: ref.name || 'sijil.pdf', mime: 'application/pdf', base64: Utilities.base64Encode(blob.getBytes()) };
 }
-
-
 // ===== Metrics.gs =====
 /**
  * Pengiraan dashboard. Semua sasaran ialah MINIMUM (boleh dilebihi) kecuali KPI berjenis "kemajuan"
@@ -1839,6 +1984,133 @@ function countedInYear_(rows, statuses, dateField, year) {
 }
 
 var MEASURES = {
+  // ---- KPT: KPI peringkat Kementerian (Kamus KPI Keusahawanan IPT 2026-2030). Paparan awam: agregat sahaja. ----
+  // KPT 1: jumlah jualan agregat usahawan pelajar (CKAI 7), tidak termasuk geran / pembiayaan.
+  kpt1: function (kpi, rows, year, ctx) {
+    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.tempoh) === year && r.jenis_pendapatan !== 'Geran / Pembiayaan'; });
+    var total = sumOf_(sales, 'pendapatan_rm');
+    return {
+      value: round2_(total),
+      secondary: [
+        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') },
+        { label: 'Geran / pembiayaan (dikecualikan)', value: rm_(sumOf_(ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.tempoh) === year && r.jenis_pendapatan === 'Geran / Pembiayaan'; }), 'pendapatan_rm')) }
+      ],
+      breakdown: [
+        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_rm); })) },
+        { title: 'Jualan (RM) mengikut jenis pendapatan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_pendapatan; }, function (r) { return num_(r.pendapatan_rm); })) }
+      ]
+    };
+  },
+
+  // KPT 2: % graduan usahawan (menubuhkan perniagaan berdaftar / menjana pekerjaan) daripada usahawan pelajar tahun akhir.
+  kpt2: function (kpi, rows, year) {
+    var grads = rows.filter(function (r) { return r.jenis_rekod === 'Graduan usahawan' && yearOf_(r.tarikh_tamat) === year; });
+    var den = 0;
+    rows.forEach(function (r) { if (r.jenis_rekod === 'Penyebut tahunan' && num_(r.tahun) === year) den += num_(r.bil_penyebut); });
+    var w = [];
+    if (!den && grads.length) w.push('Penyebut (bilangan usahawan pelajar tahun akhir) belum dilaporkan untuk tahun ini.');
+    return {
+      value: den ? round1_(grads.length * 100 / den) : 0,
+      secondary: [{ label: 'Graduan usahawan', value: grads.length }, { label: 'Usahawan pelajar tahun akhir (penyebut)', value: den }],
+      breakdown: [
+        { title: 'Graduan mengikut kategori', items: countBy_(grads, function (r) { return r.kategori; }) },
+        { title: 'Graduan mengikut fakulti', items: sortDesc_(countBy_(grads, function (r) { return r.fakulti; })) }
+      ],
+      warnings: w
+    };
+  },
+
+  // KPT 3: % tenaga pengajar keusahawanan yang terlibat dalam program peningkatan kompetensi.
+  kpt3: function (kpi, rows, year) {
+    var all = rows.filter(function (r) { return num_(r.tahun) === year; });
+    var done = all.filter(function (r) { return r.terlibat === 'Ya'; });
+    return {
+      value: all.length ? round1_(done.length * 100 / all.length) : 0,
+      secondary: [{ label: 'Tenaga pengajar berdaftar', value: all.length }, { label: 'Terlibat dalam program', value: done.length }],
+      breakdown: [
+        { title: 'Terlibat mengikut program', items: sortDesc_(countBy_(done, function (r) { return r.program; })) },
+        { title: 'Terlibat mengikut peranan', items: sortDesc_(countBy_(done, function (r) { return r.peranan; })) },
+        { title: 'Terlibat mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
+  // KPT 4: pelajar memanfaatkan inovasi dan teknologi (TRL 1-3), dikira sekali sahaja (tahun kemunculan pertama).
+  // Sumber: daftar KPT 4 + pelajar dalam CKAI 8 (inovasi pelajar) yang TRL 1-3.
+  kpt4: function (kpi, rows, year, ctx) {
+    var first = {};
+    function add(key, y, fakulti, sumber) {
+      key = String(key || '').replace(/^'/, '').trim().toLowerCase();
+      if (!key || !y) return;
+      if (!first[key] || y < first[key].y) first[key] = { y: y, fakulti: fakulti, sumber: sumber };
+    }
+    rows.forEach(function (r) { add(r.no_matrik, yearOf_(r.tarikh), r.fakulti, 'Daftar fakulti (KPT 4)'); });
+    ctx.rows('CKAI8').forEach(function (r) {
+      if (['TRL 1', 'TRL 2', 'TRL 3'].indexOf(r.trl) < 0) return;
+      var p = parseJson_(r.pelajar, []);
+      if (Array.isArray(p)) p.forEach(function (x) { add(x && x.matrik, yearOf_(r.tarikh), r.fakulti, 'Inovasi pelajar (CKAI 8)'); });
+    });
+    var counted = Object.keys(first).map(function (k) { return first[k]; }).filter(function (x) { return x.y === year; });
+    return {
+      value: counted.length,
+      secondary: [{ label: 'Terkumpul sehingga tahun ini', value: Object.keys(first).filter(function (k) { return first[k].y <= year; }).length }],
+      breakdown: [
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(counted, function (x) { return x.fakulti; })) },
+        { title: 'Mengikut sumber data', items: countBy_(counted, function (x) { return x.sumber; }) }
+      ]
+    };
+  },
+
+  // KPT 5: syarikat pemula (SSU aktif) berasaskan inovasi dan teknologi, TRL 4-6, didaftarkan pada tahun itu.
+  kpt5: function (kpi, rows, year, ctx) {
+    var cs = ctx.rows('CKAI4').filter(function (r) {
+      return r.status === 'Aktif' && r.berasaskan_inovasi === 'Ya' && ['TRL 4', 'TRL 5', 'TRL 6'].indexOf(r.trl_syarikat) >= 0 && yearOf_(r.tarikh_daftar) === year;
+    });
+    return {
+      value: cs.length,
+      secondary: [{ label: 'Berdaftar SSM', value: cs.filter(function (r) { return r.status_ssm === 'Berdaftar'; }).length }],
+      breakdown: [
+        { title: 'Mengikut TRL', items: countBy_(cs, function (r) { return r.trl_syarikat; }).sort(function (a, b) { return a.label.localeCompare(b.label); }) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(cs, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
+  // KPT 6: projek / aktiviti berimpak daripada kolaborasi rasmi pada tahun itu.
+  kpt6: function (kpi, rows, year) {
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
+    return {
+      value: inYear.length,
+      secondary: [
+        { label: 'Tempatan', value: inYear.filter(function (r) { return r.skop === 'Tempatan'; }).length },
+        { label: 'Antarabangsa', value: inYear.filter(function (r) { return r.skop === 'Antarabangsa'; }).length }
+      ],
+      breakdown: [
+        { title: 'Mengikut dokumen rasmi', items: sortDesc_(countBy_(inYear, function (r) { return r.jenis_dokumen; })) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) }
+      ]
+    };
+  },
+
+  // KPT 7: syarikat / projek dibiayai (unik setiap tahun). Sumber: daftar KPT 7 + hadiah pertandingan (CKAI 9, nilai hadiah > 0).
+  kpt7: function (kpi, rows, year, ctx) {
+    var items = [];
+    rows.forEach(function (r) { if (yearOf_(r.tarikh) === year) items.push({ name: r.nama_syarikat, jenis: r.jenis_pembiaya, rm: num_(r.jumlah_rm), fakulti: r.fakulti }); });
+    ctx.rows('CKAI9').forEach(function (r) {
+      if (yearOf_(r.tarikh) === year && num_(r.nilai_hadiah_rm) > 0) items.push({ name: r.produk_projek || r.nama_anugerah, jenis: 'Hadiah pertandingan keusahawanan', rm: num_(r.nilai_hadiah_rm), fakulti: r.fakulti });
+    });
+    var seen = {}, uniq = [];
+    items.forEach(function (x) { var k = String(x.name || '').trim().toLowerCase(); if (k && !seen[k]) { seen[k] = 1; uniq.push(x); } });
+    return {
+      value: uniq.length,
+      secondary: [{ label: 'Jumlah nilai pembiayaan', value: rm_(sumOf_(items, 'rm')) }],
+      breakdown: [
+        { title: 'Mengikut jenis pembiayaan', items: sortDesc_(countBy_(items, function (x) { return x.jenis; })) },
+        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(uniq, function (x) { return x.fakulti; })) }
+      ]
+    };
+  },
+
   // KAI 1: inkubator aktif = didaftarkan DAN (dalam pembangunan atau beroperasi); sasaran minimum 20 setiap tahun.
   kai1: function (kpi, rows, year, ctx) {
     var active = rows.filter(function (r) {
@@ -2184,7 +2456,7 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
   var t = (targets[kpi.id] || {})[year] || null;
   var target = t && t.sasaran !== '' ? t.sasaran : '';
   var card = {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, fungsi: kpi.fungsi || null, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, teras: kpi.teras || null, fungsi: kpi.fungsi || null, unit: kpi.unit, jenis: kpi.jenis, format: kpi.valueFormat || '',
     value: m.value, target: target,
     pct: target !== '' && target > 0 ? round1_(m.value / target * 100) : null,
     status: statusFor_(kpi, m.value, target),
@@ -2234,18 +2506,23 @@ function premiumShare_(rows, year) {
 
 function computeDashboard_(year) {
   var targets = readTargets_();
-  var ctx = { faculties: listFaculties_() };
+  var cache = {};
+  function tableRows(id) {
+    var k = getKpi_(id);
+    if (!k.sheet) return [];
+    return cache[id] || (cache[id] = readTable_(k.sheet, typesFor_(k)).rows);
+  }
+  var ctx = { faculties: listFaculties_(), rows: tableRows };
   var cards = KPIS.map(function (kpi) {
-    var rows = readTable_(kpi.sheet, typesFor_(kpi)).rows;
-    return buildKpiCard_(kpi, rows, year, targets, ctx);
+    return buildKpiCard_(kpi, tableRows(kpi.id), year, targets, ctx);
   });
   var withTarget = cards.filter(function (c) { return c.target !== ''; }).length;
   var meet = cards.filter(function (c) { return c.status === 'Capai sasaran' || c.status === 'Melebihi sasaran' || c.status === 'Selesai'; }).length;
   return {
-    year: year, years: APP.YEARS, levels: LEVELS, functions: FUNCTIONS, generatedAt: nowIso_(),
+    year: year, years: APP.YEARS, levels: LEVELS, teras: TERAS, functions: FUNCTIONS, generatedAt: nowIso_(),
     ds: { label: 'DS 04 · Pekerjaan Premium Tier 1', goal: '40% Pekerjaan Premium Tier 1 (2030)' },
     summary: { total: withTarget, meet: meet },
-    premium: premiumShare_(readTable_('CKAI7_Pendapatan_Pelajar', typesFor_(getKpi_('CKAI7'))).rows, year),
+    premium: premiumShare_(tableRows('CKAI7'), year),
     kpis: cards
   };
 }
@@ -2276,8 +2553,6 @@ function getTrend_() {
   try { cache.put('trend', JSON.stringify(out), APP.DASH_CACHE_TTL); } catch (e) { /* abaikan */ }
   return out;
 }
-
-
 // ===== Admin.gs =====
 /** Fungsi Admin: pengurusan pengguna (PIC), sasaran dan paparan log audit. */
 
@@ -2421,7 +2696,7 @@ function getSetupInfo_(token) {
   if (ss) {
     var missingTabs = [], missingCols = [];
     var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS]]
-      .concat(KPIS.map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
+      .concat(KPIS.filter(function (k) { return k.sheet; }).map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
     specs.forEach(function (sp) {
       var sh = ss.getSheetByName(sp[0]);
       if (!sh) { missingTabs.push(sp[0]); return; }
@@ -2473,8 +2748,6 @@ function sendTestMail_(token) {
   audit_(admin, 'UJIAN_EMEL', '', '', '');
   return { to: admin.emel, remaining: safe_(function () { return MailApp.getRemainingDailyQuota(); }, null) };
 }
-
-
 // ===== Code.gs =====
 /** Titik masuk web app dan fungsi API yang dipanggil klien (google.script.run). */
 

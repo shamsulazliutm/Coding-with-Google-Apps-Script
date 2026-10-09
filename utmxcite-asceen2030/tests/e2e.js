@@ -77,19 +77,20 @@ function buildHtml() {
     const navs = await page.locator('.side .nav').allInnerTexts();
     assert.ok(navs.findIndex(t => /Infografik/.test(t)) >= 0 && navs.findIndex(t => /Infografik/.test(t)) < navs.findIndex(t => /Dashboard/.test(t)));
   });
-  await step('dashboard awam dimuatkan tanpa log masuk (17 kad: 7 KPI + 10 CKAI)', async () => {
+  await step('dashboard awam dimuatkan tanpa log masuk (24 kad: 7 KPT + 7 KPI + 10 CKAI)', async () => {
     await page.click('.nav:has-text("Dashboard")');
     await page.waitForSelector('.kcard');
-    assert.strictEqual(await page.locator('.kcard').count(), 17);
+    assert.strictEqual(await page.locator('.kcard').count(), 24);
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.toUpperCase());
-    deepEq(heads, ['KAI · PERINGKAT UNIVERSITI', 'DKAI · PERINGKAT JABATAN (JTNC HEPA)', 'CKAI · PERINGKAT PUSAT (UTMXCITE)']);
-    deepEq((await page.locator('.sub b').allInnerTexts()).map(t => t.toUpperCase()), ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE', 'CROSS-CUTTING']);
+    deepEq(heads, ['KPT · PERINGKAT KEMENTERIAN (KPI KEUSAHAWANAN IPT)', 'KAI · PERINGKAT UNIVERSITI', 'DKAI · PERINGKAT JABATAN (JTNC HEPA)', 'CKAI · PERINGKAT PUSAT (UTMXCITE)']);
+    deepEq((await page.locator('.sub b').allInnerTexts()).map(t => t.toUpperCase()), ['TERAS 1', 'TERAS 2', 'TERAS 3', '1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE', 'CROSS-CUTTING']);
     assert.ok((await text('.cont')).includes('Kenal pasti minat keusahawanan pelajar'), 'terjemahan Melayu fungsi tiada');
     assert.strictEqual(await page.locator('.tag', { hasText: 'Department' }).count(), 1);
     assert.strictEqual(await page.locator('.tag', { hasText: 'Internal' }).count(), 0);
     assert.ok((await text('.side')).includes('Pengunjung'));
     assert.strictEqual(await page.locator('.nav', { hasText: 'Urus Pengguna' }).count(), 0);
-    assert.ok((await text('.kcard >> nth=0')).includes('KAI 1'));
+    assert.ok((await text('.kcard >> nth=0')).includes('KPT 1'));
+    assert.ok((await text('.kcard >> nth=7')).includes('KAI 1'));
     const logoOk = await page.evaluate(() => { const i = document.querySelector('.shlogo'); return !!i && i.complete && i.naturalWidth > 100; });
     assert.ok(logoOk, 'logo UTM tidak dimuatkan dalam sidebar');
     await page.screenshot({ path: path.join(out, '1-dashboard-awam.png'), fullPage: true });
@@ -107,9 +108,9 @@ function buildHtml() {
   await step('pemilih tahun menukar sasaran KAI 3 kepada 30 (2027)', async () => {
     await page.selectOption('#yr', '2027');
     await page.waitForFunction(() => document.querySelector('#yr').value === '2027' && /30/.test(document.body.innerText));
-    assert.ok((await text('.kcard >> nth=2')).includes('30'));
+    assert.ok((await text('.kcard >> nth=9')).includes('30'));
     await page.selectOption('#yr', '2026');
-    await page.waitForFunction(() => /25/.test(document.querySelectorAll('.kcard')[2].innerText));
+    await page.waitForFunction(() => /25/.test(document.querySelectorAll('.kcard')[9].innerText));
   });
   await step('sidebar gaya portal: logo UTM ASCEND, MODUL, kumpulan boleh dilipat', async () => {
     assert.ok(await page.locator('.shlogo').isVisible());
@@ -132,9 +133,13 @@ function buildHtml() {
     // kumpulan dilipat secara lalai; klik untuk membuka dan menutup
     // Satu bahagian "PERINGKAT" dengan tiga kumpulan boleh dilipat (+ bahagian Admin)
     deepEq((await page.locator('.mod').allInnerTexts()).map(x => x.toUpperCase()), ['PERINGKAT', 'ADMIN']);
-    deepEq(await page.locator('.gh').evaluateAll(els => els.map(e => e.getAttribute('data-g') + '=' + e.getAttribute('aria-expanded'))), ['KAI=false', 'DKAI=false', 'CKAI=false', 'ADMIN=false']);
-    deepEq(await page.locator('.gh .lb').allInnerTexts(), ['KAI · Universiti', 'DKAI · Jabatan (JTNC HEPA)', 'CKAI · Pusat (UTMXCITE)', 'Pentadbiran']);
+    deepEq(await page.locator('.gh').evaluateAll(els => els.map(e => e.getAttribute('data-g') + '=' + e.getAttribute('aria-expanded'))), ['KPT=false', 'KAI=false', 'DKAI=false', 'CKAI=false', 'ADMIN=false']);
+    deepEq(await page.locator('.gh .lb').allInnerTexts(), ['KPT · Kementerian', 'KAI · Universiti', 'DKAI · Jabatan (JTNC HEPA)', 'CKAI · Pusat (UTMXCITE)', 'Pentadbiran']);
     assert.ok(!(await page.locator('.gb[data-g="KAI"] .nav').first().isVisible()));
+    await page.click('.gh[data-g="KPT"]');
+    assert.strictEqual(await page.locator('.gb[data-g="KPT"] .nav').count(), 5); // KPT 2, 3, 4, 6, 7 (KPT 1 dan 5 automatik)
+    deepEq((await page.locator('.gb[data-g="KPT"] .stagelbl').allInnerTexts()).map(x => x.toUpperCase()), ['TERAS 1 · EKOSISTEM KEUSAHAWANAN PELAJAR YANG BERDAYA SAING', 'TERAS 2 · INOVASI DAN TEKNOLOGI DALAM KEUSAHAWANAN', 'TERAS 3 · KOLABORASI BERIMPAK TINGGI']);
+    await page.click('.gh[data-g="KPT"]');
     await page.click('.gh[data-g="KAI"]');
     assert.ok(await page.locator('.gb[data-g="KAI"] .nav').first().isVisible());
     assert.strictEqual(await page.locator('.gb[data-g="KAI"] .nav').count(), 6); // KAI 1-6
@@ -405,10 +410,13 @@ function buildHtml() {
     await goNav('Infografik');
     await page.waitForSelector('.ig .igp');
     assert.ok((await page.locator('.igp').count()) >= 6);
-    assert.ok((await page.locator('svg.ring').count()) >= 10); // premium + 3 peringkat + 6 fungsi
+    assert.ok((await page.locator('svg.ring').count()) >= 18); // premium + 4 peringkat + 7 KPT + 6 fungsi + tabung
     assert.ok((await page.locator('svg.chart').count()) >= 1);
     const txt = await page.locator('.cont').innerText();
-    ['Laporan Prestasi UTMXCITE', 'Pekerjaan Premium Tier 1', 'Sasaran 2030: 40%', 'Enam fungsi UTMXCITE', 'Semua indikator', 'Kenal pasti minat', '(Identify Interest)', 'Pameran inovasi pelajar', '(Showcase Innovation)'].forEach(x => assert.ok(txt.toLowerCase().includes(x.toLowerCase()), 'infografik tiada: ' + x));
+    ['Laporan Prestasi UTMXCITE', 'Pekerjaan Premium Tier 1', 'Sasaran 2030: 40%', 'Enam fungsi UTMXCITE', 'Semua indikator', 'Peringkat Kementerian (KPT)', 'Teras 1', 'Teras 3', 'Kolaborasi berimpak tinggi', 'Jualan agregat usahawan', 'Kenal pasti minat', '(Identify Interest)', 'Pameran inovasi pelajar', '(Showcase Innovation)'].forEach(x => assert.ok(txt.toLowerCase().includes(x.toLowerCase()), 'infografik tiada: ' + x));
+    assert.strictEqual(await page.locator('.kpti').count(), 7);
+    assert.strictEqual(await page.locator('.kptp .kpth').count(), 3);
+    assert.strictEqual(await page.locator('.rrow.four .rtile').count(), 4);
     await page.selectOption('#iy', '2027');
     await page.waitForSelector('.igs:has-text("tahun 2027")');
     await page.selectOption('#iy', '2026');
@@ -421,7 +429,7 @@ function buildHtml() {
     await page.click('[data-action="dview"][data-view="fungsi"]');
     await page.waitForSelector('.grp:has-text("Cross-cutting")');
     assert.strictEqual(await page.locator('.grp').count(), 7);
-    assert.strictEqual(await page.locator('.kcard').count(), 17); // semua indikator, dikelompokkan semula
+    assert.strictEqual(await page.locator('.kcard').count(), 17); // KAI, DKAI dan CKAI dipetakan kepada fungsi; KPT mengikut Teras (bukan fungsi)
     const heads = (await page.locator('.grp').allInnerTexts()).map(t => t.split('\n')[0].toUpperCase());
     deepEq(heads, ['1 · IDENTIFY STUDENT ENTREPRENEURSHIP INTEREST', '2 · CONDUCT ENTREPRENEURSHIP TRAINING', '3 · SUPPORT STUDENT BUSINESS IDEATION', '4 · FACILITATE STUDENT STARTUP DEVELOPMENT', '5 · MONITOR STUDENT ENTERPRISE PERFORMANCE', '6 · SHOWCASE STUDENT INNOVATION VENTURE', 'CROSS-CUTTING']);
     // fungsi 4 menghimpun KAI 1, 2, 3, 5, 6 dan CKAI 4, 5, 6

@@ -121,7 +121,15 @@ var FUNCTIONS = [
 ];
 
 /** Tiga peringkat penunjuk. Setiap KPI tergolong dalam satu peringkat mengikut awalan ID (KAI / DKAI / CKAI). */
+/** Tiga teras Kamus KPI Keusahawanan IPT 2026-2030 (peringkat KPT). */
+var TERAS = [
+  { id: 't1', no: 1, label: 'Ekosistem keusahawanan pelajar yang berdaya saing' },
+  { id: 't2', no: 2, label: 'Inovasi dan teknologi dalam keusahawanan' },
+  { id: 't3', no: 3, label: 'Kolaborasi berimpak tinggi' }
+];
+
 var LEVELS = [
+  { id: 'KPT', label: 'KPT · Peringkat Kementerian (KPI Keusahawanan IPT)', short: 'KPT · Kementerian', section: 'Peringkat Kementerian · KPT' },
   { id: 'KAI', label: 'KAI · Peringkat Universiti', short: 'KAI · Universiti', section: 'Peringkat Universiti · KAI' },
   { id: 'DKAI', label: 'DKAI · Peringkat Jabatan (JTNC HEPA)', short: 'DKAI · Jabatan (JTNC HEPA)', section: 'Peringkat Jabatan · DKAI (JTNC HEPA)' },
   { id: 'CKAI', label: 'CKAI · Peringkat Pusat (UTMXCITE)', short: 'CKAI · Pusat (UTMXCITE)', section: 'Peringkat Pusat · CKAI (UTMXCITE)' }
@@ -218,12 +226,151 @@ function makerspaceValidate_(c, errors) {
   if (c.tarikh_mula && c.tarikh_mula === c.tarikh_tamat && c.masa_mula && c.masa_tamat && !errors.masa_tamat && c.masa_tamat <= c.masa_mula) errors.masa_tamat = 'Masa tamat mesti selepas masa mula.';
 }
 
+function addMonthsIso_(iso, n) {
+  var y = parseInt(iso.slice(0, 4), 10), m = parseInt(iso.slice(5, 7), 10) - 1 + n, d = iso.slice(8, 10);
+  y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+  return y + '-' + ('0' + (m + 1)).slice(-2) + '-' + d;
+}
+
+/** KPT2: dua jenis rekod (graduan usahawan / penyebut tahunan bagi fakulti). Graduan dikira sekali (no. KP). */
+function kpt2Validate_(c, errors) {
+  icValidate_(c, errors);
+  var fak = c.fakulti || '';
+  if (c.jenis_rekod === 'Penyebut tahunan') {
+    c.kunci = 'p|' + c.tahun + '|' + fak;
+  } else {
+    c.kunci = 'g|' + String(c.no_kp || '').toLowerCase();
+    if (c.tarikh_tamat && c.tarikh_penubuhan && !errors.tarikh_penubuhan && c.tarikh_penubuhan > addMonthsIso_(c.tarikh_tamat, 6))
+      errors.tarikh_penubuhan = 'Perniagaan mesti ditubuhkan dalam tempoh 6 bulan selepas tamat pengajian (atau lebih awal).';
+  }
+}
+
+/** KPT3: satu rekod bagi setiap staf setiap tahun. */
+function kpt3Validate_(c, errors) {
+  icValidate_(c, errors);
+  c.kunci = String(c.tahun || '') + '|' + String(c.no_staf || '').trim().toLowerCase();
+}
+
+/** KPT7: satu syarikat/projek dikira sekali bagi setiap tahun pelaporan. */
+function kpt7Validate_(c, errors) {
+  c.kunci = String(c.tarikh || '').slice(0, 4) + '|' + String(c.nama_syarikat || '').trim().toLowerCase();
+}
+
 var PROGRAM_DONE_REQUIRE = ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'];
 
 // ---------------------------------------------------------------------------
 // Definisi KPI. entry: 'faculty' = PIC fakulti + Admin; 'admin' = Admin sahaja.
 // ---------------------------------------------------------------------------
 var KPIS = [
+  {
+    id: 'KPT1', sheet: null, auto: true, group: 'KPT', teras: 't1', entry: 'auto',
+    title: 'KPT 1 · Jumlah jualan agregat usahawan pelajar', short: 'Jualan agregat usahawan',
+    unit: 'RM jualan setahun', measure: 'kpt1', jenis: 'minimum', valueFormat: 'rm', listColumns: [], statusField: null, rules: [], fields: []
+  },
+  {
+    id: 'KPT2', prefix: 'K2', sheet: 'KPT2_Graduan_Usahawan', group: 'KPT', teras: 't1', entry: 'faculty',
+    title: 'KPT 2 · Peratus graduan yang menceburi keusahawanan dan mewujudkan peluang pekerjaan', short: '% graduan berusahawan',
+    unit: '% graduan usahawan', measure: 'kpt2', jenis: 'minimum', valueFormat: 'pct',
+    listColumns: ['id', 'jenis_rekod', 'fakulti', 'nama', 'tarikh_tamat', 'kategori', 'tahun', 'bil_penyebut'],
+    statusField: 'jenis_rekod', unique: ['kunci'], validate: kpt2Validate_,
+    rules: [
+      { when: { field: 'jenis_rekod', in: ['Graduan usahawan'] }, require: ['nama', 'no_kp', 'no_matrik', 'tarikh_tamat', 'nama_perniagaan', 'no_pendaftaran', 'tarikh_penubuhan', 'kategori'] },
+      { when: { field: 'jenis_rekod', in: ['Penyebut tahunan'] }, require: ['tahun', 'bil_penyebut'] }
+    ],
+    fields: [
+      F_('jenis_rekod', 'Jenis rekod', 'select', { required: true, sec: 'Rekod', options: ['Graduan usahawan', 'Penyebut tahunan'], hint: 'Penyebut tahunan = bilangan usahawan pelajar tahun akhir bagi fakulti anda (satu rekod setahun).' }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true }),
+      F_('nama', 'Nama graduan', 'text', { sec: 'Graduan usahawan' }),
+      F_('no_kp', 'No. KP / pasport', 'text'),
+      F_('no_matrik', 'No. matrik', 'text'),
+      F_('tarikh_tamat', 'Tarikh tamat pengajian', 'date'),
+      F_('nama_perniagaan', 'Nama perniagaan', 'text'),
+      F_('no_pendaftaran', 'No. pendaftaran SSM / SKM / PBT', 'text'),
+      F_('tarikh_penubuhan', 'Tarikh penubuhan perniagaan', 'date'),
+      F_('kategori', 'Kategori', 'select', { options: ['Menubuhkan perniagaan berdaftar', 'Menjana peluang pekerjaan', 'Berkembang daripada projek pelajar', 'Model perniagaan inovatif (IP-based startup / gig bernilai tinggi)'] }),
+      F_('lampiran', 'Sijil SSM / SKM / lesen PBT (PDF)', 'file', { full: true }),
+      F_('tahun', 'Tahun', 'number', { min: 2026, max: 2030, sec: 'Penyebut tahunan' }),
+      F_('bil_penyebut', 'Bilangan usahawan pelajar tahun akhir', 'number', { min: 0 }),
+      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'jenis_rekod' })
+    ]
+  },
+  {
+    id: 'KPT3', prefix: 'K3', sheet: 'KPT3_Tenaga_Pengajar', group: 'KPT', teras: 't1', entry: 'faculty',
+    title: 'KPT 3 · Peratus tenaga pengajar keusahawanan dalam program peningkatan kompetensi', short: '% tenaga pengajar terlibat',
+    unit: '% tenaga pengajar terlibat', measure: 'kpt3', jenis: 'minimum', valueFormat: 'pct',
+    listColumns: ['id', 'tahun', 'fakulti', 'nama', 'no_staf', 'terlibat', 'program'],
+    statusField: 'terlibat', unique: ['kunci'], validate: kpt3Validate_,
+    rules: [{ when: { field: 'terlibat', in: ['Ya'] }, require: ['peranan', 'program', 'tarikh_program'] }],
+    fields: [
+      F_('tahun', 'Tahun', 'number', { required: true, min: 2026, max: 2030, sec: 'Tenaga pengajar keusahawanan (berdaftar dengan Pusat)' }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true }),
+      F_('nama', 'Nama', 'text', { required: true }),
+      F_('no_staf', 'No. staf', 'text', { required: true, errorOn: 'no_staf' }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
+      F_('jenis_staf', 'Jenis staf', 'select', { required: true, options: ['Staf akademik', 'Staf bukan akademik'] }),
+      F_('terlibat', 'Terlibat dalam program peningkatan kompetensi?', 'yesno', { required: true, sec: 'Penglibatan' }),
+      F_('peranan', 'Peranan', 'select', { options: ['Mentor', 'Pengasas bersama', 'Penyelidik komersialisasi', 'Pembimbing inkubator'] }),
+      F_('program', 'Program', 'select', { options: ['Inkubator', 'Pemecut (accelerator)', 'Pemula', 'Spin-off', 'Kolaborasi industri'] }),
+      F_('tarikh_program', 'Tarikh penglibatan', 'date'),
+      F_('lampiran', 'Surat lantikan / sijil kompetensi (PDF)', 'file', { full: true }),
+      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'no_staf' })
+    ]
+  },
+  {
+    id: 'KPT4', prefix: 'K4', sheet: 'KPT4_Pelajar_Inovasi', group: 'KPT', teras: 't2', entry: 'faculty',
+    title: 'KPT 4 · Jumlah pelajar yang memanfaatkan inovasi dan teknologi dalam keusahawanan', short: 'Pelajar inovasi dan teknologi',
+    unit: 'pelajar', measure: 'kpt4', jenis: 'minimum',
+    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'projek', 'trl', 'tarikh'],
+    statusField: 'trl', unique: ['no_matrik'], validate: icValidate_, rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
+      F_('nama', 'Nama pelajar', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
+      F_('no_matrik', 'No. matrik', 'text', { required: true, hint: 'Setiap pelajar dikira sekali sahaja sepanjang pengajian.' }),
+      F_('projek', 'Inovasi / teknologi / projek', 'text', { required: true, sec: 'Inovasi dan teknologi' }),
+      F_('trl', 'Tahap kesediaan teknologi (TRL 1 hingga 3)', 'select', { required: true, options: ['TRL 1', 'TRL 2', 'TRL 3'], short: 'TRL' }),
+      F_('tarikh', 'Tarikh penyertaan', 'date', { required: true }),
+      F_('lampiran', 'Bukti penyertaan / penilaian TRL atau CRL (PDF)', 'file', { full: true, sec: 'Dokumen' })
+    ]
+  },
+  {
+    id: 'KPT5', sheet: null, auto: true, group: 'KPT', teras: 't2', entry: 'auto',
+    title: 'KPT 5 · Jumlah syarikat pemula pelajar / graduan berasaskan inovasi dan teknologi', short: 'Syarikat pemula inovasi dan teknologi',
+    unit: 'syarikat pemula', measure: 'kpt5', jenis: 'minimum', listColumns: [], statusField: null, rules: [], fields: []
+  },
+  {
+    id: 'KPT6', prefix: 'K6', sheet: 'KPT6_Kolaborasi', group: 'KPT', teras: 't3', entry: 'faculty',
+    title: 'KPT 6 · Bilangan projek / aktiviti berimpak daripada kolaborasi rasmi (tempatan dan antarabangsa)', short: 'Kolaborasi berimpak',
+    unit: 'projek / aktiviti', measure: 'kpt6', jenis: 'minimum',
+    listColumns: ['id', 'tajuk', 'rakan', 'skop', 'jenis_dokumen', 'fakulti', 'tarikh'],
+    statusField: 'skop', rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Projek / aktiviti' }),
+      F_('tajuk', 'Tajuk projek / aktiviti', 'text', { required: true, full: true }),
+      F_('rakan', 'Rakan kolaborasi', 'text', { required: true }),
+      F_('skop', 'Tempatan atau antarabangsa', 'select', { required: true, options: ['Tempatan', 'Antarabangsa'] }),
+      F_('jenis_dokumen', 'Dokumen rasmi', 'select', { required: true, options: ['MoU', 'MoA', 'LoA', 'LoI', 'Geran penyelidikan'] }),
+      F_('tarikh', 'Tarikh dokumen / mula projek', 'date', { required: true }),
+      F_('penerangan_impak', 'Penerangan impak', 'textarea', { full: true }),
+      F_('lampiran', 'Dokumen rasmi / laporan / sijil (PDF)', 'file', { full: true, sec: 'Dokumen' })
+    ]
+  },
+  {
+    id: 'KPT7', prefix: 'K7', sheet: 'KPT7_Pembiayaan', group: 'KPT', teras: 't3', entry: 'faculty',
+    title: 'KPT 7 · Jumlah syarikat, perusahaan atau projek perniagaan yang dibiayai', short: 'Syarikat atau projek dibiayai',
+    unit: 'syarikat / projek dibiayai', measure: 'kpt7', jenis: 'minimum',
+    listColumns: ['id', 'nama_syarikat', 'jenis_pembiaya', 'jumlah_rm', 'fakulti', 'tarikh'],
+    statusField: 'jenis_pembiaya', unique: ['kunci'], validate: kpt7Validate_, rules: [],
+    fields: [
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pembiayaan' }),
+      F_('nama_syarikat', 'Nama syarikat / perusahaan / projek', 'text', { required: true, full: true, errorOn: 'nama_syarikat' }),
+      F_('jenis_pembiaya', 'Jenis pembiayaan', 'select', { required: true, options: ['Pelabur budiman (angel investor)', 'Pemodal teroka (venture capital)', 'Entiti pendanaan awam', 'Geran agensi kerajaan', 'Hadiah pertandingan keusahawanan', 'Pembiayaan in-kind'] }),
+      F_('jumlah_rm', 'Nilai pembiayaan (RM)', 'number', { required: true, min: 0 }),
+      F_('tarikh', 'Tarikh terima', 'date', { required: true }),
+      F_('lampiran', 'Surat tawaran / rekod penerimaan / pengesahan (PDF)', 'file', { full: true, sec: 'Dokumen' }),
+      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'nama_syarikat' })
+    ]
+  },
   {
     id: 'KAI1', prefix: 'L1', sheet: 'KAI1_Launchpad', group: 'Growth', fungsi: 'startup', entry: 'faculty',
     title: 'KAI 1 · Menggiatkan semula UTM Launchpad', short: 'UTM Launchpad',
@@ -525,7 +672,8 @@ var KPIS = [
     listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
     rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] },
-      { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] }],
+      { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] },
+      { when: { field: 'berasaskan_inovasi', in: ['Ya'] }, require: ['trl_syarikat'] }],
     validate: ssuValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pemilik' }),
@@ -545,6 +693,8 @@ var KPIS = [
       F_('tarikh_ssm', 'Tarikh pendaftaran SSM', 'date', { hint: 'Wajib jika status SSM Berdaftar.' }),
       F_('sijil_ssm', 'Attachment SSM (PDF)', 'file', { full: true, hint: 'Sijil / bukti pendaftaran SSM. PDF sahaja, maksimum 5 MB.' }),
       F_('status', 'Status', 'select', { required: true, options: ['Aktif', 'Tidak Aktif'] }),
+      F_('berasaskan_inovasi', 'Berasaskan inovasi dan teknologi?', 'yesno', { sec: 'KPT 5 · inovasi dan teknologi' }),
+      F_('trl_syarikat', 'TRL syarikat (TRL 4 hingga 6)', 'select', { options: ['TRL 4', 'TRL 5', 'TRL 6'], short: 'TRL' }),
       F_('catatan', 'Catatan', 'textarea', { full: true, sec: 'Pengurusan' })
     ]
   },
@@ -755,6 +905,9 @@ function buildTargetSeed_() {
     add('KAI6', y, 20, [], 'minimum', y === 2026 ? 400000 : '', y === 2026 ? 'Minimum 5 pelajar setiap fakulti (FAI, FC, FKE, MJIIT). Sasaran sekunder startup AI: Q1 0, Q2 1, Q3 2, Q4 3' : '');
   });
   add('DKAI1', 2026, 100, [], 'kemajuan', '', 'Projek sekali sahaja, mesti siap pada 2026');
+  // KPT: sasaran tahunan mengikut Kamus KPI Keusahawanan IPT 2026-2030
+  var kptT = { KPT1: [80000, 85000, 90000, 95000, 100000], KPT2: [10, 10.5, 11, 11.5, 12], KPT3: [10, 10.5, 11, 11.5, 12], KPT4: [600, 700, 800, 900, 1000], KPT5: [60, 65, 70, 75, 80], KPT6: [80, 85, 90, 95, 100], KPT7: [210, 220, 230, 240, 250] };
+  Object.keys(kptT).forEach(function (k) { kptT[k].forEach(function (t, i) { add(k, 2026 + i, t, [], 'minimum', '', i === 0 ? 'Sasaran mengikut Kamus KPI Keusahawanan IPT 2026-2030' : ''); }); });
   // CKAI: sasaran belum ditetapkan. Isi melalui menu Admin > Sasaran.
   ['CKAI1', 'CKAI2', 'CKAI3', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7', 'CKAI8', 'CKAI9'].forEach(function (k) {
     [2026, 2027, 2028, 2029, 2030].forEach(function (y) { add(k, y, '', [], 'minimum', '', ''); });
