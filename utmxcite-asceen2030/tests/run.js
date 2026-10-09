@@ -1035,6 +1035,11 @@ test('CKAI 10: peruntukan (a) dan komitmen (b) diisi sekali; bulan seterusnya di
   const l2 = ok(save({ tabung: 'Lain-lain', tabung_lain: 'tabung uji', no_chargeline: 'U.1', tempoh: '2030-02', perbelanjaan: 200 }));
   assert.strictEqual(l2.peruntukan_awal, 300); assert.strictEqual(l1.baki, 200);
 });
+test('OTP: kegagalan hantar e-mel memberi mesej jelas (bukan ralat dalaman)', () => {
+  const orig = g.MailApp.sendEmail;
+  g.MailApp.sendEmail = () => { throw new Error('You do not have permission to call MailApp.sendEmail'); };
+  try { fail(g.api_requestOtp('admin@utm.my'), /E-mel OTP tidak dapat dihantar/); } finally { g.MailApp.sendEmail = orig; }
+});
 
 console.log('Muat naik pukal');
 test('pukal: baris sah disimpan, baris gagal dilaporkan, unik dan akses dihormati', () => {

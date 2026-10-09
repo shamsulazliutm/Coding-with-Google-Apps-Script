@@ -60,14 +60,19 @@ function requestOtp_(emailIn) {
   if (user && user.aktif && emailDomainAllowed_(email)) {
     var code = randomDigits_(6);
     cache.put('otp:' + sha256Hex_(email), JSON.stringify({ h: otpHash_(email, code), a: 0 }), APP.OTP_TTL);
-    MailApp.sendEmail({
-      to: email,
-      subject: '[' + APP.NAME + '] Kod OTP log masuk anda',
-      name: APP.NAME,
-      body: 'Salam ' + (user.nama || '') + ',\n\nKod OTP anda ialah: ' + code + '\n\n' +
-        'Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. ' +
-        'Jika anda tidak membuat permintaan ini, abaikan e-mel ini.\n\n' + APP.NAME
-    });
+    try {
+      MailApp.sendEmail({
+        to: email,
+        subject: '[' + APP.NAME + '] Kod OTP log masuk anda',
+        name: APP.NAME,
+        body: 'Salam ' + (user.nama || '') + ',\n\nKod OTP anda ialah: ' + code + '\n\n' +
+          'Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. ' +
+          'Jika anda tidak membuat permintaan ini, abaikan e-mel ini.\n\n' + APP.NAME
+      });
+    } catch (e) {
+      console.error('Gagal hantar e-mel OTP: ' + (e && e.message));
+      throw userError_('E-mel OTP tidak dapat dihantar. Pentadbir: jalankan setup() dan luluskan kebenaran hantar e-mel (script.send_mail), atau semak kuota e-mel harian.');
+    }
     audit_(user, 'OTP_DIMINTA', '', '', '');
   }
   // Mesej sama tanpa mengira sama ada e-mel berdaftar (elak penghitungan akaun).

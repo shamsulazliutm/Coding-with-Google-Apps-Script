@@ -86,7 +86,10 @@ function normalizeCell_(v, type) {
 // ---------------------------------------------------------------------------
 function getSS_() {
   var id = getProp_('SHEET_ID');
-  if (id) return SpreadsheetApp.openById(id);
+  if (id) {
+    try { return SpreadsheetApp.openById(id); }
+    catch (e) { console.error('Gagal buka Sheet ' + id + ': ' + (e && e.message)); throw userError_('Google Sheet tidak dapat dibuka. Pentadbir: semak SHEET_ID dalam Script Properties dan kebenaran akaun penerbit.'); }
+  }
   var active = null;
   try { active = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) { active = null; }
   if (active) return active;
