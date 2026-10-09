@@ -936,6 +936,26 @@ label .req{color:var(--bad)}
       '<div class="igctl"><label for="iy" style="margin:0">Tahun</label><select id="iy" data-change="iyear">' + d.years.map(function (y) { return '<option' + (y === d.year ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
       '<button class="btn o sm" type="button" data-action="print">Cetak / PDF</button></div></div><div class="ig">';
 
+    // 0) KPT (paling atas): KPI peringkat Kementerian, dikumpulkan mengikut tiga Teras
+    var kptList = cs.filter(function (c) { return c.level === 'KPT'; });
+    if (kptList.length) {
+      function compact(c) {
+        var v = Number(c.value);
+        if (c.format === 'pct') return fmtNum(v) + '%';
+        if (c.format === 'rm') return v >= 1e6 ? 'RM' + fmtNum(Math.round(v / 1e5) / 10) + 'j' : v >= 1e3 ? 'RM' + fmtNum(Math.round(v / 100) / 10) + 'k' : 'RM' + fmtNum(Math.round(v));
+        return fmtNum(v);
+      }
+      h += panel('KPI Keusahawanan IPT · Peringkat Kementerian (KPT)', d.teras.map(function (t) {
+        var list = kptList.filter(function (c) { return c.teras === t.id; });
+        if (!list.length) return '';
+        return '<div class="kptg"><h4 class="kpth"><span class="kptn">Teras ' + t.no + '</span>' + esc(t.label) + '</h4><div class="kptc">' + list.map(function (c) {
+          return '<div class="kpti">' + ringSvg(pctCap(c) === null ? 0 : pctCap(c), { size: 92, label: c.title, text: compact(c), color: COL.kpt }) +
+            '<b>' + esc(c.title.split(' · ')[0]) + '</b><span class="kptt">' + esc(c.short) + '</span>' +
+            '<small>' + (c.target !== '' ? 'Sasaran ' + esc(fmtVal(c, c.target)) + ' · ' + fmtNum(c.pct) + '%' : 'Tiada sasaran') + '</small>' + statusChip(c.status) + '</div>';
+        }).join('') + '</div></div>';
+      }).join(''), 'c12 kptp');
+    }
+
     // 1) Pekerjaan Premium Tier 1
     var pr = d.premium;
     h += panel('Pekerjaan Premium Tier 1', '<div class="prem2">' + ringSvg(pr.pct, { size: 150, label: 'Usahawan berpendapatan premium', text: pr.pct + '%', tick: pr.targetPct }) +
@@ -955,26 +975,6 @@ label .req{color:var(--bad)}
       '<div><b>' + cs.length + '</b><span>indikator dipantau</span></div><div><b>' + rate + '%</b><span>kadar pencapaian</span></div></div>' +
       '<div class="pbar2"><i style="width:' + rate + '%"></i></div>' +
       '<h4 class="igt2">KPI mencapai sasaran mengikut tahun</h4>' + barsSvg(tr.map(function (t) { return { label: String(t.year), value: t.meet }; }), { label: 'KPI mencapai sasaran', fmt: function (v) { return v + ' KPI'; } }), 'c4');
-
-    // 3b) KPT: KPI peringkat Kementerian, dikumpulkan mengikut tiga Teras
-    var kptList = cs.filter(function (c) { return c.level === 'KPT'; });
-    if (kptList.length) {
-      function compact(c) {
-        var v = Number(c.value);
-        if (c.format === 'pct') return fmtNum(v) + '%';
-        if (c.format === 'rm') return v >= 1e6 ? 'RM' + fmtNum(Math.round(v / 1e5) / 10) + 'j' : v >= 1e3 ? 'RM' + fmtNum(Math.round(v / 100) / 10) + 'k' : 'RM' + fmtNum(Math.round(v));
-        return fmtNum(v);
-      }
-      h += panel('KPI Keusahawanan IPT · Peringkat Kementerian (KPT)', d.teras.map(function (t) {
-        var list = kptList.filter(function (c) { return c.teras === t.id; });
-        if (!list.length) return '';
-        return '<div class="kptg"><h4 class="kpth"><span class="kptn">Teras ' + t.no + '</span>' + esc(t.label) + '</h4><div class="kptc">' + list.map(function (c) {
-          return '<div class="kpti">' + ringSvg(pctCap(c) === null ? 0 : pctCap(c), { size: 92, label: c.title, text: compact(c), color: COL.kpt }) +
-            '<b>' + esc(c.title.split(' · ')[0]) + '</b><span class="kptt">' + esc(c.short) + '</span>' +
-            '<small>' + (c.target !== '' ? 'Sasaran ' + esc(fmtVal(c, c.target)) + ' · ' + fmtNum(c.pct) + '%' : 'Tiada sasaran') + '</small>' + statusChip(c.status) + '</div>';
-        }).join('') + '</div></div>';
-      }).join(''), 'c12 kptp');
-    }
 
     // 4) Nombor utama
     var tiles = [['KAI1', 'Inkubator aktif'], ['KAI3', 'Ruang perniagaan'], ['KAI4', 'Pelajar GiGA'], ['KAI6', 'Startup AI'], ['CKAI1', 'Profiling pelajar'], ['CKAI4', 'Pendaftaran SSU'], ['CKAI5', 'Penggunaan Makerspace'], ['CKAI9', 'Anugerah']].filter(function (t) { return byId[t[0]]; });
