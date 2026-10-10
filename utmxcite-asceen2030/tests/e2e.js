@@ -522,6 +522,9 @@ function buildHtml() {
   await step('Infografik: PDF slaid 16:9 (slaid 1 = tajuk, 2 = ringkasan, 3 = KPT, 4 = KAI, 5 = fungsi) dijana untuk cetakan', async () => {
     await goNav('Infografik');
     await page.waitForSelector('[data-action="slides"]');
+    assert.strictEqual((await page.locator('[data-action="slides"]').innerText()).trim(), 'Cetak slide');
+    const bs = await page.$$eval('.igctl .pbtn', els => els.map(e => { const r = e.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
+    assert.deepStrictEqual(bs[0], bs[1]);   // saiz kotak Cetak slide = Cetak halaman
     await page.evaluate(() => { window.print = () => {}; });
     await page.click('[data-action="slides"]');
     const n = await page.locator('#slides .slide').count();
