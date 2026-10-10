@@ -43,7 +43,7 @@ function seedStudentsFor(kpiId, rec) {
     if (!rec[mk] && validKp(rec[mp.no_kp]) && kpi.id !== 'KPT2') rec[mk] = 'M' + String(rec[mp.no_kp]).replace(/[^A-Za-z0-9]/g, '');
     add(rec[mk], rec[mp.nama_pelajar], mp.no_kp && (!['CKAI1', 'KAI5', 'KAI6', 'CKAI6'].includes(kpi.id) || rec[mp.no_kp] !== undefined) ? rec[mp.no_kp] : '900101105555', rec[mp.emel], rec[mp.telefon], (mp.fakulti && rec.fakulti) || 'FAI');
   }
-  kpi.fields.filter(f => f.type === 'people').forEach(f => (Array.isArray(rec[f.key]) ? rec[f.key] : []).forEach(p => add(p.matrik, p.nama, p.nokp || (f.kp === false ? '900101105555' : ''), '', '', 'FAI')));
+  kpi.fields.filter(f => f.type === 'people').forEach(f => (Array.isArray(rec[f.key]) ? rec[f.key] : []).forEach(p => add(p.matrik, p.nama, p.nokp || '900101105555', '', '', 'FAI')));
   return rec;
 }
 g.api_save = (tok, kpiId, rec) => origApiSave(tok, kpiId, seedStudentsFor(kpiId, rec));
@@ -652,14 +652,13 @@ test('CKAI 8: akses PIC fakulti; OD = projek yang telah menyertai pertandingan s
   deepEq(ok(g.api_session(innoPic)).kpis.map(k => k.id), ['CKAI8']);
   const a = ok(g.api_save(innoPic, 'CKAI8', inno({ fakulti: 'FKE' })));
   assert.strictEqual(a.fakulti, 'FM'); // dipaksa kepada fakulti PIC
-  assert.strictEqual(JSON.parse(a.pelajar)[0].nokp, ''); // no. KP tidak diperlukan bagi CKAI 8
+  assert.strictEqual(JSON.parse(a.pelajar)[0].nokp, '900101105555'); // no. KP daripada PELAJAR (piawai sama seperti KPI lain)
   fail(g.api_save(innoPic, 'CKAI8', inno({ peringkat: 'Dalam kelas' })), /betulkan/); // peringkat paling rendah ialah Fakulti
   fail(g.api_save(innoPic, 'CKAI8', inno({ nama_pertandingan: '' })), /betulkan/);
   fail(g.api_save(innoPic, 'CKAI8', inno({ tarikh: '' })), /betulkan/);
   fail(g.api_save(innoPic, 'CKAI8', inno({ mentor: '' })), /betulkan/);
   fail(g.api_save(innoPic, 'CKAI8', inno({ pelajar: [] })), /betulkan/);
   const r = g.api_save(innoPic, 'CKAI8', inno({ pelajar: [{ matrik: '' }] })); fail(r, /betulkan/); assert.ok(r.fields.pelajar);
-  assert.ok(!/KP/.test(r.fields.pelajar), 'no. KP tidak boleh diminta');
   assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI8', {})).rows.length, 0);
 });
 test('CKAI 8: anugerah pilihan; peringkat sasaran wajib apabila calon peningkatan', () => {
@@ -1134,7 +1133,7 @@ test('PELAJAR: CKAI 8 menerima senarai pelajar (no. matrik sahaja) dan menyalin 
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
   sh.appendRow(['PJ010', '040506107777', 'Pasukan Satu', '', '', 'FAI', '', '']); sh.appendRow(['PJ011', '050607108888', 'Pasukan Dua', '', '', 'FC', '', '']);
   const a = ok(g.api_save(adminToken, 'CKAI8', Object.assign(inno({ pelajar: [{ matrik: 'pj010' }, { matrik: 'PJ011' }] }), { __nostudent: 1 })));
-  const ps = JSON.parse(a.pelajar); deepEq(ps.map(p => p.nama), ['Pasukan Satu', 'Pasukan Dua']); deepEq(ps.map(p => p.nokp), ['', '']);
+  const ps = JSON.parse(a.pelajar); deepEq(ps.map(p => p.nama), ['Pasukan Satu', 'Pasukan Dua']); deepEq(ps.map(p => p.nokp), ['040506107777', '050607108888']); deepEq(ps.map(p => p.fakulti), ['FAI', 'FC']);
   const b = ok(g.api_save(adminToken, 'CKAI9', Object.assign(award({ pelajar: [{ matrik: 'PJ010' }], sijil: ok(g.api_uploadFile(adminToken, 'CKAI9', 'sijil', { name: 's.pdf', data: PDF('stu') })) }), { __nostudent: 1 })));
   assert.strictEqual(JSON.parse(b.pelajar)[0].nokp, '040506107777');
   const bad = g.api_save(adminToken, 'CKAI8', Object.assign(inno({ pelajar: [{ matrik: 'PJ010' }, { matrik: 'GHAIB1' }] }), { __nostudent: 1 }));
@@ -1152,17 +1151,33 @@ test('PELAJAR: CKAI 1 ada medan no. KP (diambil daripada PELAJAR)', () => {
 });
 test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP (nama dan no. KP auto) serta no. matrik dan nama dalam senarai', () => {
   const withStu = g.KPIS.filter(k => k.student);
-  deepEq(withStu.map(k => k.id), ['KPT2', 'KPT4', 'KAI4', 'KAI5', 'KAI6', 'CKAI1', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7']);
+  deepEq(withStu.map(k => k.id), ['KPT2', 'KPT4', 'KAI3', 'KAI4', 'KAI5', 'KAI6', 'CKAI1', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7']);
   withStu.forEach(k => {
     const mp = k.student.map, f = (key) => k.fields.find(x => x.key === key);
-    assert.ok(f('no_matrik') && !f('no_matrik').derived, k.id + ': no_matrik');
+    assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
     assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
-    assert.ok(k.listColumns.includes('no_matrik') && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
+    assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
+  });
+  // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR'); sh.appendRow(['STD01', '070809101111', 'Standard Satu', '', '', 'FKE', '', '']);
+  ['CKAI8', 'CKAI9'].forEach(id => {
+    const rec = id === 'CKAI8' ? inno({ pelajar: [{ matrik: 'STD01' }] }) : award({ pelajar: [{ matrik: 'STD01' }], sijil: ok(g.api_uploadFile(adminToken, 'CKAI9', 'sijil', { name: 's.pdf', data: PDF('std') })) });
+    const r = ok(g.api_save(adminToken, id, Object.assign({ __nostudent: 1 }, rec)));
+    deepEq(JSON.parse(r.pelajar)[0], { nama: 'Standard Satu', matrik: 'STD01', nokp: '070809101111', fakulti: 'FKE' });
   });
   const sess = ok(g.api_session(adminToken)).kpis.find(k => k.id === 'KAI6');
   assert.ok(sess.fields.find(x => x.key === 'no_kp').autoShow === 'no_kp');
+});
+test('KAI 3: penyewa melalui PELAJAR (no. matrik wajib bila Disewa; nama, no. KP, fakulti auto)', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR'); sh.appendRow(['SY001', '080910102222', 'Penyewa Satu', '', '', 'FKM', '', '']);
+  const base = { __nostudent: 1, kod_lot: 'LT-9', jenis_ruang: 'Student Mall', lokasi: 'Mall', status: 'Disewa', tarikh_ditawarkan: '2026-01-01', tarikh_mula_sewa: '2026-02-01' };
+  const r0 = g.api_save(adminToken, 'KAI3', base); fail(r0, /betulkan/); assert.ok(r0.fields.penyewa_matrik);
+  const r1 = ok(g.api_save(adminToken, 'KAI3', Object.assign({}, base, { penyewa_matrik: 'sy001', penyewa_nama: 'Palsu' })));
+  assert.strictEqual(r1.penyewa_nama, 'Penyewa Satu'); assert.strictEqual(String(r1.penyewa_kp).replace(/^'/, ''), '080910102222'); assert.strictEqual(r1.penyewa_fakulti, 'FKM');
+  const r2 = g.api_save(adminToken, 'KAI3', Object.assign({}, base, { kod_lot: 'LT-10', penyewa_matrik: 'TIADA555' })); fail(r2, /PELAJAR/); assert.strictEqual(r2.missing[0].no_matrik, 'TIADA555');
+  ok(g.api_save(adminToken, 'KAI3', { __nostudent: 1, kod_lot: 'LT-11', jenis_ruang: 'Student Mall', lokasi: 'Mall', status: 'Ditawarkan', tarikh_ditawarkan: '2026-01-01' }));   // belum disewa: tiada penyewa
 });
 
 console.log('Muat naik pukal');

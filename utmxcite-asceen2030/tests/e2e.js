@@ -318,6 +318,8 @@ function buildHtml() {
     assert.strictEqual(await page.locator('[data-pk="pelajar"][data-pf="nama"], [data-pk="pelajar"][data-pf="nokp"]').count(), 0);   // hanya no. matrik
     await pk(0, 'matrik').fill('A24CS0101'); await pk(0, 'matrik').press('Tab');
     await page.waitForSelector('[data-pname="pelajar:0"]:has-text("Ali Bin Abu")');
+    assert.strictEqual((await text('[data-pkp="pelajar:0"]')).trim(), '900101145678');   // Admin melihat no. KP penuh (PIC: disamarkan)
+    assert.strictEqual((await text('[data-pfk="pelajar:0"]')).trim(), 'FC');
     await page.click('[data-action="padd"][data-key="pelajar"]');
     await pk(1, 'matrik').fill('TIADA999'); await pk(1, 'matrik').press('Tab');
     await page.waitForSelector('.mdl');     // pelajar tiada: tetingkap melengkapkan; batal

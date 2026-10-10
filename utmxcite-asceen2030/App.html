@@ -569,12 +569,16 @@
   function parseJson(v, fb) { if (!v) return fb; if (typeof v !== 'string') return v; try { return JSON.parse(v); } catch (e) { return fb; } }
 
   // ---- Pelajar berbilang (nama, no. matrik, no. KP)
+  function maskKp(v) { v = String(v || '').replace(/^'/, ''); return v && !isAdmin() && !/^•/.test(v) ? '••••••••' + v.slice(-4) : v; }
   function peopleHtml(key) {
     var arr = S.people[key] || [];
     return arr.map(function (p, i) {
+      var id = key + ':' + i;
       return '<div class="prow mo"><span class="pn">' + (i + 1) + '</span>' +
         '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="matrik" placeholder="No. matrik" maxlength="30" autocomplete="off" aria-label="No. matrik pelajar ' + (i + 1) + '" value="' + esc(p.matrik) + '">' +
-        '<span class="pname" data-pname="' + key + ':' + i + '">' + (p.nama ? '✓ ' + esc(p.nama) : '') + '</span>' +
+        '<span class="pname" data-pname="' + id + '" title="Nama (auto)">' + (p.nama ? '✓ ' + esc(p.nama) : '') + '</span>' +
+        '<span class="pcell" data-pkp="' + id + '" title="No. KP (auto)">' + esc(maskKp(p.nokp)) + '</span>' +
+        '<span class="pcell" data-pfk="' + id + '" title="Fakulti (auto)">' + esc(p.fakulti || '') + '</span>' +
         (arr.length > 1 ? '<button type="button" class="btn d sm" data-action="pdel" data-key="' + key + '" data-i="' + i + '" aria-label="Buang pelajar ' + (i + 1) + '">✕</button>' : '<span></span>') + '</div>';
     }).join('');
   }
@@ -632,7 +636,7 @@
     var id = 'f_' + fd.key, v = val === undefined || val === null ? '' : String(val).replace(/^'/, '');
     var req = fd.required ? ' required' : '';
     var user = S.session.user;
-    if (fd.derived) return '<input type="text" id="' + id + '" value="' + esc(v) + '" readonly tabindex="-1" class="ro" placeholder="Diisi automatik daripada PELAJAR">';
+    if (fd.derived) return '<input type="text" id="' + id + '" value="' + esc(fd.autoShow === 'no_kp' ? maskKp(v) : v) + '" readonly tabindex="-1" class="ro" placeholder="Diisi automatik daripada PELAJAR">';
     switch (fd.type) {
       case 'select':
         return '<select id="' + id + '" name="' + fd.key + '"><option value="">— pilih —</option>' +
@@ -677,7 +681,7 @@
     var rec = S.editing || {};
     S.people = {}; S.files = {}; S.peopleKp = {};
     k.fields.forEach(function (fd) {
-      if (fd.type === 'people') { S.peopleKp[fd.key] = fd.kp !== false; var ps = parseJson(rec[fd.key], []); S.people[fd.key] = ps.length ? ps.map(function (p) { return { nama: p.nama || '', matrik: p.matrik || '', nokp: p.nokp || '' }; }) : [{ nama: '', matrik: '', nokp: '' }]; }
+      if (fd.type === 'people') { S.peopleKp[fd.key] = fd.kp !== false; var ps = parseJson(rec[fd.key], []); S.people[fd.key] = ps.length ? ps.map(function (p) { return { nama: p.nama || '', matrik: p.matrik || '', nokp: p.nokp || '', fakulti: p.fakulti || '' }; }) : [{ nama: '', matrik: '', nokp: '', fakulti: '' }]; }
       if (fd.type === 'file') { var f = parseJson(rec[fd.key], null); S.files[fd.key] = f && f.id ? f : null; }
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
@@ -758,8 +762,11 @@
       var v = r[0];
       if (input.getAttribute('data-pk')) {   // senarai pelajar
         var key = input.getAttribute('data-pk'), i = parseInt(input.getAttribute('data-pi'), 10);
-        if (S.people[key] && S.people[key][i]) S.people[key][i].nama = v.complete ? v.nama_pelajar : '';
-        var sp = $('[data-pname="' + key + ':' + i + '"]'); if (sp) sp.textContent = v.complete ? '✓ ' + v.nama_pelajar : '';
+        var pp = S.people[key] && S.people[key][i];
+        if (pp) { pp.nama = v.complete ? v.nama_pelajar : ''; pp.nokp = v.complete ? (v.no_kp || v.kp_mask || '') : ''; pp.fakulti = v.complete ? (v.fakulti || '') : ''; }
+        var id = key + ':' + i, sp = $('[data-pname="' + id + '"]'), kc = $('[data-pkp="' + id + '"]'), fc = $('[data-pfk="' + id + '"]');
+        if (sp) sp.textContent = v.complete ? '✓ ' + v.nama_pelajar : '';
+        if (kc) kc.textContent = pp ? pp.nokp : ''; if (fc) fc.textContent = pp ? pp.fakulti : '';
       } else { setStuStatus(v); fillDerived(k, v); }
       if (!v.complete) openStudentModal([v], function () { onMatrikChange(k, input); });
     }).catch(function (e) { if (!authFail(e)) toast(e.message, true); });
@@ -1208,7 +1215,7 @@
         syncPeople(pk);
         if (!S.people[pk]) S.people[pk] = [];
         if (pfd && pfd.max && S.people[pk].length >= pfd.max) { toast('Maksimum ' + pfd.max + ' ' + (pfd.noun || 'pelajar') + '.', true); break; }
-        S.people[pk].push({ nama: '', matrik: '', nokp: '' }); redrawPeople(pk); break;
+        S.people[pk].push({ nama: '', matrik: '', nokp: '', fakulti: '' }); redrawPeople(pk); break;
       case 'pdel': syncPeople(a.getAttribute('data-key')); S.people[a.getAttribute('data-key')].splice(parseInt(a.getAttribute('data-i'), 10), 1); redrawPeople(a.getAttribute('data-key')); break;
       case 'fdl': if (k) downloadPdf(k, a.getAttribute('data-id'), a.getAttribute('data-key')); break;
       case 'tab': S.view.tab = a.getAttribute('data-tab'); if (S.view.tab === 'list') S.editing = null; renderKpi(); break;

@@ -155,7 +155,7 @@ function applyStudents_(user, kpi, input) {
   peopleFields.forEach(function (f) {
     input[f.key] = lists[f.key].filter(function (p) { return p && normMatrik_(p.matrik); }).map(function (p) {
       var s2 = idx[normMatrik_(p.matrik)];
-      return { nama: s2.nama_pelajar, matrik: s2.no_matrik, nokp: f.kp === false ? '' : normKp_(s2.no_kp) };
+      return { nama: s2.nama_pelajar, matrik: s2.no_matrik, nokp: normKp_(s2.no_kp), fakulti: s2.fakulti };
     });
   });
 }
@@ -261,7 +261,7 @@ function validateRecord_(kpi, rec, faculties, user, existing, rows) {
           if (!matrik || matrik.length > 30) miss.push('no. matrik');
           if (f.kp === false) kp = ''; // medan no. KP tidak digunakan bagi KPI ini
           else if (!/^[A-Z0-9-]{6,20}$/.test(kp)) miss.push('no. KP / pasport');
-          if (miss.length) bad.push(noun.charAt(0).toUpperCase() + noun.slice(1) + ' ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp });
+          if (miss.length) bad.push(noun.charAt(0).toUpperCase() + noun.slice(1) + ' ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp, fakulti: facCodes.indexOf(String(p && p.fakulti || '')) >= 0 ? String(p.fakulti) : '' });
         });
         if (bad.length) { errors[f.key] = bad.join('; ') + '.'; break; }
         clean[f.key] = JSON.stringify(people);

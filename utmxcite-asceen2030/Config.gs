@@ -443,11 +443,11 @@ var KPIS = [
     unit: 'ruang ditawarkan', measure: 'kai3', jenis: 'minimum',
     renamed: { kolej_fakulti: 'lokasi' }, // tajuk lajur lama dinamakan semula oleh setup() (data dikekalkan)
     retired: ['kaedah_perolehan', 'no_rujukan', 'anggaran_kos', 'ptj', 'pegawai', 'tarikh_dikenalpasti', 'tarikh_sasaran_siap', 'diwartakan', 'tarikh_diwartakan'], // lajur dibuang daripada Sheet oleh setup()
-    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'lokasi', 'status', 'tarikh_ditawarkan'],
+    listColumns: ['id', 'kod_lot', 'jenis_ruang', 'lokasi', 'status', 'penyewa_nama', 'penyewa_matrik', 'tarikh_ditawarkan'],
     statusField: 'status',
     rules: [
       { when: { field: 'status', in: ['Ditawarkan', 'Disewa'] }, require: ['tarikh_ditawarkan'] },
-      { when: { field: 'status', in: ['Disewa'] }, require: ['penyewa_nama', 'penyewa_kp', 'tarikh_mula_sewa'] }
+      { when: { field: 'status', in: ['Disewa'] }, require: ['penyewa_matrik', 'tarikh_mula_sewa'] }
     ],
     validate: kai3Validate_,
     fields: [
@@ -458,9 +458,9 @@ var KPIS = [
       F_('keluasan', 'Keluasan (m²)', 'number', { min: 0 }),
       F_('status', 'Status ruang', 'select', { required: true, sec: 'Status', options: ['Dikenal pasti', 'Spesifikasi disediakan', 'Dalam perolehan', 'Siap', 'Ditawarkan', 'Disewa', 'Tidak aktif'] }),
       F_('tarikh_ditawarkan', 'Tarikh ditawarkan kepada pelajar', 'date'),
-      F_('penyewa_nama', 'Nama pelajar / pasukan penyewa', 'text', { sec: 'Sewaan' }),
-      F_('penyewa_matrik', 'No. matrik penyewa', 'text'),
-      F_('penyewa_kp', 'No. KP penyewa', 'text', { hint: 'No. KP 12 digit (tanpa sengkang) atau no. pasport. Wajib jika status Disewa.' }),
+      F_('penyewa_matrik', 'No. matrik penyewa', 'text', { sec: 'Sewaan', hint: 'Wajib jika status Disewa.' }),
+      F_('penyewa_nama', 'Nama penyewa', 'text'),
+      F_('penyewa_kp', 'No. KP penyewa', 'text'),
       F_('nama_perniagaan', 'Nama perniagaan', 'text'),
       F_('tarikh_mula_sewa', 'Tarikh mula sewa', 'date'),
       F_('tarikh_tamat_sewa', 'Tarikh tamat sewa', 'date'),
@@ -802,7 +802,7 @@ var KPIS = [
       F_('status_ip', 'Status harta intelek (IP)', 'select', { options: ['Tiada', 'Dalam proses permohonan', 'Didaftarkan (paten / hak cipta / reka bentuk)'] }),
       F_('nama_pasukan', 'Nama pasukan', 'text', { sec: 'Pasukan' }),
       F_('mentor', 'Nama mentor / penyelia', 'text', { required: true }),
-      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true, kp: false }),
+      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true }),
       F_('status_penyertaan', 'Status penyertaan', 'select', { required: true, sec: 'Pertandingan', options: ['Akan menyertai', 'Telah menyertai'] }),
       F_('nama_pertandingan', 'Nama pertandingan', 'text', { required: true }),
       F_('penganjur_pertandingan', 'Penganjur pertandingan', 'text'),
@@ -882,7 +882,9 @@ var KPIS = [
  * disalin daripada tab PELAJAR semasa simpan. map = {lajur PELAJAR: medan KPI}. Medan itu ditanda `derived` (tidak dipaparkan pada borang).
  * Medan fakulti hanya diambil bagi KPI Admin sahaja (pada KPI fakulti, fakulti ialah unit pelapor PIC).
  */
+var STUDENT_MATRIK_KEY = { KAI3: 'penyewa_matrik' };   // lalai: no_matrik
 var STUDENT_MAPS = {
+  KAI3: { nama_pelajar: 'penyewa_nama', no_kp: 'penyewa_kp' },
   KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   KAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
@@ -901,14 +903,18 @@ KPIS.forEach(function (k) {
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
   if (!map.fakulti) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
-    var at = k.fields.map(function (f) { return f.key; }).indexOf('no_kp');
+    var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
-    else if (!hasFak) { map.fakulti = 'fakulti'; k.fields.splice(at + 1, 0, F_('fakulti', 'Fakulti', 'faculty')); }
+    else if (!hasFak) {
+      var fkKey = k.id === 'KAI3' ? 'penyewa_fakulti' : 'fakulti';
+      map.fakulti = fkKey; k.fields.splice(at + 1, 0, F_(fkKey, k.id === 'KAI3' ? 'Fakulti penyewa' : 'Fakulti', 'faculty'));
+    }
   }
-  k.student = { matrik: 'no_matrik', map: map };
+  var mkKey = STUDENT_MATRIK_KEY[k.id] || 'no_matrik';
+  k.student = { matrik: mkKey, map: map };
   k.fields.forEach(function (f) {
-    if (f.key === 'no_matrik') {
-      if (k.id !== 'KPT2') f.required = true;
+    if (f.key === mkKey) {
+      if (k.id !== 'KPT2' && k.id !== 'KAI3') f.required = true;
       f.hint = (f.hint ? f.hint + ' ' : '') + 'Masukkan no. matrik sahaja; maklumat lain diambil daripada data PELAJAR. Jika pelajar belum ada, tetingkap untuk melengkapkannya akan dipaparkan.';
     }
     for (var col in map) {
