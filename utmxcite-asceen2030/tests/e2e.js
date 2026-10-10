@@ -527,7 +527,10 @@ function buildHtml() {
     assert.deepStrictEqual(bs[0], bs[1]);   // saiz kotak Cetak slide = Cetak halaman
     await page.evaluate(() => { window.print = () => {}; });
     await page.click('[data-action="slides"]');
+    await page.waitForSelector('#slides .slide', { state: 'attached' });
     const n = await page.locator('#slides .slide').count();
+    assert.strictEqual(await page.locator('#slides .slide.cover .cv-logos img').count(), 3);   // UTM, ASCEND dan UTMXCITE di muka depan
+    assert.ok(await page.locator('#slides .slide.cover .lg-xc').evaluate(el => el.complete && el.naturalWidth > 100), 'logo UTMXCITE tidak dimuat');
     assert.ok(n >= 7, 'bilangan slaid: ' + n);
     const t = async (i) => (await page.locator('#slides .slide').nth(i).innerText());
     assert.ok((await page.locator('#slides .slide').first().evaluate(el => el.classList.contains('cover'))));

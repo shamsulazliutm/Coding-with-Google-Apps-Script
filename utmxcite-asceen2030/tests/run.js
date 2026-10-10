@@ -1284,6 +1284,10 @@ test('Prestasi: Infografik dimuat dalam satu panggilan; Sheet dibuka dan setiap 
     Object.keys(reads).forEach(n => assert.ok(reads[n] <= 2, n + ' dibaca ' + reads[n] + ' kali'));   // getSheetByName: sekali bagi pembacaan + semakan
   } finally { g.SpreadsheetApp.openById = orig; ss.getSheetByName = origGet; }
 });
+test('Logo kulit slaid dimuat lazy (api_slideLogos) dan tidak ada dalam Logo.html', () => {
+  const r = ok(g.api_slideLogos()); assert.ok(/^data:image\/webp;base64,/.test(r.utm) && /^data:image\/webp;base64,/.test(r.xcite));
+  assert.ok(r.utm.length < 80000 && r.xcite.length < 80000);
+});
 
 console.log('KPT (peringkat Kementerian)');
 const failF = (r, key) => { fail(r, /betulkan/); assert.ok(r.fields[key], 'ralat medan tiada: ' + key); };

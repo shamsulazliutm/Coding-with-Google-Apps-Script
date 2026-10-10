@@ -9,7 +9,7 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const rd = (f) => fs.readFileSync(path.join(root, f), 'utf8');
 
-const gs = ['Config', 'Util', 'Setup', 'Auth', 'Data', 'Files', 'Metrics', 'Admin', 'Code'].map((n) => '/* ' + n + '.gs */\n' + rd(n + '.gs')).join('\n;\n');
+const gs = ['Config', 'Util', 'Setup', 'Auth', 'Data', 'Files', 'Metrics', 'Admin', 'Logos', 'Code'].map((n) => '/* ' + n + '.gs */\n' + rd(n + '.gs')).join('\n;\n');
 const parts = { gs, shim: rd('demo/shim.js'), seed: rd('demo/seed.js'), ui: rd('demo/demo-ui.js') };
 Object.keys(parts).forEach((k) => { if (/<\/script/i.test(parts[k])) throw new Error('"</script" ditemui dalam ' + k + ': tidak selamat untuk disisip'); });
 

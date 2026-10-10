@@ -1142,7 +1142,7 @@
     // 0) Slaid tajuk (kulit)
     slides.push(slideShell('<svg class="cv-art" viewBox="0 0 420 300" aria-hidden="true"><defs><linearGradient id="cvg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d6db"/><stop offset=".45" stop-color="#b3475d"/><stop offset="1" stop-color="#5c0f2a"/></linearGradient><linearGradient id="cvg2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#d9a5b0"/><stop offset="1" stop-color="#7a1a3d"/></linearGradient></defs>' +
       '<g transform="translate(250 -20) rotate(24)"><ellipse cx="100" cy="90" rx="190" ry="70" fill="none" stroke="url(#cvg1)" stroke-width="38"/><ellipse cx="100" cy="92" rx="150" ry="46" fill="none" stroke="url(#cvg2)" stroke-width="22" opacity=".9"/><ellipse cx="100" cy="95" rx="105" ry="26" fill="none" stroke="#8a1c46" stroke-width="10" opacity=".75"/></g></svg>' +
-      '<div class="cv-in"><span class="cv-sulit">SULIT</span>' + (window.UTM_LOGO ? '<img class="cv-logo" src="' + window.UTM_LOGO + '" alt="UTM ASCEND 2030">' : '') +
+      '<div class="cv-in"><span class="cv-sulit">SULIT</span>' + '<div class="cv-logos">' + (S.logos && S.logos.utm ? '<img class="lg-utm" src="' + S.logos.utm + '" alt="Universiti Teknologi Malaysia"><i class="lg-sep"></i>' : '') + (window.UTM_LOGO ? '<img class="lg-asc" src="' + window.UTM_LOGO + '" alt="UTM ASCEND 2030">' : '') + (S.logos && S.logos.xcite ? '<i class="lg-sep"></i><img class="lg-xc" src="' + S.logos.xcite + '" alt="UTMXCITE">' : '') + '</div>' +
       '<h1>LAPORAN<br>PENCAPAIAN<br>PRESTASI UTMXCITE</h1><div class="cv-line"></div><p class="cv-by">Disediakan Oleh :<br><b>Pusat Inovasi Mahasiswa dan Keusahawanan Teknologi (UTMXCITE)</b></p><p class="cv-yr">Tahun ' + esc(d.year) + '</p></div>' +
       '<footer class="cv-ft"><span>Jabatan Timbalan Naib Canselor (Hal Ehwal Pelajar &amp; Alumni), UTM</span><i>Innovating Sustainable Solutions</i></footer>', { cls: 'cover' }));
     // 1) Slaid 2: paparan ringkasan Infografik (Premium, Peringkat, Ringkasan, Rumusan pencapaian, Trend premium)
@@ -1225,6 +1225,8 @@
   }
   function printSlides() {
     var d = S.dash, tr = S.trend; if (!d || !tr) { toast('Data infografik belum dimuat.', true); return; }
+    // logo UTM dan UTMXCITE dimuat sekali sahaja apabila diperlukan (tidak menambah saiz halaman)
+    if (!S.logos) { call('api_slideLogos').then(function (l) { S.logos = l; printSlides(); }).catch(function () { S.logos = {}; printSlides(); }); return; }
     var host = document.getElementById('slides');
     if (!host) { host = document.createElement('div'); host.id = 'slides'; document.body.appendChild(host); }
     host.innerHTML = buildSlides(d, tr);

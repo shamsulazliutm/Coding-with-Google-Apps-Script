@@ -145,7 +145,7 @@ function loadGas(opts = {}) {
   };
   vm.createContext(sandbox);
   const dir = path.join(__dirname, '..');
-  ['Config', 'Util', 'Setup', 'Auth', 'Data', 'Files', 'Metrics', 'Admin', 'Code'].forEach(f => {
+  ['Config', 'Util', 'Setup', 'Auth', 'Data', 'Files', 'Metrics', 'Admin', 'Logos', 'Code'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(dir, f + '.gs'), 'utf8'), sandbox, { filename: f + '.gs' });
   });
   return { g: sandbox, sent, props, cacheStore, spreadsheets, clock, opts };

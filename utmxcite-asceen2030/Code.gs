@@ -29,6 +29,7 @@ function wrap_(fn) {
 function str_(v, max) { return String(v === null || v === undefined ? '' : v).slice(0, max || 300); }
 
 // --- Awam ---------------------------------------------------------------
+function api_slideLogos() { return wrap_(function () { return SLIDE_LOGOS; }); }
 function api_infografik(year) { return wrap_(function () { return getInfografik_(year); }); }
 function api_trend() { return wrap_(function () { return getTrend_(); }); }
 function api_dashboard(year) { return wrap_(function () { return getDashboard_(year); }); }

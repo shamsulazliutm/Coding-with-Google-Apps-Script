@@ -202,7 +202,7 @@ label .req{color:var(--bad)}
 .slide .cv-art{position:absolute;right:-20px;top:-10px;width:520px;height:360px;z-index:1}
 .slide .cv-in{position:relative;z-index:2;padding:62px 90px 0}
 .slide .cv-sulit{display:block;font-weight:800;font-size:15px;letter-spacing:.04em;color:var(--m);margin-bottom:22px}
-.slide .cv-logo{display:block;height:92px;width:auto;margin-bottom:34px}
+.slide .cv-logos{display:flex;align-items:center;gap:24px;height:92px;margin-bottom:34px}.slide .cv-logos img{display:block;width:auto}.slide .lg-utm,.slide .lg-asc{height:92px}.slide .lg-xc{height:80px}.slide .lg-sep{width:2px;height:68px;background:#d9c9ce;display:block}
 .slide.cover h1{font-size:76px;line-height:1.02;margin:0;color:#5c0f2a;font-weight:900;letter-spacing:-.01em}
 .slide .cv-line{width:540px;height:3px;background:#5c0f2a;margin:34px 0 20px}
 .slide .cv-by{font-size:21px;line-height:1.5;color:#2b1a1f;margin:0}.slide .cv-by b{font-weight:800}
@@ -1419,7 +1419,7 @@ label .req{color:var(--bad)}
     // 0) Slaid tajuk (kulit)
     slides.push(slideShell('<svg class="cv-art" viewBox="0 0 420 300" aria-hidden="true"><defs><linearGradient id="cvg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d6db"/><stop offset=".45" stop-color="#b3475d"/><stop offset="1" stop-color="#5c0f2a"/></linearGradient><linearGradient id="cvg2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#d9a5b0"/><stop offset="1" stop-color="#7a1a3d"/></linearGradient></defs>' +
       '<g transform="translate(250 -20) rotate(24)"><ellipse cx="100" cy="90" rx="190" ry="70" fill="none" stroke="url(#cvg1)" stroke-width="38"/><ellipse cx="100" cy="92" rx="150" ry="46" fill="none" stroke="url(#cvg2)" stroke-width="22" opacity=".9"/><ellipse cx="100" cy="95" rx="105" ry="26" fill="none" stroke="#8a1c46" stroke-width="10" opacity=".75"/></g></svg>' +
-      '<div class="cv-in"><span class="cv-sulit">SULIT</span>' + (window.UTM_LOGO ? '<img class="cv-logo" src="' + window.UTM_LOGO + '" alt="UTM ASCEND 2030">' : '') +
+      '<div class="cv-in"><span class="cv-sulit">SULIT</span>' + '<div class="cv-logos">' + (S.logos && S.logos.utm ? '<img class="lg-utm" src="' + S.logos.utm + '" alt="Universiti Teknologi Malaysia"><i class="lg-sep"></i>' : '') + (window.UTM_LOGO ? '<img class="lg-asc" src="' + window.UTM_LOGO + '" alt="UTM ASCEND 2030">' : '') + (S.logos && S.logos.xcite ? '<i class="lg-sep"></i><img class="lg-xc" src="' + S.logos.xcite + '" alt="UTMXCITE">' : '') + '</div>' +
       '<h1>LAPORAN<br>PENCAPAIAN<br>PRESTASI UTMXCITE</h1><div class="cv-line"></div><p class="cv-by">Disediakan Oleh :<br><b>Pusat Inovasi Mahasiswa dan Keusahawanan Teknologi (UTMXCITE)</b></p><p class="cv-yr">Tahun ' + esc(d.year) + '</p></div>' +
       '<footer class="cv-ft"><span>Jabatan Timbalan Naib Canselor (Hal Ehwal Pelajar &amp; Alumni), UTM</span><i>Innovating Sustainable Solutions</i></footer>', { cls: 'cover' }));
     // 1) Slaid 2: paparan ringkasan Infografik (Premium, Peringkat, Ringkasan, Rumusan pencapaian, Trend premium)
@@ -1502,6 +1502,8 @@ label .req{color:var(--bad)}
   }
   function printSlides() {
     var d = S.dash, tr = S.trend; if (!d || !tr) { toast('Data infografik belum dimuat.', true); return; }
+    // logo UTM dan UTMXCITE dimuat sekali sahaja apabila diperlukan (tidak menambah saiz halaman)
+    if (!S.logos) { call('api_slideLogos').then(function (l) { S.logos = l; printSlides(); }).catch(function () { S.logos = {}; printSlides(); }); return; }
     var host = document.getElementById('slides');
     if (!host) { host = document.createElement('div'); host.id = 'slides'; document.body.appendChild(host); }
     host.innerHTML = buildSlides(d, tr);
