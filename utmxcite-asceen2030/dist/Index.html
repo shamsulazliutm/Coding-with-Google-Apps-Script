@@ -187,6 +187,7 @@ label .req{color:var(--bad)}
 .chart{width:100%;height:auto;display:block}.chart .ax{font-size:9.5px;fill:var(--mut)}.chart .av{font-size:10px;font-weight:600;fill:var(--ink)}
 .klist{display:flex;flex-direction:column;gap:6px}.kl{display:grid;grid-template-columns:minmax(170px,1.1fr) 1.6fr 190px 120px;gap:10px;align-items:center;font-size:12.5px}
 .kl .kn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kl .mini{height:6px;background:#efe6e9;border-radius:3px;overflow:hidden}.kl .mini i{display:block;height:100%;background:var(--m)}.kl .n{text-align:right;color:var(--mut)}
+.tbrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px}.tbd{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px}.tbd .ring{max-width:130px}.tbd b{font-size:14px}.tbd span{font-size:12px;color:var(--mut)}.tbd small{font-size:11px;color:var(--mut)}
 .kptg{margin:4px 0 14px}.kpth{margin:0 0 8px;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}.kptn{background:#b8860b;color:#fff;border-radius:9px;padding:2px 9px;font-size:11px}
 .kptc{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.kpti{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;border:1px solid #efe1e6;border-radius:12px;padding:10px 8px;min-width:0}
 .kpti .ring{max-width:92px}.kpti b{font-size:12.5px}.kptt{font-size:11.5px;color:var(--ink)}.kpti small{font-size:11px;color:var(--mut)}
@@ -1278,6 +1279,18 @@ label .req{color:var(--bad)}
     }).catch(function (e) { $('#content').innerHTML = '<p class="boot">' + esc(e.message) + '</p>'; });
   }
 
+  // % Penggunaan Tabung: satu cincin bagi setiap tabung; nilai % di tengah, kod tabung dan RM dibelanjakan di bawah (peruntukan tidak didedahkan kepada awam).
+  var TB_COLORS = ['#5c0f2a', '#1f6f6b', '#a0577a', '#b8860b', '#6a8caf', '#8a1c46', '#3b78d8', '#7a6a2f'];
+  function tabungRingsHtml(tb, size) {
+    var pct = bdOf(tb, /% Penggunaan Tabung/i), rm = bdOf(tb, /Perbelanjaan \(RM\)/i) || [], rmBy = {};
+    rm.forEach(function (x) { rmBy[x.label] = x.value; });
+    if (!pct) return '';
+    return '<div class="tbrow">' + pct.map(function (it, i) {
+      return '<div class="tbd">' + ringSvg(Math.min(100, it.value), { size: size || 130, label: 'Penggunaan tabung ' + it.label, text: fmtNum(it.value) + '%', color: TB_COLORS[i % TB_COLORS.length] }) +
+        '<b>' + esc(it.label) + '</b>' + (rmBy[it.label] !== undefined ? '<span>' + esc(money(rmBy[it.label])) + '</span><small>dibelanjakan</small>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+
   // Kandungan panel KPT (tiga Teras; cincin setiap KPI). Digunakan oleh Infografik dan slaid 2.
   function kptTerasHtml(d, cs) {
     var kptList = cs.filter(function (c) { return c.level === 'KPT'; });
@@ -1350,8 +1363,7 @@ label .req{color:var(--bad)}
         '<div class="pt"><b>' + esc(tsec['Jumlah perbelanjaan terkumpul'] || '-') + '</b><span>perbelanjaan operasi terkumpul ' + esc(d.year) + '</span><span>Peruntukan: ' + esc(tsec['Jumlah peruntukan / baki awal'] || '-') + '</span><span>Baki tabung: ' + esc(tsec['Baki tabung'] || '-') + '</span>' + jimat + '</div></div>', 'c4');
     }
 
-    var tbItems = bdOf(byId.CKAI10, /% Penggunaan Tabung/i);
-    if (tbItems) h += panel('% Penggunaan Tabung', hbarsHtml(tbItems, function (v) { return fmtNum(v) + '%'; }, 8), 'c8');
+    if (byId.CKAI10 && bdOf(byId.CKAI10, /% Penggunaan Tabung/i)) h += panel('% Penggunaan Tabung', tabungRingsHtml(byId.CKAI10, 104), 'c8');
 
     // 5) Enam fungsi
     h += panel('Enam fungsi UTMXCITE', '<div class="rrow six">' + d.functions.filter(function (f) { return f.no; }).map(function (f) {
@@ -1464,11 +1476,10 @@ label .req{color:var(--bad)}
     if (tb) {
       var tsec = {}; (tb.secondary || []).forEach(function (x) { tsec[x.label] = x.value; });
       var jimat = tsec['Penjimatan berbanding bajet'] ? '<span>Penjimatan berbanding bajet: ' + esc(tsec['Penjimatan berbanding bajet']) + '</span>' : (tsec['Lebihan berbanding bajet'] ? '<span>Lebihan berbanding bajet: ' + esc(tsec['Lebihan berbanding bajet']) + '</span>' : '');
-      var tbItems = bdOf(tb, /% Penggunaan Tabung/i);
       slides.push(gridSlide('CKAI 10', 'Penggunaan tabung amanah',
         panel('Penggunaan tabung amanah', '<div class="prem2">' + ringSvg(Math.min(100, tb.value), { size: 130, label: 'Penggunaan peruntukan', text: fmtNum(tb.value) + '%', color: COL.teal, tick: tb.target !== '' ? tb.target : 0 }) +
           '<div class="pt"><b>' + esc(tsec['Jumlah perbelanjaan terkumpul'] || '-') + '</b><span>perbelanjaan operasi terkumpul ' + esc(d.year) + '</span><span>Peruntukan: ' + esc(tsec['Jumlah peruntukan / baki awal'] || '-') + '</span><span>Baki tabung: ' + esc(tsec['Baki tabung'] || '-') + '</span>' + jimat + '</div></div>', 'c4') +
-        (tbItems ? panel('% Penggunaan Tabung', hbarsHtml(tbItems, function (v) { return fmtNum(v) + '%'; }, 8), 'c8') : ''), 1.35));
+        (bdOf(tb, /% Penggunaan Tabung/i) ? panel('% Penggunaan Tabung', tabungRingsHtml(tb, 118), 'c8') : ''), 1.2));
     }
     // 6+) Semua indikator (susunan peratus sasaran), 12 baris setiap slaid
     var all = cs.slice().sort(function (a, b) { return (b.pct === null ? -1 : b.pct) - (a.pct === null ? -1 : a.pct); });
