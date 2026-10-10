@@ -1021,7 +1021,8 @@ test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan;
   const byTb = c.breakdown.find(b => b.title === '% Penggunaan Tabung').items;
   deepEq(byTb.map(i => i.label).sort(), ['07078', '08990', 'X12']); // 5 aksara terakhir no. chargeline
   assert.strictEqual(byTb.find(i => i.label === '07078').value, Math.round(60000 / 118602.64 * 1000) / 10);
-  assert.strictEqual(c.breakdown.find(b => /\(RM\) mengikut tabung/.test(b.title)).items.find(i => i.label === '07078').value, 60000);
+  assert.strictEqual(c.breakdown.find(b => /^Perbelanjaan \(RM\) mengikut tabung/.test(b.title)).items.find(i => i.label === '07078').value, 60000);
+  assert.strictEqual(c.breakdown.find(b => /^Peruntukan \(RM\) mengikut tabung/.test(b.title)).items.find(i => i.label === '07078').value, 118602.64);   // belanja / peruntukan setiap tabung (permintaan Admin)
   assert.ok(!sj.includes('Tabung Induk') && !sj.includes('Tabung Baharu')); // nama tabung tidak dipaparkan kepada umum
   assert.ok(!c.breakdown.some(b => /bulan/i.test(b.title))); // butiran mengikut bulan tidak diperlukan
 });

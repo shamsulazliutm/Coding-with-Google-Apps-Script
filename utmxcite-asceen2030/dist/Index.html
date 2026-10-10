@@ -1282,12 +1282,13 @@ label .req{color:var(--bad)}
   // % Penggunaan Tabung: satu cincin bagi setiap tabung; nilai % di tengah, kod tabung dan RM dibelanjakan di bawah (peruntukan tidak didedahkan kepada awam).
   var TB_COLORS = ['#5c0f2a', '#1f6f6b', '#a0577a', '#b8860b', '#6a8caf', '#8a1c46', '#3b78d8', '#7a6a2f'];
   function tabungRingsHtml(tb, size) {
-    var pct = bdOf(tb, /% Penggunaan Tabung/i), rm = bdOf(tb, /Perbelanjaan \(RM\)/i) || [], rmBy = {};
-    rm.forEach(function (x) { rmBy[x.label] = x.value; });
+    var pct = bdOf(tb, /% Penggunaan Tabung/i), rm = bdOf(tb, /Perbelanjaan \(RM\)/i) || [], al = bdOf(tb, /Peruntukan \(RM\)/i) || [], rmBy = {}, alBy = {};
+    rm.forEach(function (x) { rmBy[x.label] = x.value; }); al.forEach(function (x) { alBy[x.label] = x.value; });
+    function rmS(n) { n = Number(n); return 'RM' + (n % 1 === 0 ? n.toLocaleString('en-MY') : n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })); }
     if (!pct) return '';
     return '<div class="tbrow">' + pct.map(function (it, i) {
       return '<div class="tbd">' + ringSvg(Math.min(100, it.value), { size: size || 130, label: 'Penggunaan tabung ' + it.label, text: fmtNum(it.value) + '%', color: TB_COLORS[i % TB_COLORS.length] }) +
-        '<b>' + esc(it.label) + '</b>' + (rmBy[it.label] !== undefined ? '<span>' + esc(money(rmBy[it.label])) + '</span><small>dibelanjakan</small>' : '') + '</div>';
+        '<b>' + esc(it.label) + '</b>' + (rmBy[it.label] !== undefined ? '<span>' + esc(rmS(rmBy[it.label])) + (alBy[it.label] !== undefined ? ' / ' + esc(rmS(alBy[it.label])) : '') + '</span><small>belanja / peruntukan</small>' : '') + '</div>';
     }).join('') + '</div>';
   }
 
