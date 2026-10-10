@@ -505,6 +505,8 @@ test('CKAI 6 (sewaan ruang niaga): hanya yang DIBAYAR dikira; tertunggak dipapar
   const r = { tempoh: '2026-03', no_matrik: 'SW001', nama_pelajar: 'Pelajar Penyewa', inkubator: 'Student Mall - Lot 2', penyewa: 'Syarikat A', jumlah_rm: 500 };
   fail(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar' }, r)), /betulkan/); // tarikh bayar wajib
   fail(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Tertunggak' }, r, { no_matrik: '' })), /betulkan/); // no. matrik wajib
+  const bad = g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Tertunggak' }, r, { inkubator: 'Kedai Sendiri' })); fail(bad, /betulkan/); assert.ok(bad.fields.inkubator);   // dropdown sahaja
+  const lain = g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Tertunggak' }, r, { inkubator: 'Lain-lain' })); fail(lain, /betulkan/); assert.ok(lain.fields.inkubator_lain);   // Lain-lain mesti dinamakan
   const sv = ok(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar', tarikh_bayar: '2026-03-05' }, r)));
   assert.strictEqual(sv.no_matrik, 'SW001'); assert.strictEqual(sv.nama_pelajar, 'Pelajar Penyewa');   // nama daripada PELAJAR
   ok(g.api_save(adminToken, 'CKAI6', Object.assign({}, r, { tempoh: '2026-04', jumlah_rm: 700, status_bayaran: 'Tertunggak' })));
