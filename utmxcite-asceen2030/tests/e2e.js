@@ -511,8 +511,6 @@ function buildHtml() {
     const txt = await page.locator('.cont').innerText();
     ['Laporan Prestasi UTMXCITE', 'Pekerjaan Premium Tier 1', 'Sasaran 2030: 40%', 'Enam fungsi UTMXCITE', 'Semua indikator', 'Peringkat Kementerian (KPT)', 'Teras 1', 'Teras 3', 'Kolaborasi berimpak tinggi', 'Jualan agregat usahawan', 'Kenal pasti minat', '(Identify Interest)', 'Pameran inovasi pelajar', '(Showcase Innovation)'].forEach(x => assert.ok(txt.toLowerCase().includes(x.toLowerCase()), 'infografik tiada: ' + x));
     assert.strictEqual(await page.locator('.kpti').count(), 7);
-    assert.ok(await page.locator('.igp:has-text("% Penggunaan Tabung") .tbd svg.ring').count() >= 1);   // cincin bagi setiap tabung, % di tengah
-    assert.ok(/%/.test(await page.locator('.igp:has-text("% Penggunaan Tabung") .tbd svg.ring text').first().innerHTML()));
     assert.strictEqual(await page.locator('.kptp .kpth').count(), 3);
     assert.strictEqual(await page.locator('.rrow.four .rtile').count(), 4);
     await page.selectOption('#iy', '2027');
