@@ -502,9 +502,11 @@ test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () 
     fail(g.api_save(adminToken, 'CKAI5', mk({ bil_peserta: 0 })), /betulkan/);
 });
 test('CKAI 6 (sewaan ruang niaga): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
-  const r = { tempoh: '2026-03', inkubator: 'Student Mall - Lot 2', penyewa: 'Syarikat A', jumlah_rm: 500 };
+  const r = { tempoh: '2026-03', no_matrik: 'SW001', nama_pelajar: 'Pelajar Penyewa', inkubator: 'Student Mall - Lot 2', penyewa: 'Syarikat A', jumlah_rm: 500 };
   fail(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar' }, r)), /betulkan/); // tarikh bayar wajib
-  ok(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar', tarikh_bayar: '2026-03-05' }, r)));
+  fail(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Tertunggak' }, r, { no_matrik: '' })), /betulkan/); // no. matrik wajib
+  const sv = ok(g.api_save(adminToken, 'CKAI6', Object.assign({ status_bayaran: 'Dibayar', tarikh_bayar: '2026-03-05' }, r)));
+  assert.strictEqual(sv.no_matrik, 'SW001'); assert.strictEqual(sv.nama_pelajar, 'Pelajar Penyewa');   // nama daripada PELAJAR
   ok(g.api_save(adminToken, 'CKAI6', Object.assign({}, r, { tempoh: '2026-04', jumlah_rm: 700, status_bayaran: 'Tertunggak' })));
   const c = card(dash(2026), 'CKAI6');
   assert.strictEqual(c.value, 500); assert.strictEqual(c.secondary[0].value, 'RM 700.00'); assert.strictEqual(c.secondary[1].value, 1);
