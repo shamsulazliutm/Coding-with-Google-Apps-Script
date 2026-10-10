@@ -519,6 +519,29 @@ function buildHtml() {
     await page.waitForSelector('.igs:has-text("tahun 2026")');
     await page.screenshot({ path: path.join(out, '17-infografik.png'), fullPage: true });
   });
+  await step('Infografik: PDF slaid 16:9 (slaid 1 = ringkasan, 2 = KPT, 3 = KAI, 4 = fungsi) dijana untuk cetakan', async () => {
+    await goNav('Infografik');
+    await page.waitForSelector('[data-action="slides"]');
+    await page.evaluate(() => { window.print = () => {}; });
+    await page.click('[data-action="slides"]');
+    const n = await page.locator('#slides .slide').count();
+    assert.ok(n >= 7, 'bilangan slaid: ' + n);
+    const t = async (i) => (await page.locator('#slides .slide').nth(i).innerText());
+    assert.ok((await t(0)).includes('Pekerjaan Premium Tier 1') && (await t(0)).includes('Rumusan pencapaian') && (await t(0)).includes('Trend ukuran premium'));
+    assert.ok((await t(1)).includes('Teras 1') && (await t(1)).includes('KPT 7'));
+    assert.ok((await t(2)).includes('KAI · Peringkat Universiti') && (await t(2)).includes('KAI 6') && (await t(2)).includes('DKAI 1'));
+    assert.ok((await t(3)).includes('Enam fungsi UTMXCITE') && (await t(3)).includes('Pendapatan usahawan'));
+    assert.ok((await text('#slides')).includes('Penggunaan tabung amanah'));
+    assert.ok((await page.locator('#slides .slide .sf').count()) === n);
+    await page.emulateMedia({ media: 'print' });
+    const box = await page.locator('#slides .slide').first().evaluate(el => [el.offsetWidth, el.offsetHeight]);
+    assert.deepStrictEqual(box, [1280, 720]);   // 16:9
+    const pdf = await page.pdf({ preferCSSPageSize: true, printBackground: true });
+    assert.ok(pdf.length > 20000); assert.ok(/\/Count 9|\/Type ?\/Pages/.test(pdf.toString('latin1'))); fs.writeFileSync(path.join(out, 'laporan-slaid.pdf'), pdf);
+    await page.emulateMedia({ media: 'screen' });
+    await page.evaluate(() => window.__slidesDone && window.__slidesDone());
+    assert.strictEqual(await page.locator('#slides .slide').count(), 0);
+  });
   await step('Dashboard: tukar paparan antara peringkat dan fungsi (enam fungsi UTMXCITE)', async () => {
     await goNav('Dashboard');
     await page.waitForSelector('.seg');
