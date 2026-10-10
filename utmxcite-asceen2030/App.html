@@ -1127,7 +1127,13 @@
     var cs = d.kpis, slides = [], pr = d.premium;
     function avgPct(list) { var v = list.map(pctCap).filter(function (x) { return x !== null; }); return v.length ? Math.round(v.reduce(function (a, b) { return a + b; }, 0) / v.length) : null; }
     var rate = Math.round(d.summary.meet * 100 / Math.max(1, d.summary.total));
-    // 1) Slaid 1: paparan ringkasan Infografik (Premium, Peringkat, Ringkasan, Rumusan pencapaian, Trend premium)
+    // 0) Slaid tajuk (kulit)
+    slides.push(slideShell('<svg class="cv-art" viewBox="0 0 420 300" aria-hidden="true"><defs><linearGradient id="cvg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d6db"/><stop offset=".45" stop-color="#b3475d"/><stop offset="1" stop-color="#5c0f2a"/></linearGradient><linearGradient id="cvg2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#d9a5b0"/><stop offset="1" stop-color="#7a1a3d"/></linearGradient></defs>' +
+      '<g transform="translate(250 -20) rotate(24)"><ellipse cx="100" cy="90" rx="190" ry="70" fill="none" stroke="url(#cvg1)" stroke-width="38"/><ellipse cx="100" cy="92" rx="150" ry="46" fill="none" stroke="url(#cvg2)" stroke-width="22" opacity=".9"/><ellipse cx="100" cy="95" rx="105" ry="26" fill="none" stroke="#8a1c46" stroke-width="10" opacity=".75"/></g></svg>' +
+      '<div class="cv-in"><span class="cv-sulit">SULIT</span>' + (window.UTM_LOGO ? '<img class="cv-logo" src="' + window.UTM_LOGO + '" alt="UTM ASCEND 2030">' : '') +
+      '<h1>LAPORAN<br>PENCAPAIAN<br>PRESTASI UTMXCITE</h1><div class="cv-line"></div><p class="cv-by">Disediakan Oleh :<br><b>Pusat Inovasi Mahasiswa dan Keusahawanan Teknologi (UTMXCITE)</b></p><p class="cv-yr">Tahun ' + esc(d.year) + '</p></div>' +
+      '<footer class="cv-ft"><span>Jabatan Timbalan Naib Canselor (Hal Ehwal Pelajar &amp; Alumni), UTM</span><i>Innovating Sustainable Solutions</i></footer>', { cls: 'cover' }));
+    // 1) Slaid 2: paparan ringkasan Infografik (Premium, Peringkat, Ringkasan, Rumusan pencapaian, Trend premium)
     var lv = d.levels.map(function (l) {
       var list = cs.filter(function (c) { return c.level === l.id; }), t = list.filter(function (c) { return c.target !== ''; }), p = avgPct(t), m = t.filter(isMeet).length;
       return ringTile(p === null ? 0 : p, { size: 84, label: l.short.split(' · ')[0], text: p === null ? '–' : p + '%', sub: t.length ? m + ' / ' + t.length + ' KPI capai sasaran' : 'Sasaran belum ditetapkan', color: l.id === 'KPT' ? COL.kpt : l.id === 'KAI' ? COL.m : l.id === 'DKAI' ? COL.teal : '#a0577a' });
@@ -1149,7 +1155,7 @@
       panel('Trend ukuran premium', (yrs.length ? areaSvg(yrs, { label: 'Trend peratus pekerjaan premium', fmt: function (v) { return v + '%'; }, xlabel: function (l) { return l; }, target: pr.targetPct, targetLabel: 'Sasaran ' + pr.targetPct + '%', valueLabels: true }) : '<p class="igs">Belum ada data pendapatan (CKAI 7) untuk dipaparkan.</p>') + '<p class="igs">Hanya tahun yang ada laporan pendapatan dipaparkan.</p>', 'c4');
     slides.push(slideShell('<header class="sh1"><div><span class="sk">' + esc(d.ds.label) + '</span><h2>Laporan Prestasi UTMXCITE · ' + esc(d.year) + '</h2></div>' +
       (window.UTM_LOGO ? '<img src="' + window.UTM_LOGO + '" alt="">' : '') + '</header><div class="ig ig1">' + ov + '</div>', { cls: 'first' }));
-    // 2) Slaid 2: panel KPT (tiga Teras) seperti paparan Infografik
+    // Slaid 3: panel KPT (tiga Teras) seperti paparan Infografik
     slides.push(slideShell('<header class="sh1"><div><span class="sk">KPT · Peringkat Kementerian</span><h2>KPI Keusahawanan IPT · Peringkat Kementerian (KPT)</h2></div>' +
       (window.UTM_LOGO ? '<img src="' + window.UTM_LOGO + '" alt="">' : '') + '</header><div class="ig ig1 kptslide"><section class="igp c12 kptp">' + kptTerasHtml(d, cs) + '</section></div>', { cls: 'first' }));
     // helper: slaid berasaskan grid panel Infografik (header ringkas + panel)
@@ -1157,7 +1163,7 @@
       return slideShell('<header class="sh1"><div><span class="sk">' + esc(kicker) + '</span><h2>' + esc(title) + '</h2></div>' + (window.UTM_LOGO ? '<img src="' + window.UTM_LOGO + '" alt="">' : '') +
         '</header><div class="ig ig1" style="zoom:' + (zoom || .83) + '">' + panels + '</div>', { cls: 'first' });
     }
-    // 3) Slaid 3: KAI · Peringkat Universiti (KAI 1-6; DKAI 1 sebagai baris tambahan)
+    // Slaid 4: KAI · Peringkat Universiti (KAI 1-6; DKAI 1 sebagai baris tambahan)
     var kaiList = cs.filter(function (c) { return c.level === 'KAI'; }), dk = cs.filter(function (c) { return c.level === 'DKAI'; });
     if (kaiList.length) slides.push(slideShell(slideHead('KAI · Peringkat Universiti', 'KAI · Peringkat Universiti', 'Growth (KAI 1-3) · Transform (KAI 4-6)' + (dk.length ? ' · DKAI 1 Peringkat Jabatan (JTNC HEPA)' : '')) +
       '<div class="sbody">' + slideRows(kaiList.concat(dk)) + '</div>'));
@@ -1203,7 +1209,8 @@
     slides.push(slideShell(slideHead('Tindakan', 'Indikator yang perlu perhatian', low.length ? 'Di bawah sasaran ' + d.year + ', disusun mengikut peratus terendah' : 'Semua KPI bersasaran mencapai sasaran') +
       '<div class="sbody">' + (low.length ? slideRows(low) : '<p class="bigok">Tahniah, tiada indikator di bawah sasaran.</p>') + '</div>'));
     var total = slides.length;
-    return slides.map(function (html, i) { var cut = html.lastIndexOf('</section>'); return html.slice(0, cut) + '<footer class="sf"><span>UTMXCITE · Laporan Prestasi ' + esc(d.year) + '</span><span>' + (i + 1) + ' / ' + total + '</span></footer></section>'; }).join('');
+    return slides.map(function (html, i) { if (i === 0) return html;   // kulit tanpa pengaki biasa
+       var cut = html.lastIndexOf('</section>'); return html.slice(0, cut) + '<footer class="sf"><span>UTMXCITE · Laporan Prestasi ' + esc(d.year) + '</span><span>' + (i + 1) + ' / ' + total + '</span></footer></section>'; }).join('');
   }
   function printSlides() {
     var d = S.dash, tr = S.trend; if (!d || !tr) { toast('Data infografik belum dimuat.', true); return; }

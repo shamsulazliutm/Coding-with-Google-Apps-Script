@@ -519,7 +519,7 @@ function buildHtml() {
     await page.waitForSelector('.igs:has-text("tahun 2026")');
     await page.screenshot({ path: path.join(out, '17-infografik.png'), fullPage: true });
   });
-  await step('Infografik: PDF slaid 16:9 (slaid 1 = ringkasan, 2 = KPT, 3 = KAI, 4 = fungsi) dijana untuk cetakan', async () => {
+  await step('Infografik: PDF slaid 16:9 (slaid 1 = tajuk, 2 = ringkasan, 3 = KPT, 4 = KAI, 5 = fungsi) dijana untuk cetakan', async () => {
     await goNav('Infografik');
     await page.waitForSelector('[data-action="slides"]');
     await page.evaluate(() => { window.print = () => {}; });
@@ -527,12 +527,14 @@ function buildHtml() {
     const n = await page.locator('#slides .slide').count();
     assert.ok(n >= 7, 'bilangan slaid: ' + n);
     const t = async (i) => (await page.locator('#slides .slide').nth(i).innerText());
-    assert.ok((await t(0)).includes('Pekerjaan Premium Tier 1') && (await t(0)).includes('Rumusan pencapaian') && (await t(0)).includes('Trend ukuran premium'));
-    assert.ok((await t(1)).includes('Teras 1') && (await t(1)).includes('KPT 7'));
-    assert.ok((await t(2)).includes('KAI · Peringkat Universiti') && (await t(2)).includes('KAI 6') && (await t(2)).includes('DKAI 1'));
-    assert.ok((await t(3)).includes('Enam fungsi UTMXCITE') && (await t(3)).includes('Pendapatan usahawan'));
+    assert.ok((await page.locator('#slides .slide').first().evaluate(el => el.classList.contains('cover'))));
+    assert.ok((await t(0)).includes('LAPORAN') && (await t(0)).includes('PRESTASI UTMXCITE') && (await t(0)).includes('SULIT') && (await t(0)).includes('Pusat Inovasi Mahasiswa dan Keusahawanan Teknologi (UTMXCITE)') && (await t(0)).includes('Innovating Sustainable Solutions'));
+    assert.ok((await t(1)).includes('Pekerjaan Premium Tier 1') && (await t(1)).includes('Rumusan pencapaian') && (await t(1)).includes('Trend ukuran premium'));
+    assert.ok((await t(2)).includes('Teras 1') && (await t(2)).includes('KPT 7'));
+    assert.ok((await t(3)).includes('KAI · Peringkat Universiti') && (await t(3)).includes('KAI 6') && (await t(3)).includes('DKAI 1'));
+    assert.ok((await t(4)).includes('Enam fungsi UTMXCITE') && (await t(4)).includes('Pendapatan usahawan'));
     assert.ok((await text('#slides')).includes('Penggunaan tabung amanah'));
-    assert.ok((await page.locator('#slides .slide .sf').count()) === n);
+    assert.ok((await page.locator('#slides .slide .sf').count()) === n - 1);   // kulit tanpa pengaki biasa
     await page.emulateMedia({ media: 'print' });
     const box = await page.locator('#slides .slide').first().evaluate(el => [el.offsetWidth, el.offsetHeight]);
     assert.deepStrictEqual(box, [1280, 720]);   // 16:9
