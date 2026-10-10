@@ -13,7 +13,24 @@ window.__demoSeed = function () {
   function p2(n) { return ('0' + n).slice(-2); }
   function ymd(m, d) { return Y + '-' + p2(Math.min(m, lastM)) + '-' + p2(d); }
   function ym(m) { return Y + '-' + p2(m); }
+  // Data asas pelajar (tab PELAJAR): daftar pelajar contoh dahulu; rekod KPI hanya membawa no. matrik.
+  var kpCounter = 0, stuSeen = {};
+  function ensureStu(m, nama, kp, fak, emel, tel) {
+    m = String(m || '').trim(); if (!m || stuSeen[m.toUpperCase()]) return;
+    stuSeen[m.toUpperCase()] = 1;
+    var kpv = String(kp || '').replace(/-/g, '');
+    if (!/^[A-Za-z0-9]{6,20}$/.test(kpv)) kpv = '90' + ('0000000000' + (++kpCounter)).slice(-10);
+    var r = saveStudents_(tok, [{ no_matrik: m, nama_pelajar: nama || ('Pelajar Contoh ' + m), no_kp: kpv, fakulti: fak || 'FAI', emel: emel || '', telefon: tel || '' }]).results[0];
+    if (!r.ok) throw new Error('Seed PELAJAR gagal ' + m + ' ' + JSON.stringify(r.fields));
+  }
   function save(kpi, rec) {
+    var def = getKpi_(kpi);
+    if (def.student) {
+      var mp = def.student.map, mk = def.student.matrik;
+      if (!rec[mk] && rec[mp.no_kp] && !(kpi === 'KPT2')) rec[mk] = 'M' + String(rec[mp.no_kp]).replace(/[^A-Za-z0-9]/g, '');
+      ensureStu(rec[mk], rec[mp.nama_pelajar], rec[mp.no_kp], (mp.fakulti && rec.fakulti) || rec.fakulti, rec[mp.emel], rec[mp.telefon]);
+    }
+    def.fields.forEach(function (f) { if (f.type === 'people' && Array.isArray(rec[f.key])) rec[f.key].forEach(function (p) { ensureStu(p.matrik, p.nama, p.nokp, 'FAI'); }); });
     try { return saveRecord_(tok, kpi, rec); }
     catch (e) { throw new Error('Seed ' + kpi + ' gagal: ' + e.message + ' ' + JSON.stringify(e.fields || {}) + ' ' + JSON.stringify(rec)); }
   }

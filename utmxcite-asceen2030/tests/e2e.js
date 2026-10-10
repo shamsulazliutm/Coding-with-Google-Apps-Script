@@ -24,6 +24,13 @@ function buildHtml() {
   const login = (e) => { g.api_requestOtp(e); return g.api_verifyOtp(e, code()).data.token; };
   const admin = login('admin@utm.my');
   g.api_saveUser(admin, { emel: 'pic.fai@utm.my', nama: 'Siti Aminah', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1,KAI4,KAI6', aktif: 'Ya' });
+  // Data asas pelajar (tab PELAJAR): semua KPI hanya menerima no. matrik dan mengambil selebihnya daripada sini.
+  const stu = (m, nama, kp, fak, emel, tel) => { const r = g.api_saveStudents(admin, [{ no_matrik: m, nama_pelajar: nama, no_kp: kp, fakulti: fak, emel: emel || '', telefon: tel || '' }]); if (!r.ok || !r.data.results[0].ok) throw new Error('seed PELAJAR gagal ' + m + JSON.stringify(r)); };
+  for (let i = 0; i < 6; i++) stu('A24' + i, 'Pelajar ' + i, '99010101123' + i, 'FAI');
+  for (let i = 0; i < 7; i++) stu('B' + i, 'AI ' + i, '98010101123' + i, 'FAI');
+  stu('A24CS0101', 'Ali Bin Abu', '900101145678', 'FC'); stu('A24CS0102', 'Siti Binti Ahmad', '010203101234', 'FC');
+  stu('A24EE0001', 'Ahmad Inovator', '000101101111', 'FKE'); stu('A24PF9001', 'Nur Profil', '000202102222', 'FC');
+  stu('PK-A', 'Pukal A', '000101105555', 'FAI'); stu('PK-B', 'Pukal B', '000202106666', 'FC'); stu('PK-C', 'Pukal C', '000303107777', 'FC');
   // Data contoh untuk dashboard (hanya dalam ujian, bukan dalam produk).
   g.api_save(admin, 'KAI1', { aliran: 'Technology Startup', jenis: 'Inkubator Fakulti', fakulti: 'FC', nama_inkubator: 'Launchpad FC', didaftarkan: 'Ya', tarikh_pendaftaran: '2026-03-01', status: 'Beroperasi', tarikh_beroperasi: '2026-04-01' });
   for (let i = 0; i < 6; i++) g.api_save(admin, 'KAI4', { fakulti: i % 2 ? 'FAI' : 'FC', nama_pelajar: 'Pelajar ' + i, no_kp: '99010101123' + i, no_matrik: 'A24' + i, status: 'Mendaftar', tarikh_daftar: '2026-03-0' + (i + 1) });
@@ -186,9 +193,21 @@ function buildHtml() {
     // Hantar kosong: ralat medan wajib
     await page.click('#savebtn');
     await page.waitForSelector('.invalid .err:has-text("wajib")');
-    await page.fill('#f_nama_pelajar', 'Nur Aina <b>x</b>');
-    await page.fill('#f_no_kp', '990101-01-1234');
-    await page.fill('#f_no_matrik', 'A24CS0001');
+    // hanya no. matrik; nama, no. KP, e-mel, telefon tiada pada borang (diambil daripada PELAJAR)
+    assert.strictEqual(await page.locator('#f_nama_pelajar, #f_no_kp, #f_emel, #f_telefon').count(), 0);
+    // pelajar belum ada dalam PELAJAR: tetingkap untuk melengkapkan dipaparkan
+    await page.fill('#f_no_matrik', 'A24CS0001'); await page.press('#f_no_matrik', 'Tab');
+    await page.waitForSelector('.mdl');
+    await page.click('#stusave');
+    await page.waitForSelector('.mdl .invalid .err:has-text("wajib")');   // nama wajib; no. KP dan fakulti tidak sah
+    await page.fill('#sm_0_nama_pelajar', 'Nur Aina <b>x</b>');
+    await page.fill('#sm_0_no_kp', '990101-01-1234');
+    await page.selectOption('#sm_0_fakulti', 'FAI');
+    await page.screenshot({ path: path.join(out, '19-tetingkap-pelajar.png') });
+    await page.click('#stusave');
+    await page.waitForSelector('.mdl', { state: 'detached' });
+    await page.waitForSelector('#stu_status.ok');
+    assert.ok((await text('#stu_status')).includes('Nur Aina <b>x</b>'));
     await page.selectOption('#f_status', 'Mendaftar');
     await page.click('#savebtn');
     await page.waitForSelector('.invalid .err:has-text("Wajib diisi apabila")'); // tarikh_daftar diperlukan
@@ -265,7 +284,8 @@ function buildHtml() {
     await page.selectOption('#f_fakulti', 'FC');
     await page.fill('#f_tempoh', '2026-05');
     await page.fill('#f_nama_perniagaan', 'Kedai E2E');
-    await page.fill('#f_no_kp', '990101-01-1234');
+    await page.fill('#f_no_matrik', 'A24CS0001'); await page.press('#f_no_matrik', 'Tab');
+    await page.waitForSelector('#stu_status.ok');
     await page.selectOption('#f_jenis_pendapatan', 'Jualan produk');
     await page.fill('#f_pendapatan_rm', '1500.5');
     await page.screenshot({ path: path.join(out, '8-borang-ckai4.png'), fullPage: true });
@@ -292,9 +312,12 @@ function buildHtml() {
     await page.selectOption('#f_program', 'UTM AI Start Up');
     await page.fill('#f_mentor', 'Dr. Mentor');
     const pk = (i, f) => page.locator('[data-pk="pelajar"][data-pi="' + i + '"][data-pf="' + f + '"]');
-    await pk(0, 'nama').fill('Ali Bin Abu'); await pk(0, 'matrik').fill('A24CS0001'); await pk(0, 'nokp').fill('123');
+    assert.strictEqual(await page.locator('[data-pk="pelajar"][data-pf="nama"], [data-pk="pelajar"][data-pf="nokp"]').count(), 0);   // hanya no. matrik
+    await pk(0, 'matrik').fill('A24CS0101'); await pk(0, 'matrik').press('Tab');
+    await page.waitForSelector('[data-pname="pelajar:0"]:has-text("Ali Bin Abu")');
     await page.click('[data-action="padd"][data-key="pelajar"]');
-    await pk(1, 'nama').fill('Siti Binti Ahmad'); await pk(1, 'matrik').fill('A24CS0002'); await pk(1, 'nokp').fill('010203-10-1234');
+    await pk(1, 'matrik').fill('TIADA999'); await pk(1, 'matrik').press('Tab');
+    await page.waitForSelector('.mdl');     // pelajar tiada: tetingkap melengkapkan; batal
     assert.strictEqual(await page.locator('.prow').count(), 2);
     // fail bukan PDF ditolak di klien
     await page.setInputFiles('#f_sijil_file', { name: 'nota.txt', mimeType: 'text/plain', buffer: Buffer.from('bukan pdf') });
@@ -306,11 +329,13 @@ function buildHtml() {
     await page.setInputFiles('#f_sijil_file', { name: 'sijil-anugerah.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF') });
     await page.waitForSelector('.fileinfo:has-text("sijil-anugerah.pdf")');
     await page.screenshot({ path: path.join(out, '10-borang-ckai7.png'), fullPage: true });
-    // no. KP pelajar 1 tidak sah: ralat jelas
-    await page.click('#savebtn');
-    await page.waitForSelector('[data-field="pelajar"].invalid .err:has-text("Pelajar 1")');
+    await page.click('[data-action="stucancel"]');
+    await page.click('#savebtn');     // simpan dengan pelajar tiada: tetingkap dibuka semula
+    await page.waitForSelector('.mdl');
+    await page.click('[data-action="stucancel"]');
     // betulkan, simpan
-    await pk(0, 'nokp').fill('900101-14-5678');
+    await pk(1, 'matrik').fill('A24CS0102'); await pk(1, 'matrik').press('Tab');
+    await page.waitForSelector('[data-pname="pelajar:1"]:has-text("Siti Binti Ahmad")');
     await page.click('#savebtn');
     await page.waitForSelector('td:has-text("Anugerah Inovasi Negara")');
     assert.ok((await text('table')).includes('Ali Bin Abu, Siti Binti Ahmad'));
@@ -325,7 +350,7 @@ function buildHtml() {
     await page.click('button:has-text("Edit") >> nth=0');
     await page.waitForSelector('#kform');
     assert.strictEqual(await page.locator('.prow').count(), 2);
-    assert.strictEqual(await page.locator('[data-pk="pelajar"][data-pi="1"][data-pf="nokp"]').inputValue(), '010203101234');
+    assert.ok((await text('[data-pname="pelajar:1"]')).includes('Siti Binti Ahmad'));
     assert.ok((await text('.fileinfo')).includes('sijil-anugerah.pdf'));
     await page.click('#savebtn'); // simpan tanpa muat naik semula: rujukan fail sedia ada diterima
     await page.waitForSelector('td:has-text("Anugerah Inovasi Negara")');
@@ -382,7 +407,6 @@ function buildHtml() {
     await page.selectOption('#f_jenis_inovasi', 'Produk fizikal');
     await page.fill('#f_mentor', 'Prof. Penyelia');
     assert.strictEqual(await page.locator('[data-pk="pelajar"][data-pf="nokp"]').count(), 0); // tiada medan no. KP
-    await page.locator('[data-pk="pelajar"][data-pi="0"][data-pf="nama"]').fill('Ahmad Inovator');
     await page.locator('[data-pk="pelajar"][data-pi="0"][data-pf="matrik"]').fill('A24EE0001');
     await page.selectOption('#f_status_penyertaan', 'Telah menyertai');
     await page.fill('#f_nama_pertandingan', 'Pertandingan Inovasi Fakulti');
@@ -412,7 +436,7 @@ function buildHtml() {
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-action="bulkdl"]')]);
     const tp = path.join(out, 'templat-kpt4.csv'); await dl.saveAs(tp);
     const tpl = fs.readFileSync(tp, 'utf8');
-    assert.ok(tpl.includes('[no_matrik]') && tpl.includes('#PANDUAN') && tpl.includes('TRL 1 / TRL 2 / TRL 3'), tpl);
+    assert.ok(tpl.includes('[no_matrik]') && !tpl.includes('[no_kp]') && !tpl.includes('[nama]') && tpl.includes('#PANDUAN') && tpl.includes('TRL 1 / TRL 2 / TRL 3'), tpl);
     // isi templat: dua baris sah (satu guna tarikh d/m/y dan pilihan huruf kecil) + satu baris TRL tidak sah
     const csv = tpl.trim().split(/\r?\n/).slice(0, 1).concat([
       '"FAI","Pukal A","000101105555","PK-A","Projek A","trl 1","15/03/2026"',
@@ -425,19 +449,25 @@ function buildHtml() {
     const rowOf = (o) => order.map(k => '"' + (o[k] || '') + '"').join(',');
     const fp = path.join(out, 'pukal-kpt4.csv');
     fs.writeFileSync(fp, '﻿' + head + '\r\n' + [
-      rowOf({ fakulti: 'FAI', nama: 'Pukal A', no_kp: '000101105555', no_matrik: 'PK-A', projek: 'Projek A', trl: 'trl 1', tarikh: '15/03/2026' }),
-      rowOf({ fakulti: 'FC', nama: 'Pukal B', no_kp: '000202106666', no_matrik: 'PK-B', projek: 'Projek B', trl: 'TRL 2', tarikh: '2026-03-16' }),
-      rowOf({ fakulti: 'FC', nama: 'Pukal C', no_kp: '000303107777', no_matrik: 'PK-C', projek: 'Projek C', trl: 'TRL 9', tarikh: '2026-03-17' })].join('\r\n'));
+      rowOf({ fakulti: 'FAI', no_matrik: 'PK-A', projek: 'Projek A', trl: 'trl 1', tarikh: '15/03/2026' }),
+      rowOf({ fakulti: 'FC', no_matrik: 'PK-B', projek: 'Projek B', trl: 'TRL 2', tarikh: '2026-03-16' }),
+      rowOf({ fakulti: 'FC', no_matrik: 'PK-C', projek: 'Projek C', trl: 'TRL 9', tarikh: '2026-03-17' }),
+      rowOf({ fakulti: 'FC', no_matrik: 'PK-X', projek: 'Projek X', trl: 'TRL 1', tarikh: '2026-03-18' })].join('\r\n'));
     await page.setInputFiles('#bulkfile', fp);
     await page.waitForSelector('[data-action="bulkgo"]');
-    assert.ok((await text('.cont')).includes('3 baris data dikesan'));
+    assert.ok((await text('.cont')).includes('4 baris data dikesan'));
     await page.click('[data-action="bulkgo"]');
     await page.waitForSelector('text=2 rekod berjaya disimpan');
-    assert.ok((await text('.cont')).includes('1 baris gagal'));
-    assert.ok((await text('.cont')).includes('trl'));
+    assert.ok((await text('.cont')).includes('2 baris gagal'));
     const [er] = await Promise.all([page.waitForEvent('download'), page.click('[data-action="bulkerr"]')]);
     const ep = path.join(out, 'gagal.csv'); await er.saveAs(ep);
-    assert.ok(fs.readFileSync(ep, 'utf8').includes('PK-C') && fs.readFileSync(ep, 'utf8').includes('RALAT'));
+    assert.ok(fs.readFileSync(ep, 'utf8').includes('PK-C') && fs.readFileSync(ep, 'utf8').includes('PK-X') && fs.readFileSync(ep, 'utf8').includes('RALAT'));
+    // pelajar PK-X belum ada dalam PELAJAR: lengkapkan melalui tetingkap
+    await page.click('[data-action="bulkstu"]');
+    await page.waitForSelector('.mdl legend:has-text("PK-X")');
+    await page.fill('#sm_0_nama_pelajar', 'Pukal X'); await page.fill('#sm_0_no_kp', '000404108888'); await page.selectOption('#sm_0_fakulti', 'FC');
+    await page.click('#stusave');
+    await page.waitForSelector('.mdl', { state: 'detached' });
     await page.click('.tab:has-text("Senarai")');
     await page.waitForSelector('td:has-text("Pukal A")');
     assert.ok((await text('.cont')).includes('Pukal B') && !(await text('.cont')).includes('Pukal C'));
@@ -486,9 +516,8 @@ function buildHtml() {
     await goNav('CKAI 1');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
-    await page.waitForSelector('#f_nama_pelajar');
+    await page.waitForSelector('#f_no_matrik');
     await page.selectOption('#f_fakulti', 'FC');
-    await page.fill('#f_nama_pelajar', 'Nur Profil');
     await page.fill('#f_no_matrik', 'A24PF9001');
     await page.fill('#f_tarikh_profiling', '2026-05-05');
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
@@ -503,9 +532,8 @@ function buildHtml() {
     await page.waitForSelector('td:has-text("Nur Profil")');
     // no. matrik yang sama ditolak
     await page.click('[data-action="new"]');
-    await page.waitForSelector('#f_nama_pelajar');
+    await page.waitForSelector('#f_no_matrik');
     await page.selectOption('#f_fakulti', 'FC');
-    await page.fill('#f_nama_pelajar', 'Duplikasi');
     await page.fill('#f_no_matrik', 'a24pf9001');
     await page.fill('#f_tarikh_profiling', '2026-05-06');
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');

@@ -19,12 +19,16 @@ var APP = {
   ALLOWED_EMAIL_DOMAINS: [] // contoh: ['utm.my']; kosong = semua domain
 };
 
+/** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
+var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
+
 var SHEETS = {
   USERS: 'Pengguna',
   TARGETS: 'Sasaran',
   FACULTIES: 'Fakulti',
   RISKS: 'Risiko',
   AUDIT: 'Log_Audit',
+  STUDENTS: 'PELAJAR',
   SETUP: 'Persediaan'
 };
 
@@ -686,7 +690,7 @@ var KPIS = [
       F_('jenis_perniagaan', 'Jenis perniagaan', 'select', { required: true, options: JENIS_PERNIAGAAN }),
       F_('jenis_perniagaan_lain', 'Nama jenis perniagaan lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
-      F_('rakan_kongsi', 'Rakan kongsi lain (nama, no. matrik, no. KP)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
+      F_('rakan_kongsi', 'Rakan kongsi lain (no. matrik)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
@@ -791,7 +795,7 @@ var KPIS = [
       F_('status_ip', 'Status harta intelek (IP)', 'select', { options: ['Tiada', 'Dalam proses permohonan', 'Didaftarkan (paten / hak cipta / reka bentuk)'] }),
       F_('nama_pasukan', 'Nama pasukan', 'text', { sec: 'Pasukan' }),
       F_('mentor', 'Nama mentor / penyelia', 'text', { required: true }),
-      F_('pelajar', 'Pelajar (nama dan no. matrik)', 'people', { required: true, full: true, kp: false }),
+      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true, kp: false }),
       F_('status_penyertaan', 'Status penyertaan', 'select', { required: true, sec: 'Pertandingan', options: ['Akan menyertai', 'Telah menyertai'] }),
       F_('nama_pertandingan', 'Nama pertandingan', 'text', { required: true }),
       F_('penganjur_pertandingan', 'Penganjur pertandingan', 'text'),
@@ -833,7 +837,7 @@ var KPIS = [
       F_('nama_pasukan', 'Nama pasukan', 'text'),
       F_('produk_projek', 'Nama produk / projek / syarikat', 'text'),
       F_('mentor', 'Nama mentor / fasilitator', 'text', { required: true, sec: 'Mentor & pelajar' }),
-      F_('pelajar', 'Pelajar (nama, no. matrik, no. KP)', 'people', { required: true, full: true }),
+      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true }),
       F_('sijil', 'Sijil (PDF, maksimum 5 MB)', 'file', { required: true, full: true, sec: 'Bukti' }),
       F_('pautan_media', 'Pautan berita / media', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
@@ -865,6 +869,37 @@ var KPIS = [
     ]
   }
 ];
+
+/**
+ * KPI yang menyimpan data pelajar: hanya no. matrik dimasukkan; medan lain (nama, no. KP, e-mel, telefon, fakulti)
+ * disalin daripada tab PELAJAR semasa simpan. map = {lajur PELAJAR: medan KPI}. Medan itu ditanda `derived` (tidak dipaparkan pada borang).
+ * Medan fakulti hanya diambil bagi KPI Admin sahaja (pada KPI fakulti, fakulti ialah unit pelapor PIC).
+ */
+var STUDENT_MAPS = {
+  KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
+  KAI5: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  KAI6: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  CKAI1: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
+  KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp' },
+  KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
+};
+KPIS.forEach(function (k) {
+  var map = STUDENT_MAPS[k.id];
+  if (!map) return;
+  k.student = { matrik: 'no_matrik', map: map };
+  k.fields.forEach(function (f) {
+    if (f.key === 'no_matrik') {
+      if (k.id !== 'KPT2') f.required = true;
+      f.hint = (f.hint ? f.hint + ' ' : '') + 'Masukkan no. matrik sahaja; maklumat lain diambil daripada data PELAJAR. Jika pelajar belum ada, tetingkap untuk melengkapkannya akan dipaparkan.';
+    }
+    for (var col in map) {
+      if (map.hasOwnProperty(col) && map[col] === f.key) { f.derived = true; f.derivedRequired = !!f.required; f.required = false; f.hint = undefined; }
+    }
+  });
+});
 
 KPIS.forEach(function (k) { k.level = k.id.replace(/\d+$/, ''); });
 

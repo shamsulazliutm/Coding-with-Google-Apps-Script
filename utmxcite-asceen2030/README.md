@@ -38,6 +38,17 @@ Sasaran tahunan 2026-2030 disemai daripada kamus semasa `setup()`. Tab baharu: `
 
 Setiap KPI yang boleh diisi mempunyai dua cara kemasukan data: **Masuk Data** (satu rekod, borang sedia ada) dan **Muat Naik Pukal** (tab ketiga). Admin dan PIC fakulti (bagi KPI yang diberi akses, hanya untuk fakulti sendiri) boleh muat turun **templat CSV** (tajuk lajur, baris panduan, baris contoh), mengisinya dalam Excel dan memuat naiknya. Setiap baris melalui pengesahan, pemeriksaan unik dan peraturan yang sama seperti borang tunggal; baris yang sah disimpan, baris yang gagal dilaporkan mengikut nombor baris dan boleh dimuat turun sebagai CSV untuk dibetulkan. Maksimum 500 baris dan 1 MB setiap fail. Format tarikh hari/bulan/tahun, pilihan huruf kecil dan Ya/Tidak diterima. Lampiran PDF tidak dimuat naik secara pukal (tambah melalui Edit rekod). Medan ramai orang ditulis `nama|no. matrik|no. KP` dan dipisahkan dengan `##`. Muat naik pukal hanya menambah rekod baharu; ia tidak mengubah rekod sedia ada. Setiap muat naik direkod dalam Log Audit (`MUAT_NAIK_PUKAL`).
 
+## Data asas pelajar (tab PELAJAR)
+
+Semua data pelajar diambil daripada satu tab asas, **`PELAJAR`**, dengan lajur `no_matrik`, `no_kp`, `nama_pelajar`, `emel`, `telefon`, `fakulti` (dua lajur audit `dikemas_kini_pada` dan `dikemas_kini_oleh` ditambah oleh `setup()`; data sedia ada dalam tab tidak diubah). Anda boleh menampal data pelajar terus ke dalam tab ini.
+
+- **Kemasukan data hanya memerlukan no. matrik.** Pada KAI 4, 5, 6, CKAI 1, 4, 5, 7, KPT 2 dan KPT 4, nama, no. KP, e-mel dan telefon (serta fakulti bagi KPI Admin: KAI 5, CKAI 4, CKAI 5) tidak lagi ada pada borang; ia disalin daripada PELAJAR semasa simpan (nilai dalam PELAJAR sentiasa digunakan). Pada senarai pelajar (CKAI 4 rakan kongsi, CKAI 8, CKAI 9) setiap baris hanya no. matrik.
+- **Jika pelajar tiada atau maklumat tidak lengkap** (nama, no. KP sah dan fakulti; ditambah e-mel dan telefon bagi CKAI 5), satu **tetingkap** dipaparkan untuk melengkapkannya (sebaik no. matrik dimasukkan, atau semasa simpan). Maklumat disimpan dalam PELAJAR dan boleh digunakan semula oleh semua KPI.
+- **Siapa boleh mengubah PELAJAR:** Admin boleh mengubah semua medan. PIC hanya boleh mendaftar pelajar baharu atau mengisi medan yang masih kosong / tidak sah; data sah sedia ada tidak ditimpa. Carian no. matrik tidak mendedahkan no. KP, e-mel atau telefon kepada PIC (hanya nama dan fakulti).
+- **Muat naik pukal:** templat KPI hanya ada lajur no. matrik bagi pelajar. Baris dengan pelajar yang belum ada dalam PELAJAR dilaporkan sebagai gagal (dengan senarai no. matrik) dan butang **Lengkapkan maklumat pelajar** membuka tetingkap yang sama.
+- Rekod lama kekal seperti sedia ada. Jika rekod lama diedit dan no. matrik belum ada dalam PELAJAR, tetingkap melengkapkan akan dipaparkan.
+- **PDPA:** no. KP, e-mel dan telefon disimpan dalam Sheet sebagai teks biasa; hadkan akses kepada Sheet. Tiada data ini muncul pada dashboard atau Infografik awam, dan Log Audit hanya merekod no. matrik.
+
 ## Peranan dan akses
 
 | Peranan | Dashboard | KAI 1, 4, 6 (fakulti) | KAI 2, 3, 5, DKAI 1 | Urus pengguna / sasaran / audit |

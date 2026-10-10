@@ -20,12 +20,16 @@ var APP = {
   ALLOWED_EMAIL_DOMAINS: [] // contoh: ['utm.my']; kosong = semua domain
 };
 
+/** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
+var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
+
 var SHEETS = {
   USERS: 'Pengguna',
   TARGETS: 'Sasaran',
   FACULTIES: 'Fakulti',
   RISKS: 'Risiko',
   AUDIT: 'Log_Audit',
+  STUDENTS: 'PELAJAR',
   SETUP: 'Persediaan'
 };
 
@@ -687,7 +691,7 @@ var KPIS = [
       F_('jenis_perniagaan', 'Jenis perniagaan', 'select', { required: true, options: JENIS_PERNIAGAAN }),
       F_('jenis_perniagaan_lain', 'Nama jenis perniagaan lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
-      F_('rakan_kongsi', 'Rakan kongsi lain (nama, no. matrik, no. KP)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
+      F_('rakan_kongsi', 'Rakan kongsi lain (no. matrik)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
@@ -792,7 +796,7 @@ var KPIS = [
       F_('status_ip', 'Status harta intelek (IP)', 'select', { options: ['Tiada', 'Dalam proses permohonan', 'Didaftarkan (paten / hak cipta / reka bentuk)'] }),
       F_('nama_pasukan', 'Nama pasukan', 'text', { sec: 'Pasukan' }),
       F_('mentor', 'Nama mentor / penyelia', 'text', { required: true }),
-      F_('pelajar', 'Pelajar (nama dan no. matrik)', 'people', { required: true, full: true, kp: false }),
+      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true, kp: false }),
       F_('status_penyertaan', 'Status penyertaan', 'select', { required: true, sec: 'Pertandingan', options: ['Akan menyertai', 'Telah menyertai'] }),
       F_('nama_pertandingan', 'Nama pertandingan', 'text', { required: true }),
       F_('penganjur_pertandingan', 'Penganjur pertandingan', 'text'),
@@ -834,7 +838,7 @@ var KPIS = [
       F_('nama_pasukan', 'Nama pasukan', 'text'),
       F_('produk_projek', 'Nama produk / projek / syarikat', 'text'),
       F_('mentor', 'Nama mentor / fasilitator', 'text', { required: true, sec: 'Mentor & pelajar' }),
-      F_('pelajar', 'Pelajar (nama, no. matrik, no. KP)', 'people', { required: true, full: true }),
+      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true }),
       F_('sijil', 'Sijil (PDF, maksimum 5 MB)', 'file', { required: true, full: true, sec: 'Bukti' }),
       F_('pautan_media', 'Pautan berita / media', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
@@ -866,6 +870,37 @@ var KPIS = [
     ]
   }
 ];
+
+/**
+ * KPI yang menyimpan data pelajar: hanya no. matrik dimasukkan; medan lain (nama, no. KP, e-mel, telefon, fakulti)
+ * disalin daripada tab PELAJAR semasa simpan. map = {lajur PELAJAR: medan KPI}. Medan itu ditanda `derived` (tidak dipaparkan pada borang).
+ * Medan fakulti hanya diambil bagi KPI Admin sahaja (pada KPI fakulti, fakulti ialah unit pelapor PIC).
+ */
+var STUDENT_MAPS = {
+  KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
+  KAI5: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  KAI6: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  CKAI1: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
+  KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp' },
+  KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
+};
+KPIS.forEach(function (k) {
+  var map = STUDENT_MAPS[k.id];
+  if (!map) return;
+  k.student = { matrik: 'no_matrik', map: map };
+  k.fields.forEach(function (f) {
+    if (f.key === 'no_matrik') {
+      if (k.id !== 'KPT2') f.required = true;
+      f.hint = (f.hint ? f.hint + ' ' : '') + 'Masukkan no. matrik sahaja; maklumat lain diambil daripada data PELAJAR. Jika pelajar belum ada, tetingkap untuk melengkapkannya akan dipaparkan.';
+    }
+    for (var col in map) {
+      if (map.hasOwnProperty(col) && map[col] === f.key) { f.derived = true; f.derivedRequired = !!f.required; f.required = false; f.hint = undefined; }
+    }
+  });
+});
 
 KPIS.forEach(function (k) { k.level = k.id.replace(/\d+$/, ''); });
 
@@ -1197,6 +1232,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.TARGETS, TARGET_COLS, []);
   ensureSheet_(ss, SHEETS.RISKS, RISK_COLS, []);
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
+  ensureSheet_(ss, SHEETS.STUDENTS, STUDENT_COLS, STUDENT_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   renameColumns_(ss);
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet) return;
@@ -1592,7 +1628,7 @@ function accessibleKpis_(user) {
 
 function kpiSchema_(kpi) {
   return {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, teras: kpi.teras || null, fungsi: kpi.fungsi || null, unit: kpi.unit, entry: kpi.entry,
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, teras: kpi.teras || null, student: kpi.student ? { matrik: kpi.student.matrik, nama: kpi.student.map.nama_pelajar } : null, fungsi: kpi.fungsi || null, unit: kpi.unit, entry: kpi.entry,
     listColumns: kpi.listColumns, statusField: kpi.statusField, filter2: kpi.filter2 || null, facultyWhitelist: kpi.facultyWhitelist || null,
     fields: kpi.fields
   };
@@ -1638,6 +1674,168 @@ function listRecords_(token, kpiId, filters) {
   }
   rows.sort(function (a, b) { return String(b.dikemas_kini_pada).localeCompare(String(a.dikemas_kini_pada)); });
   return { rows: rows.map(stripRow_), canEdit: true, canDelete: user.peranan === ROLES.ADMIN };
+}
+
+// ---------------------------------------------------------------------------
+// Data asas pelajar (tab PELAJAR)
+// ---------------------------------------------------------------------------
+var STUDENT_MEMO_ = null;
+
+function normMatrik_(v) { return String(v === null || v === undefined ? '' : v).replace(/^'/, '').replace(/\s+/g, '').toUpperCase(); }
+function normKp_(v) {
+  var kp = String(v === null || v === undefined ? '' : v).replace(/^'/, '').replace(/\s+/g, '').toUpperCase();
+  if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
+  return kp;
+}
+function validKp_(kp) { return /^[A-Z0-9-]{6,20}$/.test(kp); }
+function validPhone_(t) { return /^[0-9+\-\s()]{7,20}$/.test(String(t)); }
+
+/** Baca tab PELAJAR sekali bagi setiap panggilan. Nama lajur tidak peka huruf besar/kecil. */
+function studentIndex_() {
+  if (STUDENT_MEMO_) return STUDENT_MEMO_;
+  if (!getSS_().getSheetByName(SHEETS.STUDENTS)) throw userError_('Tab "' + SHEETS.STUDENTS + '" tiada. Pentadbir perlu menjalankan fungsi setup().');
+  var t = readTable_(SHEETS.STUDENTS), idx = {};
+  t.rows.forEach(function (r) {
+    var o = { _row: r._row };
+    for (var k in r) { if (k !== '_row' && r.hasOwnProperty(k)) o[String(k).trim().toLowerCase()] = String(r[k] === null || r[k] === undefined ? '' : r[k]).replace(/^'/, '').trim(); }
+    var key = normMatrik_(o.no_matrik);
+    if (key && !idx[key]) idx[key] = o;
+  });
+  STUDENT_MEMO_ = idx;
+  return idx;
+}
+
+/** Medan pelajar yang masih kosong / tidak sah (need = tambahan wajib bagi KPI, contoh emel dan telefon). */
+function studentGaps_(s, need) {
+  var gaps = [], codes = listFaculties_().map(function (f) { return f.kod; });
+  if (!s) return ['nama_pelajar', 'no_kp', 'fakulti'];
+  if (!s.nama_pelajar) gaps.push('nama_pelajar');
+  if (!validKp_(normKp_(s.no_kp))) gaps.push('no_kp');
+  if (codes.indexOf(s.fakulti) < 0) gaps.push('fakulti');
+  (need || []).forEach(function (k) {
+    if (k === 'emel' && !isEmail_(String(s.emel || '').toLowerCase())) gaps.push('emel');
+    if (k === 'telefon' && !validPhone_(s.telefon || '')) gaps.push('telefon');
+  });
+  return gaps;
+}
+function studentNeeds_(kpi) {
+  var need = [];
+  if (!kpi.student) return need;
+  kpi.fields.forEach(function (f) {
+    if (f.derivedRequired && (f.key === 'emel' || f.key === 'telefon')) need.push(f.key);
+  });
+  return need;
+}
+
+/** Ringkasan awam bagi klien: tiada no. KP, e-mel atau telefon kepada pengguna bukan Admin. */
+function studentView_(user, matrik, s, need) {
+  var gaps = studentGaps_(s, need);
+  var out = { no_matrik: matrik, found: !!s, complete: !!s && !gaps.length, gaps: gaps, nama_pelajar: s ? s.nama_pelajar : '', fakulti: s ? s.fakulti : '' };
+  if (s && user.peranan === ROLES.ADMIN) { out.no_kp = s.no_kp; out.emel = s.emel; out.telefon = s.telefon; }
+  return out;
+}
+
+/** Semak status beberapa no. matrik (untuk borang). */
+function lookupStudents_(token, kpiId, list) {
+  var user = requireUser_(token);
+  var kpi = kpiId ? getKpi_(String(kpiId)) : null;
+  if (kpi && !canAccessKpi_(user, kpi)) throw userError_('Akses ditolak bagi KPI ini.');
+  if (!Array.isArray(list) || list.length > 50) throw userError_('Senarai no. matrik tidak sah.');
+  var idx = studentIndex_(), need = kpi ? studentNeeds_(kpi) : [];
+  return list.map(function (m) { var key = normMatrik_(m); return studentView_(user, key, idx[key] || null, need); });
+}
+
+/**
+ * Sebelum simpan: gantikan nama, no. KP, e-mel, telefon (dan fakulti bagi KPI Admin) dengan data tab PELAJAR berdasarkan no. matrik.
+ * Jika pelajar tiada atau maklumat tidak lengkap, lontar ralat dengan `missing` supaya klien membuka tetingkap melengkapkan data.
+ */
+function applyStudents_(user, kpi, input) {
+  var need = studentNeeds_(kpi), refs = [], seen = {};
+  function ref(m) { var k = normMatrik_(m); if (k && !seen[k]) { seen[k] = 1; refs.push(k); } return k; }
+  var single = kpi.student ? ref(input[kpi.student.matrik]) : '';
+  var peopleFields = kpi.fields.filter(function (f) { return f.type === 'people'; });
+  var lists = {};
+  peopleFields.forEach(function (f) {
+    var v = input[f.key], arr = Array.isArray(v) ? v : parseJson_(String(v || ''), []);
+    lists[f.key] = Array.isArray(arr) ? arr : [];
+    lists[f.key].forEach(function (p) { ref(p && p.matrik); });
+  });
+  if (!refs.length) return;
+  var idx = studentIndex_(), missing = [];
+  refs.forEach(function (m) {
+    var s = idx[m] || null;
+    if (!s || studentGaps_(s, m === single ? need : []).length) missing.push(studentView_(user, m, s, m === single ? need : []));
+  });
+  if (missing.length) {
+    throw userError_('Maklumat pelajar belum lengkap dalam sheet PELAJAR: ' + missing.map(function (x) { return x.no_matrik; }).join(', ') + '.', { missing: missing });
+  }
+  if (single) {
+    var s1 = idx[single];
+    input[kpi.student.matrik] = s1.no_matrik;
+    for (var col in kpi.student.map) {
+      if (!kpi.student.map.hasOwnProperty(col)) continue;
+      if (col === 'fakulti' && kpi.entry === 'faculty') continue;
+      input[kpi.student.map[col]] = col === 'no_kp' ? normKp_(s1.no_kp) : s1[col];
+    }
+  }
+  peopleFields.forEach(function (f) {
+    input[f.key] = lists[f.key].filter(function (p) { return p && normMatrik_(p.matrik); }).map(function (p) {
+      var s2 = idx[normMatrik_(p.matrik)];
+      return { nama: s2.nama_pelajar, matrik: s2.no_matrik, nokp: f.kp === false ? '' : normKp_(s2.no_kp) };
+    });
+  });
+}
+
+/**
+ * Simpan / lengkapkan maklumat pelajar dalam tab PELAJAR. Admin boleh mengubah semua medan; pengguna lain hanya
+ * mengisi medan yang kosong atau tidak sah (data sah sedia ada tidak diubah).
+ */
+function saveStudents_(token, list) {
+  var user = requireUser_(token);
+  if (!Array.isArray(list) || !list.length || list.length > 50) throw userError_('Senarai pelajar tidak sah.');
+  var faculties = listFaculties_().map(function (f) { return f.kod; });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    STUDENT_MEMO_ = null;
+    var idx = studentIndex_(), sh = getSheet_(SHEETS.STUDENTS), isAdmin = user.peranan === ROLES.ADMIN, results = [];
+    list.forEach(function (raw) {
+      var errs = {}, matrik = normMatrik_(raw && raw.no_matrik), cur = idx[matrik] || null;
+      if (!matrik || matrik.length > 30) errs.no_matrik = 'No. matrik tidak sah.';
+      var nama = sanitizeText_(String(raw && raw.nama_pelajar || '').trim().slice(0, 120));
+      var kp = normKp_(raw && raw.no_kp);
+      var emel = String(raw && raw.emel || '').trim().toLowerCase();
+      var tel = String(raw && raw.telefon || '').trim();
+      var fak = String(raw && raw.fakulti || '').trim();
+      var keepOk = function (curVal, validNow) { return !isAdmin && cur && curVal && validNow; };
+      var out = {
+        nama_pelajar: keepOk(cur && cur.nama_pelajar, true) ? cur.nama_pelajar : nama,
+        no_kp: keepOk(cur && cur.no_kp, cur && validKp_(normKp_(cur.no_kp))) ? normKp_(cur.no_kp) : kp,
+        emel: keepOk(cur && cur.emel, cur && isEmail_(String(cur.emel).toLowerCase())) ? cur.emel : emel,
+        telefon: keepOk(cur && cur.telefon, cur && validPhone_(cur.telefon)) ? cur.telefon : tel,
+        fakulti: keepOk(cur && cur.fakulti, cur && faculties.indexOf(cur.fakulti) >= 0) ? cur.fakulti : fak
+      };
+      if (!out.nama_pelajar) errs.nama_pelajar = 'Nama wajib diisi.';
+      if (!validKp_(out.no_kp)) errs.no_kp = 'No. KP / pasport tidak sah.';
+      if (faculties.indexOf(out.fakulti) < 0) errs.fakulti = 'Pilih fakulti.';
+      if (out.emel && !isEmail_(out.emel)) errs.emel = 'E-mel tidak sah.';
+      if (out.telefon && !validPhone_(out.telefon)) errs.telefon = 'Nombor telefon tidak sah.';
+      if (Object.keys(errs).length) { results.push({ no_matrik: matrik, ok: false, fields: errs }); return; }
+      var obj = { no_matrik: cur ? cur.no_matrik : matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti, dikemas_kini_pada: nowIso_(), dikemas_kini_oleh: user.emel };
+      var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+      // padankan nama lajur tanpa mengira huruf besar/kecil
+      var o2 = {};
+      headers.forEach(function (h) { var lk = h.trim().toLowerCase(); if (obj.hasOwnProperty(lk)) o2[h] = obj[lk]; });
+      writeRow_(sh, cur ? cur._row : null, o2);
+      audit_(user, cur ? 'PELAJAR_KEMAS_KINI' : 'PELAJAR_TAMBAH', '', '', 'no_matrik=' + obj.no_matrik);
+      idx[matrik] = { _row: cur ? cur._row : -1, no_matrik: obj.no_matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti };
+      results.push({ no_matrik: matrik, ok: true });
+    });
+    STUDENT_MEMO_ = null;
+    return { results: results };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function validateRecord_(kpi, rec, faculties, user, existing, rows) {
@@ -1788,6 +1986,7 @@ function saveRecord_(token, kpiId, rec) {
       if (isPic && kpi.entry === 'faculty' && existing.fakulti !== user.fakulti) throw userError_('Akses ditolak: rekod ini milik fakulti lain.');
     }
 
+    applyStudents_(user, kpi, input);
     var v = validateRecord_(kpi, input, listFaculties_(), user, existing, table.rows);
     if (Object.keys(v.errors).length) throw userError_('Sila betulkan medan yang bertanda.', { fields: v.errors });
 
@@ -1864,7 +2063,7 @@ function bulkSave_(token, kpiId, rows) {
     } catch (e) {
       if (!(e && e.user)) throw e;
       if (e.auth) throw e;
-      out.push({ n: n, ok: false, error: e.message, fields: e.fields || null });
+      out.push({ n: n, ok: false, error: e.message, fields: e.fields || null, missing: e.missing ? e.missing.map(function (m) { return m.no_matrik; }) : null });
     }
   });
   audit_(user, 'MUAT_NAIK_PUKAL', kpi.id, '', okCount + ' berjaya, ' + (rows.length - okCount) + ' gagal');
@@ -2737,7 +2936,7 @@ function getSetupInfo_(token) {
   check('Google Sheet laporan dijumpai', !!ss, ss ? '' : 'Jalankan setup() daripada editor Apps Script atau tekan "Jalankan persediaan".');
   if (ss) {
     var missingTabs = [], missingCols = [];
-    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS]]
+    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS]]
       .concat(KPIS.filter(function (k) { return k.sheet; }).map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
     specs.forEach(function (sp) {
       var sh = ss.getSheetByName(sp[0]);
@@ -2808,10 +3007,11 @@ function include(name) {
 
 /** Bungkus panggilan: tangkap ralat, pulangkan mesej mesra pengguna, jangan dedahkan butiran dalaman. */
 function wrap_(fn) {
+  STUDENT_MEMO_ = null;   // cache data pelajar hanya sah dalam satu panggilan
   try {
     return { ok: true, data: fn() };
   } catch (e) {
-    if (e && e.user) return { ok: false, error: e.message, fields: e.fields || null, auth: !!e.auth };
+    if (e && e.user) return { ok: false, error: e.message, fields: e.fields || null, missing: e.missing || null, auth: !!e.auth };
     console.error(e && e.stack ? e.stack : e);
     return { ok: false, error: 'Ralat dalaman. Sila cuba lagi atau hubungi pentadbir.' };
   }
@@ -2830,6 +3030,8 @@ function api_logout(token) { return wrap_(function () { return logout_(str_(toke
 function api_session(token) { return wrap_(function () { return sessionInfo_(str_(token, 200)); }); }
 function api_list(token, kpiId, filters) { return wrap_(function () { return listRecords_(str_(token, 200), str_(kpiId, 20), filters); }); }
 function api_save(token, kpiId, rec) { return wrap_(function () { return saveRecord_(str_(token, 200), str_(kpiId, 20), rec); }); }
+function api_lookupStudents(token, kpiId, list) { return wrap_(function () { return lookupStudents_(str_(token, 200), str_(kpiId, 20), list); }); }
+function api_saveStudents(token, list) { return wrap_(function () { return saveStudents_(str_(token, 200), list); }); }
 function api_bulkSave(token, kpiId, rows) { return wrap_(function () { return bulkSave_(str_(token, 200), str_(kpiId, 20), rows); }); }
 function api_uploadFile(token, kpiId, fieldKey, payload) { return wrap_(function () { return uploadFile_(str_(token, 200), str_(kpiId, 20), str_(fieldKey, 60), payload); }); }
 function api_downloadFile(token, kpiId, recordId, fieldKey) { return wrap_(function () { return downloadFile_(str_(token, 200), str_(kpiId, 20), str_(recordId, 40), str_(fieldKey, 60)); }); }

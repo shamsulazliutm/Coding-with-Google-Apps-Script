@@ -213,6 +213,9 @@ label .req{color:var(--bad)}
 .filebox input[type=file]{border:1px dashed #cdbfc3;background:#fff;padding:8px;width:100%;border-radius:6px}
 .fileinfo{margin-bottom:6px;word-break:break-all}
 .prow.nokp-off{grid-template-columns:24px 2fr 1.2fr auto}
+.prow.mo{grid-template-columns:24px 1.2fr 2fr auto}.pname{font-size:12.5px;color:var(--ok);align-self:center}.stu{font-size:12.5px;margin-top:4px;min-height:1px}.stu.ok{color:var(--ok)}.stu.warn{color:var(--warn)}
+.mdl{position:fixed;inset:0;background:rgba(43,26,31,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}.mdlb{background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:20px}.mdlb h3{margin-bottom:6px}
+.stuset{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}.stuset legend{font-weight:700;padding:0 6px;color:var(--m)}
 @media(max-width:860px){.prow{grid-template-columns:24px 1fr auto}.prow input[data-pf=matrik],.prow input[data-pf=nokp]{grid-column:2}}
 </style>
 
@@ -437,12 +440,16 @@ var APP = {
   ALLOWED_EMAIL_DOMAINS: [] // contoh: ['utm.my']; kosong = semua domain
 };
 
+/** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
+var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
+
 var SHEETS = {
   USERS: 'Pengguna',
   TARGETS: 'Sasaran',
   FACULTIES: 'Fakulti',
   RISKS: 'Risiko',
   AUDIT: 'Log_Audit',
+  STUDENTS: 'PELAJAR',
   SETUP: 'Persediaan'
 };
 
@@ -1104,7 +1111,7 @@ var KPIS = [
       F_('jenis_perniagaan', 'Jenis perniagaan', 'select', { required: true, options: JENIS_PERNIAGAAN }),
       F_('jenis_perniagaan_lain', 'Nama jenis perniagaan lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
-      F_('rakan_kongsi', 'Rakan kongsi lain (nama, no. matrik, no. KP)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
+      F_('rakan_kongsi', 'Rakan kongsi lain (no. matrik)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
@@ -1209,7 +1216,7 @@ var KPIS = [
       F_('status_ip', 'Status harta intelek (IP)', 'select', { options: ['Tiada', 'Dalam proses permohonan', 'Didaftarkan (paten / hak cipta / reka bentuk)'] }),
       F_('nama_pasukan', 'Nama pasukan', 'text', { sec: 'Pasukan' }),
       F_('mentor', 'Nama mentor / penyelia', 'text', { required: true }),
-      F_('pelajar', 'Pelajar (nama dan no. matrik)', 'people', { required: true, full: true, kp: false }),
+      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true, kp: false }),
       F_('status_penyertaan', 'Status penyertaan', 'select', { required: true, sec: 'Pertandingan', options: ['Akan menyertai', 'Telah menyertai'] }),
       F_('nama_pertandingan', 'Nama pertandingan', 'text', { required: true }),
       F_('penganjur_pertandingan', 'Penganjur pertandingan', 'text'),
@@ -1251,7 +1258,7 @@ var KPIS = [
       F_('nama_pasukan', 'Nama pasukan', 'text'),
       F_('produk_projek', 'Nama produk / projek / syarikat', 'text'),
       F_('mentor', 'Nama mentor / fasilitator', 'text', { required: true, sec: 'Mentor & pelajar' }),
-      F_('pelajar', 'Pelajar (nama, no. matrik, no. KP)', 'people', { required: true, full: true }),
+      F_('pelajar', 'Pelajar (no. matrik)', 'people', { required: true, full: true }),
       F_('sijil', 'Sijil (PDF, maksimum 5 MB)', 'file', { required: true, full: true, sec: 'Bukti' }),
       F_('pautan_media', 'Pautan berita / media', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
@@ -1283,6 +1290,37 @@ var KPIS = [
     ]
   }
 ];
+
+/**
+ * KPI yang menyimpan data pelajar: hanya no. matrik dimasukkan; medan lain (nama, no. KP, e-mel, telefon, fakulti)
+ * disalin daripada tab PELAJAR semasa simpan. map = {lajur PELAJAR: medan KPI}. Medan itu ditanda `derived` (tidak dipaparkan pada borang).
+ * Medan fakulti hanya diambil bagi KPI Admin sahaja (pada KPI fakulti, fakulti ialah unit pelapor PIC).
+ */
+var STUDENT_MAPS = {
+  KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
+  KAI5: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  KAI6: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  CKAI1: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
+  KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp' },
+  KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
+};
+KPIS.forEach(function (k) {
+  var map = STUDENT_MAPS[k.id];
+  if (!map) return;
+  k.student = { matrik: 'no_matrik', map: map };
+  k.fields.forEach(function (f) {
+    if (f.key === 'no_matrik') {
+      if (k.id !== 'KPT2') f.required = true;
+      f.hint = (f.hint ? f.hint + ' ' : '') + 'Masukkan no. matrik sahaja; maklumat lain diambil daripada data PELAJAR. Jika pelajar belum ada, tetingkap untuk melengkapkannya akan dipaparkan.';
+    }
+    for (var col in map) {
+      if (map.hasOwnProperty(col) && map[col] === f.key) { f.derived = true; f.derivedRequired = !!f.required; f.required = false; f.hint = undefined; }
+    }
+  });
+});
 
 KPIS.forEach(function (k) { k.level = k.id.replace(/\d+$/, ''); });
 
@@ -1447,7 +1485,10 @@ function normalizeCell_(v, type) {
 // ---------------------------------------------------------------------------
 function getSS_() {
   var id = getProp_('SHEET_ID');
-  if (id) return SpreadsheetApp.openById(id);
+  if (id) {
+    try { return SpreadsheetApp.openById(id); }
+    catch (e) { console.error('Gagal buka Sheet ' + id + ': ' + (e && e.message)); throw userError_('Google Sheet tidak dapat dibuka. Pentadbir: semak SHEET_ID dalam Script Properties dan kebenaran akaun penerbit.'); }
+  }
   var active = null;
   try { active = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) { active = null; }
   if (active) return active;
@@ -1615,6 +1656,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.TARGETS, TARGET_COLS, []);
   ensureSheet_(ss, SHEETS.RISKS, RISK_COLS, []);
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
+  ensureSheet_(ss, SHEETS.STUDENTS, STUDENT_COLS, STUDENT_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   renameColumns_(ss);
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet) return;
@@ -1924,14 +1966,19 @@ function requestOtp_(emailIn) {
   if (user && user.aktif && emailDomainAllowed_(email)) {
     var code = randomDigits_(6);
     cache.put('otp:' + sha256Hex_(email), JSON.stringify({ h: otpHash_(email, code), a: 0 }), APP.OTP_TTL);
-    MailApp.sendEmail({
-      to: email,
-      subject: '[' + APP.NAME + '] Kod OTP log masuk anda',
-      name: APP.NAME,
-      body: 'Salam ' + (user.nama || '') + ',\n\nKod OTP anda ialah: ' + code + '\n\n' +
-        'Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. ' +
-        'Jika anda tidak membuat permintaan ini, abaikan e-mel ini.\n\n' + APP.NAME
-    });
+    try {
+      MailApp.sendEmail({
+        to: email,
+        subject: '[' + APP.NAME + '] Kod OTP log masuk anda',
+        name: APP.NAME,
+        body: 'Salam ' + (user.nama || '') + ',\n\nKod OTP anda ialah: ' + code + '\n\n' +
+          'Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. ' +
+          'Jika anda tidak membuat permintaan ini, abaikan e-mel ini.\n\n' + APP.NAME
+      });
+    } catch (e) {
+      console.error('Gagal hantar e-mel OTP: ' + (e && e.message));
+      throw userError_('E-mel OTP tidak dapat dihantar. Pentadbir: jalankan setup() dan luluskan kebenaran hantar e-mel (script.send_mail), atau semak kuota e-mel harian.');
+    }
     audit_(user, 'OTP_DIMINTA', '', '', '');
   }
   // Mesej sama tanpa mengira sama ada e-mel berdaftar (elak penghitungan akaun).
@@ -2009,7 +2056,7 @@ function accessibleKpis_(user) {
 
 function kpiSchema_(kpi) {
   return {
-    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, teras: kpi.teras || null, fungsi: kpi.fungsi || null, unit: kpi.unit, entry: kpi.entry,
+    id: kpi.id, title: kpi.title, short: kpi.short, group: kpi.group, level: kpi.level, teras: kpi.teras || null, student: kpi.student ? { matrik: kpi.student.matrik, nama: kpi.student.map.nama_pelajar } : null, fungsi: kpi.fungsi || null, unit: kpi.unit, entry: kpi.entry,
     listColumns: kpi.listColumns, statusField: kpi.statusField, filter2: kpi.filter2 || null, facultyWhitelist: kpi.facultyWhitelist || null,
     fields: kpi.fields
   };
@@ -2055,6 +2102,168 @@ function listRecords_(token, kpiId, filters) {
   }
   rows.sort(function (a, b) { return String(b.dikemas_kini_pada).localeCompare(String(a.dikemas_kini_pada)); });
   return { rows: rows.map(stripRow_), canEdit: true, canDelete: user.peranan === ROLES.ADMIN };
+}
+
+// ---------------------------------------------------------------------------
+// Data asas pelajar (tab PELAJAR)
+// ---------------------------------------------------------------------------
+var STUDENT_MEMO_ = null;
+
+function normMatrik_(v) { return String(v === null || v === undefined ? '' : v).replace(/^'/, '').replace(/\s+/g, '').toUpperCase(); }
+function normKp_(v) {
+  var kp = String(v === null || v === undefined ? '' : v).replace(/^'/, '').replace(/\s+/g, '').toUpperCase();
+  if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
+  return kp;
+}
+function validKp_(kp) { return /^[A-Z0-9-]{6,20}$/.test(kp); }
+function validPhone_(t) { return /^[0-9+\-\s()]{7,20}$/.test(String(t)); }
+
+/** Baca tab PELAJAR sekali bagi setiap panggilan. Nama lajur tidak peka huruf besar/kecil. */
+function studentIndex_() {
+  if (STUDENT_MEMO_) return STUDENT_MEMO_;
+  if (!getSS_().getSheetByName(SHEETS.STUDENTS)) throw userError_('Tab "' + SHEETS.STUDENTS + '" tiada. Pentadbir perlu menjalankan fungsi setup().');
+  var t = readTable_(SHEETS.STUDENTS), idx = {};
+  t.rows.forEach(function (r) {
+    var o = { _row: r._row };
+    for (var k in r) { if (k !== '_row' && r.hasOwnProperty(k)) o[String(k).trim().toLowerCase()] = String(r[k] === null || r[k] === undefined ? '' : r[k]).replace(/^'/, '').trim(); }
+    var key = normMatrik_(o.no_matrik);
+    if (key && !idx[key]) idx[key] = o;
+  });
+  STUDENT_MEMO_ = idx;
+  return idx;
+}
+
+/** Medan pelajar yang masih kosong / tidak sah (need = tambahan wajib bagi KPI, contoh emel dan telefon). */
+function studentGaps_(s, need) {
+  var gaps = [], codes = listFaculties_().map(function (f) { return f.kod; });
+  if (!s) return ['nama_pelajar', 'no_kp', 'fakulti'];
+  if (!s.nama_pelajar) gaps.push('nama_pelajar');
+  if (!validKp_(normKp_(s.no_kp))) gaps.push('no_kp');
+  if (codes.indexOf(s.fakulti) < 0) gaps.push('fakulti');
+  (need || []).forEach(function (k) {
+    if (k === 'emel' && !isEmail_(String(s.emel || '').toLowerCase())) gaps.push('emel');
+    if (k === 'telefon' && !validPhone_(s.telefon || '')) gaps.push('telefon');
+  });
+  return gaps;
+}
+function studentNeeds_(kpi) {
+  var need = [];
+  if (!kpi.student) return need;
+  kpi.fields.forEach(function (f) {
+    if (f.derivedRequired && (f.key === 'emel' || f.key === 'telefon')) need.push(f.key);
+  });
+  return need;
+}
+
+/** Ringkasan awam bagi klien: tiada no. KP, e-mel atau telefon kepada pengguna bukan Admin. */
+function studentView_(user, matrik, s, need) {
+  var gaps = studentGaps_(s, need);
+  var out = { no_matrik: matrik, found: !!s, complete: !!s && !gaps.length, gaps: gaps, nama_pelajar: s ? s.nama_pelajar : '', fakulti: s ? s.fakulti : '' };
+  if (s && user.peranan === ROLES.ADMIN) { out.no_kp = s.no_kp; out.emel = s.emel; out.telefon = s.telefon; }
+  return out;
+}
+
+/** Semak status beberapa no. matrik (untuk borang). */
+function lookupStudents_(token, kpiId, list) {
+  var user = requireUser_(token);
+  var kpi = kpiId ? getKpi_(String(kpiId)) : null;
+  if (kpi && !canAccessKpi_(user, kpi)) throw userError_('Akses ditolak bagi KPI ini.');
+  if (!Array.isArray(list) || list.length > 50) throw userError_('Senarai no. matrik tidak sah.');
+  var idx = studentIndex_(), need = kpi ? studentNeeds_(kpi) : [];
+  return list.map(function (m) { var key = normMatrik_(m); return studentView_(user, key, idx[key] || null, need); });
+}
+
+/**
+ * Sebelum simpan: gantikan nama, no. KP, e-mel, telefon (dan fakulti bagi KPI Admin) dengan data tab PELAJAR berdasarkan no. matrik.
+ * Jika pelajar tiada atau maklumat tidak lengkap, lontar ralat dengan `missing` supaya klien membuka tetingkap melengkapkan data.
+ */
+function applyStudents_(user, kpi, input) {
+  var need = studentNeeds_(kpi), refs = [], seen = {};
+  function ref(m) { var k = normMatrik_(m); if (k && !seen[k]) { seen[k] = 1; refs.push(k); } return k; }
+  var single = kpi.student ? ref(input[kpi.student.matrik]) : '';
+  var peopleFields = kpi.fields.filter(function (f) { return f.type === 'people'; });
+  var lists = {};
+  peopleFields.forEach(function (f) {
+    var v = input[f.key], arr = Array.isArray(v) ? v : parseJson_(String(v || ''), []);
+    lists[f.key] = Array.isArray(arr) ? arr : [];
+    lists[f.key].forEach(function (p) { ref(p && p.matrik); });
+  });
+  if (!refs.length) return;
+  var idx = studentIndex_(), missing = [];
+  refs.forEach(function (m) {
+    var s = idx[m] || null;
+    if (!s || studentGaps_(s, m === single ? need : []).length) missing.push(studentView_(user, m, s, m === single ? need : []));
+  });
+  if (missing.length) {
+    throw userError_('Maklumat pelajar belum lengkap dalam sheet PELAJAR: ' + missing.map(function (x) { return x.no_matrik; }).join(', ') + '.', { missing: missing });
+  }
+  if (single) {
+    var s1 = idx[single];
+    input[kpi.student.matrik] = s1.no_matrik;
+    for (var col in kpi.student.map) {
+      if (!kpi.student.map.hasOwnProperty(col)) continue;
+      if (col === 'fakulti' && kpi.entry === 'faculty') continue;
+      input[kpi.student.map[col]] = col === 'no_kp' ? normKp_(s1.no_kp) : s1[col];
+    }
+  }
+  peopleFields.forEach(function (f) {
+    input[f.key] = lists[f.key].filter(function (p) { return p && normMatrik_(p.matrik); }).map(function (p) {
+      var s2 = idx[normMatrik_(p.matrik)];
+      return { nama: s2.nama_pelajar, matrik: s2.no_matrik, nokp: f.kp === false ? '' : normKp_(s2.no_kp) };
+    });
+  });
+}
+
+/**
+ * Simpan / lengkapkan maklumat pelajar dalam tab PELAJAR. Admin boleh mengubah semua medan; pengguna lain hanya
+ * mengisi medan yang kosong atau tidak sah (data sah sedia ada tidak diubah).
+ */
+function saveStudents_(token, list) {
+  var user = requireUser_(token);
+  if (!Array.isArray(list) || !list.length || list.length > 50) throw userError_('Senarai pelajar tidak sah.');
+  var faculties = listFaculties_().map(function (f) { return f.kod; });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    STUDENT_MEMO_ = null;
+    var idx = studentIndex_(), sh = getSheet_(SHEETS.STUDENTS), isAdmin = user.peranan === ROLES.ADMIN, results = [];
+    list.forEach(function (raw) {
+      var errs = {}, matrik = normMatrik_(raw && raw.no_matrik), cur = idx[matrik] || null;
+      if (!matrik || matrik.length > 30) errs.no_matrik = 'No. matrik tidak sah.';
+      var nama = sanitizeText_(String(raw && raw.nama_pelajar || '').trim().slice(0, 120));
+      var kp = normKp_(raw && raw.no_kp);
+      var emel = String(raw && raw.emel || '').trim().toLowerCase();
+      var tel = String(raw && raw.telefon || '').trim();
+      var fak = String(raw && raw.fakulti || '').trim();
+      var keepOk = function (curVal, validNow) { return !isAdmin && cur && curVal && validNow; };
+      var out = {
+        nama_pelajar: keepOk(cur && cur.nama_pelajar, true) ? cur.nama_pelajar : nama,
+        no_kp: keepOk(cur && cur.no_kp, cur && validKp_(normKp_(cur.no_kp))) ? normKp_(cur.no_kp) : kp,
+        emel: keepOk(cur && cur.emel, cur && isEmail_(String(cur.emel).toLowerCase())) ? cur.emel : emel,
+        telefon: keepOk(cur && cur.telefon, cur && validPhone_(cur.telefon)) ? cur.telefon : tel,
+        fakulti: keepOk(cur && cur.fakulti, cur && faculties.indexOf(cur.fakulti) >= 0) ? cur.fakulti : fak
+      };
+      if (!out.nama_pelajar) errs.nama_pelajar = 'Nama wajib diisi.';
+      if (!validKp_(out.no_kp)) errs.no_kp = 'No. KP / pasport tidak sah.';
+      if (faculties.indexOf(out.fakulti) < 0) errs.fakulti = 'Pilih fakulti.';
+      if (out.emel && !isEmail_(out.emel)) errs.emel = 'E-mel tidak sah.';
+      if (out.telefon && !validPhone_(out.telefon)) errs.telefon = 'Nombor telefon tidak sah.';
+      if (Object.keys(errs).length) { results.push({ no_matrik: matrik, ok: false, fields: errs }); return; }
+      var obj = { no_matrik: cur ? cur.no_matrik : matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti, dikemas_kini_pada: nowIso_(), dikemas_kini_oleh: user.emel };
+      var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+      // padankan nama lajur tanpa mengira huruf besar/kecil
+      var o2 = {};
+      headers.forEach(function (h) { var lk = h.trim().toLowerCase(); if (obj.hasOwnProperty(lk)) o2[h] = obj[lk]; });
+      writeRow_(sh, cur ? cur._row : null, o2);
+      audit_(user, cur ? 'PELAJAR_KEMAS_KINI' : 'PELAJAR_TAMBAH', '', '', 'no_matrik=' + obj.no_matrik);
+      idx[matrik] = { _row: cur ? cur._row : -1, no_matrik: obj.no_matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti };
+      results.push({ no_matrik: matrik, ok: true });
+    });
+    STUDENT_MEMO_ = null;
+    return { results: results };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function validateRecord_(kpi, rec, faculties, user, existing, rows) {
@@ -2205,6 +2414,7 @@ function saveRecord_(token, kpiId, rec) {
       if (isPic && kpi.entry === 'faculty' && existing.fakulti !== user.fakulti) throw userError_('Akses ditolak: rekod ini milik fakulti lain.');
     }
 
+    applyStudents_(user, kpi, input);
     var v = validateRecord_(kpi, input, listFaculties_(), user, existing, table.rows);
     if (Object.keys(v.errors).length) throw userError_('Sila betulkan medan yang bertanda.', { fields: v.errors });
 
@@ -2281,7 +2491,7 @@ function bulkSave_(token, kpiId, rows) {
     } catch (e) {
       if (!(e && e.user)) throw e;
       if (e.auth) throw e;
-      out.push({ n: n, ok: false, error: e.message, fields: e.fields || null });
+      out.push({ n: n, ok: false, error: e.message, fields: e.fields || null, missing: e.missing ? e.missing.map(function (m) { return m.no_matrik; }) : null });
     }
   });
   audit_(user, 'MUAT_NAIK_PUKAL', kpi.id, '', okCount + ' berjaya, ' + (rows.length - okCount) + ' gagal');
@@ -3160,7 +3370,7 @@ function getSetupInfo_(token) {
   check('Google Sheet laporan dijumpai', !!ss, ss ? '' : 'Jalankan setup() daripada editor Apps Script atau tekan "Jalankan persediaan".');
   if (ss) {
     var missingTabs = [], missingCols = [];
-    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS]]
+    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS]]
       .concat(KPIS.filter(function (k) { return k.sheet; }).map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
     specs.forEach(function (sp) {
       var sh = ss.getSheetByName(sp[0]);
@@ -3233,10 +3443,11 @@ function include(name) {
 
 /** Bungkus panggilan: tangkap ralat, pulangkan mesej mesra pengguna, jangan dedahkan butiran dalaman. */
 function wrap_(fn) {
+  STUDENT_MEMO_ = null;   // cache data pelajar hanya sah dalam satu panggilan
   try {
     return { ok: true, data: fn() };
   } catch (e) {
-    if (e && e.user) return { ok: false, error: e.message, fields: e.fields || null, auth: !!e.auth };
+    if (e && e.user) return { ok: false, error: e.message, fields: e.fields || null, missing: e.missing || null, auth: !!e.auth };
     console.error(e && e.stack ? e.stack : e);
     return { ok: false, error: 'Ralat dalaman. Sila cuba lagi atau hubungi pentadbir.' };
   }
@@ -3255,6 +3466,8 @@ function api_logout(token) { return wrap_(function () { return logout_(str_(toke
 function api_session(token) { return wrap_(function () { return sessionInfo_(str_(token, 200)); }); }
 function api_list(token, kpiId, filters) { return wrap_(function () { return listRecords_(str_(token, 200), str_(kpiId, 20), filters); }); }
 function api_save(token, kpiId, rec) { return wrap_(function () { return saveRecord_(str_(token, 200), str_(kpiId, 20), rec); }); }
+function api_lookupStudents(token, kpiId, list) { return wrap_(function () { return lookupStudents_(str_(token, 200), str_(kpiId, 20), list); }); }
+function api_saveStudents(token, list) { return wrap_(function () { return saveStudents_(str_(token, 200), list); }); }
 function api_bulkSave(token, kpiId, rows) { return wrap_(function () { return bulkSave_(str_(token, 200), str_(kpiId, 20), rows); }); }
 function api_uploadFile(token, kpiId, fieldKey, payload) { return wrap_(function () { return uploadFile_(str_(token, 200), str_(kpiId, 20), str_(fieldKey, 60), payload); }); }
 function api_downloadFile(token, kpiId, recordId, fieldKey) { return wrap_(function () { return downloadFile_(str_(token, 200), str_(kpiId, 20), str_(recordId, 40), str_(fieldKey, 60)); }); }
@@ -3287,7 +3500,24 @@ window.__demoSeed = function () {
   function p2(n) { return ('0' + n).slice(-2); }
   function ymd(m, d) { return Y + '-' + p2(Math.min(m, lastM)) + '-' + p2(d); }
   function ym(m) { return Y + '-' + p2(m); }
+  // Data asas pelajar (tab PELAJAR): daftar pelajar contoh dahulu; rekod KPI hanya membawa no. matrik.
+  var kpCounter = 0, stuSeen = {};
+  function ensureStu(m, nama, kp, fak, emel, tel) {
+    m = String(m || '').trim(); if (!m || stuSeen[m.toUpperCase()]) return;
+    stuSeen[m.toUpperCase()] = 1;
+    var kpv = String(kp || '').replace(/-/g, '');
+    if (!/^[A-Za-z0-9]{6,20}$/.test(kpv)) kpv = '90' + ('0000000000' + (++kpCounter)).slice(-10);
+    var r = saveStudents_(tok, [{ no_matrik: m, nama_pelajar: nama || ('Pelajar Contoh ' + m), no_kp: kpv, fakulti: fak || 'FAI', emel: emel || '', telefon: tel || '' }]).results[0];
+    if (!r.ok) throw new Error('Seed PELAJAR gagal ' + m + ' ' + JSON.stringify(r.fields));
+  }
   function save(kpi, rec) {
+    var def = getKpi_(kpi);
+    if (def.student) {
+      var mp = def.student.map, mk = def.student.matrik;
+      if (!rec[mk] && rec[mp.no_kp] && !(kpi === 'KPT2')) rec[mk] = 'M' + String(rec[mp.no_kp]).replace(/[^A-Za-z0-9]/g, '');
+      ensureStu(rec[mk], rec[mp.nama_pelajar], rec[mp.no_kp], (mp.fakulti && rec.fakulti) || rec.fakulti, rec[mp.emel], rec[mp.telefon]);
+    }
+    def.fields.forEach(function (f) { if (f.type === 'people' && Array.isArray(rec[f.key])) rec[f.key].forEach(function (p) { ensureStu(p.matrik, p.nama, p.nokp, 'FAI'); }); });
     try { return saveRecord_(tok, kpi, rec); }
     catch (e) { throw new Error('Seed ' + kpi + ' gagal: ' + e.message + ' ' + JSON.stringify(e.fields || {}) + ' ' + JSON.stringify(rec)); }
   }
@@ -3479,7 +3709,7 @@ window.__demoSeed = function () {
         .withSuccessHandler(function (r) {
           if (r && r.ok) return resolve(r.data);
           var e = new Error((r && r.error) || 'Ralat tidak diketahui.');
-          e.fields = r && r.fields; e.auth = r && r.auth;
+          e.fields = r && r.fields; e.missing = r && r.missing; e.auth = r && r.auth;
           reject(e);
         })
         .withFailureHandler(function (err) { reject(new Error((err && err.message) || 'Ralat rangkaian. Cuba lagi.')); });
@@ -3773,7 +4003,7 @@ window.__demoSeed = function () {
   // ------------------------------------------------------------------ muat naik pukal (CSV)
   var BULK_MAX_ROWS = 500, BULK_CHUNK = 40;
   function bulkFields(k) {
-    return k.fields.filter(function (f) { return f.type !== 'file' && !f.hidden && !(f.key === 'fakulti' && !isAdmin()); });
+    return k.fields.filter(function (f) { return f.type !== 'file' && !f.hidden && !f.derived && !(f.key === 'fakulti' && !isAdmin()); });
   }
   function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
   function csvText(rows) { return '﻿' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n'; }
@@ -3792,7 +4022,7 @@ window.__demoSeed = function () {
     if (f.type === 'email') return 'nama@utm.my';
     if (f.type === 'url') return 'https://contoh.my';
     if (f.type === 'time') return '09:00';
-    if (f.type === 'people') return 'Nama Pelajar|A24XX0001' + (f.kp === false ? '' : '|010203105555') + '##Nama Kedua|A24XX0002' + (f.kp === false ? '' : '|010304106666');
+    if (f.type === 'people') return 'A24XX0001##A24XX0002';
     return 'contoh';
   }
   function guideFor(f) {
@@ -3803,7 +4033,7 @@ window.__demoSeed = function () {
     else if (f.type === 'yesno') g += ' · Ya / Tidak';
     else if (f.type === 'select') g += ' · ' + f.options.join(' / ');
     else if (f.type === 'faculty') g += ' · kod fakulti';
-    else if (f.type === 'people') g += ' · nama|no. matrik' + (f.kp === false ? '' : '|no. KP') + ', pisahkan orang dengan ##';
+    else if (f.type === 'people') g += ' · no. matrik sahaja, pisahkan dengan ##';
     return g;
   }
   function downloadTemplate(k) {
@@ -3856,7 +4086,7 @@ window.__demoSeed = function () {
     } else if (f.type === 'faculty') {
       return v.toUpperCase();
     } else if (f.type === 'people') {
-      return v.split('##').map(function (x) { var a = x.split('|'); return { nama: (a[0] || '').trim(), matrik: (a[1] || '').trim(), nokp: (a[2] || '').trim() }; }).filter(function (x) { return x.nama || x.matrik || x.nokp; });
+      return v.split('##').map(function (x) { var a = x.split('|'); return { matrik: (a.length > 1 ? a[1] : a[0]).trim() }; }).filter(function (x) { return x.matrik; });
     }
     return v;
   }
@@ -3904,6 +4134,17 @@ window.__demoSeed = function () {
       }).catch(function (e) { b.busy = false; if (!authFail(e)) { toast(e.message, true); b.finished = true; renderBulk(k); } });
     })();
   }
+  function bulkCompleteStudents(k) {
+    var b = S.bulk; if (!b || !b.results) return;
+    var ms = {}; b.results.forEach(function (r) { (r.missing || []).forEach(function (m) { ms[stuKey(m)] = m; }); });
+    var list = Object.keys(ms).slice(0, 50);
+    if (!list.length) return;
+    lookupStu(k, list).then(function (r) {
+      var inc = r.filter(function (v) { return !v.complete; });
+      if (!inc.length) { toast('Semua pelajar sudah lengkap. Muat naik semula baris yang gagal.'); return; }
+      openStudentModal(inc, function () { toast('Selesai. Muat naik semula baris yang gagal (muat turun CSV baris gagal).'); });
+    }).catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+  }
   function downloadBulkErrors(k) {
     var b = S.bulk; if (!b || !b.results) return;
     var bad = b.results.filter(function (r) { return !r.ok; });
@@ -3915,6 +4156,7 @@ window.__demoSeed = function () {
     var fs = bulkFields(k), b = S.bulk && S.bulk.kpiId === k.id ? S.bulk : null, h = '';
     h += '<div class="panel"><h3>1. Muat turun templat</h3><p class="muted">Templat CSV mengandungi tajuk lajur, satu baris panduan (wajib / pilihan dan nilai dibenarkan) dan satu baris contoh. Baris bermula dengan # diabaikan semasa muat naik. Isi data di bawah baris tajuk, simpan sebagai <b>CSV</b>.</p>' +
       '<p class="muted">Lajur: ' + fs.map(function (f) { return esc(f.label) + (f.required ? '*' : ''); }).join(' · ') + '.</p>' +
+      '<p class="muted">Bagi pelajar, isi <b>no. matrik</b> sahaja; nama, no. KP, e-mel dan telefon diambil daripada tab PELAJAR. Pelajar yang belum ada dalam PELAJAR akan dilaporkan sebagai baris gagal dan boleh dilengkapkan selepas muat naik.</p>' +
       '<p class="muted">Lampiran PDF tidak boleh dimuat naik secara pukal; tambah melalui Senarai &gt; Edit rekod. Tarikh: YYYY-MM-DD (format hari/bulan/tahun diterima). Formatkan lajur no. KP / no. matrik sebagai Teks dalam Excel supaya sifar di hadapan tidak hilang.</p>' +
       '<button class="btn" type="button" data-action="bulkdl">⬇ Muat turun templat (' + esc(k.id) + ')</button></div>';
     h += '<div class="panel"><h3>2. Muat naik fail CSV</h3>' +
@@ -3934,7 +4176,8 @@ window.__demoSeed = function () {
             bad.slice(0, 200).map(function (r) {
               return '<tr><td>' + r.n + '</td><td>' + esc(r.error) + (r.fields ? '<div class="muted">' + Object.keys(r.fields).map(function (x) { return esc(x) + ': ' + esc(r.fields[x]); }).join('<br>') + '</div>' : '') + '</td></tr>';
             }).join('') + '</tbody></table></div>' +
-            '<button class="btn o" type="button" data-action="bulkerr">⬇ Muat turun baris gagal (CSV)</button> ';
+            '<button class="btn o" type="button" data-action="bulkerr">⬇ Muat turun baris gagal (CSV)</button> ' +
+            (bad.some(function (r) { return r.missing && r.missing.length; }) ? '<button class="btn" type="button" data-action="bulkstu">Lengkapkan maklumat pelajar</button> ' : '');
         }
         h += '<button class="btn o" type="button" data-action="bulkreset">Muat naik fail lain</button> <button class="btn" type="button" data-action="tab" data-tab="list">Lihat senarai</button>';
       }
@@ -3993,12 +4236,10 @@ window.__demoSeed = function () {
   // ---- Pelajar berbilang (nama, no. matrik, no. KP)
   function peopleHtml(key) {
     var arr = S.people[key] || [];
-    var kp = S.peopleKp[key] !== false;
     return arr.map(function (p, i) {
-      return '<div class="prow' + (kp ? '' : ' nokp-off') + '"><span class="pn">' + (i + 1) + '</span>' +
-        '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="nama" placeholder="Nama penuh" maxlength="120" aria-label="Nama pelajar ' + (i + 1) + '" value="' + esc(p.nama) + '">' +
-        '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="matrik" placeholder="No. matrik" maxlength="30" aria-label="No. matrik pelajar ' + (i + 1) + '" value="' + esc(p.matrik) + '">' +
-        (kp ? '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="nokp" placeholder="No. KP / pasport" maxlength="20" inputmode="numeric" autocomplete="off" aria-label="No. KP pelajar ' + (i + 1) + '" value="' + esc(p.nokp) + '">' : '') +
+      return '<div class="prow mo"><span class="pn">' + (i + 1) + '</span>' +
+        '<input type="text" data-pk="' + key + '" data-pi="' + i + '" data-pf="matrik" placeholder="No. matrik" maxlength="30" autocomplete="off" aria-label="No. matrik pelajar ' + (i + 1) + '" value="' + esc(p.matrik) + '">' +
+        '<span class="pname" data-pname="' + key + ':' + i + '">' + (p.nama ? '✓ ' + esc(p.nama) : '') + '</span>' +
         (arr.length > 1 ? '<button type="button" class="btn d sm" data-action="pdel" data-key="' + key + '" data-i="' + i + '" aria-label="Buang pelajar ' + (i + 1) + '">✕</button>' : '<span></span>') + '</div>';
     }).join('');
   }
@@ -4078,7 +4319,7 @@ window.__demoSeed = function () {
       case 'people':
         return '<div class="people" data-people="' + fd.key + '" id="f_' + fd.key + '">' + peopleHtml(fd.key) + '</div>' +
           '<button type="button" class="btn o sm" data-action="padd" data-key="' + fd.key + '">＋ Tambah ' + esc(fd.noun || 'pelajar') + '</button>' +
-          '<div class="hint">Satu baris bagi setiap ' + esc(fd.noun || 'pelajar') + (fd.max ? ' (maksimum ' + fd.max + ')' : '') + '.' + (fd.kp === false ? '' : ' No. KP 12 digit (sengkang tidak diperlukan) atau no. pasport.') + '</div>';
+          '<div class="hint">Satu baris bagi setiap ' + esc(fd.noun || 'pelajar') + (fd.max ? ' (maksimum ' + fd.max + ')' : '') + '. Masukkan no. matrik sahaja; nama diambil daripada data PELAJAR.</div>';
       case 'file':
         return '<div class="filebox" data-filebox="' + fd.key + '" id="f_' + fd.key + '">' + fileHtml(k, fd.key) + '</div>';
       case 'month':
@@ -4105,10 +4346,12 @@ window.__demoSeed = function () {
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
     k.fields.forEach(function (fd) {
-      if (fd.hidden) return;
+      if (fd.hidden || fd.derived) return;
       if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
       h += '<div class="' + (fd.full ? 'full' : '') + '" data-field="' + fd.key + '"><label for="f_' + fd.key + '">' + esc(fd.label) + (fd.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
-        inputFor(k, fd, (!S.editing && rec[fd.key] === undefined && fd.def !== undefined) ? fd.def : rec[fd.key]) + (fd.hint ? '<div class="hint">' + esc(fd.hint) + '</div>' : '') + '<div class="err" role="alert"></div></div>';
+        inputFor(k, fd, (!S.editing && rec[fd.key] === undefined && fd.def !== undefined) ? fd.def : rec[fd.key]) +
+        (k.student && fd.key === k.student.matrik ? '<div class="stu" id="stu_status" aria-live="polite">' + (S.editing && rec[k.student.nama] ? '✓ ' + esc(rec[k.student.nama]) : '') + '</div>' : '') +
+        (fd.hint ? '<div class="hint">' + esc(fd.hint) + '</div>' : '') + '<div class="err" role="alert"></div></div>';
     });
     h += '</div><div class="acts"><button class="btn" type="submit" id="savebtn">Simpan</button>' +
       '<button class="btn o" type="button" data-action="cancelform">Batal</button></div></form>';
@@ -4133,7 +4376,7 @@ window.__demoSeed = function () {
     var rec = {};
     if (S.editing) rec.id = S.editing.id;
     k.fields.forEach(function (fd) {
-      if (fd.type === 'people') { syncPeople(fd.key); rec[fd.key] = (S.people[fd.key] || []).filter(function (p) { return p.nama || p.matrik || p.nokp; }); return; }
+      if (fd.type === 'people') { syncPeople(fd.key); rec[fd.key] = (S.people[fd.key] || []).filter(function (p) { return p.matrik; }).map(function (p) { return { matrik: p.matrik }; }); return; }
       if (fd.type === 'file') { rec[fd.key] = S.files[fd.key] || ''; return; }
       var el = document.getElementById('f_' + fd.key);
       if (!el) return;
@@ -4154,6 +4397,75 @@ window.__demoSeed = function () {
     if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
+  // ------------------------------------------------------------------ data asas pelajar (tab PELAJAR)
+  S.stu = S.stu || {};
+  function stuKey(m) { return String(m || '').replace(/\s+/g, '').toUpperCase(); }
+  function lookupStu(k, matriks) {
+    return call('api_lookupStudents', S.token, k.id, matriks).then(function (r) { r.forEach(function (v) { S.stu[stuKey(v.no_matrik)] = v; }); return r; });
+  }
+  function setStuStatus(v) {
+    var el = $('#stu_status'); if (!el) return;
+    el.className = 'stu' + (v && v.complete ? ' ok' : v ? ' warn' : '');
+    el.textContent = !v ? '' : v.complete ? '✓ ' + v.nama_pelajar + (v.fakulti ? ' · ' + v.fakulti : '') : v.found ? '⚠ Maklumat pelajar belum lengkap' : '⚠ Pelajar belum ada dalam data PELAJAR';
+  }
+  function onMatrikChange(k, input) {
+    var m = stuKey(input.value); if (!m) { setStuStatus(null); return; }
+    lookupStu(k, [m]).then(function (r) {
+      var v = r[0];
+      if (input.getAttribute('data-pk')) {   // senarai pelajar
+        var key = input.getAttribute('data-pk'), i = parseInt(input.getAttribute('data-pi'), 10);
+        if (S.people[key] && S.people[key][i]) S.people[key][i].nama = v.complete ? v.nama_pelajar : '';
+        var sp = $('[data-pname="' + key + ':' + i + '"]'); if (sp) sp.textContent = v.complete ? '✓ ' + v.nama_pelajar : '';
+      } else setStuStatus(v);
+      if (!v.complete) openStudentModal([v], function () { onMatrikChange(k, input); });
+    }).catch(function (e) { if (!authFail(e)) toast(e.message, true); });
+  }
+  function openStudentModal(items, onDone) {
+    S.modal = { items: items, onDone: onDone, errors: {} };
+    drawStudentModal();
+  }
+  function drawStudentModal() {
+    var m = S.modal, host = $('#modal');
+    if (!host) { host = document.createElement('div'); host.id = 'modal'; document.body.appendChild(host); }
+    if (!m) { host.innerHTML = ''; return; }
+    var facs = S.session.faculties;
+    host.innerHTML = '<div class="mdl" role="dialog" aria-modal="true" aria-labelledby="mdlt"><div class="mdlb"><h3 id="mdlt">Lengkapkan maklumat pelajar</h3>' +
+      '<p class="muted">Pelajar berikut belum ada atau belum lengkap dalam data asas PELAJAR. Lengkapkan sekali sahaja; maklumat disimpan dalam tab PELAJAR dan digunakan oleh semua KPI.</p>' +
+      '<form id="stuform" novalidate>' + m.items.map(function (v, i) {
+        var er = m.errors[v.no_matrik] || {};
+        function f(key, label, type, val, ph) {
+          return '<div data-field="s' + i + key + '" class="' + (er[key] ? 'invalid' : '') + '"><label for="sm_' + i + '_' + key + '">' + label + '</label><input type="' + type + '" id="sm_' + i + '_' + key + '" data-si="' + i + '" data-sf="' + key + '" value="' + esc(val || '') + '"' + (ph ? ' placeholder="' + ph + '"' : '') + ' maxlength="120" autocomplete="off"><div class="err" role="alert">' + esc(er[key] || '') + '</div></div>';
+        }
+        return '<fieldset class="stuset"><legend>' + esc(v.no_matrik) + '</legend><div class="fgrid">' +
+          f('nama_pelajar', 'Nama pelajar <span class="req">*</span>', 'text', v.nama_pelajar) +
+          f('no_kp', 'No. KP / pasport <span class="req">*</span>', 'text', v.no_kp, v.found && !v.no_kp && S.session.user.peranan !== 'Admin' ? '' : '') +
+          f('emel', 'E-mel' + (v.gaps && v.gaps.indexOf('emel') >= 0 ? ' <span class="req">*</span>' : ''), 'email', v.emel) +
+          f('telefon', 'No. telefon' + (v.gaps && v.gaps.indexOf('telefon') >= 0 ? ' <span class="req">*</span>' : ''), 'text', v.telefon) +
+          '<div data-field="s' + i + 'fakulti" class="' + (er.fakulti ? 'invalid' : '') + '"><label for="sm_' + i + '_fakulti">Fakulti <span class="req">*</span></label><select id="sm_' + i + '_fakulti" data-si="' + i + '" data-sf="fakulti"><option value="">Pilih…</option>' +
+          facs.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (v.fakulti === x.kod ? ' selected' : '') + '>' + esc(x.kod + ' · ' + x.nama) + '</option>'; }).join('') + '</select><div class="err" role="alert">' + esc(er.fakulti || '') + '</div></div>' +
+          '</div></fieldset>';
+      }).join('') + '<div class="acts"><button class="btn" type="submit" id="stusave">Simpan ke PELAJAR</button><button class="btn o" type="button" data-action="stucancel">Batal</button></div></form></div></div>';
+    var first = host.querySelector('input,select'); if (first) first.focus();
+  }
+  function saveStudentModal() {
+    var m = S.modal; if (!m || m.busy) return;
+    var list = m.items.map(function (v, i) {
+      var o = { no_matrik: v.no_matrik };
+      $$('#stuform [data-si="' + i + '"]').forEach(function (el) { o[el.getAttribute('data-sf')] = el.value; });
+      return o;
+    });
+    m.busy = true; var b = $('#stusave'); if (b) { b.disabled = true; b.textContent = 'Menyimpan…'; }
+    call('api_saveStudents', S.token, list).then(function (r) {
+      var bad = {}, badItems = [];
+      r.results.forEach(function (x, i) { if (!x.ok) { bad[x.no_matrik] = x.fields || {}; badItems.push(Object.assign({}, m.items[i], list[i])); } });
+      m.busy = false;
+      if (badItems.length) { m.items = badItems; m.errors = bad; drawStudentModal(); return; }
+      var done = m.onDone; S.modal = null; drawStudentModal(); toast('Maklumat pelajar disimpan dalam PELAJAR.');
+      list.forEach(function (o) { delete S.stu[stuKey(o.no_matrik)]; });
+      if (done) done();
+    }).catch(function (e) { m.busy = false; if (!authFail(e)) { toast(e.message, true); drawStudentModal(); } });
+  }
+
   function submitForm() {
     var k = kpiById(S.view.id); if (!k || S.busy) return;
     var btn = $('#savebtn'); S.busy = true; btn.disabled = true; btn.textContent = 'Menyimpan…';
@@ -4163,6 +4475,7 @@ window.__demoSeed = function () {
       render();
     }).catch(function (e) {
       if (authFail(e)) return;
+      if (e.missing && e.missing.length) { openStudentModal(e.missing, submitForm); return; }
       showFieldErrors(e.fields); toast(e.message, true);
     }).then(function () { S.busy = false; var b = $('#savebtn'); if (b) { b.disabled = false; b.textContent = 'Simpan'; } });
   }
@@ -4555,6 +4868,8 @@ window.__demoSeed = function () {
       case 'pdel': syncPeople(a.getAttribute('data-key')); S.people[a.getAttribute('data-key')].splice(parseInt(a.getAttribute('data-i'), 10), 1); redrawPeople(a.getAttribute('data-key')); break;
       case 'fdl': if (k) downloadPdf(k, a.getAttribute('data-id'), a.getAttribute('data-key')); break;
       case 'tab': S.view.tab = a.getAttribute('data-tab'); if (S.view.tab === 'list') S.editing = null; renderKpi(); break;
+      case 'stucancel': S.modal = null; drawStudentModal(); break;
+      case 'bulkstu': bulkCompleteStudents(kpiById(S.view.id)); break;
       case 'bulkdl': downloadTemplate(kpiById(S.view.id)); break;
       case 'bulkgo': runBulk(kpiById(S.view.id)); break;
       case 'bulkerr': downloadBulkErrors(kpiById(S.view.id)); break;
@@ -4619,6 +4934,7 @@ window.__demoSeed = function () {
     ev.preventDefault();
     var id = ev.target.id;
     if (id === 'kform') submitForm();
+    else if (id === 'stuform') saveStudentModal();
     else if (id === 'lform') submitLogin();
     else if (id === 'uform') {
       var rec = { emel: $('#u_emel').value, nama: $('#u_nama').value, peranan: $('#u_peranan').value, fakulti: $('#u_fakulti').value, kpi_akses: $('#u_akses').value, aktif: $('#u_aktif').value };
@@ -4629,6 +4945,8 @@ window.__demoSeed = function () {
 
   document.addEventListener('change', function (ev) {
     if (ev.target.id && ev.target.id.indexOf('f_') === 0 && S.view.name === 'kpi') { var ak = kpiById(S.view.id); if (ak) applyAutofill(ak, ev.target.id.slice(2)); }
+    var tg = ev.target, kk2 = S.view.name === 'kpi' ? kpiById(S.view.id) : null;
+    if (kk2 && ((kk2.student && tg.id === 'f_' + kk2.student.matrik) || tg.getAttribute('data-pf') === 'matrik')) { onMatrikChange(kk2, tg); }
     var c = ev.target.getAttribute && ev.target.getAttribute('data-change');
     if (!c) return;
     if (c === 'fupload') { var kk = kpiById(S.view.id); if (kk) uploadPdf(kk, ev.target.getAttribute('data-key'), ev.target.files && ev.target.files[0]); return; }

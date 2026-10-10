@@ -79,10 +79,13 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await page.waitForSelector('table');
     const before = await page.locator('tbody tr').count();
     await page.click('[data-action="new"]');
-    await page.waitForSelector('#f_nama_pelajar');
+    await page.waitForSelector('#f_no_matrik');
     assert.ok(await page.locator('#f_fakulti').isDisabled()); // dikunci kepada FAI
-    await page.fill('#f_nama_pelajar', 'Pelajar Demo Baharu');
-    await page.fill('#f_no_matrik', 'DEMO0001');
+    assert.strictEqual(await page.locator('#f_nama_pelajar').count(), 0); // hanya no. matrik; selebihnya daripada PELAJAR
+    await page.fill('#f_no_matrik', 'DEMO0001'); await page.press('#f_no_matrik', 'Tab');
+    await page.waitForSelector('.mdl');                                     // pelajar baharu: lengkapkan dalam tetingkap
+    await page.fill('#sm_0_nama_pelajar', 'Pelajar Demo Baharu'); await page.fill('#sm_0_no_kp', '000101101234'); await page.selectOption('#sm_0_fakulti', 'FAI');
+    await page.click('#stusave'); await page.waitForSelector('.mdl', { state: 'detached' });
     await page.fill('#f_tarikh_profiling', '2026-05-05');
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
     await page.selectOption('#f_tahap_minat', 'Tinggi');

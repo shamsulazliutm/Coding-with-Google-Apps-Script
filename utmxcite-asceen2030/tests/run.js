@@ -5,14 +5,50 @@ const { loadGas } = require('./mock');
 let passed = 0, failed = 0;
 function test(name, fn) {
   try { fn(); passed++; console.log('  ok   ' + name); }
-  catch (e) { failed++; console.log('  FAIL ' + name + '\n       ' + (e.stack || e).split('\n').slice(0, 4).join('\n       ')); }
+  catch (e) { failed++; console.log('  FAIL ' + name + '\n       ' + (e.stack || e).split('\n').slice(0, 12).join('\n       ')); }
 }
 const ok = (r) => { assert.ok(r.ok, 'Dijangka ok, dapat: ' + JSON.stringify(r)); return r.data; };
-const fail = (r, re) => { assert.strictEqual(r.ok, false, 'Dijangka gagal'); if (re) assert.match(r.error, re); return r; };
+// Pelajar belum lengkap dalam PELAJAR (r.missing) dikira sama seperti ralat medan pelajar (/betulkan/).
+const fail = (r, re) => { assert.strictEqual(r.ok, false, 'Dijangka gagal'); if (re && !(re.source === 'betulkan' && r.missing)) assert.match(r.error, re); return r; };
 
 // Tetapkan "hari ini" kepada 15 Mei 2026 (Q2 2026).
 const env = loadGas({ now: Date.UTC(2026, 4, 15, 4, 0, 0) });
 const g = env.g;
+
+// Data asas pelajar: ujian lama menghantar nama/no. KP bersama no. matrik. Pembalut ini mendaftarkan pelajar dalam tab PELAJAR
+// (jika belum ada) sebelum rekod disimpan, supaya ujian KPI kekal menguji logik KPI. Ujian khusus PELAJAR ada di bahagian "Data asas pelajar".
+const origApiSave = g.api_save;
+function seedStudentsFor(kpiId, rec) {
+  const kpi = g.KPIS.find(k => k.id === kpiId);
+  if (!kpi || !env.props.SHEET_ID || !rec || rec.__nostudent) return rec;
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
+  if (!sh) return rec;
+  rec = Object.assign({}, rec);
+  const lr = sh.getLastRow();
+  const rowsNow = lr < 2 ? [] : sh.getRange(2, 1, lr - 1, 6).getValues();
+  const have = new Set(rowsNow.map(r => String(r[0]).toUpperCase()));
+  const validKp = (k) => /^[A-Z0-9-]{6,20}$/i.test(String(k || '').replace(/\s+/g, ''));
+  const add = (m, nama, kp, emel, tel, fak) => {
+    m = String(m || '').trim(); if (!m) return;
+    if (have.has(m.toUpperCase())) {   // lengkapkan e-mel / telefon yang masih kosong
+      const i = rowsNow.findIndex(r => String(r[0]).toUpperCase() === m.toUpperCase());
+      if (i >= 0) { if (emel && !rowsNow[i][3]) sh.getRange(i + 2, 4).setValue(emel); if (tel && !rowsNow[i][4]) sh.getRange(i + 2, 5).setValue(tel); }
+      return;
+    }
+    if (!validKp(kp)) return; have.add(m.toUpperCase());
+    sh.appendRow([m, String(kp).replace(/-/g, ''), nama || 'Pelajar ' + m, emel || '', tel || '', fak || 'FAI', '', '']);
+  };
+  if (kpi.student) {
+    const mp = kpi.student.map, mk = kpi.student.matrik;
+    if (!rec[mk] && validKp(rec[mp.no_kp]) && kpi.id !== 'KPT2') rec[mk] = 'M' + String(rec[mp.no_kp]).replace(/[^A-Za-z0-9]/g, '');
+    add(rec[mk], rec[mp.nama_pelajar], mp.no_kp ? rec[mp.no_kp] : '900101105555', rec[mp.emel], rec[mp.telefon], (mp.fakulti && rec.fakulti) || 'FAI');
+  }
+  kpi.fields.filter(f => f.type === 'people').forEach(f => (Array.isArray(rec[f.key]) ? rec[f.key] : []).forEach(p => add(p.matrik, p.nama, p.nokp || (f.kp === false ? '900101105555' : ''), '', '', 'FAI')));
+  return rec;
+}
+g.api_save = (tok, kpiId, rec) => origApiSave(tok, kpiId, seedStudentsFor(kpiId, rec));
+const origBulk = g.api_bulkSave;
+g.api_bulkSave = (tok, kpiId, rows) => origBulk(tok, kpiId, (rows || []).map(r => (r && r.rec ? { n: r.n, rec: seedStudentsFor(kpiId, r.rec) } : r)));
 const lastCode = () => /OTP anda ialah: (\d{6})/.exec(env.sent[env.sent.length - 1].body)[1];
 
 function login(email) {
@@ -411,9 +447,7 @@ test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', tarikh_ssm: '' })), /betulkan/); // Berdaftar: tarikh SSM wajib
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', tarikh_ssm: '2026-02-30' })), /betulkan/);
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-010', status_ssm: 'Tidak Berdaftar', tarikh_ssm: '', tarikh_daftar: '2025-06-01' })));
-  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', no_kp: '' })), /betulkan/);
-  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', no_kp: '12' })), /betulkan/);
-  assert.strictEqual(ok(g.api_list(adminToken, 'CKAI4', {})).rows[0].no_kp.replace(/^'/, ''), '990101011234'); // sengkang dibuang
+    assert.strictEqual(ok(g.api_list(adminToken, 'CKAI4', {})).rows[0].no_kp.replace(/^'/, ''), '990101011234'); // sengkang dibuang
   const c = card(dash(2026), 'CKAI4');
   assert.strictEqual(c.value, 2); assert.strictEqual(c.secondary[0].value, 1);
   assert.strictEqual(card(dash(2027), 'CKAI4').value, 1);
@@ -459,15 +493,13 @@ test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () 
   assert.strictEqual(card(dash(2026), 'CKAI5').secondary[3].value, 'RM 5.00');
   fail(g.api_save(adminToken, 'CKAI5', mk({ status_bayaran: 'Bayar', bayaran_rm: '' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ status_bayaran: 'Percuma' })), /betulkan/);
-  fail(g.api_save(adminToken, 'CKAI5', mk({ fakulti: 'XYZ' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ peralatan: 'Mesin Rekaan' })), /betulkan/); // bukan pilihan
   fail(g.api_save(adminToken, 'CKAI5', mk({ peralatan: 'Lain-lain (Other)' })), /betulkan/); // mesti dinamakan
   ok(g.api_save(adminToken, 'CKAI5', mk({ peralatan: 'Lain-lain (Other)', peralatan_lain: 'Vacuum Former', tarikh_mula: '2025-03-01', tarikh_tamat: '2025-03-01' })));
   fail(g.api_save(adminToken, 'CKAI5', mk({ tarikh_tamat: '2026-01-09' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ masa_tamat: '08:00' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI5', mk({ masa_mula: '25:61' })), /betulkan/);
-  fail(g.api_save(adminToken, 'CKAI5', mk({ telefon: 'abc' })), /betulkan/);
-  fail(g.api_save(adminToken, 'CKAI5', mk({ bil_peserta: 0 })), /betulkan/);
+    fail(g.api_save(adminToken, 'CKAI5', mk({ bil_peserta: 0 })), /betulkan/);
 });
 test('CKAI 6 (sewaan ruang niaga): hanya yang DIBAYAR dikira; tertunggak dipaparkan berasingan', () => {
   const r = { tempoh: '2026-03', inkubator: 'Student Mall - Lot 2', penyewa: 'Syarikat A', jumlah_rm: 500 };
@@ -505,8 +537,8 @@ test('CKAI 9: pengesahan medan (pelajar berbilang, no. KP, sijil wajib, program 
   fail(g.api_save(awardPic, 'CKAI9', Object.assign({}, good, { sijil: undefined })), /betulkan/);
   const r1 = g.api_save(awardPic, 'CKAI9', Object.assign({}, good, { pelajar: [] })); fail(r1, /betulkan/); assert.match(r1.fields.pelajar, /wajib/);
   const r1b = g.api_save(awardPic, 'CKAI9', Object.assign({}, good, { pelajar: 'bukan-senarai' })); fail(r1b, /betulkan/); assert.match(r1b.fields.pelajar, /sekurang-kurangnya seorang/);
-  const r2 = g.api_save(awardPic, 'CKAI9', Object.assign({}, good, { pelajar: [{ nama: 'A', matrik: 'M1', nokp: '900101-14-5678' }, { nama: '', matrik: '', nokp: '123' }] }));
-  fail(r2, /betulkan/); assert.match(r2.fields.pelajar, /Pelajar 2: nama, no. matrik, no. KP \/ pasport tidak sah/);
+  const r2 = g.api_save(awardPic, 'CKAI9', Object.assign({ __nostudent: 1 }, good, { pelajar: [{ matrik: 'M1' }, { matrik: 'TIADA99' }] }));
+  fail(r2, /betulkan/); assert.ok(r2.missing && r2.missing.some(m => m.no_matrik === 'TIADA99'));   // pelajar mesti ada dalam tab PELAJAR
   fail(g.api_save(awardPic, 'CKAI9', Object.assign({}, good, { mentor: '' })), /betulkan/);
   fail(g.api_save(awardPic, 'CKAI9', Object.assign({}, good, { agensi: '' })), /betulkan/);
   fail(g.api_save(awardPic, 'CKAI9', Object.assign({}, good, { program: 'Lain-lain' })), /betulkan/); // program_lain wajib
@@ -598,7 +630,7 @@ test('susunan lajur Sheet tidak penting: tab Pengguna dan KPI ditulis mengikut n
   const r = ok(g.api_save(adminToken, 'KAI5', { fakulti: 'FAI', nama_pelajar: 'Lajur Terbalik', no_matrik: 'LT1', status: 'Dicalonkan' }));
   assert.strictEqual(ok(g.api_list(adminToken, 'KAI5', { q: 'Lajur Terbalik' })).rows[0].no_matrik, 'LT1');
   ok(g.api_save(adminToken, 'KAI5', { id: r.id, fakulti: 'FAI', nama_pelajar: 'Lajur Terbalik 2', no_matrik: 'LT1', status: 'Dicalonkan' }));
-  assert.strictEqual(ok(g.api_list(adminToken, 'KAI5', { q: 'Lajur Terbalik 2' })).rows.length, 1);
+  assert.strictEqual(ok(g.api_list(adminToken, 'KAI5', { q: 'Lajur Terbalik' })).rows.length, 1);   // nama diambil daripada PELAJAR, bukan borang
   // pulihkan susunan asal supaya ujian lain tidak terjejas
   us.data = us.data.map(r => { const c = r.slice(); const t = c[0]; c[0] = c[1]; c[1] = t; return c; });
   k.data = k.data.map(r => r.slice().reverse());
@@ -622,7 +654,7 @@ test('CKAI 8: akses PIC fakulti; OD = projek yang telah menyertai pertandingan s
   fail(g.api_save(innoPic, 'CKAI8', inno({ tarikh: '' })), /betulkan/);
   fail(g.api_save(innoPic, 'CKAI8', inno({ mentor: '' })), /betulkan/);
   fail(g.api_save(innoPic, 'CKAI8', inno({ pelajar: [] })), /betulkan/);
-  const r = g.api_save(innoPic, 'CKAI8', inno({ pelajar: [{ nama: '', matrik: 'X' }] })); fail(r, /betulkan/); assert.match(r.fields.pelajar, /Pelajar 1: nama/);
+  const r = g.api_save(innoPic, 'CKAI8', inno({ pelajar: [{ matrik: '' }] })); fail(r, /betulkan/); assert.ok(r.fields.pelajar);
   assert.ok(!/KP/.test(r.fields.pelajar), 'no. KP tidak boleh diminta');
   assert.strictEqual(ok(g.api_list(innoPicFc, 'CKAI8', {})).rows.length, 0);
 });
@@ -679,10 +711,9 @@ test('CKAI 1 (fungsi 1 Identify Interest): PIC fakulti mendaftar profiling; pers
   assert.strictEqual(a.fakulti, 'FM'); assert.strictEqual(a.id.slice(0, 3), 'PF-');
   const r = g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0002', persetujuan: 'Tidak' })); fail(r, /betulkan/); assert.match(r.fields.persetujuan, /persetujuan pelajar/);
   const r2 = g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0002', persetujuan: '' })); fail(r2, /betulkan/); assert.ok(r2.fields.persetujuan);
-  ['tahap_minat', 'sumber_profiling', 'tarikh_profiling', 'no_matrik', 'nama_pelajar'].forEach(k => fail(g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0003', [k]: '' })), /betulkan/));
+  ['tahap_minat', 'sumber_profiling', 'tarikh_profiling', 'no_matrik'].forEach(k => fail(g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0003', [k]: '' })), /betulkan/));
   fail(g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0004', tahap_minat: 'Sangat tinggi' })), /betulkan/);
-  fail(g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0004', emel: 'bukan-emel' })), /betulkan/);
-  assert.strictEqual(ok(g.api_list(profPicFc, 'CKAI1', {})).rows.length, 0);
+    assert.strictEqual(ok(g.api_list(profPicFc, 'CKAI1', {})).rows.length, 0);
 });
 test('CKAI 1: satu profil bagi setiap no. matrik (tidak peka huruf besar/kecil); ID rekod fakulti lain tidak didedahkan', () => {
   const dup = g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'a24pf0001' })); fail(dup, /betulkan/); assert.match(dup.fields.no_matrik, /Sudah didaftarkan \(PF-001\)/);
@@ -852,7 +883,7 @@ test('CKAI 4: lampiran Sijil SSM (PDF) disimpan dengan pautan Drive dalam Sheet'
 
 test('CKAI 4: rakan kongsi (nama, no. matrik, no. KP), maksimum 12, selaras dengan bilangan rakan kongsi', () => {
   const base = { fakulti: 'FC', nama_pelajar: 'Pemilik', no_kp: '990101011234', no_matrik: 'S90', jenis_perniagaan: 'Pembinaan', status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', nama_syarikat: 'Syarikat RK', tarikh_daftar: '2026-04-02', status: 'Aktif' };
-  const p = (n) => Array.from({ length: n }, (_, i) => ({ nama: 'Rakan ' + (i + 1), matrik: 'M' + (i + 1), nokp: '0001010' + (10000 + i) }));
+  const p = (n) => Array.from({ length: n }, (_, i) => ({ nama: 'Rakan ' + (i + 1), matrik: 'RK' + (i + 1), nokp: '0001010' + (10000 + i) }));
   const r = ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-801', bil_rakan_kongsi: 13, rakan_kongsi: p(12) })));
   const row = ok(g.api_list(adminToken, 'CKAI4', {})).rows.find(x => x.id === r.id);
   assert.strictEqual(JSON.parse(row.rakan_kongsi).length, 12);
@@ -860,8 +891,7 @@ test('CKAI 4: rakan kongsi (nama, no. matrik, no. KP), maksimum 12, selaras deng
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-802', bil_rakan_kongsi: 13, rakan_kongsi: p(13) })), /betulkan/); // lebih 12
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-803', bil_rakan_kongsi: 14 })), /betulkan/); // lebih 13
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-804', bil_rakan_kongsi: 3, rakan_kongsi: p(3) })), /betulkan/); // 3 > 3-1
-  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-805', bil_rakan_kongsi: 2, rakan_kongsi: [{ nama: 'A', matrik: '', nokp: '12' }] })), /betulkan/);
-  ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-806', bil_rakan_kongsi: 1 }))); // pemilik tunggal, tanpa senarai
+    ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-806', bil_rakan_kongsi: 1 }))); // pemilik tunggal, tanpa senarai
 });
 
 test('KAI 4 (GiGA): No. KP / pasport wajib, disahkan dan sengkang dibuang', () => {
@@ -1039,6 +1069,77 @@ test('OTP: kegagalan hantar e-mel memberi mesej jelas (bukan ralat dalaman)', ()
   const orig = g.MailApp.sendEmail;
   g.MailApp.sendEmail = () => { throw new Error('You do not have permission to call MailApp.sendEmail'); };
   try { fail(g.api_requestOtp('admin@utm.my'), /E-mel OTP tidak dapat dihantar/); } finally { g.MailApp.sendEmail = orig; }
+});
+
+console.log('Data asas pelajar (tab PELAJAR)');
+test('PELAJAR: setup() mencipta tab dengan lajur no_matrik, no_kp, nama_pelajar, emel, telefon, fakulti', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
+  assert.ok(sh);
+  ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti'].forEach(c => assert.ok(sh.data[0].includes(c), 'lajur tiada: ' + c));
+});
+test('PELAJAR: hanya no. matrik dimasukkan; maklumat lain diambil daripada PELAJAR dan menggantikan nilai borang', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
+  sh.appendRow(['PJ001', '010203105555', 'Nur Pelajar Satu', 'nur@graduate.utm.my', '0123456789', 'FAI', '', '']);
+  const r = ok(g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'pj001', nama_pelajar: 'Nama Palsu', no_kp: '111111111111', status: 'Memohon' }));
+  assert.strictEqual(r.no_matrik, 'PJ001'); assert.strictEqual(r.nama_pelajar, 'Nur Pelajar Satu');
+  assert.strictEqual(String(r.no_kp).replace(/^'/, ''), '010203105555'); assert.strictEqual(r.emel, 'nur@graduate.utm.my'); assert.strictEqual(r.telefon, '0123456789');
+});
+test('PELAJAR: pelajar tiada atau tidak lengkap -> ralat dengan senarai `missing` (klien membuka tetingkap melengkapkan)', () => {
+  const r = g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'TIADA01', status: 'Memohon' });
+  fail(r, /PELAJAR/); assert.strictEqual(r.missing[0].no_matrik, 'TIADA01'); assert.strictEqual(r.missing[0].found, false);
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
+  sh.appendRow(['PJ002', '', 'Separuh Lengkap', '', '', '', '', '']);     // no. KP dan fakulti kosong
+  const r2 = g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ002', status: 'Memohon' });
+  fail(r2, /PELAJAR/); deepEq(r2.missing[0].gaps, ['no_kp', 'fakulti']); assert.strictEqual(r2.missing[0].nama_pelajar, 'Separuh Lengkap');
+});
+test('PELAJAR: saveStudents melengkapkan data; selepas itu rekod boleh disimpan; pengesahan medan', () => {
+  const bad = ok(g.api_saveStudents(adminToken, [{ no_matrik: 'PJ002', nama_pelajar: 'Separuh Lengkap', no_kp: '12', fakulti: 'XYZ', emel: 'x', telefon: 'abc' }]));
+  assert.strictEqual(bad.results[0].ok, false); ['no_kp', 'fakulti', 'emel', 'telefon'].forEach(k => assert.ok(bad.results[0].fields[k], k));
+  const good = ok(g.api_saveStudents(adminToken, [{ no_matrik: 'PJ002', nama_pelajar: 'Separuh Lengkap', no_kp: '020304-10-6666', fakulti: 'FC', emel: 'sl@utm.my', telefon: '012-3456789' }]));
+  assert.strictEqual(good.results[0].ok, true);
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR'), row = sh.data.find(r => r[0] === 'PJ002');
+  assert.strictEqual(String(row[1]).replace(/^'/, ''), '020304106666');
+  ok(g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ002', status: 'Memohon' }));
+  assert.ok(ok(g.api_listAudit(adminToken, 50)).some(a => a.tindakan === 'PELAJAR_KEMAS_KINI' && !/020304/.test(a.ringkasan)));
+});
+test('PELAJAR: PIC hanya mengisi medan kosong (data sah tidak ditimpa); carian tidak mendedahkan no. KP, e-mel, telefon kepada PIC', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'pic.stu@utm.my', nama: 'PIC Stu', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI4', aktif: 'Ya' }));
+  const t = login('pic.stu@utm.my');
+  const lk = ok(g.api_lookupStudents(t, 'KAI4', ['pj001', 'TIADA77']));
+  assert.strictEqual(lk[0].found, true); assert.strictEqual(lk[0].complete, true); assert.strictEqual(lk[0].nama_pelajar, 'Nur Pelajar Satu');
+  assert.strictEqual(lk[1].found, false);
+  const sj = JSON.stringify(lk); ['010203', 'nur@graduate', '0123456789'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
+  assert.ok(ok(g.api_lookupStudents(adminToken, 'KAI4', ['PJ001']))[0].no_kp);
+  fail(g.api_lookupStudents(t, 'KAI2', ['PJ001']), /Akses ditolak/);
+  ok(g.api_saveStudents(t, [{ no_matrik: 'PJ001', nama_pelajar: 'Dipaksa Tukar', no_kp: '999999999999', fakulti: 'FKE', emel: 'baru@utm.my', telefon: '0999999999' }]));
+  const row = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR').data.find(r => r[0] === 'PJ001');
+  assert.strictEqual(row[2], 'Nur Pelajar Satu'); assert.strictEqual(String(row[1]).replace(/^'/, ''), '010203105555');
+  ok(g.api_saveStudents(t, [{ no_matrik: 'PJ777', nama_pelajar: 'Pelajar Baharu', no_kp: '030405106666', fakulti: 'FAI' }]));    // pelajar baharu boleh didaftar PIC
+  assert.ok(env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR').data.some(r => r[0] === 'PJ777'));
+});
+test('PELAJAR: CKAI 5 memerlukan e-mel dan telefon; senarai orang (CKAI 8 / CKAI 9 / rakan kongsi) hanya no. matrik', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
+  sh.appendRow(['PJ020', '060708109999', 'Pemohon Makerspace', '', '', 'FKE', '', '']);   // tanpa e-mel dan telefon
+  const mk = { __nostudent: 1, peralatan: '3D Printer', tujuan: 'Uji', bil_peserta: 1, tarikh_mula: '2026-02-01', tarikh_tamat: '2026-02-01', masa_mula: '09:00', masa_tamat: '10:00', status_bayaran: 'Bayar', bayaran_rm: 5, no_matrik: 'PJ020' };
+  const r = g.api_save(adminToken, 'CKAI5', mk); fail(r, /PELAJAR/); deepEq(r.missing[0].gaps, ['emel', 'telefon']);
+  ok(g.api_saveStudents(adminToken, [{ no_matrik: 'PJ020', nama_pelajar: 'Pemohon Makerspace', no_kp: '060708109999', fakulti: 'FKE', emel: 'pemohon@utm.my', telefon: '0111234567' }]));
+  const saved = ok(g.api_save(adminToken, 'CKAI5', mk));
+  assert.strictEqual(saved.nama, 'Pemohon Makerspace'); assert.strictEqual(saved.fakulti, 'FKE'); assert.strictEqual(saved.emel, 'pemohon@utm.my');   // fakulti diambil daripada PELAJAR (KPI Admin)
+});
+test('PELAJAR: CKAI 8 menerima senarai pelajar (no. matrik sahaja) dan menyalin nama; tiada dalam PELAJAR ditolak', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
+  sh.appendRow(['PJ010', '040506107777', 'Pasukan Satu', '', '', 'FAI', '', '']); sh.appendRow(['PJ011', '050607108888', 'Pasukan Dua', '', '', 'FC', '', '']);
+  const a = ok(g.api_save(adminToken, 'CKAI8', Object.assign(inno({ pelajar: [{ matrik: 'pj010' }, { matrik: 'PJ011' }] }), { __nostudent: 1 })));
+  const ps = JSON.parse(a.pelajar); deepEq(ps.map(p => p.nama), ['Pasukan Satu', 'Pasukan Dua']); deepEq(ps.map(p => p.nokp), ['', '']);
+  const b = ok(g.api_save(adminToken, 'CKAI9', Object.assign(award({ pelajar: [{ matrik: 'PJ010' }], sijil: ok(g.api_uploadFile(adminToken, 'CKAI9', 'sijil', { name: 's.pdf', data: PDF('stu') })) }), { __nostudent: 1 })));
+  assert.strictEqual(JSON.parse(b.pelajar)[0].nokp, '040506107777');
+  const bad = g.api_save(adminToken, 'CKAI8', Object.assign(inno({ pelajar: [{ matrik: 'PJ010' }, { matrik: 'GHAIB1' }] }), { __nostudent: 1 }));
+  fail(bad, /PELAJAR/); deepEq(bad.missing.map(m => m.no_matrik), ['GHAIB1']);
+});
+test('PELAJAR: muat naik pukal melaporkan baris dengan pelajar tiada dan menyenaraikan no. matrik', () => {
+  const row = (m) => ({ n: 2, rec: { fakulti: 'FAI', no_matrik: m, projek: 'P', trl: 'TRL 1', tarikh: '2026-03-01', __nostudent: 1 } });
+  const r = ok(g.api_bulkSave(adminToken, 'KPT4', [row('PJ011'), Object.assign(row('BULKX9'), { n: 3 })]));
+  deepEq(r.results.map(x => x.ok), [true, false]); deepEq(r.results[1].missing, ['BULKX9']); assert.match(r.results[1].error, /BULKX9/);
 });
 
 console.log('Muat naik pukal');
