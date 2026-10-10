@@ -194,7 +194,8 @@ function buildHtml() {
     await page.click('#savebtn');
     await page.waitForSelector('.invalid .err:has-text("wajib")');
     // hanya no. matrik; nama, no. KP, e-mel, telefon tiada pada borang (diambil daripada PELAJAR)
-    assert.strictEqual(await page.locator('#f_nama_pelajar, #f_no_kp, #f_emel, #f_telefon').count(), 0);
+    assert.strictEqual(await page.locator('#f_emel, #f_telefon').count(), 0);
+    assert.ok(await page.locator('#f_nama_pelajar[readonly]').isVisible() && await page.locator('#f_no_kp[readonly]').isVisible());   // nama dan no. KP auto (baca sahaja)
     // pelajar belum ada dalam PELAJAR: tetingkap untuk melengkapkan dipaparkan
     await page.fill('#f_no_matrik', 'A24CS0001'); await page.press('#f_no_matrik', 'Tab');
     await page.waitForSelector('.mdl');
@@ -208,6 +209,8 @@ function buildHtml() {
     await page.waitForSelector('.mdl', { state: 'detached' });
     await page.waitForSelector('#stu_status.ok');
     assert.ok((await text('#stu_status')).includes('Nur Aina <b>x</b>'));
+    assert.strictEqual(await page.inputValue('#f_nama_pelajar'), 'Nur Aina <b>x</b>');
+    assert.match(await page.inputValue('#f_no_kp'), /^••••••••1234$/);      // PIC: no. KP disamarkan
     await page.selectOption('#f_status', 'Mendaftar');
     await page.click('#savebtn');
     await page.waitForSelector('.invalid .err:has-text("Wajib diisi apabila")'); // tarikh_daftar diperlukan

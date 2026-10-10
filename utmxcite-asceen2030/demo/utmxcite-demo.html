@@ -213,7 +213,7 @@ label .req{color:var(--bad)}
 .filebox input[type=file]{border:1px dashed #cdbfc3;background:#fff;padding:8px;width:100%;border-radius:6px}
 .fileinfo{margin-bottom:6px;word-break:break-all}
 .prow.nokp-off{grid-template-columns:24px 2fr 1.2fr auto}
-.prow.mo{grid-template-columns:24px 1.2fr 2fr auto}.pname{font-size:12.5px;color:var(--ok);align-self:center}.stu{font-size:12.5px;margin-top:4px;min-height:1px}.stu.ok{color:var(--ok)}.stu.warn{color:var(--warn)}
+.prow.mo{grid-template-columns:24px 1.2fr 2fr auto}.pname{font-size:12.5px;color:var(--ok);align-self:center}.auto{font-weight:400;color:var(--mut);font-size:11px}input.ro{background:#f3eef0;color:var(--ink)}.stu{font-size:12.5px;margin-top:4px;min-height:1px}.stu.ok{color:var(--ok)}.stu.warn{color:var(--warn)}
 .mdl{position:fixed;inset:0;background:rgba(43,26,31,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}.mdlb{background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:20px}.mdlb h3{margin-bottom:6px}
 .stuset{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}.stuset legend{font-weight:700;padding:0 6px;color:var(--m)}
 @media(max-width:860px){.prow{grid-template-columns:24px 1fr auto}.prow input[data-pf=matrik],.prow input[data-pf=nokp]{grid-column:2}}
@@ -696,7 +696,7 @@ var KPIS = [
     id: 'KPT2', prefix: 'K2', sheet: 'KPT2_Graduan_Usahawan', group: 'KPT', teras: 't1', entry: 'faculty',
     title: 'KPT 2 · Peratus graduan yang menceburi keusahawanan dan mewujudkan peluang pekerjaan', short: '% graduan berusahawan',
     unit: '% graduan usahawan', measure: 'kpt2', jenis: 'minimum', valueFormat: 'pct',
-    listColumns: ['id', 'jenis_rekod', 'fakulti', 'nama', 'tarikh_tamat', 'kategori', 'tahun', 'bil_penyebut'],
+    listColumns: ['id', 'jenis_rekod', 'fakulti', 'nama', 'no_matrik', 'tarikh_tamat', 'kategori', 'tahun', 'bil_penyebut'],
     statusField: 'jenis_rekod', unique: ['kunci'], validate: kpt2Validate_,
     rules: [
       { when: { field: 'jenis_rekod', in: ['Graduan usahawan'] }, require: ['nama', 'no_kp', 'no_matrik', 'tarikh_tamat', 'nama_perniagaan', 'no_pendaftaran', 'tarikh_penubuhan', 'kategori'] },
@@ -941,6 +941,7 @@ var KPIS = [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text'),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
       F_('program', 'Program', 'text'),
@@ -979,6 +980,7 @@ var KPIS = [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text'),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
       F_('program', 'Program', 'text'),
@@ -1095,7 +1097,7 @@ var KPIS = [
     id: 'CKAI4', prefix: 'SS', sheet: 'CKAI4_SSU', fungsi: 'startup', group: 'Center', entry: 'admin',
     title: 'CKAI 4 · Bilangan pendaftaran SSU (Sistem Syarikat Universiti)', short: 'Pendaftaran SSU',
     unit: 'pendaftaran SSU', measure: 'ssu', jenis: 'minimum',
-    listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
+    listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'no_matrik', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
     rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] },
       { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] },
@@ -1164,6 +1166,7 @@ var KPIS = [
       F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Sewaan bulanan' }),
       F_('no_matrik', 'No. matrik pelajar', 'text', { required: true, sec: 'Pelajar penyewa' }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
+      F_('no_kp', 'No. KP / pasport', 'text'),
       F_('inkubator', 'Ruang niaga', 'select', { required: true, sec: 'Ruang dan sewaan', options: LOKASI_PERNIAGAAN }),
       F_('inkubator_lain', 'Nama ruang niaga lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('penyewa', 'Penyewa (syarikat / pasukan)', 'text', { required: true }),
@@ -1179,7 +1182,7 @@ var KPIS = [
     id: 'CKAI7', prefix: 'PP', sheet: 'CKAI7_Pendapatan_Pelajar', fungsi: 'prestasi', group: 'Center', entry: 'faculty',
     title: 'CKAI 7 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
     unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
+    listColumns: ['id', 'tempoh', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
     statusField: 'jenis_pendapatan',
     rules: [{ when: { field: 'lokasi_perniagaan', in: ['Lain-lain'] }, require: ['lokasi_perniagaan_lain'] }],
     validate: icValidate_,
@@ -1302,12 +1305,12 @@ var KPIS = [
  */
 var STUDENT_MAPS = {
   KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
-  KAI5: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
-  KAI6: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  KAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
-  CKAI6: { nama_pelajar: 'nama_pelajar' },
+  CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
   CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
   KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp' },
   KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
@@ -1315,6 +1318,14 @@ var STUDENT_MAPS = {
 KPIS.forEach(function (k) {
   var map = STUDENT_MAPS[k.id];
   if (!map) return;
+  // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
+  // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
+  if (!map.fakulti) {
+    var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
+    var at = k.fields.map(function (f) { return f.key; }).indexOf('no_kp');
+    if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
+    else if (!hasFak) { map.fakulti = 'fakulti'; k.fields.splice(at + 1, 0, F_('fakulti', 'Fakulti', 'faculty')); }
+  }
   k.student = { matrik: 'no_matrik', map: map };
   k.fields.forEach(function (f) {
     if (f.key === 'no_matrik') {
@@ -1322,7 +1333,7 @@ KPIS.forEach(function (k) {
       f.hint = (f.hint ? f.hint + ' ' : '') + 'Masukkan no. matrik sahaja; maklumat lain diambil daripada data PELAJAR. Jika pelajar belum ada, tetingkap untuk melengkapkannya akan dipaparkan.';
     }
     for (var col in map) {
-      if (map.hasOwnProperty(col) && map[col] === f.key) { f.derived = true; f.derivedRequired = !!f.required; f.required = false; f.hint = undefined; }
+      if (map.hasOwnProperty(col) && map[col] === f.key) { f.derived = true; f.autoShow = (col === 'nama_pelajar' || col === 'no_kp' || col === 'fakulti') ? col : undefined; f.derivedRequired = !!f.required; f.required = false; f.hint = undefined; }
     }
   });
 });
@@ -2165,6 +2176,7 @@ function studentView_(user, matrik, s, need) {
   var gaps = studentGaps_(s, need);
   var out = { no_matrik: matrik, found: !!s, complete: !!s && !gaps.length, gaps: gaps, nama_pelajar: s ? s.nama_pelajar : '', fakulti: s ? s.fakulti : '' };
   if (s && user.peranan === ROLES.ADMIN) { out.no_kp = s.no_kp; out.emel = s.emel; out.telefon = s.telefon; }
+  else if (s && s.no_kp) out.kp_mask = '••••••••' + normKp_(s.no_kp).slice(-4);   // bukan Admin: no. KP disamarkan
   return out;
 }
 
@@ -2207,7 +2219,6 @@ function applyStudents_(user, kpi, input) {
     input[kpi.student.matrik] = s1.no_matrik;
     for (var col in kpi.student.map) {
       if (!kpi.student.map.hasOwnProperty(col)) continue;
-      if (col === 'fakulti' && kpi.entry === 'faculty') continue;
       input[kpi.student.map[col]] = col === 'no_kp' ? normKp_(s1.no_kp) : s1[col];
     }
   }
@@ -4302,6 +4313,7 @@ window.__demoSeed = function () {
     var id = 'f_' + fd.key, v = val === undefined || val === null ? '' : String(val).replace(/^'/, '');
     var req = fd.required ? ' required' : '';
     var user = S.session.user;
+    if (fd.derived) return '<input type="text" id="' + id + '" value="' + esc(v) + '" readonly tabindex="-1" class="ro" placeholder="Diisi automatik daripada PELAJAR">';
     switch (fd.type) {
       case 'select':
         return '<select id="' + id + '" name="' + fd.key + '"><option value="">— pilih —</option>' +
@@ -4351,7 +4363,7 @@ window.__demoSeed = function () {
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
     k.fields.forEach(function (fd) {
-      if (fd.hidden || fd.derived) return;
+      if (fd.hidden || (fd.derived && !fd.autoShow)) return;
       if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
       h += '<div class="' + (fd.full ? 'full' : '') + '" data-field="' + fd.key + '"><label for="f_' + fd.key + '">' + esc(fd.label) + (fd.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
         inputFor(k, fd, (!S.editing && rec[fd.key] === undefined && fd.def !== undefined) ? fd.def : rec[fd.key]) +
@@ -4383,6 +4395,7 @@ window.__demoSeed = function () {
     k.fields.forEach(function (fd) {
       if (fd.type === 'people') { syncPeople(fd.key); rec[fd.key] = (S.people[fd.key] || []).filter(function (p) { return p.matrik; }).map(function (p) { return { matrik: p.matrik }; }); return; }
       if (fd.type === 'file') { rec[fd.key] = S.files[fd.key] || ''; return; }
+      if (fd.derived) return;   // diisi automatik oleh pelayan daripada PELAJAR
       var el = document.getElementById('f_' + fd.key);
       if (!el) return;
       if (el.disabled && fd.key === 'fakulti') { rec[fd.key] = S.session.user.fakulti; return; }
@@ -4408,20 +4421,27 @@ window.__demoSeed = function () {
   function lookupStu(k, matriks) {
     return call('api_lookupStudents', S.token, k.id, matriks).then(function (r) { r.forEach(function (v) { S.stu[stuKey(v.no_matrik)] = v; }); return r; });
   }
+  function fillDerived(k, v) {
+    k.fields.forEach(function (fd) {
+      if (!fd.derived || !fd.autoShow) return;
+      var el = document.getElementById('f_' + fd.key); if (!el) return;
+      el.value = !v || !v.found ? '' : fd.autoShow === 'nama_pelajar' ? v.nama_pelajar : fd.autoShow === 'fakulti' ? (v.fakulti || '') : (v.no_kp || v.kp_mask || '');
+    });
+  }
   function setStuStatus(v) {
     var el = $('#stu_status'); if (!el) return;
     el.className = 'stu' + (v && v.complete ? ' ok' : v ? ' warn' : '');
     el.textContent = !v ? '' : v.complete ? '✓ ' + v.nama_pelajar + (v.fakulti ? ' · ' + v.fakulti : '') : v.found ? '⚠ Maklumat pelajar belum lengkap' : '⚠ Pelajar belum ada dalam data PELAJAR';
   }
   function onMatrikChange(k, input) {
-    var m = stuKey(input.value); if (!m) { setStuStatus(null); return; }
+    var m = stuKey(input.value); if (!m) { setStuStatus(null); fillDerived(k, null); return; }
     lookupStu(k, [m]).then(function (r) {
       var v = r[0];
       if (input.getAttribute('data-pk')) {   // senarai pelajar
         var key = input.getAttribute('data-pk'), i = parseInt(input.getAttribute('data-pi'), 10);
         if (S.people[key] && S.people[key][i]) S.people[key][i].nama = v.complete ? v.nama_pelajar : '';
         var sp = $('[data-pname="' + key + ':' + i + '"]'); if (sp) sp.textContent = v.complete ? '✓ ' + v.nama_pelajar : '';
-      } else setStuStatus(v);
+      } else { setStuStatus(v); fillDerived(k, v); }
       if (!v.complete) openStudentModal([v], function () { onMatrikChange(k, input); });
     }).catch(function (e) { if (!authFail(e)) toast(e.message, true); });
   }

@@ -106,6 +106,7 @@ function studentView_(user, matrik, s, need) {
   var gaps = studentGaps_(s, need);
   var out = { no_matrik: matrik, found: !!s, complete: !!s && !gaps.length, gaps: gaps, nama_pelajar: s ? s.nama_pelajar : '', fakulti: s ? s.fakulti : '' };
   if (s && user.peranan === ROLES.ADMIN) { out.no_kp = s.no_kp; out.emel = s.emel; out.telefon = s.telefon; }
+  else if (s && s.no_kp) out.kp_mask = '••••••••' + normKp_(s.no_kp).slice(-4);   // bukan Admin: no. KP disamarkan
   return out;
 }
 
@@ -148,7 +149,6 @@ function applyStudents_(user, kpi, input) {
     input[kpi.student.matrik] = s1.no_matrik;
     for (var col in kpi.student.map) {
       if (!kpi.student.map.hasOwnProperty(col)) continue;
-      if (col === 'fakulti' && kpi.entry === 'faculty') continue;
       input[kpi.student.map[col]] = col === 'no_kp' ? normKp_(s1.no_kp) : s1[col];
     }
   }

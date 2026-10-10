@@ -632,6 +632,7 @@
     var id = 'f_' + fd.key, v = val === undefined || val === null ? '' : String(val).replace(/^'/, '');
     var req = fd.required ? ' required' : '';
     var user = S.session.user;
+    if (fd.derived) return '<input type="text" id="' + id + '" value="' + esc(v) + '" readonly tabindex="-1" class="ro" placeholder="Diisi automatik daripada PELAJAR">';
     switch (fd.type) {
       case 'select':
         return '<select id="' + id + '" name="' + fd.key + '"><option value="">— pilih —</option>' +
@@ -681,7 +682,7 @@
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
     k.fields.forEach(function (fd) {
-      if (fd.hidden || fd.derived) return;
+      if (fd.hidden || (fd.derived && !fd.autoShow)) return;
       if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
       h += '<div class="' + (fd.full ? 'full' : '') + '" data-field="' + fd.key + '"><label for="f_' + fd.key + '">' + esc(fd.label) + (fd.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +
         inputFor(k, fd, (!S.editing && rec[fd.key] === undefined && fd.def !== undefined) ? fd.def : rec[fd.key]) +
@@ -713,6 +714,7 @@
     k.fields.forEach(function (fd) {
       if (fd.type === 'people') { syncPeople(fd.key); rec[fd.key] = (S.people[fd.key] || []).filter(function (p) { return p.matrik; }).map(function (p) { return { matrik: p.matrik }; }); return; }
       if (fd.type === 'file') { rec[fd.key] = S.files[fd.key] || ''; return; }
+      if (fd.derived) return;   // diisi automatik oleh pelayan daripada PELAJAR
       var el = document.getElementById('f_' + fd.key);
       if (!el) return;
       if (el.disabled && fd.key === 'fakulti') { rec[fd.key] = S.session.user.fakulti; return; }
@@ -738,20 +740,27 @@
   function lookupStu(k, matriks) {
     return call('api_lookupStudents', S.token, k.id, matriks).then(function (r) { r.forEach(function (v) { S.stu[stuKey(v.no_matrik)] = v; }); return r; });
   }
+  function fillDerived(k, v) {
+    k.fields.forEach(function (fd) {
+      if (!fd.derived || !fd.autoShow) return;
+      var el = document.getElementById('f_' + fd.key); if (!el) return;
+      el.value = !v || !v.found ? '' : fd.autoShow === 'nama_pelajar' ? v.nama_pelajar : fd.autoShow === 'fakulti' ? (v.fakulti || '') : (v.no_kp || v.kp_mask || '');
+    });
+  }
   function setStuStatus(v) {
     var el = $('#stu_status'); if (!el) return;
     el.className = 'stu' + (v && v.complete ? ' ok' : v ? ' warn' : '');
     el.textContent = !v ? '' : v.complete ? '✓ ' + v.nama_pelajar + (v.fakulti ? ' · ' + v.fakulti : '') : v.found ? '⚠ Maklumat pelajar belum lengkap' : '⚠ Pelajar belum ada dalam data PELAJAR';
   }
   function onMatrikChange(k, input) {
-    var m = stuKey(input.value); if (!m) { setStuStatus(null); return; }
+    var m = stuKey(input.value); if (!m) { setStuStatus(null); fillDerived(k, null); return; }
     lookupStu(k, [m]).then(function (r) {
       var v = r[0];
       if (input.getAttribute('data-pk')) {   // senarai pelajar
         var key = input.getAttribute('data-pk'), i = parseInt(input.getAttribute('data-pi'), 10);
         if (S.people[key] && S.people[key][i]) S.people[key][i].nama = v.complete ? v.nama_pelajar : '';
         var sp = $('[data-pname="' + key + ':' + i + '"]'); if (sp) sp.textContent = v.complete ? '✓ ' + v.nama_pelajar : '';
-      } else setStuStatus(v);
+      } else { setStuStatus(v); fillDerived(k, v); }
       if (!v.complete) openStudentModal([v], function () { onMatrikChange(k, input); });
     }).catch(function (e) { if (!authFail(e)) toast(e.message, true); });
   }

@@ -41,7 +41,7 @@ function seedStudentsFor(kpiId, rec) {
   if (kpi.student) {
     const mp = kpi.student.map, mk = kpi.student.matrik;
     if (!rec[mk] && validKp(rec[mp.no_kp]) && kpi.id !== 'KPT2') rec[mk] = 'M' + String(rec[mp.no_kp]).replace(/[^A-Za-z0-9]/g, '');
-    add(rec[mk], rec[mp.nama_pelajar], mp.no_kp && (kpi.id !== 'CKAI1' || rec[mp.no_kp] !== undefined) ? rec[mp.no_kp] : '900101105555', rec[mp.emel], rec[mp.telefon], (mp.fakulti && rec.fakulti) || 'FAI');
+    add(rec[mk], rec[mp.nama_pelajar], mp.no_kp && (!['CKAI1', 'KAI5', 'KAI6', 'CKAI6'].includes(kpi.id) || rec[mp.no_kp] !== undefined) ? rec[mp.no_kp] : '900101105555', rec[mp.emel], rec[mp.telefon], (mp.fakulti && rec.fakulti) || 'FAI');
   }
   kpi.fields.filter(f => f.type === 'people').forEach(f => (Array.isArray(rec[f.key]) ? rec[f.key] : []).forEach(p => add(p.matrik, p.nama, p.nokp || (f.kp === false ? '900101105555' : ''), '', '', 'FAI')));
   return rec;
@@ -1149,6 +1149,20 @@ test('PELAJAR: CKAI 1 ada medan no. KP (diambil daripada PELAJAR)', () => {
   assert.ok(g.KPIS.find(k => k.id === 'CKAI1').fields.some(f => f.key === 'no_kp' && f.derived));
   const r = ok(g.api_save(adminToken, 'CKAI1', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ001', tarikh_profiling: '2026-03-01', sumber_profiling: 'Pendaftaran minat', tahap_minat: 'Tinggi', tahap_kesediaan: 'Ada idea', persetujuan: 'Ya' }));
   assert.strictEqual(String(r.no_kp).replace(/^'/, ''), '010203105555');
+});
+test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP (nama dan no. KP auto) serta no. matrik dan nama dalam senarai', () => {
+  const withStu = g.KPIS.filter(k => k.student);
+  deepEq(withStu.map(k => k.id), ['KPT2', 'KPT4', 'KAI4', 'KAI5', 'KAI6', 'CKAI1', 'CKAI4', 'CKAI5', 'CKAI6', 'CKAI7']);
+  withStu.forEach(k => {
+    const mp = k.student.map, f = (key) => k.fields.find(x => x.key === key);
+    assert.ok(f('no_matrik') && !f('no_matrik').derived, k.id + ': no_matrik');
+    assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
+    assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
+    assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    assert.ok(k.listColumns.includes('no_matrik') && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
+  });
+  const sess = ok(g.api_session(adminToken)).kpis.find(k => k.id === 'KAI6');
+  assert.ok(sess.fields.find(x => x.key === 'no_kp').autoShow === 'no_kp');
 });
 
 console.log('Muat naik pukal');

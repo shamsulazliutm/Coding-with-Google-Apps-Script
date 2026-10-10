@@ -276,7 +276,7 @@ var KPIS = [
     id: 'KPT2', prefix: 'K2', sheet: 'KPT2_Graduan_Usahawan', group: 'KPT', teras: 't1', entry: 'faculty',
     title: 'KPT 2 · Peratus graduan yang menceburi keusahawanan dan mewujudkan peluang pekerjaan', short: '% graduan berusahawan',
     unit: '% graduan usahawan', measure: 'kpt2', jenis: 'minimum', valueFormat: 'pct',
-    listColumns: ['id', 'jenis_rekod', 'fakulti', 'nama', 'tarikh_tamat', 'kategori', 'tahun', 'bil_penyebut'],
+    listColumns: ['id', 'jenis_rekod', 'fakulti', 'nama', 'no_matrik', 'tarikh_tamat', 'kategori', 'tahun', 'bil_penyebut'],
     statusField: 'jenis_rekod', unique: ['kunci'], validate: kpt2Validate_,
     rules: [
       { when: { field: 'jenis_rekod', in: ['Graduan usahawan'] }, require: ['nama', 'no_kp', 'no_matrik', 'tarikh_tamat', 'nama_perniagaan', 'no_pendaftaran', 'tarikh_penubuhan', 'kategori'] },
@@ -521,6 +521,7 @@ var KPIS = [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text'),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
       F_('program', 'Program', 'text'),
@@ -559,6 +560,7 @@ var KPIS = [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text'),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
       F_('program', 'Program', 'text'),
@@ -675,7 +677,7 @@ var KPIS = [
     id: 'CKAI4', prefix: 'SS', sheet: 'CKAI4_SSU', fungsi: 'startup', group: 'Center', entry: 'admin',
     title: 'CKAI 4 · Bilangan pendaftaran SSU (Sistem Syarikat Universiti)', short: 'Pendaftaran SSU',
     unit: 'pendaftaran SSU', measure: 'ssu', jenis: 'minimum',
-    listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'fakulti', 'tarikh_daftar', 'status'],
+    listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'no_matrik', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
     rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] },
       { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] },
@@ -744,6 +746,7 @@ var KPIS = [
       F_('tempoh', 'Bulan', 'month', { required: true, sec: 'Sewaan bulanan' }),
       F_('no_matrik', 'No. matrik pelajar', 'text', { required: true, sec: 'Pelajar penyewa' }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
+      F_('no_kp', 'No. KP / pasport', 'text'),
       F_('inkubator', 'Ruang niaga', 'select', { required: true, sec: 'Ruang dan sewaan', options: LOKASI_PERNIAGAAN }),
       F_('inkubator_lain', 'Nama ruang niaga lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('penyewa', 'Penyewa (syarikat / pasukan)', 'text', { required: true }),
@@ -759,7 +762,7 @@ var KPIS = [
     id: 'CKAI7', prefix: 'PP', sheet: 'CKAI7_Pendapatan_Pelajar', fungsi: 'prestasi', group: 'Center', entry: 'faculty',
     title: 'CKAI 7 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
     unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'tempoh', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
+    listColumns: ['id', 'tempoh', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
     statusField: 'jenis_pendapatan',
     rules: [{ when: { field: 'lokasi_perniagaan', in: ['Lain-lain'] }, require: ['lokasi_perniagaan_lain'] }],
     validate: icValidate_,
@@ -882,12 +885,12 @@ var KPIS = [
  */
 var STUDENT_MAPS = {
   KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
-  KAI5: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
-  KAI6: { nama_pelajar: 'nama_pelajar', emel: 'emel', telefon: 'telefon' },
+  KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  KAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
-  CKAI6: { nama_pelajar: 'nama_pelajar' },
+  CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
   CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
   KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp' },
   KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
@@ -895,6 +898,14 @@ var STUDENT_MAPS = {
 KPIS.forEach(function (k) {
   var map = STUDENT_MAPS[k.id];
   if (!map) return;
+  // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
+  // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
+  if (!map.fakulti) {
+    var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
+    var at = k.fields.map(function (f) { return f.key; }).indexOf('no_kp');
+    if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
+    else if (!hasFak) { map.fakulti = 'fakulti'; k.fields.splice(at + 1, 0, F_('fakulti', 'Fakulti', 'faculty')); }
+  }
   k.student = { matrik: 'no_matrik', map: map };
   k.fields.forEach(function (f) {
     if (f.key === 'no_matrik') {
@@ -902,7 +913,7 @@ KPIS.forEach(function (k) {
       f.hint = (f.hint ? f.hint + ' ' : '') + 'Masukkan no. matrik sahaja; maklumat lain diambil daripada data PELAJAR. Jika pelajar belum ada, tetingkap untuk melengkapkannya akan dipaparkan.';
     }
     for (var col in map) {
-      if (map.hasOwnProperty(col) && map[col] === f.key) { f.derived = true; f.derivedRequired = !!f.required; f.required = false; f.hint = undefined; }
+      if (map.hasOwnProperty(col) && map[col] === f.key) { f.derived = true; f.autoShow = (col === 'nama_pelajar' || col === 'no_kp' || col === 'fakulti') ? col : undefined; f.derivedRequired = !!f.required; f.required = false; f.hint = undefined; }
     }
   });
 });
@@ -1737,6 +1748,7 @@ function studentView_(user, matrik, s, need) {
   var gaps = studentGaps_(s, need);
   var out = { no_matrik: matrik, found: !!s, complete: !!s && !gaps.length, gaps: gaps, nama_pelajar: s ? s.nama_pelajar : '', fakulti: s ? s.fakulti : '' };
   if (s && user.peranan === ROLES.ADMIN) { out.no_kp = s.no_kp; out.emel = s.emel; out.telefon = s.telefon; }
+  else if (s && s.no_kp) out.kp_mask = '••••••••' + normKp_(s.no_kp).slice(-4);   // bukan Admin: no. KP disamarkan
   return out;
 }
 
@@ -1779,7 +1791,6 @@ function applyStudents_(user, kpi, input) {
     input[kpi.student.matrik] = s1.no_matrik;
     for (var col in kpi.student.map) {
       if (!kpi.student.map.hasOwnProperty(col)) continue;
-      if (col === 'fakulti' && kpi.entry === 'faculty') continue;
       input[kpi.student.map[col]] = col === 'no_kp' ? normKp_(s1.no_kp) : s1[col];
     }
   }
