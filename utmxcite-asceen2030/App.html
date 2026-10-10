@@ -1012,7 +1012,7 @@
     if (!pct) return '';
     return '<div class="tbrow">' + pct.map(function (it, i) {
       return '<div class="tbd">' + ringSvg(Math.min(100, it.value), { size: size || 130, label: 'Penggunaan tabung ' + it.label, text: fmtNum(it.value) + '%', color: TB_COLORS[i % TB_COLORS.length] }) +
-        '<b>' + esc(it.label) + '</b>' + (rmBy[it.label] !== undefined ? '<span>' + esc(rmS(rmBy[it.label])) + (alBy[it.label] !== undefined ? ' / ' + esc(rmS(alBy[it.label])) : '') + '</span><small>belanja / peruntukan</small>' : '') + '</div>';
+        '<b>' + esc(it.label) + '</b>' + (rmBy[it.label] !== undefined ? '<span>' + esc(rmS(rmBy[it.label])) + (alBy[it.label] !== undefined ? ' / ' + esc(rmS(alBy[it.label])) : '') + '</span>' : '') + '</div>';
     }).join('') + '</div>';
   }
 
