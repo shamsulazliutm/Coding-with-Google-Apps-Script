@@ -483,7 +483,9 @@ test('CKAI 5 (Makerspace): satu permohonan = satu penggunaan, Admin sahaja', () 
   assert.strictEqual(row.no_kp, '990101011234'); // sengkang dibuang
   const c = card(dash(2026), 'CKAI5');
   assert.strictEqual(c.value, 3); assert.strictEqual(c.secondary[0].value, 2); assert.strictEqual(c.secondary[1].value, 8);
-  deepEq(c.breakdown[0].items.map(i => i.label + ':' + i.value), ['2026-01:1', '2026-02:2']);
+  deepEq(c.breakdown[0].items.map(i => i.label + ':' + i.value), ['2026-01:3', '2026-02:5']);   // jumlah bil_peserta (pengguna), bukan bilangan tempahan
+  assert.strictEqual(c.secondary[4].label, 'Tempahan'); assert.strictEqual(c.secondary[4].value, 3);
+  const eq = c.breakdown.find(b => b.title === 'Penggunaan mengikut peralatan').items; assert.strictEqual(eq.reduce((a, i) => a + i.value, 0), 8);   // jumlah pengguna mengikut peralatan
   assert.strictEqual(c.breakdown[1].items[0].label, 'FC');
   assert.strictEqual(c.breakdown[2].items[0].label, '3D Printer');
   assert.strictEqual(c.secondary[2].value, 'RM 15.00'); assert.strictEqual(c.secondary[3].value, 'RM 0.00');

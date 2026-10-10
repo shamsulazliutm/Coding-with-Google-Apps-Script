@@ -54,6 +54,8 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await page.waitForSelector('.ig .igp');
     assert.ok((await page.locator('svg.ring').count()) >= 18);
     assert.strictEqual(await page.locator('.kpti').count(), 7);
+    assert.ok(await page.locator('.igp:has-text("Penggunaan Makerspace mengikut peralatan") .bi').count() >= 3);   // carta mengikut peralatan (pengguna)
+    assert.ok(/pengguna/.test(await page.locator('.igp:has-text("Penggunaan Makerspace mengikut bulan")').innerText()));
     assert.strictEqual(await page.locator('.igp:has-text("% Penggunaan Tabung") .tbd svg.ring').count(), 5);   // satu cincin bagi setiap tabung
     assert.ok(/%/.test(await page.locator('.igp:has-text("% Penggunaan Tabung") .tbd svg.ring text').first().innerHTML()));   // nilai % di tengah
     assert.strictEqual(await page.locator('.igp:has-text("% Penggunaan Tabung") .bi').count(), 0);

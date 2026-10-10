@@ -318,12 +318,15 @@ var MEASURES = {
         { label: 'Pengguna unik', value: Object.keys(users).length },
         { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') },
         { label: 'Caj diterima', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Bayar'; }), 'bayaran_rm')) },
-        { label: 'Caj belum dibayar', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Belum Dibayar'; }), 'bayaran_rm')) }
+        { label: 'Caj belum dibayar', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Belum Dibayar'; }), 'bayaran_rm')) },
+        { label: 'Tempahan', value: inYear.length }
       ],
       breakdown: [
-        { title: 'Penggunaan mengikut bulan', items: byMonth_(countBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); })) },
+        // Carta mengikut BILANGAN PENGGUNA (jumlah bil_peserta), bukan bilangan tempahan
+        { title: 'Penggunaan mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return String(r.tarikh_mula).slice(0, 7); }, function (r) { return num_(r.bil_peserta); })) },
         { title: 'Penggunaan mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) },
-        { title: 'Peralatan paling banyak dipohon', items: sortDesc_(countBy_(inYear, function (r) { return String(r.peralatan || '').trim(); })).slice(0, 5) }
+        { title: 'Peralatan paling banyak dipohon', items: sortDesc_(countBy_(inYear, function (r) { return String(r.peralatan || '').trim(); })).slice(0, 5) },
+        { title: 'Penggunaan mengikut peralatan', items: sortDesc_(sumBy_(inYear, function (r) { return String(r.peralatan || '').trim(); }, function (r) { return num_(r.bil_peserta); })) }
       ]
     };
   },

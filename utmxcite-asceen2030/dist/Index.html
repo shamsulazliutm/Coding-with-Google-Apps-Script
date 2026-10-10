@@ -167,7 +167,7 @@ label .req{color:var(--bad)}
 .igtop{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .igh{color:var(--m);font-size:24px}.igs{color:var(--mut);font-size:12.5px;margin-top:2px}
 .igctl{display:flex;gap:8px;align-items:center}
-.ig{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.ig{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;grid-auto-flow:row dense}
 .igp{background:#fff;border:1px solid #e6d3da;border-radius:14px;padding:16px;min-width:0}
 .igp.c4{grid-column:span 4}.igp.c8{grid-column:span 8}.igp.c12{grid-column:span 12}
 .igt2{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);margin:12px 0 4px}
@@ -187,6 +187,7 @@ label .req{color:var(--bad)}
 .chart{width:100%;height:auto;display:block}.chart .ax{font-size:9.5px;fill:var(--mut)}.chart .av{font-size:10px;font-weight:600;fill:var(--ink)}
 .klist{display:flex;flex-direction:column;gap:6px}.kl{display:grid;grid-template-columns:minmax(170px,1.1fr) 1.6fr 190px 120px;gap:10px;align-items:center;font-size:12.5px}
 .kl .kn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kl .mini{height:6px;background:#efe6e9;border-radius:3px;overflow:hidden}.kl .mini i{display:block;height:100%;background:var(--m)}.kl .n{text-align:right;color:var(--mut)}
+.eqbars .bi .l{white-space:normal;overflow:visible;text-overflow:clip}.eqbars .bi{grid-template-columns:minmax(210px,1.5fr) 3fr auto;font-size:13.5px;margin:9px 0}.eqbars .bi .mini{height:12px}.eqbars .bi .n{font-weight:700;white-space:nowrap}
 .tbrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px}.tbd{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px}.tbd .ring{max-width:130px}.tbd b{font-size:14px}.tbd span{font-size:12px;color:var(--mut)}.tbd small{font-size:11px;color:var(--mut)}
 .igctl .pbtn{flex:0 0 118px;width:118px;min-width:118px;box-sizing:border-box;height:34px;padding:0 8px;white-space:nowrap;text-align:center}
 .kptg{margin:4px 0 14px}.kpth{margin:0 0 8px;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}.kptn{background:#b8860b;color:#fff;border-radius:9px;padding:2px 9px;font-size:11px}
@@ -211,7 +212,7 @@ label .req{color:var(--bad)}
 /* slaid 2 = paparan ringkasan Infografik */
 .slide.first{border-top:10px solid var(--m);background:var(--bg)}.slide .sh1{display:flex;justify-content:space-between;align-items:center;padding:12px 28px 0}
 .slide .sh1 h2{margin:4px 0 0;font-size:30px;color:var(--m);line-height:1.1}.slide .sh1 .sk{display:inline-block;background:var(--gold);color:#4a2f00;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;border-radius:20px;padding:3px 12px}.slide .sh1 img{height:50px;width:auto}
-.slide .kptslide{zoom:.92}.slide .kptslide .kptc{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.slide .kptslide .kpti{padding:4px 8px;gap:1px}.slide .kptslide .kpti .ring{max-width:70px}.slide .kptslide .kptg{margin:0 0 6px}.slide .kptslide .chip{font-size:11px;padding:1px 8px}.slide .ig1 .igp.c4{grid-column:span 4}.slide .ig1 .igp.c8{grid-column:span 8}.slide .ig1 .igp.c12{grid-column:span 12}.slide .ig1 .rrow.six{grid-template-columns:repeat(6,1fr)}.slide .ig1 .rrow.six .ring{max-width:88px}.slide .ig1 .bi{grid-template-columns:60px 1fr auto}.slide .ig1 .bi .n{white-space:nowrap}.slide .ig1 .pt b{font-size:28px}.slide .ig1 .pt{font-size:15px}.slide .ig1 .chip{white-space:nowrap}.slide .ig1 .kl{grid-template-columns:240px 1fr 290px 150px;gap:12px}.slide .klist{gap:5px}.slide .kl{font-size:14px}.slide .ig1{zoom:.83;margin:8px 20px 0;flex:1;align-content:start}.slide.first .sf{padding-top:4px}
+.slide .kptslide{zoom:.92}.slide .kptslide .kptc{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.slide .kptslide .kpti{padding:4px 8px;gap:1px}.slide .kptslide .kpti .ring{max-width:70px}.slide .kptslide .kptg{margin:0 0 6px}.slide .kptslide .chip{font-size:11px;padding:1px 8px}.slide .ig1 .igp.c4{grid-column:span 4}.slide .ig1 .igp.c8{grid-column:span 8}.slide .ig1 .igp.c12{grid-column:span 12}.slide .ig1 .rrow.six{grid-template-columns:repeat(6,1fr)}.slide .ig1 .rrow.six .ring{max-width:88px}.slide .ig1 .bi{grid-template-columns:60px 1fr auto}.slide .ig1 .eqbars .bi{grid-template-columns:230px 1fr auto}.slide .ig1 .bi .n{white-space:nowrap}.slide .ig1 .pt b{font-size:28px}.slide .ig1 .pt{font-size:15px}.slide .ig1 .chip{white-space:nowrap}.slide .ig1 .kl{grid-template-columns:240px 1fr 290px 150px;gap:12px}.slide .klist{gap:5px}.slide .kl{font-size:14px}.slide .ig1{zoom:.83;margin:8px 20px 0;flex:1;align-content:start}.slide.first .sf{padding-top:4px}
 /* ---- PDF slaid 16:9 (1280x720 px = 13.333 x 7.5 in) ---- */
 #slides{display:none}
 .slide{position:relative;width:1280px;height:720px;overflow:hidden;background:#fff;color:var(--ink);display:flex;flex-direction:column;page-break-after:always;break-after:page;font-family:"Segoe UI",Roboto,Arial,sans-serif}
@@ -1293,6 +1294,18 @@ label .req{color:var(--bad)}
     }).join('') + '</div>';
   }
 
+  // Penggunaan Makerspace: bilangan pengguna (bil_peserta). msUsersHtml = nombor besar + tempahan; msEquipHtml = bar mendatar mengikut peralatan dengan peratus.
+  function msUsersHtml(c, items) {
+    var total = (items || []).reduce(function (a, i) { return a + Number(i.value || 0); }, 0), tm = null;
+    (c.secondary || []).forEach(function (x) { if (x.label === 'Tempahan') tm = x.value; });
+    return '<div class="big1">' + esc(fmtNum(total)) + ' <small>pengguna</small></div>' + (tm !== null ? '<p class="igs">daripada ' + esc(fmtNum(tm)) + ' tempahan</p>' : '');
+  }
+  function msEquipHtml(items) {
+    var total = items.reduce(function (a, i) { return a + Number(i.value || 0); }, 0);
+    return '<p class="igs">Jumlah pengguna (bil_peserta) bagi setiap peralatan · ' + esc(fmtNum(total)) + ' pengguna</p><div class="eqbars">' +
+      hbarsHtml(items, function (v) { return fmtNum(v) + (total ? ' (' + Math.round(v * 100 / total) + '%)' : ''); }, 8) + '</div>';
+  }
+
   // Kandungan panel KPT (tiga Teras; cincin setiap KPI). Digunakan oleh Infografik dan slaid 2.
   function kptTerasHtml(d, cs) {
     var kptList = cs.filter(function (c) { return c.level === 'KPT'; });
@@ -1377,7 +1390,9 @@ label .req{color:var(--bad)}
     var inc = bdOf(byId.CKAI7, /bulan/i), rent = bdOf(byId.CKAI6, /bulan/i), ms = bdOf(byId.CKAI5, /bulan/i);
     if (inc) h += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c4');
     if (rent) h += panel('Sewaan ruang niaga diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan ruang niaga bulanan', fmt: money }), 'c4');
-    if (ms) h += panel('Penggunaan Makerspace mengikut bulan', '<div class="big1">' + esc(fmtNum(byId.CKAI5.value)) + ' <small>penggunaan</small></div>' + barsSvg(ms, { label: 'Penggunaan Makerspace bulanan', fmt: function (v) { return v + ' penggunaan'; } }), 'c4');
+    var msEq = bdOf(byId.CKAI5, /Penggunaan mengikut peralatan/i);
+    if (ms) h += panel('Penggunaan Makerspace mengikut bulan', msUsersHtml(byId.CKAI5, ms) + barsSvg(ms, { label: 'Pengguna Makerspace bulanan', fmt: function (v) { return v + ' pengguna'; } }), 'c4');
+    if (msEq) h += panel('Penggunaan Makerspace mengikut peralatan', msEquipHtml(msEq), 'c8');
 
     // 8) Fakulti
     var fakCards = [['CKAI7', 'Pendapatan usahawan mengikut fakulti', money], ['CKAI4', 'Pendaftaran SSU mengikut fakulti'], ['CKAI1', 'Profiling pelajar mengikut fakulti']];
@@ -1464,7 +1479,7 @@ label .req{color:var(--bad)}
     }).join('') + '</div>', 'c12');
     var p4 = fn6;
     if (inc) p4 += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c4');
-    if (ms) p4 += panel('Penggunaan Makerspace mengikut bulan', '<div class="big1">' + esc(fmtNum(byId.CKAI5.value)) + ' <small>penggunaan</small></div>' + barsSvg(ms, { label: 'Penggunaan Makerspace bulanan', fmt: function (v) { return v + ' penggunaan'; } }), 'c4');
+    if (ms) p4 += panel('Penggunaan Makerspace mengikut bulan', msUsersHtml(byId.CKAI5, ms) + barsSvg(ms, { label: 'Pengguna Makerspace bulanan', fmt: function (v) { return v + ' pengguna'; } }), 'c4');
     var fi7 = bdOf(byId.CKAI7, /fakulti/i);
     if (fi7) p4 += panel('Pendapatan usahawan mengikut fakulti', hbarsHtml(fi7, money, 7), 'c4');
     slides.push(gridSlide('Fungsi dan prestasi', 'Enam fungsi UTMXCITE dan prestasi usahawan', p4, .95));
@@ -1473,7 +1488,12 @@ label .req{color:var(--bad)}
     if (rent) p5 += panel('Sewaan ruang niaga diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan ruang niaga bulanan', fmt: money }), 'c4');
     [['CKAI4', 'Pendaftaran SSU mengikut fakulti'], ['CKAI1', 'Profiling pelajar mengikut fakulti']].forEach(function (f) { var it = bdOf(byId[f[0]], /fakulti/i); if (it) p5 += panel(f[1], hbarsHtml(it, null, 8), 'c4'); });
     if (p5) slides.push(gridSlide('Prestasi', 'Sewaan ruang niaga, SSU dan profiling pelajar', p5, 1.3));
-    // 6) Slaid 6: penggunaan tabung amanah (CKAI 10)
+    // Slaid 6: Penggunaan Makerspace (pengguna mengikut bulan + mengikut peralatan)
+    var msEq2 = bdOf(byId.CKAI5, /Penggunaan mengikut peralatan/i);
+    if (ms && msEq2) slides.push(gridSlide('CKAI 5', 'Penggunaan Makerspace mengikut bilangan pengguna',
+      panel('Penggunaan Makerspace mengikut bulan', msUsersHtml(byId.CKAI5, ms) + barsSvg(ms, { label: 'Pengguna Makerspace bulanan', fmt: function (v) { return v + ' pengguna'; } }), 'c4') +
+      panel('Penggunaan Makerspace mengikut peralatan', msEquipHtml(msEq2), 'c8'), 1.4));
+    // 7) Slaid 7: penggunaan tabung amanah (CKAI 10)
     var tb = byId.CKAI10;
     if (tb) {
       var tsec = {}; (tb.secondary || []).forEach(function (x) { tsec[x.label] = x.value; });
