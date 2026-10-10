@@ -511,6 +511,13 @@ function buildHtml() {
     const txt = await page.locator('.cont').innerText();
     ['Laporan Prestasi UTMXCITE', 'Pekerjaan Premium Tier 1', 'Sasaran 2030: 40%', 'Enam fungsi UTMXCITE', 'Semua indikator', 'Peringkat Kementerian (KPT)', 'Teras 1', 'Teras 3', 'Kolaborasi berimpak tinggi', 'Jualan agregat usahawan', 'Kenal pasti minat', '(Identify Interest)', 'Pameran inovasi pelajar', '(Showcase Innovation)'].forEach(x => assert.ok(txt.toLowerCase().includes(x.toLowerCase()), 'infografik tiada: ' + x));
     assert.strictEqual(await page.locator('.kpti').count(), 7);
+    // susunan: pendapatan bulan + fakulti sebaris; Makerspace bulan + peralatan sebaris
+    const pos = await page.$$eval('.igp', els => els.map(e => { const r = e.getBoundingClientRect(); return [e.querySelector('.igt').textContent.trim(), Math.round(r.top + scrollY)]; }));
+    const topOf = (re) => (pos.find(x => re.test(x[0])) || [0, -1])[1];
+    // (data e2e mungkin tidak mempunyai semua panel; susunan penuh disemak dalam ujian demo)
+    if (topOf(/Pendapatan usahawan \(RM\)/) > 0 && topOf(/Pendapatan usahawan mengikut fakulti/) > 0) assert.ok(Math.abs(topOf(/Pendapatan usahawan \(RM\)/) - topOf(/Pendapatan usahawan mengikut fakulti/)) <= 2, 'pendapatan bulan dan fakulti mesti sebaris ' + JSON.stringify(pos));
+    if (topOf(/Makerspace mengikut bulan/) > 0 && topOf(/Makerspace mengikut peralatan/) > 0) assert.ok(Math.abs(topOf(/Makerspace mengikut bulan/) - topOf(/Makerspace mengikut peralatan/)) <= 2, 'Makerspace bulan dan peralatan mesti sebaris');
+
     assert.strictEqual(await page.locator('.kptp .kpth').count(), 3);
     assert.strictEqual(await page.locator('.rrow.four .rtile').count(), 4);
     await page.selectOption('#iy', '2027');

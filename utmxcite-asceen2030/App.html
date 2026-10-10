@@ -1108,17 +1108,15 @@
       return ringTile(p === null ? 0 : p, { size: 88, label: f.no + ' · ' + (f.nama || f.short), en: f.nama ? f.short : '', text: p === null ? '–' : p + '%', sub: list.length + ' indikator' });
     }).join('') + '</div>', 'c12');
 
-    // 7) Carta bulanan (RM dan bilangan)
-    var inc = bdOf(byId.CKAI7, /bulan/i), rent = bdOf(byId.CKAI6, /bulan/i), ms = bdOf(byId.CKAI5, /bulan/i);
-    if (inc) h += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c4');
-    if (rent) h += panel('Sewaan ruang niaga diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan ruang niaga bulanan', fmt: money }), 'c4');
+    // 7) Baris 1: pendapatan usahawan mengikut bulan + mengikut fakulti; baris 2: Makerspace mengikut bulan + mengikut peralatan; baris 3: sewaan, SSU, profiling
+    var inc = bdOf(byId.CKAI7, /bulan/i), rent = bdOf(byId.CKAI6, /bulan/i), ms = bdOf(byId.CKAI5, /bulan/i), incFak = bdOf(byId.CKAI7, /fakulti/i);
     var msEq = bdOf(byId.CKAI5, /Penggunaan mengikut peralatan/i);
+    if (inc) h += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c6');
+    if (incFak) h += panel('Pendapatan usahawan mengikut fakulti', hbarsHtml(incFak, money, 7), 'c6');
     if (ms) h += panel('Penggunaan Makerspace mengikut bulan', msUsersHtml(byId.CKAI5, ms) + barsSvg(ms, { label: 'Pengguna Makerspace bulanan', fmt: function (v) { return v + ' pengguna'; } }), 'c4');
     if (msEq) h += panel('Penggunaan Makerspace mengikut peralatan', msEquipHtml(msEq), 'c8');
-
-    // 8) Fakulti
-    var fakCards = [['CKAI7', 'Pendapatan usahawan mengikut fakulti', money], ['CKAI4', 'Pendaftaran SSU mengikut fakulti'], ['CKAI1', 'Profiling pelajar mengikut fakulti']];
-    fakCards.forEach(function (f) { var it = bdOf(byId[f[0]], /fakulti/i); if (it) h += panel(f[1], hbarsHtml(it, f[2], 7), 'c4'); });
+    if (rent) h += panel('Sewaan ruang niaga diterima (RM)', '<div class="big1">' + esc(fmtVal(byId.CKAI6, byId.CKAI6.value)) + '</div>' + areaSvg(rent, { label: 'Sewaan ruang niaga bulanan', fmt: money }), 'c4');
+    [['CKAI4', 'Pendaftaran SSU mengikut fakulti'], ['CKAI1', 'Profiling pelajar mengikut fakulti']].forEach(function (f) { var it = bdOf(byId[f[0]], /fakulti/i); if (it) h += panel(f[1], hbarsHtml(it, null, 7), 'c4'); });
 
     // 9) Semua indikator
     var all = cs.slice().sort(function (a, b) { return (b.pct === null ? -1 : b.pct) - (a.pct === null ? -1 : a.pct); });
@@ -1199,11 +1197,9 @@
       var list = cs.filter(function (c) { return c.fungsi === f.id; }), t = list.filter(function (c) { return c.target !== ''; }), p = avgPct(t);
       return ringTile(p === null ? 0 : p, { size: 88, label: f.no + ' · ' + (f.nama || f.short), en: f.nama ? f.short : '', text: p === null ? '–' : p + '%', sub: list.length + ' indikator' });
     }).join('') + '</div>', 'c12');
-    var p4 = fn6;
-    if (inc) p4 += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c4');
-    if (ms) p4 += panel('Penggunaan Makerspace mengikut bulan', msUsersHtml(byId.CKAI5, ms) + barsSvg(ms, { label: 'Pengguna Makerspace bulanan', fmt: function (v) { return v + ' pengguna'; } }), 'c4');
-    var fi7 = bdOf(byId.CKAI7, /fakulti/i);
-    if (fi7) p4 += panel('Pendapatan usahawan mengikut fakulti', hbarsHtml(fi7, money, 7), 'c4');
+    var p4 = fn6, fi7 = bdOf(byId.CKAI7, /fakulti/i);
+    if (inc) p4 += panel('Pendapatan usahawan (RM) mengikut bulan', '<div class="big1">' + esc(fmtVal(byId.CKAI7, byId.CKAI7.value)) + '</div>' + areaSvg(inc, { label: 'Pendapatan usahawan bulanan', fmt: money }), 'c6');
+    if (fi7) p4 += panel('Pendapatan usahawan mengikut fakulti', hbarsHtml(fi7, money, 7), 'c6');
     slides.push(gridSlide('Fungsi dan prestasi', 'Enam fungsi UTMXCITE dan prestasi usahawan', p4, .95));
     // 5) Slaid 5: sewaan ruang niaga, SSU dan profiling
     var p5 = '';

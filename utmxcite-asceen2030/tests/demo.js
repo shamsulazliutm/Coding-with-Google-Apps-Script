@@ -54,6 +54,12 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await page.waitForSelector('.ig .igp');
     assert.ok((await page.locator('svg.ring').count()) >= 18);
     assert.strictEqual(await page.locator('.kpti').count(), 7);
+    const pos = await page.$$eval('.igp', els => els.map(e => { const r = e.getBoundingClientRect(); return [e.querySelector('.igt').textContent.trim(), Math.round(r.top + scrollY)]; }));
+    const topOf = (re) => (pos.find(x => re.test(x[0])) || [0, -1])[1];
+    assert.ok(Math.abs(topOf(/Pendapatan usahawan \(RM\)/) - topOf(/Pendapatan usahawan mengikut fakulti/)) <= 2);   // sebaris
+    assert.ok(Math.abs(topOf(/Makerspace mengikut bulan/) - topOf(/Makerspace mengikut peralatan/)) <= 2);           // sebaris
+    assert.ok(Math.abs(topOf(/Sewaan ruang niaga/) - topOf(/Pendaftaran SSU/)) <= 2 && Math.abs(topOf(/Pendaftaran SSU/) - topOf(/Profiling pelajar mengikut fakulti/)) <= 2);   // baris sewaan, SSU, profiling
+
     assert.ok(await page.locator('.igp:has-text("Penggunaan Makerspace mengikut peralatan") .bi').count() >= 3);   // carta mengikut peralatan (pengguna)
     assert.ok(/pengguna/.test(await page.locator('.igp:has-text("Penggunaan Makerspace mengikut bulan")').innerText()));
     assert.strictEqual(await page.locator('.igp:has-text("% Penggunaan Tabung") .tbd svg.ring').count(), 5);   // satu cincin bagi setiap tabung
