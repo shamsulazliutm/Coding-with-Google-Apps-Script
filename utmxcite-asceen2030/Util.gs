@@ -84,10 +84,12 @@ function normalizeCell_(v, type) {
 // ---------------------------------------------------------------------------
 // Akses Sheet
 // ---------------------------------------------------------------------------
+var SS_MEMO_ = null;   // objek Spreadsheet dibuka sekali setiap panggilan (openById ialah operasi perlahan)
 function getSS_() {
+  if (SS_MEMO_) return SS_MEMO_;
   var id = getProp_('SHEET_ID');
   if (id) {
-    try { return SpreadsheetApp.openById(id); }
+    try { return (SS_MEMO_ = SpreadsheetApp.openById(id)); }
     catch (e) { console.error('Gagal buka Sheet ' + id + ': ' + (e && e.message)); throw userError_('Google Sheet tidak dapat dibuka. Pentadbir: semak SHEET_ID dalam Script Properties dan kebenaran akaun penerbit.'); }
   }
   var active = null;

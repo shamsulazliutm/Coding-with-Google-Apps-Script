@@ -1272,8 +1272,8 @@ label .req{color:var(--bad)}
   function loadInfo(year) {
     $('#content').innerHTML = '<p class="boot">Memuatkan infografik…</p>';
     var y = year || S.year || '';
-    Promise.all([call('api_dashboard', y), S.trend ? Promise.resolve(S.trend) : call('api_trend')]).then(function (r) {
-      S.dash = r[0]; S.year = r[0].year; S.trend = r[1];
+    (S.trend ? call('api_dashboard', y).then(function (d) { return { dash: d, trend: S.trend }; }) : call('api_infografik', y)).then(function (r) {
+      S.dash = r.dash; S.year = r.dash.year; S.trend = r.trend;
       if (S.view.name === 'infografik') renderInfo();
     }).catch(function (e) { $('#content').innerHTML = '<p class="boot">' + esc(e.message) + '</p>'; });
   }

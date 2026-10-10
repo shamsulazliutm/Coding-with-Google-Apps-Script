@@ -11,7 +11,7 @@ var APP = {
   OTP_MAX_ATTEMPTS: 5,
   OTP_MAX_REQUESTS: 5,     // setiap jam bagi satu e-mel
   SESSION_TTL: 21600,      // 6 jam (had maksimum CacheService)
-  DASH_CACHE_TTL: 120,
+  DASH_CACHE_TTL: 600,
   YEARS: [2026, 2027, 2028, 2029, 2030],
   PREMIUM_INCOME_RM: 4000, // ambang purata pendapatan sebulan bagi "pekerjaan premium" (lebih daripada)
   PREMIUM_TARGET_PCT: 40,  // sasaran 40% menjelang 2030

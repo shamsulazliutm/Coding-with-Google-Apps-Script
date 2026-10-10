@@ -12,7 +12,7 @@ var APP = {
   OTP_MAX_ATTEMPTS: 5,
   OTP_MAX_REQUESTS: 5,     // setiap jam bagi satu e-mel
   SESSION_TTL: 21600,      // 6 jam (had maksimum CacheService)
-  DASH_CACHE_TTL: 120,
+  DASH_CACHE_TTL: 600,
   YEARS: [2026, 2027, 2028, 2029, 2030],
   PREMIUM_INCOME_RM: 4000, // ambang purata pendapatan sebulan bagi "pekerjaan premium" (lebih daripada)
   PREMIUM_TARGET_PCT: 40,  // sasaran 40% menjelang 2030
@@ -1087,10 +1087,12 @@ function normalizeCell_(v, type) {
 // ---------------------------------------------------------------------------
 // Akses Sheet
 // ---------------------------------------------------------------------------
+var SS_MEMO_ = null;   // objek Spreadsheet dibuka sekali setiap panggilan (openById ialah operasi perlahan)
 function getSS_() {
+  if (SS_MEMO_) return SS_MEMO_;
   var id = getProp_('SHEET_ID');
   if (id) {
-    try { return SpreadsheetApp.openById(id); }
+    try { return (SS_MEMO_ = SpreadsheetApp.openById(id)); }
     catch (e) { console.error('Gagal buka Sheet ' + id + ': ' + (e && e.message)); throw userError_('Google Sheet tidak dapat dibuka. Pentadbir: semak SHEET_ID dalam Script Properties dan kebenaran akaun penerbit.'); }
   }
   var active = null;
@@ -2779,15 +2781,21 @@ function premiumShare_(rows, year) {
   };
 }
 
+/** Data dibaca sekali setiap panggilan dan dikongsi antara tahun (Infografik mengira 5 tahun sekaligus). */
+var DASH_MEMO_ = null;
+function dashMemo_() {
+  if (!DASH_MEMO_) DASH_MEMO_ = { tables: {}, targets: readTargets_(), faculties: listFaculties_() };
+  return DASH_MEMO_;
+}
+
 function computeDashboard_(year) {
-  var targets = readTargets_();
-  var cache = {};
+  var memo = dashMemo_(), targets = memo.targets, cache = memo.tables;
   function tableRows(id) {
     var k = getKpi_(id);
     if (!k.sheet) return [];
     return cache[id] || (cache[id] = readTable_(k.sheet, typesFor_(k)).rows);
   }
-  var ctx = { faculties: listFaculties_(), rows: tableRows };
+  var ctx = { faculties: memo.faculties, rows: tableRows };
   var cards = KPIS.map(function (kpi) {
     return buildKpiCard_(kpi, tableRows(kpi.id), year, targets, ctx);
   });
@@ -2812,6 +2820,12 @@ function getDashboard_(yearIn) {
   var d = computeDashboard_(year);
   try { cache.put('dash:' + year, JSON.stringify(d), APP.DASH_CACHE_TTL); } catch (e) { /* terlalu besar: abaikan cache */ }
   return d;
+}
+
+/** Infografik: dashboard tahun dipilih + trend dalam satu panggilan (satu bacaan Sheet dikongsi semua tahun). */
+function getInfografik_(yearIn) {
+  var d = getDashboard_(yearIn), t = getTrend_();
+  return { dash: d, trend: t };
 }
 
 /** Trend 2026-2030 untuk Infografik (awam, agregat sahaja): nilai setiap KPI, ukuran premium dan bilangan KPI mencapai sasaran bagi setiap tahun. */
@@ -3182,6 +3196,7 @@ function include(name) {
 /** Bungkus panggilan: tangkap ralat, pulangkan mesej mesra pengguna, jangan dedahkan butiran dalaman. */
 function wrap_(fn) {
   STUDENT_MEMO_ = null;   // cache data pelajar hanya sah dalam satu panggilan
+  SS_MEMO_ = null; DASH_MEMO_ = null;
   try {
     return { ok: true, data: fn() };
   } catch (e) {
@@ -3194,6 +3209,7 @@ function wrap_(fn) {
 function str_(v, max) { return String(v === null || v === undefined ? '' : v).slice(0, max || 300); }
 
 // --- Awam ---------------------------------------------------------------
+function api_infografik(year) { return wrap_(function () { return getInfografik_(year); }); }
 function api_trend() { return wrap_(function () { return getTrend_(); }); }
 function api_dashboard(year) { return wrap_(function () { return getDashboard_(year); }); }
 function api_requestOtp(email) { return wrap_(function () { return requestOtp_(str_(email, 254)); }); }

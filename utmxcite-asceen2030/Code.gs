@@ -16,6 +16,7 @@ function include(name) {
 /** Bungkus panggilan: tangkap ralat, pulangkan mesej mesra pengguna, jangan dedahkan butiran dalaman. */
 function wrap_(fn) {
   STUDENT_MEMO_ = null;   // cache data pelajar hanya sah dalam satu panggilan
+  SS_MEMO_ = null; DASH_MEMO_ = null;
   try {
     return { ok: true, data: fn() };
   } catch (e) {
@@ -28,6 +29,7 @@ function wrap_(fn) {
 function str_(v, max) { return String(v === null || v === undefined ? '' : v).slice(0, max || 300); }
 
 // --- Awam ---------------------------------------------------------------
+function api_infografik(year) { return wrap_(function () { return getInfografik_(year); }); }
 function api_trend() { return wrap_(function () { return getTrend_(); }); }
 function api_dashboard(year) { return wrap_(function () { return getDashboard_(year); }); }
 function api_requestOtp(email) { return wrap_(function () { return requestOtp_(str_(email, 254)); }); }

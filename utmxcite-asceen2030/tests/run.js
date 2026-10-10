@@ -1256,6 +1256,18 @@ test('Segerak CKAI 5: Sheet tidak dapat dibuka / tab tiada memberi mesej jelas',
   const r = g.api_syncMakerspace(adminToken, 1); fail(r, /tidak dapat dibuka|Tab/);
   env.props.MAKERSPACE_SHEET_ID = keep;
 });
+test('Prestasi: Infografik dimuat dalam satu panggilan; Sheet dibuka dan setiap tab dibaca sekali walaupun 5 tahun dikira', () => {
+  g.CacheService.getScriptCache().remove && ['dash:2026', 'dash:2027', 'dash:2028', 'dash:2029', 'dash:2030', 'trend'].forEach(k => g.CacheService.getScriptCache().remove(k));
+  const orig = g.SpreadsheetApp.openById; let opens = 0; g.SpreadsheetApp.openById = (id) => { opens++; return orig(id); };
+  const reads = {}; const ss = env.spreadsheets[env.props.SHEET_ID], origGet = ss.getSheetByName.bind(ss);
+  ss.getSheetByName = (n) => { reads[n] = (reads[n] || 0) + 1; return origGet(n); };
+  try {
+    const r = ok(g.api_infografik(2026));
+    assert.strictEqual(r.dash.year, 2026); assert.strictEqual(r.trend.length, 5); assert.ok(r.dash.kpis.length === 24);
+    assert.strictEqual(opens, 1, 'openById dipanggil ' + opens + ' kali');
+    Object.keys(reads).forEach(n => assert.ok(reads[n] <= 2, n + ' dibaca ' + reads[n] + ' kali'));   // getSheetByName: sekali bagi pembacaan + semakan
+  } finally { g.SpreadsheetApp.openById = orig; ss.getSheetByName = origGet; }
+});
 
 console.log('KPT (peringkat Kementerian)');
 const failF = (r, key) => { fail(r, /betulkan/); assert.ok(r.fields[key], 'ralat medan tiada: ' + key); };
