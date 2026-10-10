@@ -22,6 +22,9 @@ var APP = {
 /** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
+/** Sheet luar bagi CKAI 5: borang permohonan penggunaan peralatan (tab DATA). ID boleh ditukar melalui Script Property MAKERSPACE_SHEET_ID. */
+var MAKERSPACE_SRC = { id: '1meTCl-xyxqeLZhf3CeGjgT8oIfe62pNU7PSJFLaChdo', tab: 'DATA' };
+
 var SHEETS = {
   USERS: 'Pengguna',
   TARGETS: 'Sasaran',
@@ -712,7 +715,7 @@ var KPIS = [
     listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'status_bayaran', 'bayaran_rm', 'borang'],
     statusField: 'status_bayaran',
     rules: [{ when: { field: 'peralatan', in: ['Lain-lain (Other)'] }, require: ['peralatan_lain'] }],
-    validate: makerspaceValidate_,
+    validate: makerspaceValidate_, unique: ['sumber_kunci'],
     fields: [
       F_('emel', 'E-mel', 'email', { required: true, sec: 'Pemohon' }),
       F_('nama', 'Nama penuh', 'text', { required: true }),
@@ -731,7 +734,8 @@ var KPIS = [
       F_('masa_tamat', 'Masa tamat', 'time', { required: true }),
       F_('status_bayaran', 'Bayaran caj', 'select', { required: true, sec: 'Caj perkhidmatan', options: ['Bayar', 'Belum Dibayar', 'Tiada Caj'] }),
       F_('bayaran_rm', 'Bayaran (RM)', 'number', { short: 'Bayaran RM', min: 0, def: 5, hint: 'Lalai RM5. Diset RM0 secara automatik jika "Tiada Caj".' }),
-      F_('borang', 'Borang permohonan (PDF)', 'file', { full: true, sec: 'Dokumen' })
+      F_('borang', 'Borang permohonan (PDF)', 'file', { full: true, sec: 'Dokumen' }),
+      F_('sumber_kunci', 'Kunci sumber', 'text', { hidden: true })
     ]
   },
   {

@@ -51,6 +51,18 @@ Semua data pelajar diambil daripada satu tab asas, **`PELAJAR`**, dengan lajur `
 - Rekod lama kekal seperti sedia ada. Jika rekod lama diedit dan no. matrik belum ada dalam PELAJAR, tetingkap melengkapkan akan dipaparkan.
 - **PDPA:** no. KP, e-mel dan telefon disimpan dalam Sheet sebagai teks biasa; hadkan akses kepada Sheet. Tiada data ini muncul pada dashboard atau Infografik awam, dan Log Audit hanya merekod no. matrik.
 
+## Segerak CKAI 5 daripada Sheet permohonan (Sheet luar)
+
+CKAI 5 (Penggunaan Makerspace) boleh dikemas kini daripada Sheet borang permohonan peralatan (tab **DATA**; ID dalam `MAKERSPACE_SRC` di Config.gs atau Script Property `MAKERSPACE_SHEET_ID`). Akaun yang menerbitkan aplikasi mesti ada akses **Viewer** pada Sheet itu.
+
+- **Manual:** Admin > CKAI 5 > **Segerak daripada Sheet permohonan**. Setiap baris baharu diimport dan melalui pengesahan yang sama seperti kemasukan biasa; baris bermasalah dilaporkan dengan nombor baris sumber (betulkan di Sheet sumber, kemudian segerak semula).
+- **Automatik:** dalam Apps Script, Triggers > Add trigger > fungsi `segerakMakerspace` > Time-driven (contoh: setiap hari).
+- **Tiada pendua:** setiap rekod diimport mempunyai kunci sumber (cap masa + no. matrik; lajur `sumber_kunci`), jadi segerak berulang selamat.
+- **Pelajar:** no. matrik dipadankan dengan PELAJAR. Pelajar yang belum ada atau belum lengkap didaftar daripada data borang (nama, no. KP, e-mel, telefon, fakulti); data sah sedia ada dalam PELAJAR tidak ditimpa. Fakulti sumber mesti kod fakulti sah (contoh FABU, SPACE).
+- **Pemetaan:** peralatan Laser Cut/Cutter -> Laser Cutter Machine; 3D -> 3D Printer; Sewaan Ruang; Peralatan Tangan; selain itu -> Lain-lain (nama asal disimpan). Lajur Fakulti/Jabatan/Unit/Kelas disimpan juga dalam "Jabatan / unit / kelas". Bayaran: jika lajur caj ada amaun (contoh RM25.50) -> Bayar; jika kosong -> Belum Dibayar (RM0), boleh dikemas kini oleh Admin. Bilangan peserta kosong -> 1.
+- **Borang permohonan:** pautan Drive asal disimpan (lajur `borang_pautan`); fail kekal milik pemilik asal dan tidak dipindah atau dipadam oleh aplikasi.
+- Tab lain dalam Sheet sumber (Sheet4, BLACKLIST / TAK BAYAR) tidak dibaca.
+
 ## Peranan dan akses
 
 | Peranan | Dashboard | KAI 1, 4, 6 (fakulti) | KAI 2, 3, 5, DKAI 1 | Urus pengguna / sasaran / audit |

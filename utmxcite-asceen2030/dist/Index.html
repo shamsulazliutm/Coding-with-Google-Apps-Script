@@ -746,6 +746,32 @@ label .req{color:var(--bad)}
     $('#content').innerHTML = h + '</div>';
   }
 
+  // ---- Segerak CKAI 5 daripada Sheet permohonan (Admin)
+  function msyncHtml() {
+    var m = S.msync; if (!m) return '';
+    var h = '<div class="panel" role="status"><h3>Segerak daripada Sheet permohonan</h3>';
+    if (m.busy) return h + '<p>Menyegerak… ' + m.imported + ' diimport, ' + m.skipped + ' sedia ada' + (m.total ? ' (baris sumber: ' + m.total + ')' : '') + '.</p></div>';
+    if (m.error) return h + '<p class="err" style="display:block">' + esc(m.error) + '</p></div>';
+    h += '<p><b>' + m.imported + ' rekod diimport</b>, ' + m.skipped + ' sudah ada' + (m.students ? ', ' + m.students + ' pelajar didaftar / dilengkapkan dalam PELAJAR' : '') + (m.failed.length ? ', <b style="color:var(--bad)">' + m.failed.length + ' baris perlu dibetulkan</b>' : '') + '.</p>';
+    if (m.failed.length) {
+      h += '<p class="muted">Betulkan data di Sheet sumber (atau lengkapkan pelajar dalam PELAJAR), kemudian tekan Segerak semula. Baris yang sudah diimport tidak akan berganda.</p><div class="tablewrap"><table><thead><tr><th>Baris sumber</th><th>No. matrik</th><th>Masalah</th></tr></thead><tbody>' +
+        m.failed.slice(0, 100).map(function (r) { return '<tr><td>' + r.row + '</td><td>' + esc(r.no_matrik) + '</td><td>' + esc(r.error) + (r.fields ? '<div class="muted">' + Object.keys(r.fields).map(function (x) { return esc(x) + ': ' + esc(r.fields[x]); }).join('<br>') + '</div>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    }
+    return h + '</div>';
+  }
+  function runMsync() {
+    var k = kpiById('CKAI5'); if (!k || (S.msync && S.msync.busy)) return;
+    S.msync = { busy: true, imported: 0, skipped: 0, students: 0, failed: [], total: 0 };
+    renderKpi();
+    (function next(row) {
+      call('api_syncMakerspace', S.token, row).then(function (r) {
+        var m = S.msync; m.imported += r.imported; m.skipped += r.skipped; m.students += r.students; m.failed = m.failed.concat(r.failed); m.total = r.total;
+        if (!r.done) { var el = $('.panel[role="status"] p'); if (el) el.textContent = 'Menyegerak… ' + m.imported + ' diimport, ' + m.skipped + ' sedia ada.'; return next(r.nextRow); }
+        m.busy = false; S.list = null; renderKpi();
+      }).catch(function (e) { if (authFail(e)) return; S.msync = { busy: false, error: e.message }; renderKpi(); });
+    })(1);
+  }
+
   function loadList(k) {
     call('api_list', S.token, k.id, S.listFilters).then(function (r) {
       S.list = r; if (S.view.name === 'kpi' && S.view.id === k.id && (S.view.tab || 'list') === 'list') renderList(k);
@@ -759,7 +785,7 @@ label .req{color:var(--bad)}
     var el = $('#content');
     var f = S.listFilters;
     var statusField = k.statusField && fieldDef(k, k.statusField);
-    var h = '<div class="bar-top">' +
+    var h = (k.id === 'CKAI5' ? msyncHtml() : '') + '<div class="bar-top">' +
       '<input type="text" id="q" placeholder="🔍 Cari…" value="' + esc(f.q || '') + '" aria-label="Cari" data-input="q">' +
       (statusField ? '<select data-change="fstatus" aria-label="Tapis ' + esc(statusField.label) + '"><option value="">' + esc(statusField.label) + ': Semua</option>' +
         statusField.options.map(function (o) { return '<option' + (f.status === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' : '') +
@@ -767,7 +793,7 @@ label .req{color:var(--bad)}
         fieldDef(k, k.filter2).options.map(function (o) { return '<option' + (f.status2 === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' : '') +
       (isAdmin() && k.entry === 'faculty' ? '<select data-change="ffak" aria-label="Tapis fakulti"><option value="">Fakulti: Semua</option>' +
         S.session.faculties.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (f.fakulti === x.kod ? ' selected' : '') + '>' + esc(x.kod) + '</option>'; }).join('') + '</select>' : '') +
-      '<span class="grow"></span><button class="btn" data-action="new">＋ Rekod baharu</button></div>';
+      '<span class="grow"></span>' + (k.id === 'CKAI5' && isAdmin() ? '<button class="btn o" data-action="msync"' + (S.msync && S.msync.busy ? ' disabled' : '') + '>⬇ Segerak daripada Sheet permohonan</button> ' : '') + '<button class="btn" data-action="new">＋ Rekod baharu</button></div>';
     if (!S.list) { el.innerHTML = h + '<p class="boot">Memuatkan…</p>'; loadList(k); return; }
     h += '<div class="panel"><table class="lst"><thead><tr>' + k.listColumns.map(function (c) { return '<th>' + esc(colLabel(k, c)) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>';
     if (!S.list.rows.length) h += '<tr><td class="empty" colspan="' + (k.listColumns.length + 1) + '">Tiada rekod.</td></tr>';
@@ -1445,6 +1471,7 @@ label .req{color:var(--bad)}
       case 'pdel': syncPeople(a.getAttribute('data-key')); S.people[a.getAttribute('data-key')].splice(parseInt(a.getAttribute('data-i'), 10), 1); redrawPeople(a.getAttribute('data-key')); break;
       case 'fdl': if (k) downloadPdf(k, a.getAttribute('data-id'), a.getAttribute('data-key')); break;
       case 'tab': S.view.tab = a.getAttribute('data-tab'); if (S.view.tab === 'list') S.editing = null; renderKpi(); break;
+      case 'msync': runMsync(); break;
       case 'stucancel': S.modal = null; drawStudentModal(); break;
       case 'bulkstu': bulkCompleteStudents(kpiById(S.view.id)); break;
       case 'bulkdl': downloadTemplate(kpiById(S.view.id)); break;

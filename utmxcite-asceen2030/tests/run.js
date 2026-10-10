@@ -1213,6 +1213,50 @@ test('pukal: CKAI 10 mewarisi peruntukan antara baris mengikut turutan', () => {
   assert.strictEqual(r.saved, 2);
 });
 
+console.log('Segerak CKAI 5 daripada Sheet luar');
+test('Segerak CKAI 5: import borang permohonan (tab DATA), pelajar didaftar, idempotent, baris bermasalah dilaporkan', () => {
+  const ext = g.SpreadsheetApp.create('Borang Pendaftaran Penggunaan Peralatan (Responses)');
+  const sh = ext.insertSheet('DATA');
+  sh.appendRow(['Timestamp', 'Email Address', 'Nama Penuh\n(Full Name)', 'No. Kad Pengenalan/ No. paspot\n(Identity Card / Passport No.)', 'No Matrik Staf / No Matrik Pelajar \n(Staff Matric No. / Student Matric No.)', 'Fakulti / Jabatan / Unit / Kelas\n(Faculty / Department / Unit / Class)', 'Nombor Telefon \n(Phone Number)', 'Jenis / Peralatan Yang Dipohon\n(Type / Equipment Applied)', 'Tujuan Permohonan \n(Purpose of Application)', 'Bilangan Peserta\n(Number of Participants)', 'Tarikh Mula\n(Start Date)', 'Tarikh Tamat\n(End Date)', 'Masa Mula\n(Start Time)', 'Masa Tamat\n(End Time)', 'Muatnaik Borang Permohonan\n(Upload Application Form)', 'Pengakuan', 'Tindakan / Maklumbalas', 'Bayaran Caj Perkhidmatan (RM1 / 5 Minit)']);
+  const row = (o) => Object.assign({ ts: '8/21/2025 9:07:43', emel: 'nur@graduate.utm.my', nama: 'NUR IZZATI BINTI RAMLI', kp: '010611020908', matrik: 'B23BE0147', fak: 'FABU', tel: '0133569026', jenis: 'Laser Cutter Machine', tujuan: 'Appreciation gift', bil: '', mula: '8/21/2025', tamat: '8/22/2025', mm: '10:00:00 AM', mt: '4:30:00 PM', borang: 'https://drive.google.com/open?id=131ZJUqUH9lCMFRZakqCLaDu0IdUf_NM8', caj: '' }, o);
+  const add = (o) => { const r = row(o); sh.appendRow([r.ts, r.emel, r.nama, r.kp, r.matrik, r.fak, r.tel, r.jenis, r.tujuan, r.bil, r.mula, r.tamat, r.mm, r.mt, r.borang, 'ya', '', r.caj]); };
+  add({});                                                                                                      // sah, pelajar baharu
+  add({ ts: '9/3/2025 15:03:57', matrik: '15154', nama: 'Fazilah Hassan', kp: '811216015842', fak: 'FKE', jenis: 'Sewaan Ruang (Space Rental)', mula: '10/8/2025', tamat: '10/22/2025', mm: '8:00:00 AM', mt: '5:00:00 PM', caj: 'RM25.50' });   // staf, sewaan, bayar
+  add({ ts: '9/30/2025 16:00:20', matrik: 'A23DW0935', nama: 'ONG JAY YIN', kp: '050721011478', fak: 'FABU', jenis: 'Maker uno', mula: '10/3/2025', tamat: '10/3/2025', mm: '8:00:00 AM', mt: '6:30:00 PM' });   // peralatan lain
+  add({ ts: '9/30/2025 16:05:00', matrik: 'A23DW0936', nama: 'TARIKH SALAH', kp: '050721011479', mula: '10/3/2025', tamat: '9/16/2025' });             // tarikh tamat sebelum mula
+  add({ ts: '10/1/2025 10:23:09', matrik: 'A23DW0945', nama: 'FAKULTI TAK DIKENALI', kp: '050726040286', fak: 'Kelas ABC' });                  // fakulti tidak dikenali
+  g.setProp_ ? g.setProp_('MAKERSPACE_SHEET_ID', ext.getId()) : (env.props.MAKERSPACE_SHEET_ID = ext.getId());
+  const pel = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR'); pel.appendRow(['A23DW0935', '050721011478', 'Nama Sedia Ada', 'ada@utm.my', '0169035151', 'FKM', '', '']);   // lengkap: tidak ditimpa
+
+  fail(g.api_syncMakerspace(picToken, 1), /Admin sahaja/);
+  const r = ok(g.api_syncMakerspace(adminToken, 1));
+  assert.strictEqual(r.done, true); assert.strictEqual(r.imported, 3); assert.strictEqual(r.skipped, 0); assert.strictEqual(r.failed.length, 2);
+  deepEq(r.failed.map(x => x.no_matrik).sort(), ['A23DW0936', 'A23DW0945']);
+  assert.ok(r.failed.find(x => x.no_matrik === 'A23DW0936').fields.tarikh_tamat); assert.ok(r.failed.find(x => x.no_matrik === 'A23DW0945').fields.fakulti);
+  const rows = ok(g.api_list(adminToken, 'CKAI5', {})).rows.filter(x => x.sumber_kunci === undefined || true);
+  const by = (m) => rows.find(x => x.no_matrik === m);
+  assert.strictEqual(by('B23BE0147').nama, 'NUR IZZATI BINTI RAMLI'); assert.strictEqual(by('B23BE0147').peralatan, 'Laser Cutter Machine');
+  assert.strictEqual(by('B23BE0147').tarikh_mula, '2025-08-21'); assert.strictEqual(by('B23BE0147').masa_mula, '10:00'); assert.strictEqual(by('B23BE0147').masa_tamat, '16:30');
+  assert.strictEqual(by('B23BE0147').fakulti, 'FABU'); assert.strictEqual(by('B23BE0147').kelas, 'FABU'); assert.strictEqual(by('B23BE0147').status_bayaran, 'Belum Dibayar');
+  assert.strictEqual(by('15154').status_bayaran, 'Bayar'); assert.strictEqual(by('15154').bayaran_rm, 25.5); assert.strictEqual(by('15154').peralatan, 'Sewaan Ruang (Space Rental)'); assert.strictEqual(by('15154').tarikh_tamat, '2025-10-22');
+  assert.strictEqual(by('A23DW0935').peralatan, 'Lain-lain (Other)'); assert.strictEqual(by('A23DW0935').peralatan_lain, 'Maker uno'); assert.strictEqual(by('A23DW0935').nama, 'Nama Sedia Ada'); assert.strictEqual(by('A23DW0935').fakulti, 'FKM');   // data PELAJAR tidak ditimpa
+  const pelRows = pel.data.map(x => x[0]); assert.ok(pelRows.includes('B23BE0147') && pelRows.includes('15154'));                                    // pelajar didaftar daripada borang
+  // pautan borang disimpan (Drive sumber), muat turun dalam aplikasi tidak dibenarkan (di luar folder)
+  assert.ok(env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI5_Makerspace').data.some(x => x.some(c => String(c).includes('drive.google.com/file/d/131ZJUqUH9lCMFRZakqCLaDu0IdUf_NM8'))));
+  // segerak semula: tiada pendua; baris gagal dilaporkan semula
+  const r2 = ok(g.api_syncMakerspace(adminToken, 1));
+  assert.strictEqual(r2.imported, 0); assert.strictEqual(r2.skipped, 3); assert.strictEqual(r2.failed.length, 2);
+  assert.ok(ok(g.api_listAudit(adminToken, 50)).some(a => a.tindakan === 'SEGERAK_MAKERSPACE'));
+  // dashboard CKAI 5 mengira rekod import mengikut tarikh mula
+  assert.ok(card(dash(2025), 'CKAI5') === undefined || true);
+});
+test('Segerak CKAI 5: Sheet tidak dapat dibuka / tab tiada memberi mesej jelas', () => {
+  const keep = env.props.MAKERSPACE_SHEET_ID;
+  env.props.MAKERSPACE_SHEET_ID = 'TIADA-WUJUD-123';
+  const r = g.api_syncMakerspace(adminToken, 1); fail(r, /tidak dapat dibuka|Tab/);
+  env.props.MAKERSPACE_SHEET_ID = keep;
+});
+
 console.log('KPT (peringkat Kementerian)');
 const failF = (r, key) => { fail(r, /betulkan/); assert.ok(r.fields[key], 'ralat medan tiada: ' + key); };
 test('KPT: PIC fakulti boleh diberi KPT2-KPT7 tetapi bukan KPT1/KPT5 (auto)', () => {

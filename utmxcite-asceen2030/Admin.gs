@@ -192,3 +192,143 @@ function sendTestMail_(token) {
   audit_(admin, 'UJIAN_EMEL', '', '', '');
   return { to: admin.emel, remaining: safe_(function () { return MailApp.getRemainingDailyQuota(); }, null) };
 }
+
+
+// ---------------------------------------------------------------------------
+// Segerak CKAI 5 (Penggunaan Makerspace) daripada Sheet luar (borang permohonan, tab DATA)
+// ---------------------------------------------------------------------------
+var MS_COLS = {
+  ts: /^timestamp/i, emel: /^email/i, nama: /^nama penuh/i, kp: /kad pengenalan|paspot|passport/i, matrik: /^no\.? ?matrik/i,
+  fak: /^fakulti/i, tel: /telefon|phone/i, jenis: /^jenis/i, tujuan: /^tujuan/i, bil: /^bilangan/i,
+  mula: /^tarikh mula/i, tamat: /^tarikh tamat/i, masaM: /^masa mula/i, masaT: /^masa tamat/i, borang: /^muatnaik|^upload/i, caj: /^bayaran caj|^bayaran/i
+};
+
+function openMakerspaceSource_() {
+  var id = getProp_('MAKERSPACE_SHEET_ID') || MAKERSPACE_SRC.id;
+  var ss;
+  try { ss = SpreadsheetApp.openById(id); }
+  catch (e) { console.error('Gagal buka Sheet sumber ' + id + ': ' + (e && e.message)); throw userError_('Sheet permohonan tidak dapat dibuka. Kongsi Sheet itu (Viewer) dengan akaun penerbit aplikasi.'); }
+  if (!ss) throw userError_('Sheet permohonan tidak dapat dibuka. Semak MAKERSPACE_SHEET_ID dan kebenaran akaun penerbit.');
+  var sh = ss.getSheetByName(MAKERSPACE_SRC.tab);
+  if (!sh) throw userError_('Tab "' + MAKERSPACE_SRC.tab + '" tiada dalam Sheet permohonan.');
+  var tz = APP.TZ;
+  try { if (ss.getSpreadsheetTimeZone) tz = ss.getSpreadsheetTimeZone() || APP.TZ; } catch (e) { tz = APP.TZ; }
+  return { sh: sh, tz: tz };
+}
+
+function srcDate_(v, tz) {
+  if (Object.prototype.toString.call(v) === '[object Date]') return isNaN(v.getTime()) ? '' : Utilities.formatDate(v, tz, 'yyyy-MM-dd');
+  var t = String(v === null || v === undefined ? '' : v).trim(), m;
+  if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t))) return m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2);   // M/D/YYYY (format Google Form)
+  if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t))) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  return '';
+}
+function srcTime_(v, tz) {
+  if (Object.prototype.toString.call(v) === '[object Date]') return isNaN(v.getTime()) ? '' : Utilities.formatDate(v, tz, 'HH:mm');
+  var t = String(v === null || v === undefined ? '' : v).trim(), m = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i.exec(t);
+  if (!m) return '';
+  var h = parseInt(m[1], 10);
+  if (m[3]) { var pm = /pm/i.test(m[3]); if (pm && h < 12) h += 12; if (!pm && h === 12) h = 0; }
+  return ('0' + h).slice(-2) + ':' + m[2];
+}
+function srcEquipment_(raw) {
+  var t = String(raw || '').toLowerCase();
+  if (/laser/.test(t)) return { p: 'Laser Cutter Machine' };
+  if (/3d/.test(t)) return { p: '3D Printer' };
+  if (/sewaan|space rental/.test(t)) return { p: 'Sewaan Ruang (Space Rental)' };
+  if (/tangan|tools/.test(t)) return { p: 'Peralatan Tangan (Tools)' };
+  return { p: 'Lain-lain (Other)', lain: String(raw || '').trim().slice(0, 100) || 'Tidak dinyatakan' };
+}
+function srcFaculty_(raw, codes) {
+  var t = String(raw || '').trim().toUpperCase();
+  if (codes.indexOf(t) >= 0) return t;
+  var first = t.split(/[\s\/,-]+/)[0];
+  return codes.indexOf(first) >= 0 ? first : '';
+}
+function srcFileId_(link) {
+  var m = /[?&]id=([A-Za-z0-9_-]{10,100})/.exec(String(link || '')) || /\/d\/([A-Za-z0-9_-]{10,100})/.exec(String(link || ''));
+  return m ? m[1] : '';
+}
+
+/**
+ * Import baris baharu daripada Sheet permohonan ke CKAI 5. Idempotent: kunci sumber (cap masa + no. matrik) mengelak pendua.
+ * startRow = indeks baris sumber (0 = baris tajuk). Berhenti selepas maxNew baris baharu atau lewat tempoh; pulangkan nextRow.
+ * Pelajar yang belum ada / belum lengkap dalam PELAJAR didaftar daripada data borang (data sah sedia ada tidak ditimpa).
+ */
+function syncMakerspace_(user, startRow, maxNew, deadline) {
+  var kpi = getKpi_('CKAI5'), src = openMakerspaceSource_(), sh = src.sh, tz = src.tz;
+  var lr = sh.getLastRow(), lc = sh.getLastColumn();
+  var out = { imported: 0, skipped: 0, failed: [], students: 0, nextRow: startRow, done: true, total: Math.max(0, lr - 1) };
+  if (lr < 2) return out;
+  var vals = sh.getRange(1, 1, lr, lc).getValues(), hdr = vals[0].map(function (h) { return String(h || '').replace(/\s+/g, ' ').trim(); });
+  var col = {};
+  Object.keys(MS_COLS).forEach(function (k) { for (var i = 0; i < hdr.length; i++) { if (MS_COLS[k].test(hdr[i])) { col[k] = i; break; } } });
+  ['ts', 'nama', 'kp', 'matrik', 'jenis', 'mula', 'tamat'].forEach(function (k) { if (col[k] === undefined) throw userError_('Lajur "' + k + '" tidak dijumpai dalam tab DATA. Semak tajuk lajur sumber.'); });
+  var existing = {}, faculties = listFaculties_().map(function (f) { return f.kod; });
+  readTable_(kpi.sheet, typesFor_(kpi)).rows.forEach(function (r) { if (r.sumber_kunci) existing[String(r.sumber_kunci)] = 1; });
+  var cell = function (row, k) { return col[k] === undefined ? '' : row[col[k]]; };
+  var tried = 0, i = Math.max(1, startRow || 1);
+  for (; i < vals.length; i++) {
+    if (tried >= maxNew || (deadline && new Date().getTime() > deadline)) { out.done = false; break; }
+    var row = vals[i], matrik = normMatrik_(cell(row, 'matrik'));
+    if (!matrik && !String(cell(row, 'nama')).trim()) continue;
+    var tsv = cell(row, 'ts'), tsKey = Object.prototype.toString.call(tsv) === '[object Date]' ? Utilities.formatDate(tsv, tz, 'yyyy-MM-dd HH:mm:ss') : String(tsv).trim();
+    var key = 'ms|' + tsKey + '|' + matrik;
+    if (existing[key]) { out.skipped++; continue; }
+    tried++;
+    var fail = function (msg, fields) { out.failed.push({ row: i + 1, no_matrik: matrik, error: msg, fields: fields || null }); };
+    try {
+      // 1) pelajar dalam PELAJAR
+      var need = studentNeeds_(kpi), cur = studentIndex_()[matrik] || null;
+      if (!cur || studentGaps_(cur, need).length) {
+        var sr = saveStudentsAs_({ emel: user.emel, peranan: ROLES.PIC }, [{
+          no_matrik: matrik, nama_pelajar: String(cell(row, 'nama')).trim(), no_kp: cell(row, 'kp'), emel: String(cell(row, 'emel')).trim(),
+          telefon: String(cell(row, 'tel')).trim(), fakulti: srcFaculty_(cell(row, 'fak'), faculties)
+        }]).results[0];
+        if (!sr.ok) { fail('Maklumat pelajar tidak lengkap / tidak sah dalam borang: ' + Object.keys(sr.fields).join(', ') + '.', sr.fields); continue; }
+        out.students++; STUDENT_MEMO_ = null;
+      }
+      // 2) rekod CKAI 5
+      var eq = srcEquipment_(cell(row, 'jenis')), caj = String(cell(row, 'caj')), amt = /([\d.]+)/.exec(caj.replace(/,/g, ''));
+      var fid = srcFileId_(cell(row, 'borang'));
+      var rec = {
+        no_matrik: matrik, kelas: String(cell(row, 'fak')).trim().slice(0, 120), peralatan: eq.p, peralatan_lain: eq.lain || '',
+        tujuan: String(cell(row, 'tujuan')).trim().slice(0, 2000) || 'Tidak dinyatakan', bil_peserta: parseInt(cell(row, 'bil'), 10) || 1,
+        tarikh_mula: srcDate_(cell(row, 'mula'), tz), tarikh_tamat: srcDate_(cell(row, 'tamat'), tz),
+        masa_mula: srcTime_(cell(row, 'masaM'), tz), masa_tamat: srcTime_(cell(row, 'masaT'), tz),
+        status_bayaran: amt && /rm|\d/i.test(caj) ? 'Bayar' : 'Belum Dibayar', bayaran_rm: amt && /rm|\d/i.test(caj) ? Number(amt[1]) : 0,
+        sumber_kunci: key
+      };
+      if (fid) rec.borang = { id: fid, name: 'borang-permohonan' };
+      saveRecordAs_(user, kpi, rec, { trustFiles: true });
+      existing[key] = 1; out.imported++;
+    } catch (e) {
+      if (!(e && e.user)) throw e;
+      if (e.fields && e.fields.sumber_kunci) { out.skipped++; tried--; continue; }
+      fail(e.message, e.fields || null);
+    }
+  }
+  out.nextRow = i;
+  if (i >= vals.length) out.done = true;
+  return out;
+}
+
+function syncMakerspaceApi_(token, startRow) {
+  var user = requireAdmin_(token);
+  var r = syncMakerspace_(user, parseInt(startRow, 10) || 1, 25, new Date().getTime() + 240000);
+  audit_(user, 'SEGERAK_MAKERSPACE', 'CKAI5', '', r.imported + ' diimport, ' + r.skipped + ' sedia ada, ' + r.failed.length + ' gagal');
+  return r;
+}
+
+/** Untuk pencetus berjadual (Triggers > Time-driven): segerak sehingga selesai dalam had masa. */
+function segerakMakerspace() {
+  var admin = { emel: 'segerak@sistem', nama: 'Segerak Makerspace', peranan: ROLES.ADMIN, fakulti: 'UTMXCITE', kpiAkses: [] };
+  var deadline = new Date().getTime() + 270000, row = 1, tot = { imported: 0, skipped: 0, failed: 0 }, r;
+  do {
+    r = syncMakerspace_(admin, row, 25, deadline);
+    tot.imported += r.imported; tot.skipped += r.skipped; tot.failed += r.failed.length; row = r.nextRow;
+  } while (!r.done && new Date().getTime() < deadline);
+  audit_(admin, 'SEGERAK_MAKERSPACE', 'CKAI5', '', tot.imported + ' diimport, ' + tot.skipped + ' sedia ada, ' + tot.failed + ' gagal' + (r.done ? '' : ' (belum selesai)'));
+  console.log(JSON.stringify(tot) + (r.done ? '' : ' belum selesai; jalankan semula'));
+  return tot;
+}

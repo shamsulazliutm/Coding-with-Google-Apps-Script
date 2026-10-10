@@ -54,4 +54,5 @@ function api_saveTarget(token, input) { return wrap_(function () { return saveTa
 function api_setupInfo(token) { return wrap_(function () { return getSetupInfo_(str_(token, 200)); }); }
 function api_runSetup(token) { return wrap_(function () { return runSetupFromApp_(str_(token, 200)); }); }
 function api_testMail(token) { return wrap_(function () { return sendTestMail_(str_(token, 200)); }); }
+function api_syncMakerspace(token, startRow) { return wrap_(function () { return syncMakerspaceApi_(str_(token, 200), startRow); }); }
 function api_listAudit(token, limit) { return wrap_(function () { return listAudit_(str_(token, 200), limit); }); }

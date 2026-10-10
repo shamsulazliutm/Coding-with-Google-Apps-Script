@@ -31,6 +31,12 @@ function buildHtml() {
   stu('A24CS0101', 'Ali Bin Abu', '900101145678', 'FC'); stu('A24CS0102', 'Siti Binti Ahmad', '010203101234', 'FC');
   stu('A24EE0001', 'Ahmad Inovator', '000101101111', 'FKE'); stu('A24PF9001', 'Nur Profil', '000202102222', 'FC');
   stu('PK-A', 'Pukal A', '000101105555', 'FAI'); stu('PK-B', 'Pukal B', '000202106666', 'FC'); stu('PK-C', 'Pukal C', '000303107777', 'FC');
+  // Sheet luar (borang permohonan peralatan) untuk segerak CKAI 5
+  const ext = g.SpreadsheetApp.create('Borang Permohonan Luar'), extSh = ext.insertSheet('DATA');
+  extSh.appendRow(['Timestamp', 'Email Address', 'Nama Penuh', 'No. Kad Pengenalan', 'No Matrik', 'Fakulti / Jabatan', 'Nombor Telefon', 'Jenis / Peralatan', 'Tujuan Permohonan', 'Bilangan Peserta', 'Tarikh Mula', 'Tarikh Tamat', 'Masa Mula', 'Masa Tamat', 'Muatnaik Borang', 'Pengakuan', 'Tindakan', 'Bayaran Caj']);
+  extSh.appendRow(['8/21/2025 9:07:43', 'a@graduate.utm.my', 'Pemohon Luar Satu', '010611020908', 'MSX001', 'FABU', '0133569026', 'Laser Cut Machine', 'Projek', '', '8/21/2025', '8/22/2025', '10:00:00 AM', '4:30:00 PM', 'https://drive.google.com/open?id=131ZJUqUH9lCMFRZakqCLaDu0IdUf_NM8', '', '', 'RM12']);
+  extSh.appendRow(['8/22/2025 9:07:43', 'b@graduate.utm.my', 'Pemohon Salah', '010611020909', 'MSX002', 'Kelas Entah', '0133569027', '3D Printer', 'Projek', '', '8/22/2025', '8/22/2025', '10:00:00 AM', '4:30:00 PM', '', '', '', '']);
+  env.props.MAKERSPACE_SHEET_ID = ext.getId();
   // Data contoh untuk dashboard (hanya dalam ujian, bukan dalam produk).
   g.api_save(admin, 'KAI1', { aliran: 'Technology Startup', jenis: 'Inkubator Fakulti', fakulti: 'FC', nama_inkubator: 'Launchpad FC', didaftarkan: 'Ya', tarikh_pendaftaran: '2026-03-01', status: 'Beroperasi', tarikh_beroperasi: '2026-04-01' });
   for (let i = 0; i < 6; i++) g.api_save(admin, 'KAI4', { fakulti: i % 2 ? 'FAI' : 'FC', nama_pelajar: 'Pelajar ' + i, no_kp: '99010101123' + i, no_matrik: 'A24' + i, status: 'Mendaftar', tarikh_daftar: '2026-03-0' + (i + 1) });
@@ -483,6 +489,18 @@ function buildHtml() {
     await page.waitForSelector('text=Lajur wajib tiada');
     assert.strictEqual(await page.locator('[data-action="bulkgo"]').count(), 0);
     await page.screenshot({ path: path.join(out, '18-muat-naik-pukal.png'), fullPage: true });
+  });
+  await step('CKAI 5: segerak daripada Sheet permohonan (Admin); baris bermasalah dilaporkan; segerak semula tiada pendua', async () => {
+    await goNav('CKAI 5');
+    await page.waitForSelector('[data-action="msync"]');
+    await page.click('[data-action="msync"]');
+    await page.waitForSelector('.panel[role="status"]:has-text("1 rekod diimport")');
+    assert.ok((await text('.cont')).includes('1 baris perlu dibetulkan') && (await text('.cont')).includes('MSX002'));
+    await page.waitForSelector('td:has-text("Pemohon Luar Satu")');
+    await page.click('[data-action="msync"]');
+    await page.waitForSelector('.panel[role="status"]:has-text("0 rekod diimport")');
+    assert.strictEqual(await page.locator('td:has-text("Pemohon Luar Satu")').count(), 1);
+    await page.screenshot({ path: path.join(out, '20-segerak-makerspace.png'), fullPage: true });
   });
   await step('Infografik (awam): panel, cincin dan carta dipaparkan; tukar tahun', async () => {
     await goNav('Infografik');

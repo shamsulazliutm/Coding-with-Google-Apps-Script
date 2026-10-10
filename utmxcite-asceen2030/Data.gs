@@ -165,7 +165,9 @@ function applyStudents_(user, kpi, input) {
  * mengisi medan yang kosong atau tidak sah (data sah sedia ada tidak diubah).
  */
 function saveStudents_(token, list) {
-  var user = requireUser_(token);
+  return saveStudentsAs_(requireUser_(token), list);
+}
+function saveStudentsAs_(user, list) {
   if (!Array.isArray(list) || !list.length || list.length > 50) throw userError_('Senarai pelajar tidak sah.');
   var faculties = listFaculties_().map(function (f) { return f.kod; });
   var lock = LockService.getScriptLock();
@@ -212,7 +214,7 @@ function saveStudents_(token, list) {
   }
 }
 
-function validateRecord_(kpi, rec, faculties, user, existing, rows) {
+function validateRecord_(kpi, rec, faculties, user, existing, rows, opts) {
   var errors = {}, clean = {};
   var facCodes = faculties.map(function (f) { return f.kod; });
 
@@ -269,6 +271,7 @@ function validateRecord_(kpi, rec, faculties, user, existing, rows) {
       case 'file':
         var fv = typeof v === 'string' ? parseJson_(v, null) : v;
         if (!fv || typeof fv.id !== 'string' || !/^[A-Za-z0-9_-]{10,100}$/.test(fv.id)) { errors[f.key] = 'Muat naik fail PDF.'; break; }
+        if (opts && opts.trustFiles) { clean[f.key] = JSON.stringify({ id: fv.id, name: String(fv.name || 'borang.pdf').slice(0, 100) }); break; }
         var keep = existing ? parseJson_(existing[f.key], {}) : {};
         if (keep && keep.id === fv.id) { clean[f.key] = JSON.stringify({ id: keep.id, name: String(keep.name || 'sijil.pdf').slice(0, 100) }); break; }
         // Fail baharu mesti baru dimuat naik oleh pengguna ini melalui aplikasi (elak merujuk fail Drive sembarangan).
@@ -336,6 +339,11 @@ function saveRecord_(token, kpiId, rec) {
   var user = requireUser_(token);
   var kpi = getKpi_(String(kpiId));
   if (!canAccessKpi_(user, kpi)) throw userError_('Akses ditolak bagi KPI ini.');
+  return saveRecordAs_(user, kpi, rec, null);
+}
+
+/** Simpan rekod bagi pengguna yang sudah disahkan. opts.trustFiles = lampiran {id,name} daripada sumber dipercayai (import) diterima tanpa semakan muat naik. */
+function saveRecordAs_(user, kpi, rec, opts) {
   if (!rec || typeof rec !== 'object') throw userError_('Data tidak sah.');
 
   var lock = LockService.getScriptLock();
@@ -361,7 +369,7 @@ function saveRecord_(token, kpiId, rec) {
     }
 
     applyStudents_(user, kpi, input);
-    var v = validateRecord_(kpi, input, listFaculties_(), user, existing, table.rows);
+    var v = validateRecord_(kpi, input, listFaculties_(), user, existing, table.rows, opts);
     if (Object.keys(v.errors).length) throw userError_('Sila betulkan medan yang bertanda.', { fields: v.errors });
 
     // Medan unik (contoh: satu profil bagi setiap no. matrik).
