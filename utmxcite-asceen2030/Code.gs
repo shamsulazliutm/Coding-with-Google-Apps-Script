@@ -16,7 +16,7 @@ function include(name) {
 /** Bungkus panggilan: tangkap ralat, pulangkan mesej mesra pengguna, jangan dedahkan butiran dalaman. */
 function wrap_(fn) {
   STUDENT_MEMO_ = null;   // cache data pelajar hanya sah dalam satu panggilan
-  SS_MEMO_ = null; DASH_MEMO_ = null;
+  SS_MEMO_ = null; DASH_MEMO_ = null; FAC_MEMO_ = null;
   try {
     return { ok: true, data: fn() };
   } catch (e) {

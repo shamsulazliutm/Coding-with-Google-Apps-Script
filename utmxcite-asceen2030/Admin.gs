@@ -264,10 +264,14 @@ function syncMakerspace_(user, startRow, maxNew, deadline) {
   var col = {};
   Object.keys(MS_COLS).forEach(function (k) { for (var i = 0; i < hdr.length; i++) { if (MS_COLS[k].test(hdr[i])) { col[k] = i; break; } } });
   ['ts', 'nama', 'kp', 'matrik', 'jenis', 'mula', 'tamat'].forEach(function (k) { if (col[k] === undefined) throw userError_('Lajur "' + k + '" tidak dijumpai dalam tab DATA. Semak tajuk lajur sumber.'); });
-  var existing = {}, faculties = listFaculties_().map(function (f) { return f.kod; });
-  readTable_(kpi.sheet, typesFor_(kpi)).rows.forEach(function (r) { if (r.sumber_kunci) existing[String(r.sumber_kunci)] = 1; });
+  var ctx = { table: null, sh: null }, faculties = listFaculties_().map(function (f) { return f.kod; });
+  var tbl = readTable_(kpi.sheet, typesFor_(kpi)), existing = {};
+  tbl.rows.forEach(function (r) { if (r.sumber_kunci) existing[String(r.sumber_kunci)] = 1; });
+  ctx.table = tbl; ctx.sh = getSheet_(kpi.sheet);
   var cell = function (row, k) { return col[k] === undefined ? '' : row[col[k]]; };
-  var tried = 0, i = Math.max(1, startRow || 1);
+
+  // Fasa A: kumpulkan baris baharu (tanpa menulis apa-apa)
+  var cands = [], i = Math.max(1, startRow || 1), tried = 0;
   for (; i < vals.length; i++) {
     if (tried >= maxNew || (deadline && new Date().getTime() > deadline)) { out.done = false; break; }
     var row = vals[i], matrik = normMatrik_(cell(row, 'matrik'));
@@ -276,46 +280,59 @@ function syncMakerspace_(user, startRow, maxNew, deadline) {
     var key = 'ms|' + tsKey + '|' + matrik;
     if (existing[key]) { out.skipped++; continue; }
     tried++;
-    var fail = function (msg, fields) { out.failed.push({ row: i + 1, no_matrik: matrik, error: msg, fields: fields || null }); };
-    try {
-      // 1) pelajar dalam PELAJAR
-      var need = studentNeeds_(kpi), cur = studentIndex_()[matrik] || null;
-      if (!cur || studentGaps_(cur, need).length) {
-        var sr = saveStudentsAs_({ emel: user.emel, peranan: ROLES.PIC }, [{
-          no_matrik: matrik, nama_pelajar: String(cell(row, 'nama')).trim(), no_kp: cell(row, 'kp'), emel: String(cell(row, 'emel')).trim(),
-          telefon: String(cell(row, 'tel')).trim(), fakulti: srcFaculty_(cell(row, 'fak'), faculties)
-        }]).results[0];
-        if (!sr.ok) { fail('Maklumat pelajar tidak lengkap / tidak sah dalam borang: ' + Object.keys(sr.fields).join(', ') + '.', sr.fields); continue; }
-        out.students++; STUDENT_MEMO_ = null;
-      }
-      // 2) rekod CKAI 5
-      var eq = srcEquipment_(cell(row, 'jenis')), caj = String(cell(row, 'caj')), amt = /([\d.]+)/.exec(caj.replace(/,/g, ''));
-      var fid = srcFileId_(cell(row, 'borang'));
-      var rec = {
-        no_matrik: matrik, kelas: String(cell(row, 'fak')).trim().slice(0, 120), peralatan: eq.p, peralatan_lain: eq.lain || '',
-        tujuan: String(cell(row, 'tujuan')).trim().slice(0, 2000) || 'Tidak dinyatakan', bil_peserta: parseInt(cell(row, 'bil'), 10) || 1,
-        tarikh_mula: srcDate_(cell(row, 'mula'), tz), tarikh_tamat: srcDate_(cell(row, 'tamat'), tz),
-        masa_mula: srcTime_(cell(row, 'masaM'), tz), masa_tamat: srcTime_(cell(row, 'masaT'), tz),
-        status_bayaran: amt && /rm|\d/i.test(caj) ? 'Bayar' : 'Belum Dibayar', bayaran_rm: amt && /rm|\d/i.test(caj) ? Number(amt[1]) : 0,
-        sumber_kunci: key
-      };
-      if (fid) rec.borang = { id: fid, name: 'borang-permohonan' };
-      saveRecordAs_(user, kpi, rec, { trustFiles: true });
-      existing[key] = 1; out.imported++;
-    } catch (e) {
-      if (!(e && e.user)) throw e;
-      if (e.fields && e.fields.sumber_kunci) { out.skipped++; tried--; continue; }
-      fail(e.message, e.fields || null);
-    }
+    cands.push({ rowNum: i + 1, row: row, matrik: matrik, key: key });
   }
   out.nextRow = i;
   if (i >= vals.length) out.done = true;
+  if (!cands.length) return out;
+
+  // Fasa B: daftar / lengkapkan pelajar yang perlu dalam satu panggilan (data sah sedia ada tidak ditimpa)
+  var need = studentNeeds_(kpi), idx = studentIndex_(), toSave = [], seen = {}, bad = {};
+  cands.forEach(function (c) {
+    var cur = idx[c.matrik] || null;
+    if ((!cur || studentGaps_(cur, need).length) && !seen[c.matrik]) {
+      seen[c.matrik] = 1;
+      toSave.push({ no_matrik: c.matrik, nama_pelajar: String(cell(c.row, 'nama')).trim(), no_kp: cell(c.row, 'kp'), emel: String(cell(c.row, 'emel')).trim(), telefon: String(cell(c.row, 'tel')).trim(), fakulti: srcFaculty_(cell(c.row, 'fak'), faculties) });
+    }
+  });
+  if (toSave.length) {
+    var sres = saveStudentsAs_({ emel: user.emel, peranan: ROLES.PIC }, toSave, true).results;
+    sres.forEach(function (r) { if (r.ok) out.students++; else bad[r.no_matrik] = r.fields || {}; });
+    if (out.students) audit_(user, 'PELAJAR_TAMBAH', '', '', out.students + ' pelajar didaftar / dilengkapkan daripada borang makerspace');
+    STUDENT_MEMO_ = null;
+  }
+
+  // Fasa C: simpan rekod CKAI 5 (jadual dikongsi; audit dan cache sekali)
+  cands.forEach(function (c) {
+    var fail = function (msg, fields) { out.failed.push({ row: c.rowNum, no_matrik: c.matrik, error: msg, fields: fields || null }); };
+    if (bad[c.matrik]) { fail('Maklumat pelajar tidak lengkap / tidak sah dalam borang: ' + Object.keys(bad[c.matrik]).join(', ') + '.', bad[c.matrik]); return; }
+    try {
+      var row = c.row, eq = srcEquipment_(cell(row, 'jenis')), caj = String(cell(row, 'caj')), amt = /([\d.]+)/.exec(caj.replace(/,/g, ''));
+      var fid = srcFileId_(cell(row, 'borang')), paid = !!amt && /rm|\d/i.test(caj);
+      var rec = {
+        no_matrik: c.matrik, kelas: String(cell(row, 'fak')).trim().slice(0, 120), peralatan: eq.p, peralatan_lain: eq.lain || '',
+        tujuan: String(cell(row, 'tujuan')).trim().slice(0, 2000) || 'Tidak dinyatakan', bil_peserta: parseInt(cell(row, 'bil'), 10) || 1,
+        tarikh_mula: srcDate_(cell(row, 'mula'), tz), tarikh_tamat: srcDate_(cell(row, 'tamat'), tz),
+        masa_mula: srcTime_(cell(row, 'masaM'), tz), masa_tamat: srcTime_(cell(row, 'masaT'), tz),
+        status_bayaran: paid ? 'Bayar' : 'Belum Dibayar', bayaran_rm: paid ? Number(amt[1]) : 0,
+        sumber_kunci: c.key
+      };
+      if (fid) rec.borang = { id: fid, name: 'borang-permohonan' };
+      saveRecordAs_(user, kpi, rec, { trustFiles: true, ctx: ctx, silent: true });
+      existing[c.key] = 1; out.imported++;
+    } catch (e) {
+      if (!(e && e.user)) throw e;
+      if (e.fields && e.fields.sumber_kunci) { out.skipped++; return; }
+      fail(e.message, e.fields || null);
+    }
+  });
+  if (out.imported) clearDashCache_();
   return out;
 }
 
 function syncMakerspaceApi_(token, startRow) {
   var user = requireAdmin_(token);
-  var r = syncMakerspace_(user, parseInt(startRow, 10) || 1, 25, new Date().getTime() + 240000);
+  var r = syncMakerspace_(user, parseInt(startRow, 10) || 1, 20, new Date().getTime() + 150000);
   audit_(user, 'SEGERAK_MAKERSPACE', 'CKAI5', '', r.imported + ' diimport, ' + r.skipped + ' sedia ada, ' + r.failed.length + ' gagal');
   return r;
 }

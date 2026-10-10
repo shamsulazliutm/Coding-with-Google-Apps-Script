@@ -524,7 +524,7 @@
   function msyncHtml() {
     var m = S.msync; if (!m) return '';
     var h = '<div class="panel" role="status"><h3>Segerak daripada Sheet permohonan</h3>';
-    if (m.busy) return h + '<p>Menyegerak… ' + m.imported + ' diimport, ' + m.skipped + ' sedia ada' + (m.total ? ' (baris sumber: ' + m.total + ')' : '') + '.</p></div>';
+    if (m.busy) return h + '<p>Menyegerak… ' + m.imported + ' diimport, ' + m.skipped + ' sedia ada' + (m.total ? ' · baris sumber diproses: ' + (m.row || 0) + ' / ' + m.total : ' · membaca Sheet sumber (boleh mengambil sehingga satu minit)') + '.</p></div>';
     if (m.error) return h + '<p class="err" style="display:block">' + esc(m.error) + '</p></div>';
     h += '<p><b>' + m.imported + ' rekod diimport</b>, ' + m.skipped + ' sudah ada' + (m.students ? ', ' + m.students + ' pelajar didaftar / dilengkapkan dalam PELAJAR' : '') + (m.failed.length ? ', <b style="color:var(--bad)">' + m.failed.length + ' baris perlu dibetulkan</b>' : '') + '.</p>';
     if (m.failed.length) {
@@ -539,8 +539,8 @@
     renderKpi();
     (function next(row) {
       call('api_syncMakerspace', S.token, row).then(function (r) {
-        var m = S.msync; m.imported += r.imported; m.skipped += r.skipped; m.students += r.students; m.failed = m.failed.concat(r.failed); m.total = r.total;
-        if (!r.done) { var el = $('.panel[role="status"] p'); if (el) el.textContent = 'Menyegerak… ' + m.imported + ' diimport, ' + m.skipped + ' sedia ada.'; return next(r.nextRow); }
+        var m = S.msync; m.imported += r.imported; m.skipped += r.skipped; m.students += r.students; m.failed = m.failed.concat(r.failed); m.total = r.total; m.row = Math.min(r.total, r.nextRow - 1);
+        if (!r.done) { var el = $('.panel[role="status"] p'); if (el) el.textContent = 'Menyegerak… ' + m.imported + ' diimport, ' + m.skipped + ' sedia ada · baris sumber diproses: ' + m.row + ' / ' + m.total + '.'; return next(r.nextRow); }
         m.busy = false; S.list = null; renderKpi();
       }).catch(function (e) { if (authFail(e)) return; S.msync = { busy: false, error: e.message }; renderKpi(); });
     })(1);

@@ -1251,6 +1251,21 @@ test('Segerak CKAI 5: import borang permohonan (tab DATA), pelajar didaftar, ide
   // dashboard CKAI 5 mengira rekod import mengikut tarikh mula
   assert.ok(card(dash(2025), 'CKAI5') === undefined || true);
 });
+test('Segerak CKAI 5: pantas, jadual dibaca sekali bagi banyak baris (bukan sekali setiap baris)', () => {
+  const ext = g.SpreadsheetApp.create('Ext perf'), sh = ext.insertSheet('DATA');
+  sh.appendRow(['Timestamp', 'Email Address', 'Nama Penuh', 'No. Kad Pengenalan', 'No Matrik', 'Fakulti / Jabatan', 'Nombor Telefon', 'Jenis / Peralatan', 'Tujuan', 'Bilangan Peserta', 'Tarikh Mula', 'Tarikh Tamat', 'Masa Mula', 'Masa Tamat', 'Muatnaik Borang', 'Pengakuan', 'Tindakan', 'Bayaran Caj']);
+  for (let i = 0; i < 12; i++) sh.appendRow(['9/' + (i + 1) + '/2025 10:00:00', 'p' + i + '@utm.my', 'Pemohon Perf ' + i, '0301010' + (10000 + i), 'PERF' + i, 'FKE', '012345678' + (i % 10), '3D Printer', 'Uji', '', '9/' + (i + 1) + '/2025', '9/' + (i + 1) + '/2025', '9:00:00 AM', '5:00:00 PM', '', 'ya', '', '']);
+  const keep = env.props.MAKERSPACE_SHEET_ID; env.props.MAKERSPACE_SHEET_ID = ext.getId();
+  const ss = env.spreadsheets[env.props.SHEET_ID], origGet = ss.getSheetByName.bind(ss), reads = {};
+  ss.getSheetByName = (n) => { reads[n] = (reads[n] || 0) + 1; return origGet(n); };
+  try {
+    const r = ok(g.api_syncMakerspace(adminToken, 1));
+    assert.strictEqual(r.imported, 12); assert.strictEqual(r.students, 12); assert.strictEqual(r.failed.length, 0);
+    assert.ok((reads['CKAI5_Makerspace'] || 0) <= 6, 'CKAI5 dibaca ' + reads['CKAI5_Makerspace'] + ' kali');
+    assert.ok((reads['PELAJAR'] || 0) <= 8, 'PELAJAR dibaca ' + reads['PELAJAR'] + ' kali');
+    assert.ok((reads['Log_Audit'] || 0) <= 6, 'Log_Audit ditulis ' + reads['Log_Audit'] + ' kali');   // audit ringkasan, bukan setiap baris
+  } finally { ss.getSheetByName = origGet; env.props.MAKERSPACE_SHEET_ID = keep; }
+});
 test('Segerak CKAI 5: Sheet tidak dapat dibuka / tab tiada memberi mesej jelas', () => {
   const keep = env.props.MAKERSPACE_SHEET_ID;
   env.props.MAKERSPACE_SHEET_ID = 'TIADA-WUJUD-123';

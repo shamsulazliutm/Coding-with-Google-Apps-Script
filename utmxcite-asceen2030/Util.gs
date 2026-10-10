@@ -161,9 +161,12 @@ function rowArray_(headers, obj) {
   return headers.map(function (h) { return obj[h] === undefined || obj[h] === null ? '' : obj[h]; });
 }
 
+var FAC_MEMO_ = null;   // senarai fakulti dibaca sekali setiap panggilan
 function listFaculties_() {
-  return readTable_(SHEETS.FACULTIES).rows.map(function (r) { return { kod: String(r.kod), nama: String(r.nama) }; })
+  if (FAC_MEMO_) return FAC_MEMO_;
+  FAC_MEMO_ = readTable_(SHEETS.FACULTIES).rows.map(function (r) { return { kod: String(r.kod), nama: String(r.nama) }; })
     .filter(function (r) { return r.kod; });
+  return FAC_MEMO_;
 }
 
 function getKpi_(id) {

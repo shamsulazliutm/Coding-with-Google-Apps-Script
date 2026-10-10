@@ -165,16 +165,16 @@ function applyStudents_(user, kpi, input) {
  * mengisi medan yang kosong atau tidak sah (data sah sedia ada tidak diubah).
  */
 function saveStudents_(token, list) {
-  return saveStudentsAs_(requireUser_(token), list);
+  return saveStudentsAs_(requireUser_(token), list, false);
 }
-function saveStudentsAs_(user, list) {
+function saveStudentsAs_(user, list, silent) {
   if (!Array.isArray(list) || !list.length || list.length > 50) throw userError_('Senarai pelajar tidak sah.');
   var faculties = listFaculties_().map(function (f) { return f.kod; });
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
     STUDENT_MEMO_ = null;
-    var idx = studentIndex_(), sh = getSheet_(SHEETS.STUDENTS), isAdmin = user.peranan === ROLES.ADMIN, results = [];
+    var idx = studentIndex_(), sh = getSheet_(SHEETS.STUDENTS), isAdmin = user.peranan === ROLES.ADMIN, results = [], hdrCache = null;
     list.forEach(function (raw) {
       var errs = {}, matrik = normMatrik_(raw && raw.no_matrik), cur = idx[matrik] || null;
       if (!matrik || matrik.length > 30) errs.no_matrik = 'No. matrik tidak sah.';
@@ -198,12 +198,12 @@ function saveStudentsAs_(user, list) {
       if (out.telefon && !validPhone_(out.telefon)) errs.telefon = 'Nombor telefon tidak sah.';
       if (Object.keys(errs).length) { results.push({ no_matrik: matrik, ok: false, fields: errs }); return; }
       var obj = { no_matrik: cur ? cur.no_matrik : matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti, dikemas_kini_pada: nowIso_(), dikemas_kini_oleh: user.emel };
-      var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+      var headers = hdrCache || (hdrCache = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String));
       // padankan nama lajur tanpa mengira huruf besar/kecil
       var o2 = {};
       headers.forEach(function (h) { var lk = h.trim().toLowerCase(); if (obj.hasOwnProperty(lk)) o2[h] = obj[lk]; });
       writeRow_(sh, cur ? cur._row : null, o2);
-      audit_(user, cur ? 'PELAJAR_KEMAS_KINI' : 'PELAJAR_TAMBAH', '', '', 'no_matrik=' + obj.no_matrik);
+      if (!silent) audit_(user, cur ? 'PELAJAR_KEMAS_KINI' : 'PELAJAR_TAMBAH', '', '', 'no_matrik=' + obj.no_matrik);
       idx[matrik] = { _row: cur ? cur._row : -1, no_matrik: obj.no_matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti };
       results.push({ no_matrik: matrik, ok: true });
     });
@@ -355,10 +355,16 @@ function saveRecordAs_(user, kpi, rec, opts) {
     // PIC hanya boleh merekod bagi fakulti sendiri.
     if (isPic && kpi.entry === 'faculty') input.fakulti = user.fakulti;
 
-    var table = readTable_(kpi.sheet, typesFor_(kpi));
-    var missingCols = kpiColumns_(kpi).filter(function (c) { return table.headers.indexOf(c) < 0; });
-    if (missingCols.length) throw userError_('Skema Sheet belum dikemas kini. Pentadbir perlu menjalankan setup() semula.');
-    var sh = getSheet_(kpi.sheet);
+    // opts.ctx = jadual dibaca sekali dan dikongsi antara banyak rekod (segerak / import); opts.silent = pemanggil merekod audit dan membatalkan cache sekali sahaja
+    var ctx = opts && opts.ctx, table, sh;
+    if (ctx && ctx.table) { table = ctx.table; sh = ctx.sh; }
+    else {
+      table = readTable_(kpi.sheet, typesFor_(kpi));
+      var missingCols = kpiColumns_(kpi).filter(function (c) { return table.headers.indexOf(c) < 0; });
+      if (missingCols.length) throw userError_('Skema Sheet belum dikemas kini. Pentadbir perlu menjalankan setup() semula.');
+      sh = getSheet_(kpi.sheet);
+      if (ctx) { ctx.table = table; ctx.sh = sh; }
+    }
     var now = nowIso_();
     var id = String(rec.id || '');
     var existing = null;
@@ -408,10 +414,10 @@ function saveRecordAs_(user, kpi, rec, opts) {
       for (var b in v.clean) { if (v.clean.hasOwnProperty(b)) obj[b] = v.clean[b]; }
       setFileLinks_(kpi, v.clean, obj);
       writeRow_(sh, null, obj);
+      if (ctx) { var cp = {}; for (var ck in obj) { if (obj.hasOwnProperty(ck)) cp[ck] = obj[ck]; } table.rows.push(cp); }
       action = 'TAMBAH'; summary = 'Rekod baharu' + (kpi.entry === 'faculty' ? ' (' + obj.fakulti + ')' : '');
     }
-    audit_(user, action, kpi.id, id, summary);
-    clearDashCache_();
+    if (!(opts && opts.silent)) { audit_(user, action, kpi.id, id, summary); clearDashCache_(); }
     return stripRow_(obj);
   } finally {
     lock.releaseLock();
