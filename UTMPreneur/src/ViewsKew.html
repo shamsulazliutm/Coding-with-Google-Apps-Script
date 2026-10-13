@@ -1,1 +1,78 @@
-<!-- ViewsKew: skrin modul (diisi oleh modul) -->
+<style>
+.kew-rep{border-top:1px solid var(--line);padding:12px 0}
+.kew-rep:first-of-type{border-top:0}
+.kew-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.kew-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;font-size:12.5px}
+.kew-nums div{background:#FAF7F7;border-radius:8px;padding:6px 8px}
+.kew-nums b{display:block;font-size:13.5px}
+.kew-untung{background:var(--gold-l);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
+.kew-untung b{font-size:15px}
+.kew-neg{color:var(--bad)}
+.kew-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}
+.kew-tile{background:#FAF7F7;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.kew-tile .n{font-size:18px;font-weight:700}
+.kew-tile .t{font-size:11px;color:var(--muted)}
+.kew-filter{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kew-bagi{background:var(--gold-l);color:#6B4A05;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600}
+.kew-act{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:10px}
+@media (min-width:640px){.kew-filter{grid-template-columns:140px 140px 1fr}}
+</style>
+
+  <!-- Kewangan (pelajar): senarai laporan -->
+  <section id="v-kew" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Laporan kewangan</div><div class="e">Monthly financial report</div>
+      <p class="muted" style="margin:8px 0 0">Hantar laporan kewangan bulanan <b>sebelum atau pada <span id="kew-hari">7</span>hb bulan berikutnya</b>. Hanya pemilik perniagaan boleh menghantar; ahli pasukan melihat sahaja.
+        <span class="e">Submit the monthly report on or before the due day of the following month. Only the owner can submit; team members have view-only access.</span></p>
+      <div id="kew-tpl-slot"></div>
+      <div id="kew-msg-tpl" class="msg err" hidden></div>
+    </div>
+    <div id="kew-body"></div>
+  </section>
+
+  <!-- Kewangan: borang laporan (pelajar, atau admin bagi pihak pemilik) -->
+  <section id="v-kew-form" class="view" hidden>
+    <div id="kew-bagi" class="kew-bagi" hidden></div>
+    <button class="back" id="kew-btn-balik" type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1" id="kew-f-tajuk">Laporan kewangan</div><div class="e">Monthly financial report</div>
+      <div id="kew-f-info" style="margin-top:10px"></div>
+      <div id="kew-f-catatan" class="msg err" hidden></div>
+    </div>
+    <div class="card" id="kew-f-kad">
+      <div id="kew-f-form"></div>
+      <div id="kew-f-untung" class="kew-untung"></div>
+      <div id="kew-msg-f" class="msg" hidden></div>
+      <button id="kew-btn-hantar" class="btn" type="button">Hantar laporan <i>Submit report</i></button>
+    </div>
+  </section>
+
+  <!-- Kewangan (admin): senarai dan ringkasan -->
+  <section id="v-kew-list" class="view" data-wide hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="row"><div><div class="h1">Laporan kewangan bulanan</div><div class="e">Monthly financial reports</div></div><span class="sp"></span>
+        <button id="kew-btn-jana" class="btn alt sm" type="button" hidden>Jana laporan bulan ini sekarang <span class="e">Generate this month's reports now</span></button>
+        <button id="kew-btn-csv" class="btn alt sm" type="button">Eksport CSV <span class="e">Export CSV</span></button></div>
+      <div class="kew-filter" style="margin-top:10px">
+        <div><label class="lab" for="kew-a-bulan"><span class="l">Bulan</span> <span class="e">Month</span></label><select id="kew-a-bulan"></select></div>
+        <div><label class="lab" for="kew-a-tahun"><span class="l">Tahun</span> <span class="e">Year</span></label><select id="kew-a-tahun"></select></div>
+        <div><label class="lab" for="kew-a-q"><span class="l">Carian</span> <span class="e">Search</span></label><input id="kew-a-q" placeholder="Nama, ID, No. Matrik / Name, ID, matric no." aria-label="Cari"></div>
+      </div>
+      <div id="kew-msg-a" class="msg" hidden></div>
+    </div>
+    <div class="card"><div class="h2">Ringkasan kepatuhan <span class="e">Compliance summary</span></div>
+      <div id="kew-a-ring"></div></div>
+    <div class="card">
+      <div class="chips" id="kew-a-chips"></div>
+      <div class="scroll"><table><thead><tr><th>Perniagaan</th><th>Pemilik</th><th>Bulan</th><th>Status</th><th>Pendapatan</th><th>Perbelanjaan</th><th>Untung</th><th>Dihantar</th></tr></thead><tbody id="kew-a-body"></tbody></table></div>
+      <div id="kew-a-kosong" class="muted" style="margin-top:10px" hidden>Tiada laporan. <span class="e">No reports.</span></div>
+    </div>
+  </section>
+
+  <!-- Kewangan (admin): butiran -->
+  <section id="v-kew-det" class="view" data-wide hidden>
+    <button class="back" id="kew-btn-senarai" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div id="kew-det-body"></div>
+  </section>

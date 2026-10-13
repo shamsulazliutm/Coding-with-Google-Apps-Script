@@ -1,3 +1,402 @@
 <script>
-(function () { 'use strict'; var UP = window.UP; /* AppKew: skrip modul; guna UP.Form, UP.api, UP.show, UP.homeHooks, UP.backHooks, UP.initHooks */ })();
+(function () {
+  'use strict';
+  var UP = window.UP;
+  var $ = function (id) { return document.getElementById(id); };
+  var node = UP.node, msg = UP.msg, msgErr = UP.msgErr, clearMsg = UP.clearMsg, busy = UP.busy;
+
+  var BULAN = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+  var PILL = { 'Belum Dihantar': 'warn', Dihantar: 'info', Lewat: 'bad', 'Perlu Pembetulan': 'warn', Diterima: 'ok' };
+  var EN = { 'Belum Dihantar': 'Not submitted', Dihantar: 'Submitted', Lewat: 'Late', 'Perlu Pembetulan': 'Needs correction', Diterima: 'Accepted' };
+  var STATUSES = ['Belum Dihantar', 'Dihantar', 'Lewat', 'Perlu Pembetulan', 'Diterima'];
+  var KW = { form: null, id: '', bagi: null, det: null, confirm: '', a: { tahun: '', bulan: '', status: 'SEMUA', q: '', timer: null, ready: false } };
+
+  // ---------- Pembantu paparan ----------
+  function rm(n) {
+    if (n === null || n === undefined || n === '') return '';
+    var neg = n < 0, s = Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return (neg ? '-' : '') + 'RM ' + s;
+  }
+  function lbl(b, t) { return BULAN[b - 1] + ' ' + t; }
+  function tarikh(k) {
+    if (!k) return '';
+    var p = k.split('-'); return parseInt(p[2], 10) + ' ' + BULAN[parseInt(p[1], 10) - 1].substr(0, 3) + ' ' + p[0];
+  }
+  function sp() { return node('span', null, 'sp'); }
+  function pill(st) { var p = node('span', st, 'pill ' + (PILL[st] || '')); p.title = EN[st] || ''; return p; }
+  function bil(bm, en) { var d = node('span', bm + ' '); d.appendChild(node('span', en, 'e')); return d; }
+  function spinner(el) { el.textContent = ''; el.appendChild(node('div', null, 'spinner')); }
+  function errBox(el, r) { var m = node('div', null, 'msg err'); el.appendChild(m); msgErr(m, r); }
+  function downloadText(nama, mime, teks) {
+    var url = URL.createObjectURL(new Blob([teks], { type: mime + ';charset=utf-8' }));
+    var a = document.createElement('a'); a.href = url; a.download = nama; document.body.appendChild(a); a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  }
+  function btn(bm, en, cls, fn) {
+    var b = node('button', bm + ' ', 'btn ' + (cls || 'sm')); b.type = 'button';
+    if (en) b.appendChild(node('span', en, 'e'));
+    if (fn) b.addEventListener('click', fn);
+    return b;
+  }
+  function untungNode(n) {
+    var s = node('b', rm(n)); if (n < 0) s.className = 'kew-neg'; return s;
+  }
+
+  // ---------- Pelajar: senarai laporan ----------
+  function openKew(notice) {
+    UP.show('v-kew'); KW.bagi = null;
+    var body = $('kew-body'), slot = $('kew-tpl-slot'), mt = $('kew-msg-tpl');
+    clearMsg(mt); slot.textContent = '';
+    spinner(body);
+    UP.api('kew.saya').then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      $('kew-hari').textContent = d.tarikhAkhirHari;
+      slot.appendChild(UP.fileBtn('Muat turun templat laporan', 'Download report template', 'kew.templat', {}, mt));
+      if (notice) { var nt = node('div', null, 'msg ok'); nt.appendChild(document.createTextNode(notice[0])); nt.appendChild(node('i', notice[1])); body.appendChild(nt); }
+      if (!d.perniagaan.length) {
+        var c0 = node('div', null, 'card'); c0.appendChild(node('p', 'Anda belum mempunyai perniagaan SSU yang berdaftar. / You have no registered SSU business yet.', 'muted')); body.appendChild(c0);
+        return;
+      }
+      d.perniagaan.forEach(function (p) { body.appendChild(renderPer(p)); });
+    });
+  }
+
+  function renderPer(p) {
+    var card = node('div', null, 'card kew-per');
+    card.setAttribute('data-per', p.id);
+    var hd = node('div', null, 'row'); hd.appendChild(node('div', p.nama, 'big')); hd.appendChild(sp());
+    hd.appendChild(node('span', p.peranan === 'pemilik' ? 'Pemilik' : 'Ahli (baca sahaja)', 'pill ' + (p.peranan === 'pemilik' ? 'ok' : 'info')));
+    if (p.penyewaLot) hd.appendChild(node('span', 'Penyewa lot', 'pill'));
+    card.appendChild(hd);
+    card.appendChild(node('div', p.noPendaftaran + ' · SSU: ' + p.statusSsu, 'kew-sub'));
+    if (p.peranan !== 'pemilik') {
+      var mi = node('div', null, 'msg info'); mi.appendChild(document.createTextNode('Anda ahli pasukan: anda boleh melihat laporan sahaja. Hanya pemilik boleh menghantar.'));
+      mi.appendChild(node('i', 'You are a team member: view only. Only the owner can submit.')); card.appendChild(mi);
+    } else if (p.penyewaLot) {
+      card.appendChild(node('div', 'Penyewa lot: fail laporan (PDF atau Excel) wajib dilampirkan kecuali "tiada aktiviti". / Lot tenants must attach the report file unless there is no activity.', 'e'));
+    }
+    var out = node('div', null, 'msg err'); out.hidden = true;
+    if (!p.laporan.length) card.appendChild(node('p', 'Tiada laporan lagi. Laporan dijana pada awal bulan berikutnya. / No reports yet.', 'muted'));
+    p.laporan.forEach(function (l) {
+      var row = node('div', null, 'kew-rep'); row.setAttribute('data-id', l.id);
+      var h = node('div', null, 'row'); h.appendChild(node('b', lbl(l.bulan, l.tahun))); h.appendChild(sp());
+      if (l.hantarLewat) { var lw = node('span', 'Dihantar lewat', 'pill bad'); lw.title = 'Submitted late'; h.appendChild(lw); }
+      h.appendChild(pill(l.status)); row.appendChild(h);
+      row.appendChild(node('div', 'Tarikh akhir ' + tarikh(l.tarikhAkhir) + (l.tarikhHantar ? ' · dihantar ' + tarikh(l.tarikhHantar) : '') + ' · ' + l.id, 'kew-sub'));
+      if (l.pendapatan !== null) {
+        var g = node('div', null, 'kew-nums');
+        [['Pendapatan', l.pendapatan], ['Perbelanjaan', l.perbelanjaan]].forEach(function (x) { var c = node('div'); c.appendChild(node('span', x[0], 'e')); c.appendChild(node('b', rm(x[1]))); g.appendChild(c); });
+        var cu = node('div'); cu.appendChild(node('span', 'Untung', 'e')); cu.appendChild(untungNode(l.untung)); g.appendChild(cu);
+        row.appendChild(g);
+        if (l.tiadaAktiviti) row.appendChild(node('div', 'Tiada aktiviti bulan ini / No activity this month', 'e'));
+      }
+      if (l.catatan) {
+        var cn = node('div', null, 'msg ' + (l.status === 'Perlu Pembetulan' ? 'err' : 'info'));
+        cn.appendChild(document.createTextNode('Catatan admin: ' + l.catatan)); cn.appendChild(node('i', 'Admin note')); row.appendChild(cn);
+      }
+      var act = node('div', null, 'kew-act');
+      if (l.bolehUbah) {
+        var b = btn(l.status === 'Perlu Pembetulan' ? 'Betulkan dan hantar semula' : 'Isi dan hantar laporan', l.status === 'Perlu Pembetulan' ? 'Correct and resubmit' : 'Fill and submit', '', function () { openForm(l.id, null); });
+        b.className += ' kew-isi'; act.appendChild(b);
+      }
+      if (l.adaFail) act.appendChild(UP.fileBtn('Muat turun fail', 'Download file', 'kew.fail', { id: l.id }, out));
+      row.appendChild(act);
+      card.appendChild(row);
+    });
+    card.appendChild(out);
+    return card;
+  }
+
+  // ---------- Borang laporan ----------
+  function formSpec(wajibFail, bagi) {
+    var num = function (v) { return !v.tiadaAktiviti; };
+    return [
+      { t: 'sect', k: '_a', bm: 'Ringkasan kewangan bulan ini', en: 'This month\'s financial summary' },
+      { k: 'tiadaAktiviti', t: 'check', bm: 'Tiada aktiviti bulan ini', en: 'No business activity this month' },
+      { k: 'pendapatan', t: 'text', bm: 'Jumlah pendapatan (RM)', en: 'Total income (RM)', req: 1, ph: '0.00', hint: 'Nilai RM tepat, tidak negatif. / Exact RM value, not negative.', show: num },
+      { k: 'perbelanjaan', t: 'text', bm: 'Jumlah perbelanjaan (RM)', en: 'Total expenses (RM)', req: 1, ph: '0.00', hint: 'Nilai RM tepat, tidak negatif. / Exact RM value, not negative.', show: num },
+      { t: 'sect', k: '_b', bm: 'Fail laporan', en: 'Report file' },
+      { k: 'fail', t: 'file', accept: '.pdf,.xlsx,.xls', req: wajibFail, bm: 'Fail laporan kewangan (PDF atau Excel)', en: 'Financial report file (PDF or Excel)',
+        hint: wajibFail ? 'Wajib bagi penyewa lot (kecuali tiada aktiviti). / Required for lot tenants (unless no activity).' : 'Pilihan. / Optional.' },
+      { t: 'sect', k: '_c', bm: 'Perakuan', en: 'Declaration' },
+      bagi
+        ? { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan pemilik telah memberi persetujuan dan maklumat ini lengkap dan tepat mengikut dokumen yang diserahkan.', en: 'I confirm the owner has given consent and the information is complete and accurate according to the documents submitted.' }
+        : { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan semua maklumat yang diberikan adalah lengkap dan tepat setakat pengetahuan saya.', en: 'I confirm that all information provided is complete and accurate to the best of my knowledge.' }
+    ];
+  }
+
+  function parseRm(v) {
+    var s = String(v == null ? '' : v).trim().replace(/^rm\s*/i, '').replace(/,/g, '');
+    return /^\d+(\.\d{1,2})?$/.test(s) ? parseFloat(s) : null;
+  }
+  function paintUntung() {
+    var box = $('kew-f-untung'); box.textContent = '';
+    if (!KW.form) return;
+    var v = KW.form.values();
+    var p = v.tiadaAktiviti ? 0 : parseRm(v.pendapatan), e = v.tiadaAktiviti ? 0 : parseRm(v.perbelanjaan);
+    box.appendChild(document.createTextNode('Untung dikira (pendapatan tolak perbelanjaan): '));
+    if (p === null || e === null) box.appendChild(node('b', '-')); else box.appendChild(untungNode(Math.round((p - e) * 100) / 100));
+    box.appendChild(node('div', 'Profit is calculated automatically and may be negative.', 'e'));
+  }
+
+  function openForm(id, bagi) {
+    KW.id = id; KW.bagi = bagi || null; KW.form = null;
+    UP.show('v-kew-form');
+    var bg = $('kew-bagi'); bg.hidden = !bagi;
+    bg.textContent = bagi ? 'Bertindak bagi pihak: ' + bagi.nama + ' (' + bagi.m + ') / Acting on behalf of the owner' : '';
+    clearMsg($('kew-msg-f')); clearMsg($('kew-f-catatan'));
+    $('kew-f-info').textContent = ''; $('kew-f-form').textContent = ''; $('kew-f-untung').textContent = '';
+    $('kew-f-kad').hidden = true;
+    UP.api(bagi ? 'kew.admin.butiran' : 'kew.dapat', { id: id }).then(function (r) {
+      if (!r.ok) { $('kew-f-kad').hidden = false; msgErr($('kew-msg-f'), r); return; }
+      var d = r.data, l = d.laporan;
+      $('kew-f-tajuk').textContent = d.perniagaan.nama + ' · ' + lbl(l.bulan, l.tahun);
+      var info = $('kew-f-info');
+      var kvv = UP.kv([['Status', l.status], ['Tarikh akhir', tarikh(l.tarikhAkhir)], ['Peranan anda', bagi ? 'Admin (bagi pihak pemilik)' : (d.peranan === 'pemilik' ? 'Pemilik' : 'Ahli (baca sahaja)')]]);
+      info.appendChild(kvv);
+      if (l.status === 'Perlu Pembetulan' && l.catatan) {
+        var cn = $('kew-f-catatan'); msg(cn, 'err', 'Catatan admin: ' + l.catatan, 'Admin note');
+      }
+      var boleh = bagi ? d.bolehBantu : l.bolehUbah;
+      $('kew-f-kad').hidden = false;
+      if (!boleh) {
+        msg($('kew-msg-f'), 'info', d.peranan === 'ahli' ? 'Anda ahli pasukan: baca sahaja.' : 'Laporan ini tidak boleh disunting pada status semasa.', d.peranan === 'ahli' ? 'View only.' : 'This report cannot be edited in its current status.');
+        $('kew-btn-hantar').hidden = true;
+        return;
+      }
+      $('kew-btn-hantar').hidden = false;
+      KW.form = UP.Form(formSpec(d.wajibFail, !!bagi));
+      $('kew-f-form').appendChild(KW.form.el);
+      KW.form.set({ tiadaAktiviti: d.borang.tiadaAktiviti, pendapatan: d.borang.pendapatan, perbelanjaan: d.borang.perbelanjaan, fail: l.adaFail, perakuan: false });
+      ['pendapatan', 'perbelanjaan'].forEach(function (k) { KW.form.fields[k].wrap.querySelector('input').inputMode = 'decimal'; });
+      KW.form.el.addEventListener('input', paintUntung);
+      KW.form.el.addEventListener('change', paintUntung);
+      paintUntung();
+    });
+  }
+
+  function submitForm() {
+    var m = $('kew-msg-f'); clearMsg(m);
+    if (!KW.form) return;
+    var v = KW.form.values();
+    var p = { id: KW.id, tiadaAktiviti: v.tiadaAktiviti === true, pendapatan: v.pendapatan, perbelanjaan: v.perbelanjaan, fail: v.fail || null, perakuan: v.perakuan === true };
+    if (KW.bagi) p.noMatrik = KW.bagi.m;
+    var b = $('kew-btn-hantar'); busy(b, true); KW.form.clear();
+    UP.api(KW.bagi ? 'kew.admin.hantar' : 'kew.hantar', p).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) KW.form.errors(r.error.extra.medan); return; }
+      if (KW.bagi) openDet(KW.id, ['Laporan dihantar bagi pihak pemilik.', 'Report submitted on behalf of the owner']);
+      else openKew(['Laporan dihantar. Terima kasih.', 'Report submitted. Thank you.']);
+    });
+  }
+
+  // ---------- Admin: senarai ----------
+  function params() {
+    var p = { status: KW.a.status, q: KW.a.q };
+    if (KW.a.tahun !== '') p.tahun = KW.a.tahun;
+    if (KW.a.bulan !== '') p.bulan = KW.a.bulan;
+    return p;
+  }
+
+  function openList() {
+    UP.show('v-kew-list'); clearMsg($('kew-msg-a'));
+    loadList();
+  }
+
+  function fillPeriod(d) {
+    var sb = $('kew-a-bulan'), st = $('kew-a-tahun');
+    sb.textContent = ''; st.textContent = '';
+    var o0 = node('option', 'Semua bulan / All'); o0.value = '0'; sb.appendChild(o0);
+    BULAN.forEach(function (n, i) { var o = node('option', n); o.value = String(i + 1); sb.appendChild(o); });
+    var years = {}; d.senaraiTempoh.forEach(function (t) { years[t.tahun] = true; }); years[d.tempoh.tahun] = true;
+    Object.keys(years).sort().reverse().forEach(function (y) { var o = node('option', y); o.value = y; st.appendChild(o); });
+    sb.value = String(d.tempoh.bulan); st.value = String(d.tempoh.tahun);
+    KW.a.bulan = String(d.tempoh.bulan); KW.a.tahun = String(d.tempoh.tahun);
+  }
+
+  function tile(n, t) { var d = node('div', null, 'kew-tile'); d.appendChild(node('div', String(n), 'n')); d.appendChild(node('div', t, 't')); return d; }
+
+  function loadList() {
+    var body = $('kew-a-body'); body.textContent = '';
+    UP.api('kew.admin.senarai', params()).then(function (r) {
+      if (!r.ok) { msgErr($('kew-msg-a'), r); return; }
+      var d = r.data;
+      if (!KW.a.ready || d.tempoh.tahun !== parseInt(KW.a.tahun, 10) || d.tempoh.bulan !== parseInt(KW.a.bulan, 10)) { fillPeriod(d); KW.a.ready = true; }
+      $('kew-btn-jana').hidden = !d.bolehPutus;
+      // ringkasan
+      var s = d.ringkasan, ring = $('kew-a-ring'); ring.textContent = '';
+      var tl = node('div', null, 'kew-tiles');
+      tl.appendChild(tile(s.bilPerniagaan, 'Perniagaan / Businesses'));
+      tl.appendChild(tile(s.diterima, 'Diterima / Accepted'));
+      tl.appendChild(tile(s.dihantar, 'Dihantar / Submitted'));
+      tl.appendChild(tile(s.lewat, 'Lewat / Late'));
+      tl.appendChild(tile(s.belum, 'Belum / Not submitted'));
+      tl.appendChild(tile(s.pembetulan, 'Perlu pembetulan / Correction'));
+      tl.appendChild(tile(s.pematuhanPct + '%', 'Pematuhan / Compliance'));
+      ring.appendChild(tl);
+      var tot = node('div', null, 'kew-nums');
+      [['Pendapatan (Diterima)', s.pendapatan], ['Perbelanjaan (Diterima)', s.perbelanjaan], ['Untung (Diterima)', s.untung]].forEach(function (x) {
+        var c = node('div'); c.appendChild(node('span', x[0], 'e')); c.appendChild(x[0].indexOf('Untung') === 0 ? untungNode(x[1]) : node('b', rm(x[1]))); tot.appendChild(c);
+      });
+      ring.appendChild(tot);
+      ring.appendChild(node('div', 'Pematuhan = (Diterima + Dihantar) / bilangan perniagaan. Hanya laporan Diterima dijumlahkan. / Compliance = (Accepted + Submitted) / businesses; only Accepted reports are totalled.', 'e'));
+      // chip status
+      var chips = $('kew-a-chips'); chips.textContent = '';
+      var mk = function (kod, txt) {
+        var c = node('button', txt, 'chip' + (KW.a.status === kod ? ' on' : '')); c.type = 'button'; c.setAttribute('data-status', kod);
+        c.addEventListener('click', function () { KW.a.status = kod; loadList(); }); chips.appendChild(c);
+      };
+      var jum = 0; STATUSES.forEach(function (k) { jum += d.kiraan[k]; });
+      mk('SEMUA', 'Semua (' + jum + ')');
+      STATUSES.forEach(function (k) { mk(k, k + ' (' + d.kiraan[k] + ')'); });
+      // jadual
+      d.senarai.forEach(function (l) {
+        var tr = node('tr', null, 'click'); tr.setAttribute('data-id', l.id);
+        var c1 = node('td'); c1.appendChild(node('b', l.perniagaan)); c1.appendChild(node('div', l.id, 'e')); tr.appendChild(c1);
+        var c2 = node('td'); c2.appendChild(document.createTextNode(l.pemilik)); c2.appendChild(node('div', l.noMatrik, 'e')); tr.appendChild(c2);
+        tr.appendChild(node('td', lbl(l.bulan, l.tahun)));
+        var c3 = node('td'); c3.appendChild(pill(l.status)); if (l.hantarLewat) c3.appendChild(node('div', 'dihantar lewat', 'e')); tr.appendChild(c3);
+        tr.appendChild(node('td', l.pendapatan === null ? '' : rm(l.pendapatan)));
+        tr.appendChild(node('td', l.perbelanjaan === null ? '' : rm(l.perbelanjaan)));
+        var c4 = node('td'); if (l.untung !== null) c4.appendChild(untungNode(l.untung)); tr.appendChild(c4);
+        tr.appendChild(node('td', tarikh(l.tarikhHantar)));
+        tr.addEventListener('click', function () { openDet(l.id); });
+        body.appendChild(tr);
+      });
+      $('kew-a-kosong').hidden = d.senarai.length > 0;
+    });
+  }
+
+  function exportCsv() {
+    var m = $('kew-msg-a'); clearMsg(m);
+    var b = $('kew-btn-csv'); busy(b, true);
+    UP.api('kew.admin.csv', params()).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      downloadText(r.data.nama, r.data.mime, r.data.teks);
+      msg(m, 'ok', 'CSV dieksport (' + r.data.bil + ' baris).', 'CSV exported');
+    });
+  }
+
+  function janaSekarang() {
+    var m = $('kew-msg-a'); clearMsg(m);
+    var b = $('kew-btn-jana'); busy(b, true);
+    UP.api('kew.admin.jana', {}).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      loadList();
+      msg(m, 'ok', 'Selesai: ' + r.data.dijana + ' laporan baharu dijana, ' + r.data.lewat + ' ditanda Lewat.', 'Done: ' + r.data.dijana + ' new reports generated.');
+    });
+  }
+
+  // ---------- Admin: butiran ----------
+  function openDet(id, notice) {
+    UP.show('v-kew-det'); KW.id = id; KW.confirm = '';
+    var body = $('kew-det-body'); spinner(body);
+    UP.api('kew.admin.butiran', { id: id }).then(function (r) { renderDet(r, notice); });
+  }
+
+  function renderDet(r, notice) {
+    var body = $('kew-det-body'); body.textContent = '';
+    if (!r.ok) { errBox(body, r); return; }
+    var d = r.data, l = d.laporan, pm = d.pemilik;
+    KW.det = d;
+    if (notice) { var nt = node('div', null, 'msg ok'); nt.appendChild(document.createTextNode(notice[0])); nt.appendChild(node('i', notice[1])); body.appendChild(nt); }
+    var c = node('div', null, 'card');
+    var hd = node('div', null, 'row'); hd.appendChild(node('div', d.perniagaan.nama, 'big')); hd.appendChild(sp());
+    if (l.hantarLewat) { var lw = node('span', 'Dihantar lewat', 'pill bad'); lw.title = 'Submitted late'; hd.appendChild(lw); }
+    hd.appendChild(pill(l.status)); c.appendChild(hd);
+    c.appendChild(UP.kv([
+      ['ID laporan', l.id], ['Tempoh', lbl(l.bulan, l.tahun)], ['Tarikh akhir', tarikh(l.tarikhAkhir)], ['Tarikh hantar', tarikh(l.tarikhHantar) || '-'],
+      ['No. pendaftaran SSU', d.perniagaan.noPendaftaran], ['Pemilik', pm.nama + ' (' + pm.noMatrik + ')'], ['Emel', pm.emel], ['Telefon', pm.telefon],
+      ['Penyewa lot', d.wajibFail ? 'Ya (fail laporan wajib)' : 'Tidak'],
+      ['Tiada aktiviti', l.tiadaAktiviti ? 'Ya' : 'Tidak'], ['Pendapatan', l.pendapatan === null ? '-' : rm(l.pendapatan)],
+      ['Perbelanjaan', l.perbelanjaan === null ? '-' : rm(l.perbelanjaan)], ['Untung', l.untung === null ? '-' : rm(l.untung)],
+      ['Fail laporan', l.adaFail ? 'Ada' : 'Tiada'],
+      ['Disemak oleh', l.disemakOleh ? l.disemakOleh + ' · ' + tarikh(l.tarikhSemakan) : '-'], ['Catatan semakan', l.catatan || '-']
+    ]));
+    var out = node('div', null, 'msg err'); out.hidden = true;
+    var act = node('div', null, 'kew-act');
+    if (l.adaFail) act.appendChild(UP.fileBtn('Muat turun fail laporan', 'Download report file', 'kew.fail', { id: l.id }, out));
+    if (d.bolehBantu) act.appendChild(btn('Isi bagi pihak pemilik', 'Fill on behalf of the owner', 'alt sm', function () { openForm(l.id, { m: pm.noMatrik, nama: pm.nama }); }));
+    c.appendChild(act); c.appendChild(out);
+    body.appendChild(c);
+
+    if (d.bolehPutus) {
+      var c2 = node('div', null, 'card');
+      c2.appendChild(node('div', 'Semakan', 'h2')); c2.lastChild.appendChild(document.createTextNode(' ')); c2.lastChild.appendChild(node('span', 'Review', 'e'));
+      var lab = node('label', null, 'lab'); lab.setAttribute('for', 'kew-d-catatan');
+      lab.appendChild(node('span', 'Catatan (wajib bagi Perlu Pembetulan)', 'l')); lab.appendChild(document.createTextNode(' ')); lab.appendChild(node('span', 'Note (required for correction)', 'e'));
+      c2.appendChild(lab);
+      var ta = node('textarea'); ta.id = 'kew-d-catatan'; ta.style.minHeight = '70px'; ta.style.fontFamily = 'inherit'; ta.style.fontSize = '14px'; c2.appendChild(ta);
+      var msgA = node('div', null, 'msg err'); msgA.hidden = true; msgA.id = 'kew-msg-d';
+      var row = node('div', null, 'kew-act');
+      var bt = btn('Terima', 'Accept', '', function () {
+        if (KW.confirm !== 'terima') { KW.confirm = 'terima'; bt.firstChild.textContent = 'Tekan sekali lagi untuk sahkan (laporan akan dikunci) '; return; }
+        putus('terima', bt, msgA, ta.value);
+      });
+      bt.id = 'kew-btn-terima';
+      var bp = btn('Perlu pembetulan', 'Needs correction', 'alt sm', function () {
+        KW.confirm = '';
+        if (!ta.value.trim()) { msg(msgA, 'err', 'Catatan wajib diisi.', 'A note is required.'); return; }
+        putus('pembetulan', bp, msgA, ta.value);
+      });
+      bp.id = 'kew-btn-pembetulan';
+      row.appendChild(bt); row.appendChild(bp); c2.appendChild(row); c2.appendChild(msgA);
+      body.appendChild(c2);
+    }
+  }
+
+  function putus(t, b, msgEl, catatan) {
+    clearMsg(msgEl); busy(b, true);
+    UP.api('kew.admin.putus', { id: KW.id, tindakan: t, catatan: catatan }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { KW.confirm = ''; msgErr(msgEl, r); return; }
+      KW.confirm = '';
+      renderDet(r, t === 'terima' ? ['Laporan diterima dan dikunci.', 'Report accepted and locked'] : ['Laporan dikembalikan untuk pembetulan.', 'Report returned for correction']);
+    });
+  }
+
+  // ---------- Menu utama ----------
+  function setItem(b, pl, on, text, kind) {
+    b.disabled = !on; b.classList.toggle('off', !on);
+    pl.textContent = text; pl.className = 'pill ' + (kind || '');
+  }
+  UP.homeHooks.push(function (s) {
+    var pel = s.role === 'Pelajar';
+    var b = $('go-kew'), p = $('pill-kew');
+    setItem(b, p, false, pel ? '…' : 'Pelajar sahaja / Students only');
+    if (pel) {
+      UP.api('kew.saya').then(function (r) {
+        if (!r.ok || !r.data.perniagaan.length) { setItem(b, p, false, 'Tiada perniagaan SSU / No SSU business'); return; }
+        var n = r.data.belum;
+        setItem(b, p, true, n ? n + ' belum dihantar / pending' : 'Semua dihantar / All submitted', n ? 'warn' : 'ok');
+      });
+    }
+    var adm = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati'].indexOf(s.role) >= 0;
+    $('go-kew-admin').hidden = !adm;
+    if (adm) UP.api('kew.admin.senarai', { kiraanSahaja: true }).then(function (r) {
+      if (!r.ok) return;
+      var n = r.data.menunggu;
+      $('pill-kew-admin').textContent = n + ' menunggu semakan / awaiting review';
+      $('pill-kew-admin').className = 'pill ' + (n ? 'warn' : '');
+    });
+  });
+
+  function init() {
+    $('go-kew').addEventListener('click', function () { if (!$('go-kew').disabled) openKew(); });
+    $('go-kew-admin').addEventListener('click', function () { KW.a = { tahun: '', bulan: '', status: 'SEMUA', q: '', timer: null, ready: false }; $('kew-a-q').value = ''; openList(); });
+    $('kew-btn-balik').addEventListener('click', function () { if (KW.bagi) openDet(KW.id); else openKew(); });
+    $('kew-btn-senarai').addEventListener('click', function () { openList(); });
+    $('kew-btn-hantar').addEventListener('click', submitForm);
+    $('kew-btn-csv').addEventListener('click', exportCsv);
+    $('kew-btn-jana').addEventListener('click', janaSekarang);
+    $('kew-a-bulan').addEventListener('change', function () { KW.a.bulan = $('kew-a-bulan').value; loadList(); });
+    $('kew-a-tahun').addEventListener('change', function () { KW.a.tahun = $('kew-a-tahun').value; loadList(); });
+    $('kew-a-q').addEventListener('input', function () { clearTimeout(KW.a.timer); KW.a.timer = setTimeout(function () { KW.a.q = $('kew-a-q').value.trim(); loadList(); }, 300); });
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
 </script>

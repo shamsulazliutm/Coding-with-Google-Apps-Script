@@ -456,6 +456,9 @@ var Kewangan = (function () {
 
   function adminSenarai_(ctx, p) {
     requireViewer_(ctx);
+    if (p && p.kiraanSahaja) { // untuk pil menu utama: tidak perlu senarai penuh
+      return { menunggu: Db.find(TAB, function (r) { return str_(r.Status) === 'Dihantar'; }).length };
+    }
     var t = tapis_(p);
     var sewaan = sewaanRows_();
     var kiraan = { 'Belum Dihantar': 0, Dihantar: 0, Lewat: 0, 'Perlu Pembetulan': 0, Diterima: 0 };
