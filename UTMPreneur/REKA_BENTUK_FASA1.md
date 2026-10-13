@@ -194,7 +194,8 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 - **Lampiran:** keputusan peperiksaan semester terkini, kertas cadangan projek/perniagaan.
 - **Isu dalam borang lama:** jumlah dalam julat (cadangan: nilai tepat RM); tiada medan pinjaman diluluskan, tempoh, bayaran balik, penjamin.
 - **Tab dicadangkan:** `Permohonan_Kredit`, `Pinjaman`, `Bayaran_Balik` (aliran bayaran seperti sewaan lot).
-- **Soalan terbuka:** syarat kelayakan (profiling/SSU), jejak pinjaman dan bayaran balik, had satu pinjaman aktif, perakuan penyelia, kaedah kelulusan.
+- **Kelulusan (disahkan): admin sahaja** (Admin Penuh / Pegawai Modul); tiada perakuan penyelia dan tiada jawatankuasa dalam sistem.
+- **Soalan terbuka:** jejak pinjaman dan bayaran balik, had satu pinjaman aktif.
 
 ### Modul lain (belum dibincangkan)
 Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
