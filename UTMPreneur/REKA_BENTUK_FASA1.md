@@ -232,8 +232,12 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 - **Had permohonan (disahkan): seorang pelajar satu permohonan.** Permohonan baharu hanya dibenarkan jika yang terdahulu Ditolak atau Dibatalkan (peraturan jika yang terdahulu Diluluskan: lihat soalan terbuka).
 - **Soalan terbuka:** jejak pinjaman dan bayaran balik; adakah "satu permohonan" bermaksud satu seumur hidup, atau satu bagi setiap pinjaman belum selesai.
 
-### Modul lain (belum dibincangkan)
-Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
+### Modul lain (belum dibincangkan; borang dan peraturan dibekalkan semasa fasa 2)
+- **Daftar startup** (cadangan Tuan; perbezaan daripada SSU perlu diperjelas).
+- **Inovasi** (pendaftaran projek/produk inovasi pelajar).
+- **Anugerah** (rekod anugerah, pertandingan dan pencapaian usahawan/inovator).
+- Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
+- Modul baharu menggunakan semula asas fasa 1 (auth, peranan, `Link_Dokumen`, `Audit`, perakuan, penilaian jawatankuasa, auto-isi daripada `PELAJAR` dan `Perniagaan`) dan didaftar sebagai spreadsheet baharu dalam `Link_Dokumen`.
 
 ---
 
