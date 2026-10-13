@@ -5,6 +5,8 @@
   var ADMIN_ROLES = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati', 'Penilai'];
   var S = { token: null, session: null, emel: '', timer: null, confirmImport: false };
   var $ = function (id) { return document.getElementById(id); };
+  // Antara muka dikongsi dengan AppModul.html (Profiling, SSU)
+  var UP = window.UP = { hooks: {}, S: S };
 
   function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
@@ -26,7 +28,7 @@
   function views() { return document.querySelectorAll('#main > .view'); }
   function show(id) {
     views().forEach(function (v) { v.hidden = v.id !== id; });
-    $('main').className = (id === 'v-status' || id === 'v-import' || id === 'v-admin') ? 'wide' : '';
+    $('main').className = $(id) && $(id).hasAttribute('data-wide') ? 'wide' : '';
     window.scrollTo(0, 0);
   }
 
@@ -146,6 +148,11 @@
     renderHome(session);
   }
 
+  UP.api = function (m, p) { return api(m, p); };
+  UP.show = function (id) { show(id); };
+  UP.msg = msg; UP.msgErr = msgErr; UP.clearMsg = clearMsg; UP.busy = busy; UP.node = node;
+  UP.home = function () { renderHome(S.session); };
+
   function renderHome(s) {
     $('home-nama').textContent = 'Selamat datang, ' + (s.nama || s.email);
     $('home-peranan').textContent = s.role;
@@ -154,6 +161,7 @@
     $('admin-menu-wrap').hidden = !isAdmin;
     $('go-import').hidden = s.role !== 'Admin Penuh';
     $('go-admin').hidden = s.role !== 'Admin Penuh';
+    if (UP.hooks.home) UP.hooks.home(s);
     show('v-home');
   }
 

@@ -1,0 +1,71 @@
+  <!-- Pelajar: Profiling -->
+  <section id="v-profiling" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Profiling pelajar</div><div class="e">Student profile</div>
+      <div id="pf-info" class="msg info" hidden></div>
+      <div id="pf-pelajar" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div id="pf-form"></div>
+      <div id="msg-pf" class="msg" hidden></div>
+      <button id="btn-pf" class="btn" type="button">Simpan profiling <i>Save profile</i></button>
+    </div>
+  </section>
+
+  <!-- Pelajar: SSU (status) -->
+  <section id="v-ssu" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card"><div class="h1">Pendaftaran SSU</div><div class="e">Student startup (SSU) registration</div></div>
+    <div id="ssu-body"></div>
+  </section>
+
+  <!-- Pelajar: SSU (borang) -->
+  <section id="v-ssu-form" class="view" hidden>
+    <button class="back" id="btn-ssu-balik" type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1" id="sf-tajuk">Borang SSU</div><div class="e">SSU application form</div>
+      <div id="sf-catatan" class="msg err" hidden></div>
+      <div id="sf-pemilik" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div id="sf-form"></div>
+      <div id="msg-sf" class="msg" hidden></div>
+      <button id="btn-sf" class="btn" type="button">Hantar permohonan <i>Submit application</i></button>
+    </div>
+  </section>
+
+  <!-- Admin: senarai SSU -->
+  <section id="v-sa-list" class="view" data-wide hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="row"><div><div class="h1">Permohonan SSU</div><div class="e">SSU applications</div></div><span class="sp"></span>
+        <button id="btn-sa-sedia" class="btn alt sm" type="button" hidden>Daftar SSU sedia ada <span class="e">Register existing SSU</span></button></div>
+      <div class="chips" id="sa-chips"></div>
+      <input id="sa-q" placeholder="Cari nama, ID, No. Matrik, No. Pendaftaran / Search" aria-label="Cari">
+      <div class="scroll" style="margin-top:10px"><table><thead><tr><th>ID</th><th>Perniagaan</th><th>Pemilik</th><th>Jenis</th><th>Status</th><th>Dihantar</th></tr></thead><tbody id="sa-body"></tbody></table></div>
+      <div id="sa-kosong" class="muted" style="margin-top:10px" hidden>Tiada permohonan. <span class="e">No applications.</span></div>
+    </div>
+    <div class="card" id="sa-tamat-wrap" hidden>
+      <div class="h2">SSU hampir tamat atau telah tamat <span class="e">Expiring or expired</span></div>
+      <div class="scroll" style="margin-top:8px"><table><thead><tr><th>No. Pendaftaran</th><th>Perniagaan</th><th>Tarikh tamat</th><th>Baki hari</th><th>Status</th></tr></thead><tbody id="sa-tamat"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- Admin: butiran SSU -->
+  <section id="v-sa-det" class="view" data-wide hidden>
+    <button class="back" id="btn-sa-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div id="sd-body"></div>
+  </section>
+
+  <!-- Admin: daftar SSU sedia ada -->
+  <section id="v-sa-sedia" class="view" hidden>
+    <button class="back" id="btn-sedia-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div class="card">
+      <div class="h1">Daftar SSU sedia ada</div><div class="e">Register an existing SSU</div>
+      <p class="muted">SSU terus diluluskan dan sijil dijana. Pemilik mesti ada dalam rekod pelajar. <span class="e">The SSU is approved immediately and the certificate is generated.</span></p>
+      <div id="sd-form"></div>
+      <div id="msg-sedia" class="msg" hidden></div>
+      <button id="btn-sedia" class="btn" type="button">Daftar dan luluskan <i>Register and approve</i></button>
+    </div>
+  </section>

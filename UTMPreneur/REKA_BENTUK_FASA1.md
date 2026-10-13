@@ -341,3 +341,12 @@ Fail: `16HKfrs-fu80ZxrrOrMlLq5Q9I1bS0XEK2oIjlOcjwYc` ("Perakuan Pendaftaran Syar
 - Turutan (`SEQ_SIJIL`) dikira bersama tahun; tafsiran awal: `S` = Syarikat Pemula Pelajar.
 - Akhiran `-01`: tafsiran awal ialah bilangan pendaftaran/pembaharuan (01 = pertama, 02 = pembaharuan pertama), nombor turutan kekal sama. **Menunggu pengesahan pengguna.**
 - **Disahkan pengguna ("setuju")**: akhiran `-01` = bilangan pendaftaran/pembaharuan; tempoh sah laku sijil lalai 1 tahun, boleh diperbaharui. Pelaksana web app mesti ada akses ke fail templat Slides.
+
+## 14. Peringkat 2 dibina (Profiling dan SSU)
+
+Dilaksanakan dan diuji setempat; butiran peraturan, lalai yang dipilih dan senarai semak ujian manual dalam
+[`docs/PERINGKAT2_PANDUAN.md`](docs/PERINGKAT2_PANDUAN.md). Perubahan skema: lajur `No_SSM` pada `Permohonan_SSU`; kumpulan `Rujukan` baharu
+(NEGERI, HUBUNGAN, TEMPOH_NIAGA, MOTIVASI, ALIRAN); skop Google Slides; kunci `Tetapan` `SSU_PERINGATAN_HARI` dan `SSU_PEMBAHARUAN_AWAL_HARI`.
+**[LALAI, sila semak]** pelajar boleh menjadi rakan kongsi dalam lebih daripada satu SSU (amaran kepada admin); sijil pembaharuan
+bertarikh hari kelulusan dan tamat = tarikh tamat lama + 12 bulan jika masih sah; senarai MOTIVASI, HUBUNGAN dan TEMPOH_NIAGA ialah draf.
+Belum dibina: muat naik fail berbahagian, medan khusus startup.

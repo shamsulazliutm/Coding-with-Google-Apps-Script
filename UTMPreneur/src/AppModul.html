@@ -1,0 +1,627 @@
+<script>
+(function () {
+  'use strict';
+  var UP = window.UP;
+  var $ = function (id) { return document.getElementById(id); };
+  var node = UP.node, msg = UP.msg, msgErr = UP.msgErr, clearMsg = UP.clearMsg, busy = UP.busy;
+  var ruj = null;
+  var SSU = { form: null, edit: null, perniagaanId: '', maks: 12 };
+  var SA = { status: 'SEMUA', q: '', timer: null, id: '', confirm: '' };
+
+  var YT = [{ kod: 'Ya', bm: 'Ya', en: 'Yes' }, { kod: 'Tidak', bm: 'Tidak', en: 'No' }];
+  var YTM = YT.concat([{ kod: 'Mungkin', bm: 'Mungkin', en: 'Maybe' }]);
+  var TAHUN = [1, 2, 3, 4, 5, 6, 7].map(function (n) { return { kod: String(n), bm: String(n), en: '' }; });
+  var JENIS_SSU = [{ kod: 'Perniagaan', bm: 'Perniagaan', en: 'Business' }, { kod: 'Startup', bm: 'Startup pembangunan produk / inovasi', en: 'Product / innovation startup' }];
+  var PILL = { Baharu: 'info', Disemak: 'info', 'Perlu Pembetulan': 'warn', Diluluskan: 'ok', Ditolak: 'bad', Aktif: 'ok', 'Tamat Tempoh': 'bad' };
+
+  function loadRuj() {
+    if (ruj) return Promise.resolve(ruj);
+    return UP.api('rujukan.senarai').then(function (r) { ruj = r.ok ? r.data : {}; return ruj; });
+  }
+  function opts(g) { return (ruj && ruj[g]) || []; }
+  function pill(text, kind) { return node('span', text, 'pill ' + (kind || '')); }
+  function bil(bm, en) { var d = node('span', bm + ' '); d.appendChild(node('span', en, 'e')); return d; }
+
+  // ---------- Pembina borang ----------
+  /**
+   * spec: [{k, t, bm, en, g|o, req, max, show(v)}]. t: sect text tel date number textarea select radio multi check file rep list.
+   * Pulang {el, get(), set(obj), errors(map), values()}.
+   */
+  function Form(spec) {
+    var root = node('div');
+    var fields = {};
+    function label(f) {
+      var l = node('label', null, 'lab');
+      var a = node('span', f.bm, 'l'); l.appendChild(a);
+      if (f.req) l.appendChild(node('span', ' *', 'e'));
+      if (f.en) { l.appendChild(document.createTextNode(' ')); l.appendChild(node('span', f.en, 'e')); }
+      return l;
+    }
+    function optList(f) { return f.o || opts(f.g); }
+    function mkOption(o) { var op = node('option', o.bm); op.value = o.kod; return op; }
+    function choice(type, name, o) {
+      var lb = node('label'); var inp = document.createElement('input'); inp.type = type; inp.name = name; inp.value = o.kod;
+      lb.appendChild(inp); var s = node('span', o.bm); if (o.en && o.en !== o.bm) { s.appendChild(document.createTextNode(' ')); s.appendChild(node('span', o.en, 'e')); } lb.appendChild(s);
+      return lb;
+    }
+    spec.forEach(function (f) {
+      var wrap = node('div', null, f.t === 'sect' ? '' : 'fld');
+      var ctl = null, api = {};
+      if (f.t === 'sect') {
+        wrap = node('div', f.bm + (f.en ? ' / ' + f.en : ''), 'sech');
+        api.get = function () { return undefined; }; api.set = function () {};
+      } else {
+        wrap.appendChild(label(f));
+        if (f.t === 'text' || f.t === 'tel' || f.t === 'date' || f.t === 'number') {
+          ctl = document.createElement('input'); ctl.type = f.t; if (f.ph) ctl.placeholder = f.ph; if (f.max) ctl.maxLength = f.max;
+          if (f.t === 'text') ctl.autocomplete = 'off';
+          wrap.appendChild(ctl);
+          api.get = function () { return ctl.value; }; api.set = function (v) { ctl.value = v == null ? '' : v; };
+        } else if (f.t === 'textarea') {
+          ctl = document.createElement('textarea'); ctl.style.minHeight = '70px'; ctl.style.fontFamily = 'inherit'; ctl.style.fontSize = '14px';
+          wrap.appendChild(ctl);
+          api.get = function () { return ctl.value; }; api.set = function (v) { ctl.value = v == null ? '' : v; };
+        } else if (f.t === 'select') {
+          ctl = document.createElement('select'); var ph = node('option', '— pilih / select —'); ph.value = ''; ctl.appendChild(ph);
+          optList(f).forEach(function (o) { ctl.appendChild(mkOption(o)); });
+          wrap.appendChild(ctl);
+          api.get = function () { return ctl.value; };
+          api.set = function (v) {
+            var val = v == null ? '' : String(v);
+            var hit = optList(f).filter(function (o) { return o.kod === val || o.bm.toLowerCase() === val.toLowerCase(); })[0];
+            ctl.value = hit ? hit.kod : '';
+          };
+        } else if (f.t === 'radio' || f.t === 'multi') {
+          ctl = node('div', null, 'opts' + (f.t === 'radio' ? ' inline' : ''));
+          var nm = 'f_' + f.k + '_' + Math.random().toString(36).substr(2, 5);
+          optList(f).forEach(function (o) { ctl.appendChild(choice(f.t === 'radio' ? 'radio' : 'checkbox', nm, o)); });
+          wrap.appendChild(ctl);
+          api.get = function () {
+            var on = Array.prototype.slice.call(ctl.querySelectorAll('input:checked')).map(function (i) { return i.value; });
+            return f.t === 'radio' ? (on[0] || '') : on;
+          };
+          api.set = function (v) {
+            var arr = f.t === 'radio' ? [v] : (v || []);
+            Array.prototype.forEach.call(ctl.querySelectorAll('input'), function (i) { i.checked = arr.indexOf(i.value) >= 0; });
+          };
+        } else if (f.t === 'check') {
+          wrap.removeChild(wrap.firstChild);
+          var lb = node('label', null, 'opts'); lb.style.flexDirection = 'row'; lb.style.display = 'flex'; lb.style.gap = '8px';
+          ctl = document.createElement('input'); ctl.type = 'checkbox'; ctl.style.width = 'auto';
+          lb.appendChild(ctl); var tx = node('span', f.bm); if (f.en) { tx.appendChild(node('i', f.en, 'e')); tx.lastChild.style.display = 'block'; } lb.appendChild(tx);
+          wrap.appendChild(lb);
+          api.get = function () { return ctl.checked; }; api.set = function (v) { ctl.checked = v === true; };
+        } else if (f.t === 'file') {
+          ctl = document.createElement('input'); ctl.type = 'file'; ctl.accept = f.accept || '.pdf,.jpg,.jpeg,.png';
+          var note = node('div', null, 'e'); var st = { file: null };
+          ctl.addEventListener('change', function () {
+            var fl = ctl.files && ctl.files[0]; st.file = null;
+            if (!fl) { note.textContent = ''; return; }
+            if (fl.size > 10 * 1024 * 1024) { note.textContent = 'Fail melebihi 10 MB / File exceeds 10 MB'; ctl.value = ''; return; }
+            var rd = new FileReader();
+            rd.onload = function () { st.file = { nama: fl.name, data: String(rd.result).replace(/^data:[^,]*,/, '') }; note.textContent = fl.name; };
+            rd.readAsDataURL(fl);
+          });
+          wrap.appendChild(ctl); wrap.appendChild(note);
+          api.get = function () { return st.file; };
+          api.set = function (v) { st.file = null; ctl.value = ''; note.textContent = v ? 'Fail sedia ada akan digunakan jika tiada fail baharu dipilih. / The existing file is kept unless you choose a new one.' : ''; };
+        } else if (f.t === 'rep' || f.t === 'list') {
+          var box = node('div'); var add = node('button', '+ Tambah / Add', 'btn link'); add.type = 'button';
+          function addRow(v) {
+            if (f.max && box.children.length >= f.max) return;
+            var row = node('div', null, 'rep-row');
+            if (f.t === 'list') {
+              var i1 = document.createElement('input'); i1.placeholder = f.ph || ''; i1.value = v || ''; i1.autocapitalize = 'characters'; row.appendChild(i1);
+            } else {
+              var sel = document.createElement('select'); var p0 = node('option', 'Hubungan'); p0.value = ''; sel.appendChild(p0); opts('HUBUNGAN').forEach(function (o) { sel.appendChild(mkOption(o)); });
+              var i2 = document.createElement('input'); i2.placeholder = 'Jenis perniagaan'; var i3 = document.createElement('input'); i3.placeholder = 'Tempoh';
+              if (v) { sel.value = v.hubungan; i2.value = v.jenis; i3.value = v.tempoh; }
+              row.appendChild(sel); row.appendChild(i2); row.appendChild(i3);
+            }
+            var rm = node('button', '×', 'btn alt sm'); rm.type = 'button'; rm.setAttribute('aria-label', 'Buang / Remove');
+            rm.addEventListener('click', function () { box.removeChild(row); toggleAdd(); });
+            row.appendChild(rm); box.appendChild(row); toggleAdd();
+          }
+          function toggleAdd() { add.disabled = !!(f.max && box.children.length >= f.max); }
+          add.addEventListener('click', function () { addRow(null); });
+          wrap.appendChild(box); wrap.appendChild(add);
+          api.get = function () {
+            return Array.prototype.map.call(box.children, function (row) {
+              var c = row.querySelectorAll('input,select');
+              return f.t === 'list' ? c[0].value.trim() : { hubungan: c[0].value, jenis: c[1].value, tempoh: c[2].value };
+            }).filter(function (x) { return f.t === 'list' ? x : (x.hubungan || x.jenis || x.tempoh); });
+          };
+          api.set = function (arr) { box.textContent = ''; (arr || []).forEach(addRow); toggleAdd(); };
+          api.addRow = addRow; api.reset = function (max) { f.max = max; toggleAdd(); };
+        }
+        if (f.hint) wrap.appendChild(node('div', f.hint, 'e'));
+        var fe = node('div', null, 'fe'); fe.hidden = true; wrap.appendChild(fe); api.fe = fe;
+      }
+      if (f.k) wrap.setAttribute('data-k', f.k);
+      api.wrap = wrap; api.spec = f;
+      fields[f.k || ('_s' + Math.random())] = api;
+      root.appendChild(wrap);
+    });
+    function values() {
+      var v = {};
+      Object.keys(fields).forEach(function (k) { var x = fields[k].get(); if (x !== undefined) v[k] = x; });
+      return v;
+    }
+    function refresh() {
+      var v = values();
+      var inSect = null;
+      Object.keys(fields).forEach(function (k) {
+        var f = fields[k];
+        if (f.spec.show) f.wrap.hidden = !f.spec.show(v);
+      });
+    }
+    root.addEventListener('change', refresh);
+    root.addEventListener('input', function (e) { if (e.target && e.target.type === 'checkbox') refresh(); });
+    return {
+      el: root, values: values, refresh: refresh, fields: fields,
+      set: function (o) { Object.keys(fields).forEach(function (k) { if (fields[k].set && fields[k].spec.t !== 'sect') fields[k].set(o ? o[k] : undefined); }); refresh(); },
+      clear: function () {
+        Object.keys(fields).forEach(function (k) { var f = fields[k]; if (f.fe) { f.fe.hidden = true; f.fe.textContent = ''; f.wrap.classList.remove('has-err'); } });
+      },
+      errors: function (map) {
+        this.clear();
+        var first = null;
+        Object.keys(map || {}).forEach(function (k) {
+          var f = fields[k]; if (!f || !f.fe) return;
+          f.fe.textContent = map[k]; f.fe.hidden = false; f.wrap.classList.add('has-err'); if (!first) first = f.wrap;
+        });
+        if (first && first.scrollIntoView) first.scrollIntoView({ block: 'center' });
+      }
+    };
+  }
+
+  function isYa(v, k) { return v[k] === 'Ya'; }
+  function inc(v, k, x) { return (v[k] || []).indexOf(x) >= 0; }
+
+  function profilSpec() {
+    return [
+      { t: 'sect', k: '_a', bm: 'Maklumat semasa', en: 'Current details' },
+      { k: 'fakulti', t: 'select', g: 'FAKULTI', bm: 'Fakulti', en: 'Faculty', req: 1 },
+      { k: 'program', t: 'text', bm: 'Program', en: 'Programme', req: 1, max: 120 },
+      { k: 'bidang', t: 'select', g: 'BIDANG', bm: 'Bidang pengajian', en: 'Field of study', req: 1 },
+      { k: 'tahun', t: 'select', o: TAHUN, bm: 'Tahun pengajian', en: 'Year of study', req: 1 },
+      { k: 'telefon', t: 'tel', bm: 'No. telefon', en: 'Phone number', req: 1 },
+      { k: 'alamatKolej', t: 'text', bm: 'Alamat kolej', en: 'College address', max: 250 },
+      { k: 'alamatRumah', t: 'text', bm: 'Alamat rumah', en: 'Home address', req: 1, max: 250 },
+      { k: 'kampung', t: 'select', g: 'NEGERI', bm: 'Kampung halaman (negeri)', en: 'Hometown (state)', req: 1 },
+      { t: 'sect', k: '_b', bm: 'Latar belakang keluarga', en: 'Family background' },
+      { k: 'keluargaBerniaga', t: 'radio', o: YT, bm: 'Adakah ahli keluarga anda berniaga?', en: 'Does anyone in your family run a business?', req: 1 },
+      { k: 'keluarga', t: 'rep', max: 10, bm: 'Ahli keluarga yang berniaga', en: 'Family members in business', show: function (v) { return isYa(v, 'keluargaBerniaga'); } },
+      { t: 'sect', k: '_c', bm: 'Pengalaman berniaga', en: 'Business experience' },
+      { k: 'pernahBerniaga', t: 'radio', o: YT, bm: 'Pernahkah anda berniaga?', en: 'Have you run a business?', req: 1 },
+      { k: 'jenisDijalankan', t: 'select', g: 'KLUSTER', bm: 'Jenis perniagaan yang dijalankan', en: 'Type of business', show: function (v) { return isYa(v, 'pernahBerniaga'); } },
+      { k: 'tempohNiaga', t: 'select', g: 'TEMPOH_NIAGA', bm: 'Tempoh berniaga', en: 'Duration', show: function (v) { return isYa(v, 'pernahBerniaga'); } },
+      { k: 'motivasi', t: 'multi', g: 'MOTIVASI', bm: 'Motivasi berniaga', en: 'Motivation', show: function (v) { return isYa(v, 'pernahBerniaga'); } },
+      { t: 'sect', k: '_d', bm: 'Minat berniaga', en: 'Interest in business' },
+      { k: 'berminat', t: 'radio', o: YT, bm: 'Berminat untuk berniaga?', en: 'Interested in running a business?', req: 1 },
+      { k: 'klusterDiminati', t: 'multi', g: 'KLUSTER', bm: 'Jenis perniagaan diminati', en: 'Business types of interest', show: function (v) { return isYa(v, 'berminat'); } },
+      { k: 'klusterLain', t: 'text', bm: 'Nyatakan lain-lain', en: 'Other (please specify)', max: 120, show: function (v) { return isYa(v, 'berminat') && inc(v, 'klusterDiminati', 'LAIN'); } },
+      { k: 'mahuKampus', t: 'radio', o: YTM, bm: 'Mahu berniaga di kampus?', en: 'Want to run a business on campus?', show: function (v) { return isYa(v, 'berminat'); } },
+      { k: 'aliran', t: 'select', g: 'ALIRAN', bm: 'Aliran pilihan', en: 'Preferred stream', show: function (v) { return isYa(v, 'berminat'); } }
+    ];
+  }
+
+  function ssuSpec(maksAhli) {
+    var subj = function (v) { return ['UBSS1032', 'ULRS3032', 'MFMS1143', 'SBSF1023'].indexOf(v.syaratSubjek) >= 0; };
+    return [
+      { t: 'sect', k: '_a', bm: 'Maklumat perniagaan', en: 'Business details' },
+      { k: 'jenisSsu', t: 'radio', o: JENIS_SSU, bm: 'Jenis pendaftaran', en: 'Registration type', req: 1 },
+      { k: 'nama', t: 'text', bm: 'Nama perniagaan', en: 'Business name', req: 1, max: 120, hint: 'Akan ditukar kepada HURUF BESAR dan tidak boleh mengandungi UTM. / Converted to UPPERCASE and cannot contain UTM.' },
+      { k: 'produk', t: 'multi', g: 'PRODUK', bm: 'Produk / perkhidmatan (maksimum 5)', en: 'Products / services', req: 1 },
+      { k: 'jenisPerniagaan', t: 'select', g: 'JENIS_PERNIAGAAN', bm: 'Jenis perniagaan', en: 'Type of business', req: 1 },
+      { k: 'kluster', t: 'select', g: 'KLUSTER', bm: 'Kluster perniagaan', en: 'Business cluster', req: 1 },
+      { k: 'alamat', t: 'textarea', bm: 'Alamat perniagaan', en: 'Business address', req: 1, max: 300, hint: 'Alamat perniagaan sebenar, bukan alamat kolej, fakulti atau UTM. / The actual business address, not a college, faculty or UTM address.' },
+      { k: 'tarikhMula', t: 'date', bm: 'Tarikh mula berniaga', en: 'Business start date', req: 1 },
+      { k: 'laman', t: 'text', bm: 'Laman web / media sosial', en: 'Website / social media', max: 300 },
+      { t: 'sect', k: '_b', bm: 'Syarat subjek', en: 'Subject requirement' },
+      { k: 'syaratSubjek', t: 'select', g: 'SYARAT_SUBJEK', bm: 'Subjek yang didaftarkan', en: 'Registered subject', req: 1 },
+      { k: 'pensyarah', t: 'text', bm: 'Nama pensyarah', en: 'Lecturer', max: 120, show: subj },
+      { k: 'seksyen', t: 'text', bm: 'Seksyen', en: 'Section', max: 20, show: subj },
+      { k: 'kumpulan', t: 'text', bm: 'Kumpulan', en: 'Group', max: 40, show: subj },
+      { t: 'sect', k: '_c', bm: 'Pendaftaran SSM', en: 'SSM registration' },
+      { k: 'statusSsm', t: 'radio', g: 'STATUS_SSM', bm: 'Adakah perniagaan didaftarkan dengan SSM?', en: 'Registered with SSM?', req: 1 },
+      { k: 'noSsm', t: 'text', bm: 'No. pendaftaran SSM', en: 'SSM registration no.', max: 30, show: function (v) { return v.statusSsm === 'YA'; } },
+      { k: 'failSsm', t: 'file', bm: 'Sijil SSM (PDF/JPG/PNG)', en: 'SSM certificate', show: function (v) { return v.statusSsm === 'YA'; } },
+      { k: 'failMaklumat', t: 'file', bm: 'Maklumat SSM (pilihan)', en: 'SSM information (optional)', show: function (v) { return v.statusSsm === 'YA'; } },
+      { t: 'sect', k: '_d', bm: 'Kewangan', en: 'Finance' },
+      { k: 'sumber', t: 'multi', g: 'SUMBER_PEMBIAYAAN', bm: 'Sumber pembiayaan', en: 'Funding sources', req: 1 },
+      { k: 'modal', t: 'text', bm: 'Modal permulaan (RM, nilai tepat)', en: 'Starting capital (RM, exact)', req: 1, ph: '1500.00' },
+      { k: 'pendapatan', t: 'text', bm: 'Pendapatan kasar bulanan (RM, nilai tepat)', en: 'Gross monthly income (RM, exact)', req: 1, ph: '0.00' },
+      { t: 'sect', k: '_e', bm: 'Rakan kongsi', en: 'Partners' },
+      { k: 'ahli', t: 'list', max: maksAhli - 1, ph: 'No. Matrik rakan kongsi', bm: 'Rakan kongsi (pelajar UTM sahaja)', en: 'Partners (UTM students only)', hint: 'Maksimum ' + maksAhli + ' ahli termasuk anda. / Maximum ' + maksAhli + ' members including you.' },
+      { t: 'sect', k: '_f', bm: 'Perakuan', en: 'Declaration' },
+      { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan semua maklumat adalah benar dan bersetuju maklumat ini digunakan oleh UTMXCITE untuk pendaftaran SSU.', en: 'I confirm that all information is true and agree that UTMXCITE may use it for SSU registration.' }
+    ];
+  }
+
+  function sediaSpec() {
+    return [
+      { k: 'noMatrik', t: 'text', bm: 'No. Matrik pemilik', en: 'Owner matric no.', req: 1 },
+      { k: 'jenisSsu', t: 'radio', o: JENIS_SSU, bm: 'Jenis pendaftaran', en: 'Registration type' },
+      { k: 'nama', t: 'text', bm: 'Nama perniagaan', en: 'Business name', req: 1, max: 120 },
+      { k: 'jenisPerniagaan', t: 'select', g: 'JENIS_PERNIAGAAN', bm: 'Jenis perniagaan', en: 'Type of business', req: 1 },
+      { k: 'kluster', t: 'select', g: 'KLUSTER', bm: 'Kluster', en: 'Cluster', req: 1 },
+      { k: 'alamat', t: 'textarea', bm: 'Alamat perniagaan', en: 'Business address', req: 1 },
+      { k: 'statusSsm', t: 'radio', g: 'STATUS_SSM', bm: 'Status SSM', en: 'SSM status' },
+      { k: 'noSsm', t: 'text', bm: 'No. SSM (jika ada)', en: 'SSM no. (if any)' },
+      { k: 'syaratSubjek', t: 'select', g: 'SYARAT_SUBJEK', bm: 'Subjek (jika ada)', en: 'Subject (if any)' },
+      { k: 'tarikhDaftar', t: 'date', bm: 'Tarikh pendaftaran asal', en: 'Original registration date', hint: 'Kosongkan untuk hari ini. Tamat sah laku = tarikh ini + 12 bulan. / Leave blank for today.' },
+      { k: 'ahli', t: 'list', max: 11, ph: 'No. Matrik rakan kongsi', bm: 'Rakan kongsi', en: 'Partners' },
+      { k: 'emel', t: 'check', bm: 'Hantar emel kelulusan kepada pemilik dan ahli', en: 'Send approval emails to the owner and members' }
+    ];
+  }
+
+  // ---------- Muat turun ----------
+  function download(nama, mime, b64) {
+    var bin = atob(b64), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([arr], { type: mime || 'application/octet-stream' }));
+    var a = document.createElement('a'); a.href = url; a.download = nama; document.body.appendChild(a); a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  }
+  function getFile(id, jenis, btn, out) {
+    if (btn) btn.disabled = true;
+    UP.api('ssu.fail', { id: id, jenis: jenis }).then(function (r) {
+      if (btn) btn.disabled = false;
+      if (!r.ok) { if (out) msgErr(out, r); return; }
+      download(r.data.nama, r.data.mime, r.data.data);
+    });
+  }
+  function dlBtn(text, en, id, jenis, out) {
+    var b = node('button', text, 'btn alt sm'); b.type = 'button'; b.style.marginRight = '6px'; b.style.marginTop = '6px';
+    b.appendChild(document.createTextNode(' ')); b.appendChild(node('span', en, 'e'));
+    b.addEventListener('click', function () { getFile(id, jenis, b, out); });
+    return b;
+  }
+
+  // ---------- Profiling ----------
+  var PF = { form: null };
+  function openProfiling() {
+    UP.show('v-profiling');
+    var body = $('pf-form'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
+    clearMsg($('msg-pf'));
+    Promise.all([loadRuj(), UP.api('profil.dapat')]).then(function (res) {
+      var r = res[1];
+      body.textContent = '';
+      if (!r.ok) { msgErr($('msg-pf'), r); return; }
+      var d = r.data, p = d.pelajar;
+      var card = $('pf-pelajar'); card.textContent = '';
+      card.appendChild(kv([['Nama', p.nama], ['No. Matrik', p.noMatrik], ['Emel', p.emel], ['No. KP', p.noKp], ['Jantina', p.jantina], ['Etnik', p.etnik], ['Kewarganegaraan', p.kewarganegaraan]]));
+      card.appendChild(node('p', 'Maklumat di atas diambil daripada rekod pelajar dan tidak boleh diubah di sini. Hubungi UTMXCITE jika tidak betul. / Taken from student records; contact UTMXCITE if incorrect.', 'e'));
+      var info = $('pf-info');
+      if (d.status.lengkap && d.status.perluKemasKini) { msg(info, 'info', 'Sesi baharu: sila semak dan simpan semula profil anda.', 'New session: please review and save your profile again.'); }
+      else if (!d.status.lengkap) { msg(info, 'info', 'Profiling wajib dilengkapkan sebelum memohon SSU.', 'Profiling must be completed before applying for SSU.'); }
+      else info.hidden = true;
+      PF.form = Form(profilSpec());
+      body.appendChild(PF.form.el);
+      var v = d.profil || {};
+      PF.form.set({
+        fakulti: p.fakulti, program: p.program, bidang: p.bidang, tahun: p.tahun, telefon: p.telefon, alamatKolej: p.alamatKolej, alamatRumah: p.alamatRumah,
+        kampung: v.kampung, keluargaBerniaga: v.keluargaBerniaga, keluarga: v.keluarga, pernahBerniaga: v.pernahBerniaga,
+        jenisDijalankan: v.jenisDijalankan, tempohNiaga: v.tempohNiaga, motivasi: v.motivasi, berminat: v.berminat,
+        klusterDiminati: v.klusterDiminati, klusterLain: v.klusterLain, mahuKampus: v.mahuKampus, aliran: v.aliran
+      });
+    });
+  }
+  function kv(rows) {
+    var g = node('div', null, 'kv');
+    rows.forEach(function (r) { g.appendChild(node('span', r[0])); g.appendChild(node('span', r[1] == null ? '' : String(r[1]))); });
+    return g;
+  }
+  function saveProfiling() {
+    var m = $('msg-pf'); clearMsg(m);
+    if (!PF.form) return;
+    var btn = $('btn-pf'); busy(btn, true); PF.form.clear();
+    UP.api('profil.simpan', PF.form.values()).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) PF.form.errors(r.error.extra.medan); return; }
+      msg(m, 'ok', 'Profiling disimpan.', 'Profile saved.');
+      $('pf-info').hidden = true;
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  }
+
+  // ---------- SSU: status ----------
+  function openSsu(notice) {
+    if (typeof notice !== 'string') notice = '';
+    UP.show('v-ssu');
+    var body = $('ssu-body'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
+    Promise.all([loadRuj(), UP.api('ssu.saya')]).then(function (res) {
+      var r = res[1];
+      body.textContent = '';
+      if (!r.ok) { var m = node('div', null, 'msg err'); body.appendChild(m); msgErr(m, r); return; }
+      var d = r.data; SSU.maks = d.had.maksAhli;
+      if (notice) { var nt = node('div', null, 'msg ok'); nt.appendChild(document.createTextNode(notice)); nt.appendChild(node('i', 'Application submitted')); body.appendChild(nt); }
+      var out = node('div', null, 'msg err'); out.hidden = true;
+      if (!d.profil.lengkap) {
+        var c = node('div', null, 'card'); var mm = node('div', null, 'msg info');
+        mm.appendChild(document.createTextNode('Lengkapkan profiling anda dahulu sebelum memohon SSU.')); mm.appendChild(node('i', 'Complete your profile before applying for SSU.'));
+        c.appendChild(mm);
+        var b = node('button', 'Pergi ke profiling ', 'btn'); b.appendChild(node('i', 'Go to profile')); b.type = 'button'; b.addEventListener('click', openProfiling); c.appendChild(b);
+        body.appendChild(c);
+      }
+      var lastOk = null;
+      d.permohonan.forEach(function (p) { if (p.status === 'Diluluskan' && p.adaSijil) lastOk = p; });
+      if (d.perniagaan) {
+        var pn = d.perniagaan, card = node('div', null, 'card');
+        var hd = node('div', null, 'row'); hd.appendChild(node('div', pn.nama, 'big')); hd.appendChild(node('span', null, 'sp')); hd.appendChild(pill(pn.status, PILL[pn.status]));
+        card.appendChild(hd);
+        card.appendChild(kv([['No. pendaftaran', pn.noPendaftaran], ['Tarikh daftar', pn.tarikhDaftar], ['Sah sehingga', pn.tarikhTamat],
+          ['Baki', pn.hariBaki === null ? '' : (pn.hariBaki >= 0 ? pn.hariBaki + ' hari / days' : 'Tamat ' + (-pn.hariBaki) + ' hari lalu / expired')]]));
+        if (pn.status === 'Tamat Tempoh' || (pn.hariBaki !== null && pn.hariBaki <= 60)) {
+          var w = node('div', null, 'msg ' + (pn.status === 'Tamat Tempoh' ? 'err' : 'info'));
+          w.appendChild(document.createTextNode(pn.status === 'Tamat Tempoh' ? 'SSU anda telah tamat tempoh. Sila perbaharui.' : 'SSU anda akan tamat tidak lama lagi. Anda boleh memperbaharuinya sekarang.'));
+          w.appendChild(node('i', pn.status === 'Tamat Tempoh' ? 'Your SSU has expired. Please renew.' : 'Your SSU expires soon. You can renew now.'));
+          card.appendChild(w);
+        }
+        if (lastOk) card.appendChild(dlBtn('Muat turun sijil', 'Download certificate', lastOk.id, 'sijil', out));
+        if (d.boleh.perbaharui) {
+          var rb = node('button', 'Perbaharui SSU ', 'btn'); rb.appendChild(node('i', 'Renew SSU')); rb.type = 'button';
+          rb.addEventListener('click', function () { openSsuForm({ perniagaanId: pn.id }); });
+          card.appendChild(rb);
+        }
+        card.appendChild(out);
+        body.appendChild(card);
+      }
+      if (d.permohonan.length) {
+        var c2 = node('div', null, 'card'); c2.appendChild(node('div', 'Permohonan saya', 'h2')); c2.lastChild.appendChild(document.createTextNode(' ')); c2.lastChild.appendChild(node('span', 'My applications', 'e'));
+        d.permohonan.forEach(function (p) {
+          var row = node('div', null, 'sec');
+          var h = node('div', null, 'row'); h.appendChild(node('b', p.nama)); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(p.status, PILL[p.status]));
+          row.appendChild(h);
+          row.appendChild(node('div', p.id + ' · ' + p.jenisPermohonan + ' · dihantar ' + p.tarikhHantar, 'e'));
+          if (p.catatan) { var cn = node('div', null, 'msg ' + (p.status === 'Ditolak' ? 'err' : 'info')); cn.appendChild(document.createTextNode('Catatan admin: ' + p.catatan)); cn.appendChild(node('i', 'Admin note')); row.appendChild(cn); }
+          if (p.bolehUbah) { var eb = node('button', 'Edit dan hantar semula ', 'btn sm'); eb.appendChild(node('span', 'Edit and resubmit', 'e')); eb.style.marginTop = '8px'; eb.type = 'button'; eb.addEventListener('click', function () { openSsuForm({ id: p.id }); }); row.appendChild(eb); }
+          c2.appendChild(row);
+        });
+        body.appendChild(c2);
+      }
+      if (d.sertaan.length) {
+        var c3 = node('div', null, 'card'); c3.appendChild(node('div', 'SSU yang saya sertai (baca sahaja)', 'h2'));
+        d.sertaan.forEach(function (p) {
+          var row = node('div', null, 'sec'); var h = node('div', null, 'row'); h.appendChild(node('b', p.nama)); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(p.status, PILL[p.status]));
+          row.appendChild(h); row.appendChild(node('div', 'Pemilik: ' + p.pemilik + ' · ' + p.id, 'e'));
+          if (p.adaSijil) row.appendChild(dlBtn('Muat turun sijil', 'Download certificate', p.id, 'sijil', out));
+          c3.appendChild(row);
+        });
+        body.appendChild(c3);
+      }
+      if (d.boleh.mohonBaharu) {
+        var nb = node('button', 'Mohon SSU baharu ', 'btn'); nb.appendChild(node('i', 'Apply for a new SSU')); nb.type = 'button';
+        nb.addEventListener('click', function () { openSsuForm({}); });
+        body.appendChild(nb);
+      } else if (!d.permohonan.length && !d.perniagaan && d.profil.lengkap) {
+        body.appendChild(node('p', 'Tiada permohonan.', 'muted'));
+      }
+    });
+  }
+
+  // ---------- SSU: borang ----------
+  function openSsuForm(target) {
+    UP.show('v-ssu-form');
+    var body = $('sf-form'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
+    clearMsg($('msg-sf')); $('sf-catatan').hidden = true;
+    SSU.edit = target.id || ''; SSU.perniagaanId = target.perniagaanId || '';
+    $('sf-tajuk').textContent = SSU.perniagaanId ? 'Pembaharuan SSU' : (SSU.edit ? 'Edit permohonan SSU' : 'Permohonan SSU baharu');
+    var calls = [loadRuj()];
+    if (target.id || target.perniagaanId) calls.push(UP.api('ssu.dapat', target.id ? { id: target.id } : { perniagaanId: target.perniagaanId }));
+    else calls.push(UP.api('profil.dapat'));
+    Promise.all(calls).then(function (res) {
+      var r = res[1];
+      body.textContent = '';
+      if (!r.ok) { msgErr($('msg-sf'), r); return; }
+      var pem = r.data.pemilik || (r.data.pelajar ? { nama: r.data.pelajar.nama, noMatrik: r.data.pelajar.noMatrik, fakulti: r.data.pelajar.fakulti, program: r.data.pelajar.program } : null);
+      var pc = $('sf-pemilik'); pc.textContent = '';
+      if (pem) pc.appendChild(kv([['Pemilik', pem.nama], ['No. Matrik', pem.noMatrik], ['Fakulti', pem.fakulti], ['Program', pem.program]]));
+      if (r.data.catatan && r.data.status === 'Perlu Pembetulan') { var cn = $('sf-catatan'); msg(cn, 'err', 'Catatan admin: ' + r.data.catatan, 'Admin note'); }
+      SSU.form = Form(ssuSpec(SSU.maks));
+      body.appendChild(SSU.form.el);
+      var b = r.data.borang || { jenisSsu: 'Perniagaan' };
+      SSU.form.set(b);
+      SSU.form.fields.failSsm.set(b.failSsmAda); SSU.form.fields.failMaklumat.set(b.failMaklumatAda);
+      $('btn-sf').firstChild.textContent = SSU.edit ? 'Hantar semula ' : 'Hantar permohonan ';
+    });
+  }
+  function submitSsu() {
+    var m = $('msg-sf'); clearMsg(m);
+    if (!SSU.form) return;
+    var v = SSU.form.values();
+    if (SSU.edit) v.id = SSU.edit;
+    if (SSU.perniagaanId) v.perniagaanId = SSU.perniagaanId;
+    var btn = $('btn-sf'); busy(btn, true); SSU.form.clear();
+    UP.api('ssu.hantar', v).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) SSU.form.errors(r.error.extra.medan); return; }
+      openSsu('Permohonan dihantar: ' + r.data.id);
+    });
+  }
+
+  // ---------- Admin: senarai ----------
+  var STATUSES = ['SEMUA', 'Baharu', 'Disemak', 'Perlu Pembetulan', 'Diluluskan', 'Ditolak'];
+  function openSaList(keep) {
+    UP.show('v-sa-list');
+    if (!keep) { SA.status = 'SEMUA'; SA.q = ''; $('sa-q').value = ''; }
+    loadSaList();
+  }
+  function loadSaList() {
+    UP.api('ssu.admin.senarai', { status: SA.status, q: SA.q }).then(function (r) {
+      var tb = $('sa-body'); tb.textContent = '';
+      if (!r.ok) { $('sa-kosong').hidden = false; $('sa-kosong').textContent = (r.error && r.error.bm) || 'Ralat'; return; }
+      var d = r.data;
+      var chips = $('sa-chips'); chips.textContent = '';
+      STATUSES.forEach(function (s) {
+        var n = s === 'SEMUA' ? Object.keys(d.kiraan).reduce(function (a, k) { return a + d.kiraan[k]; }, 0) : d.kiraan[s];
+        var b = node('button', (s === 'SEMUA' ? 'Semua' : s) + ' (' + n + ')', 'chip' + (SA.status === s ? ' on' : '')); b.type = 'button';
+        b.addEventListener('click', function () { SA.status = s; loadSaList(); });
+        chips.appendChild(b);
+      });
+      $('btn-sa-sedia').hidden = !d.bolehPutus;
+      $('sa-kosong').hidden = d.senarai.length > 0;
+      d.senarai.forEach(function (p) {
+        var tr = node('tr', null, 'click'); tr.setAttribute('data-id', p.id);
+        [p.id, p.nama, p.pemilik + ' (' + p.noMatrik + ')', p.jenisPermohonan + ' / ' + p.jenisSsu].forEach(function (t) { tr.appendChild(node('td', t)); });
+        var st = node('td'); st.appendChild(pill(p.status, PILL[p.status])); tr.appendChild(st);
+        tr.appendChild(node('td', p.tarikhHantar));
+        tr.addEventListener('click', function () { openSaDetail(p.id); });
+        tb.appendChild(tr);
+      });
+      var tw = $('sa-tamat-wrap'), tt = $('sa-tamat'); tt.textContent = ''; tw.hidden = !d.hampirTamat.length;
+      d.hampirTamat.forEach(function (x) {
+        var tr = node('tr'); [x.noPendaftaran, x.nama, x.tarikhTamat, x.hariBaki === null ? '' : String(x.hariBaki)].forEach(function (t) { tr.appendChild(node('td', t)); });
+        var st = node('td'); st.appendChild(pill(x.status, PILL[x.status])); tr.appendChild(st); tt.appendChild(tr);
+      });
+    });
+  }
+
+  // ---------- Admin: butiran ----------
+  function openSaDetail(id) {
+    SA.id = id; SA.confirm = '';
+    UP.show('v-sa-det');
+    var body = $('sd-body'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
+    UP.api('ssu.admin.butiran', { id: id }).then(function (r) { renderSaDetail(r); });
+  }
+  function renderSaDetail(r, extra) {
+    var body = $('sd-body'); body.textContent = '';
+    if (!r.ok) { var m = node('div', null, 'msg err'); body.appendChild(m); msgErr(m, r); return; }
+    var d = r.data, b = d.borang, l = d.label;
+    var out = node('div', null, 'msg err'); out.hidden = true;
+    var head = node('div', null, 'card');
+    var hr = node('div', null, 'row'); hr.appendChild(node('div', b.nama, 'h1')); hr.appendChild(node('span', null, 'sp')); hr.appendChild(pill(d.status, PILL[d.status])); head.appendChild(hr);
+    head.appendChild(node('div', b.id + ' · ' + b.jenisPermohonan + ' · ' + b.jenisSsu, 'e'));
+    if (extra && extra.length) extra.forEach(function (t) { var w = node('div', null, 'msg err'); w.textContent = t; head.appendChild(w); });
+    d.amaran.forEach(function (t) { var w = node('div', null, 'msg info'); w.textContent = t; head.appendChild(w); });
+    body.appendChild(head);
+
+    var c1 = node('div', null, 'card'); c1.appendChild(node('div', 'Pemilik', 'h2'));
+    var p = d.pemilik;
+    var rows = [['Nama', p.nama], ['No. Matrik', p.noMatrik], ['Emel', p.emel], ['Fakulti', p.fakulti], ['Program', p.program], ['Tahun', p.tahun], ['Telefon', p.telefon], ['Jantina', p.jantina], ['Etnik', p.etnik]];
+    if (p.noKp !== undefined) rows.push(['No. KP', p.noKp]);
+    c1.appendChild(kv(rows)); body.appendChild(c1);
+
+    var c2 = node('div', null, 'card'); c2.appendChild(node('div', 'Perniagaan', 'h2'));
+    c2.appendChild(kv([
+      ['Produk', l.produk.join(', ')], ['Jenis perniagaan', l.jenisPerniagaan], ['Kluster', l.kluster], ['Alamat', b.alamat], ['Tarikh mula', b.tarikhMula],
+      ['Laman / media sosial', b.laman], ['Subjek', l.syarat + (b.pensyarah ? ' · ' + b.pensyarah + ' · Seksyen ' + b.seksyen + ' · Kump. ' + b.kumpulan : '')],
+      ['Status SSM', l.statusSsm + (b.noSsm ? ' (' + b.noSsm + ')' : '')], ['Sumber pembiayaan', l.sumber.join(', ')],
+      ['Modal (RM)', b.modal], ['Pendapatan bulanan (RM)', b.pendapatan], ['No. pendaftaran', d.ringkas.noPendaftaran], ['Sah sehingga', d.tarikhTamat], ['Diluluskan oleh', d.diluluskanOleh]
+    ]));
+    if (d.fail.ssm) c2.appendChild(dlBtn('Sijil SSM', 'SSM certificate', b.id, 'ssm', out));
+    if (d.fail.maklumat) c2.appendChild(dlBtn('Maklumat SSM', 'SSM info', b.id, 'maklumat', out));
+    if (d.fail.sijil) c2.appendChild(dlBtn('Sijil SSU (PDF)', 'SSU certificate', b.id, 'sijil', out));
+    c2.appendChild(out);
+    body.appendChild(c2);
+
+    var c3 = node('div', null, 'card'); c3.appendChild(node('div', 'Ahli pasukan (' + d.ahli.length + ')', 'h2'));
+    var tb = node('table'); var th = node('thead'); var trh = node('tr'); ['Peranan', 'Nama', 'No. Matrik', 'Fakulti', 'Jantina', 'Etnik', 'Tahun'].forEach(function (t) { trh.appendChild(node('th', t)); }); th.appendChild(trh); tb.appendChild(th);
+    var tbd = node('tbody'); d.ahli.forEach(function (a) { var tr = node('tr'); [a.peranan, a.nama, a.noMatrik, a.fakulti, a.jantina, a.etnik, a.tahun].forEach(function (t) { tr.appendChild(node('td', t)); }); tbd.appendChild(tr); }); tb.appendChild(tbd);
+    var sc = node('div', null, 'scroll'); sc.appendChild(tb); c3.appendChild(sc); body.appendChild(c3);
+
+    var c4 = node('div', null, 'card'); c4.appendChild(node('div', 'Tindakan', 'h2'));
+    if (d.catatanAdmin) c4.appendChild(node('p', 'Catatan terdahulu: ' + d.catatanAdmin, 'e'));
+    if (!d.bolehPutus) c4.appendChild(node('p', 'Anda hanya boleh melihat (tiada kebenaran memutuskan).', 'muted'));
+    else {
+      var open = d.status === 'Baharu' || d.status === 'Disemak' || d.status === 'Perlu Pembetulan';
+      var msgA = node('div', null, 'msg'); msgA.hidden = true; msgA.id = 'msg-sd';
+      if (open) {
+        var cat = document.createElement('textarea'); cat.id = 'sd-catatan'; cat.placeholder = 'Catatan (wajib untuk Perlu Pembetulan dan Tolak) / Note'; cat.style.minHeight = '60px'; cat.style.fontFamily = 'inherit'; cat.style.fontSize = '14px';
+        c4.appendChild(cat);
+        var row = node('div', null, 'row'); row.style.marginTop = '10px';
+        var act = function (txt, en, tindakan, cls, confirm) {
+          var bt = node('button', txt + ' ', 'btn sm' + (cls ? ' ' + cls : '')); bt.appendChild(node('span', en, 'e')); bt.type = 'button'; bt.setAttribute('data-act', tindakan);
+          bt.addEventListener('click', function () {
+            if (confirm && SA.confirm !== tindakan) { SA.confirm = tindakan; bt.firstChild.textContent = 'Tekan sekali lagi untuk sahkan '; return; }
+            SA.confirm = ''; bt.disabled = true; clearMsg(msgA);
+            UP.api('ssu.admin.putus', { id: b.id, tindakan: tindakan, catatan: cat.value }).then(function (res) {
+              if (!res.ok) { bt.disabled = false; msgErr(msgA, res); return; }
+              renderSaDetail(res, res.data.amaranSijil);
+            });
+          });
+          row.appendChild(bt);
+        };
+        if (d.status === 'Baharu') act('Tandakan disemak', 'Mark reviewed', 'semak', 'alt');
+        if (d.status !== 'Perlu Pembetulan') act('Perlu pembetulan', 'Needs correction', 'pembetulan', 'alt');
+        act('Tolak', 'Reject', 'tolak', 'alt', true);
+        if (d.status !== 'Perlu Pembetulan') act('Luluskan', 'Approve', 'lulus', '', true);
+        c4.appendChild(row);
+      }
+      if (d.status === 'Diluluskan') {
+        var jb = node('button', (d.fail.sijil ? 'Jana semula sijil ' : 'Jana sijil '), 'btn alt sm'); jb.appendChild(node('span', 'Generate certificate', 'e')); jb.type = 'button'; jb.id = 'btn-jana';
+        jb.addEventListener('click', function () {
+          jb.disabled = true; clearMsg(msgA);
+          UP.api('ssu.admin.sijil', { id: b.id }).then(function (res) { if (!res.ok) { jb.disabled = false; msgErr(msgA, res); return; } renderSaDetail(res, res.data.amaranSijil); });
+        });
+        c4.appendChild(jb);
+      }
+      c4.appendChild(msgA);
+    }
+    body.appendChild(c4);
+  }
+
+  // ---------- Admin: daftar sedia ada ----------
+  var SD = { form: null };
+  function openSedia() {
+    UP.show('v-sa-sedia'); clearMsg($('msg-sedia'));
+    loadRuj().then(function () {
+      var box = $('sd-form'); box.textContent = '';
+      SD.form = Form(sediaSpec()); box.appendChild(SD.form.el);
+      SD.form.set({ jenisSsu: 'Perniagaan', statusSsm: 'PROSES', emel: false });
+    });
+  }
+  function submitSedia() {
+    var m = $('msg-sedia'); clearMsg(m);
+    var v = SD.form.values();
+    var btn = $('btn-sedia'); busy(btn, true); SD.form.clear();
+    UP.api('ssu.admin.sedia', v).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) SD.form.errors(r.error.extra.medan); return; }
+      SA.id = r.data.borang.id; UP.show('v-sa-det'); renderSaDetail(r, r.data.amaranSijil);
+    });
+  }
+
+  // ---------- Menu utama ----------
+  function setItem(btn, pillEl, on, text, kind) {
+    btn.disabled = !on; btn.classList.toggle('off', !on);
+    pillEl.textContent = text; pillEl.className = 'pill ' + (kind || '');
+  }
+  UP.hooks.home = function (s) {
+    var pel = s.role === 'Pelajar';
+    setItem($('go-profil'), $('pill-profil'), pel, pel ? '…' : 'Pelajar sahaja / Students only');
+    setItem($('go-ssu'), $('pill-ssu'), pel, pel ? '…' : 'Pelajar sahaja / Students only');
+    if (pel) {
+      UP.api('ssu.saya').then(function (r) {
+        if (!r.ok) { $('pill-profil').textContent = ''; $('pill-ssu').textContent = ''; return; }
+        var d = r.data;
+        $('pill-profil').textContent = !d.profil.lengkap ? 'Belum lengkap / Incomplete' : (d.profil.perluKemasKini ? 'Perlu kemas kini / Update due' : 'Lengkap / Complete');
+        $('pill-profil').className = 'pill ' + (!d.profil.lengkap ? 'warn' : (d.profil.perluKemasKini ? 'info' : 'ok'));
+        var st = d.perniagaan ? d.perniagaan.status : (d.permohonan.length ? d.permohonan[0].status : 'Belum mohon / Not applied');
+        $('pill-ssu').textContent = st; $('pill-ssu').className = 'pill ' + (PILL[st] || '');
+      });
+    }
+    var adm = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati'].indexOf(s.role) >= 0;
+    $('go-ssu-admin').hidden = !adm;
+    if (adm) UP.api('ssu.admin.senarai', { status: 'Baharu' }).then(function (r) {
+      if (r.ok) { $('pill-ssu-admin').textContent = r.data.kiraan.Baharu + ' baharu / new'; $('pill-ssu-admin').className = 'pill ' + (r.data.kiraan.Baharu ? 'warn' : ''); }
+    });
+  };
+
+  function init() {
+    $('go-profil').addEventListener('click', function () { if (!$('go-profil').disabled) openProfiling(); });
+    $('go-ssu').addEventListener('click', function () { if (!$('go-ssu').disabled) openSsu(); });
+    $('go-ssu-admin').addEventListener('click', function () { openSaList(false); });
+    $('btn-pf').addEventListener('click', saveProfiling);
+    $('btn-sf').addEventListener('click', submitSsu);
+    $('btn-ssu-balik').addEventListener('click', function () { openSsu(); });
+    $('btn-sa-balik').addEventListener('click', function () { openSaList(true); });
+    $('btn-sa-sedia').addEventListener('click', openSedia);
+    $('btn-sedia-balik').addEventListener('click', function () { openSaList(true); });
+    $('btn-sedia').addEventListener('click', submitSedia);
+    $('sa-q').addEventListener('input', function () { clearTimeout(SA.timer); SA.timer = setTimeout(function () { SA.q = $('sa-q').value.trim(); loadSaList(); }, 300); });
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>

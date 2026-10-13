@@ -100,8 +100,8 @@
     </div>
     <div class="h2" style="margin-top:4px">Modul <span class="e">Modules</span></div>
     <div class="menu" id="menu-modul">
-      <div class="item off"><div class="l">Profiling</div><div class="e">Profile</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
-      <div class="item off"><div class="l">Pendaftaran SSU</div><div class="e">Startup registration</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
+      <button class="item" id="go-profil" type="button"><div class="l">Profiling</div><div class="e">Profile</div><span class="pill" id="pill-profil" style="margin-top:6px"></span></button>
+      <button class="item" id="go-ssu" type="button"><div class="l">Pendaftaran SSU</div><div class="e">Startup registration</div><span class="pill" id="pill-ssu" style="margin-top:6px"></span></button>
       <div class="item off"><div class="l">Ruang niaga</div><div class="e">Business premises</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
       <div class="item off"><div class="l">Laporan kewangan</div><div class="e">Financial report</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
       <div class="item off"><div class="l">Makerspace</div><div class="e">Makerspace</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
@@ -109,6 +109,7 @@
     <div id="admin-menu-wrap" hidden>
       <div class="h2" style="margin:8px 0 8px">Pentadbir <span class="e">Admin</span></div>
       <div class="menu">
+        <button class="item" id="go-ssu-admin" type="button" hidden><div class="l">Permohonan SSU</div><div class="e">SSU applications</div><span class="pill" id="pill-ssu-admin" style="margin-top:6px"></span></button>
         <button class="item" id="go-status" type="button"><div class="l">Status sistem</div><div class="e">System status</div></button>
         <button class="item" id="go-import" type="button" hidden><div class="l">Import data pelajar</div><div class="e">Import student data (PELAJAR)</div></button>
         <button class="item" id="go-admin" type="button" hidden><div class="l">Urus admin</div><div class="e">Manage admins</div></button>
@@ -117,14 +118,14 @@
   </section>
 
   <!-- Admin: status -->
-  <section id="v-status" class="view" hidden>
+  <section id="v-status" class="view" data-wide hidden>
     <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
     <div class="card"><div class="h1">Status sistem</div><div class="e">System status</div>
       <div id="status-body" style="margin-top:12px"></div></div>
   </section>
 
   <!-- Admin: import PELAJAR -->
-  <section id="v-import" class="view" hidden>
+  <section id="v-import" class="view" data-wide hidden>
     <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
     <div class="card">
       <div class="h1">Import data pelajar</div><div class="e">Import student data into PELAJAR</div>
@@ -144,7 +145,7 @@
   </section>
 
   <!-- Admin: urus admin -->
-  <section id="v-admin" class="view" hidden>
+  <section id="v-admin" class="view" data-wide hidden>
     <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
     <div class="card"><div class="h1">Urus admin</div><div class="e">Manage admins</div>
       <div class="scroll" style="margin-top:10px"><table><thead><tr><th>Emel</th><th>Nama</th><th>Peranan</th><th>Modul</th><th>Status</th><th></th></tr></thead><tbody id="adm-body"></tbody></table></div>
@@ -161,9 +162,12 @@
     </div>
   </section>
 
+<?!= include('ViewsModul') ?>
+
 </main>
 
 <?!= include('LogoData') ?>
 <?!= include('App') ?>
+<?!= include('AppModul') ?>
 </body>
 </html>
