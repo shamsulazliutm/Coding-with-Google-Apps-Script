@@ -326,7 +326,7 @@
     $('go-status').addEventListener('click', openStatus);
     $('go-import').addEventListener('click', function () { show('v-import'); $('imp-hasil').textContent = ''; $('btn-imp-jalan').disabled = true; });
     $('go-admin').addEventListener('click', openAdmins);
-    document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { renderHome(S.session); }); });
+    document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { if (UP.hooks.back && UP.hooks.back()) return; renderHome(S.session); }); });
     $('btn-imp-semak').addEventListener('click', importCheck);
     $('btn-imp-jalan').addEventListener('click', importRun);
     $('imp-csv').addEventListener('input', function () { $('btn-imp-jalan').disabled = true; });

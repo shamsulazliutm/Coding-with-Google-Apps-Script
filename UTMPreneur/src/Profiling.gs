@@ -178,8 +178,8 @@ var Profiling = (function () {
       v.keluarga.forEach(function (f) { keep.push({ ID_Profil: id, Hubungan: f.hubungan, Jenis_Perniagaan: f.jenis, Tempoh: f.tempoh }); });
       Db.replaceAll('Perniagaan_Keluarga', keep);
       // 4. Sinkron telefon ke Pengguna
-      var pg = Db.find('Pengguna', function (r) { return Util.normEmail(r.Emel) === ctx.email; });
-      if (pg.length) { Db.update('Pengguna', pg[0]._row, { Telefon: v.telefon }); Auth.invalidatePengguna(ctx.email); }
+      var pg = Db.find('Pengguna', function (r) { return Util.normMatric(r.No_Matrik) === m && Util.str(r.Peranan) === ROLE.PELAJAR; });
+      if (pg.length) { Db.update('Pengguna', pg[0]._row, { Telefon: v.telefon }); Auth.invalidatePengguna(Util.normEmail(pg[0].Emel)); }
       Audit.log(ctx, cur.length ? 'KEMAS_KINI_PROFIL' : 'SIMPAN_PROFIL', 'Profiling', id, '', sesi, '');
       return view_(ctx);
     });

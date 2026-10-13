@@ -58,6 +58,12 @@ function rpcTable_() {
     'ssu.admin.butiran':  { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminButiran(c, p); } },
     'ssu.admin.putus':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminKeputusan(c, p); } },
     'ssu.admin.sijil':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminJanaSijil(c, p); } },
+    'bantu.pelajar':      { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Bantu.pelajar(c, p); } },
+    'profil.admin.dapat': { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Profiling.view(Bantu.ctx(c, p.noMatrik)); } },
+    'profil.admin.simpan':{ auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Profiling.save(Bantu.ctx(c, p.noMatrik), p); } },
+    'ssu.admin.pelajar':  { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.saya(Bantu.ctx(c, p.noMatrik)); } },
+    'ssu.admin.dapat':    { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.dapat(Bantu.ctx(c, p.noMatrik), p); } },
+    'ssu.admin.hantar':   { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.hantarBagiPihak(c, p); } },
     'ssu.admin.sedia':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminDaftarSedia(c, p); } }
   };
 }

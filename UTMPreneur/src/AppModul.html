@@ -7,6 +7,21 @@
   var ruj = null;
   var SSU = { form: null, edit: null, perniagaanId: '', maks: 12 };
   var SA = { status: 'SEMUA', q: '', timer: null, id: '', confirm: '' };
+  var BAGI = null; // {m, nama} apabila admin bertindak bagi pihak pelajar
+  var BAGI_MAP = { 'profil.dapat': 'profil.admin.dapat', 'profil.simpan': 'profil.admin.simpan', 'ssu.saya': 'ssu.admin.pelajar', 'ssu.dapat': 'ssu.admin.dapat', 'ssu.hantar': 'ssu.admin.hantar' };
+  function call(m, p) {
+    p = p || {};
+    if (!BAGI) return UP.api(m, p);
+    var q = {}; Object.keys(p).forEach(function (k) { q[k] = p[k]; });
+    q.noMatrik = BAGI.m;
+    return UP.api(BAGI_MAP[m] || m, q);
+  }
+  function paintBagi() {
+    document.querySelectorAll('.bagi').forEach(function (el) {
+      el.hidden = !BAGI;
+      el.textContent = BAGI ? 'Bertindak bagi pihak: ' + BAGI.nama + ' (' + BAGI.m + ') / Acting on behalf of the student' : '';
+    });
+  }
 
   var YT = [{ kod: 'Ya', bm: 'Ya', en: 'Yes' }, { kod: 'Tidak', bm: 'Tidak', en: 'No' }];
   var YTM = YT.concat([{ kod: 'Mungkin', bm: 'Mungkin', en: 'Maybe' }]);
@@ -235,8 +250,10 @@
       { t: 'sect', k: '_e', bm: 'Rakan kongsi', en: 'Partners' },
       { k: 'ahli', t: 'list', max: maksAhli - 1, ph: 'No. Matrik rakan kongsi', bm: 'Rakan kongsi (pelajar UTM sahaja)', en: 'Partners (UTM students only)', hint: 'Maksimum ' + maksAhli + ' ahli termasuk anda. / Maximum ' + maksAhli + ' members including you.' },
       { t: 'sect', k: '_f', bm: 'Perakuan', en: 'Declaration' },
-      { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan semua maklumat adalah benar dan bersetuju maklumat ini digunakan oleh UTMXCITE untuk pendaftaran SSU.', en: 'I confirm that all information is true and agree that UTMXCITE may use it for SSU registration.' }
-    ];
+      BAGI
+        ? { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan pelajar telah memberi persetujuan dan maklumat ini benar mengikut dokumen yang diserahkan.', en: 'I confirm the student has given consent and the information is correct according to the documents submitted.' }
+        : { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan semua maklumat adalah benar dan bersetuju maklumat ini digunakan oleh UTMXCITE untuk pendaftaran SSU.', en: 'I confirm that all information is true and agree that UTMXCITE may use it for SSU registration.' }
+    ].concat(BAGI ? [{ k: 'terusLulus', t: 'check', bm: 'Luluskan terus selepas dihantar dan jana sijil', en: 'Approve immediately and generate the certificate' }] : []);
   }
 
   function sediaSpec() {
@@ -282,10 +299,10 @@
   // ---------- Profiling ----------
   var PF = { form: null };
   function openProfiling() {
-    UP.show('v-profiling');
+    UP.show('v-profiling'); paintBagi();
     var body = $('pf-form'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
     clearMsg($('msg-pf'));
-    Promise.all([loadRuj(), UP.api('profil.dapat')]).then(function (res) {
+    Promise.all([loadRuj(), call('profil.dapat')]).then(function (res) {
       var r = res[1];
       body.textContent = '';
       if (!r.ok) { msgErr($('msg-pf'), r); return; }
@@ -317,7 +334,7 @@
     var m = $('msg-pf'); clearMsg(m);
     if (!PF.form) return;
     var btn = $('btn-pf'); busy(btn, true); PF.form.clear();
-    UP.api('profil.simpan', PF.form.values()).then(function (r) {
+    call('profil.simpan', PF.form.values()).then(function (r) {
       busy(btn, false);
       if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) PF.form.errors(r.error.extra.medan); return; }
       msg(m, 'ok', 'Profiling disimpan.', 'Profile saved.');
@@ -329,9 +346,9 @@
   // ---------- SSU: status ----------
   function openSsu(notice) {
     if (typeof notice !== 'string') notice = '';
-    UP.show('v-ssu');
+    UP.show('v-ssu'); paintBagi();
     var body = $('ssu-body'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
-    Promise.all([loadRuj(), UP.api('ssu.saya')]).then(function (res) {
+    Promise.all([loadRuj(), call('ssu.saya')]).then(function (res) {
       var r = res[1];
       body.textContent = '';
       if (!r.ok) { var m = node('div', null, 'msg err'); body.appendChild(m); msgErr(m, r); return; }
@@ -403,14 +420,14 @@
 
   // ---------- SSU: borang ----------
   function openSsuForm(target) {
-    UP.show('v-ssu-form');
+    UP.show('v-ssu-form'); paintBagi();
     var body = $('sf-form'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
     clearMsg($('msg-sf')); $('sf-catatan').hidden = true;
     SSU.edit = target.id || ''; SSU.perniagaanId = target.perniagaanId || '';
     $('sf-tajuk').textContent = SSU.perniagaanId ? 'Pembaharuan SSU' : (SSU.edit ? 'Edit permohonan SSU' : 'Permohonan SSU baharu');
     var calls = [loadRuj()];
-    if (target.id || target.perniagaanId) calls.push(UP.api('ssu.dapat', target.id ? { id: target.id } : { perniagaanId: target.perniagaanId }));
-    else calls.push(UP.api('profil.dapat'));
+    if (target.id || target.perniagaanId) calls.push(call('ssu.dapat', target.id ? { id: target.id } : { perniagaanId: target.perniagaanId }));
+    else calls.push(call('profil.dapat'));
     Promise.all(calls).then(function (res) {
       var r = res[1];
       body.textContent = '';
@@ -434,7 +451,7 @@
     if (SSU.edit) v.id = SSU.edit;
     if (SSU.perniagaanId) v.perniagaanId = SSU.perniagaanId;
     var btn = $('btn-sf'); busy(btn, true); SSU.form.clear();
-    UP.api('ssu.hantar', v).then(function (r) {
+    call('ssu.hantar', v).then(function (r) {
       busy(btn, false);
       if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) SSU.form.errors(r.error.extra.medan); return; }
       openSsu('Permohonan dihantar: ' + r.data.id);
@@ -583,6 +600,44 @@
     });
   }
 
+  // ---------- Admin: bantu pelajar ----------
+  function openBantu() {
+    BAGI = null; paintBagi();
+    UP.show('v-bantu'); clearMsg($('msg-bt')); $('bt-hasil').textContent = '';
+    $('bt-matrik').focus();
+  }
+  function findBantu() {
+    var m = $('msg-bt'); clearMsg(m);
+    var mat = $('bt-matrik').value.trim();
+    if (!mat) { msg(m, 'err', 'Masukkan No. Matrik.', 'Enter a matric number.'); return; }
+    var btn = $('btn-bt'); busy(btn, true);
+    UP.api('bantu.pelajar', { noMatrik: mat }).then(function (r) {
+      busy(btn, false);
+      var out = $('bt-hasil'); out.textContent = '';
+      if (!r.ok) { msgErr(m, r); return; }
+      var d = r.data, p = d.pelajar, ssu = d.ssu;
+      var card = node('div', null, 'card');
+      var hd = node('div', null, 'row'); hd.appendChild(node('div', p.nama, 'big')); hd.appendChild(node('span', null, 'sp'));
+      if (p.statusPelajar && p.statusPelajar.toLowerCase() !== 'aktif') hd.appendChild(pill(p.statusPelajar, 'bad'));
+      card.appendChild(hd);
+      card.appendChild(kv([['No. Matrik', p.noMatrik], ['Emel', p.emel], ['Fakulti', p.fakulti], ['Program', p.program], ['Pernah log masuk', p.sudahLogMasuk ? 'Ya / Yes' : 'Belum / Not yet']]));
+      var go = function (txt, en, fn) { var b = node('button', txt + ' ', 'btn sm'); b.appendChild(node('span', en, 'e')); b.type = 'button'; b.style.marginTop = '10px'; b.style.marginRight = '6px'; b.addEventListener('click', function () { BAGI = { m: p.noMatrik, nama: p.nama }; fn(); }); return b; };
+      var pf = node('div', null, 'sec'); pf.appendChild(node('b', 'Profiling ')); pf.appendChild(pill(d.profil.lengkap ? (d.profil.perluKemasKini ? 'Perlu kemas kini' : 'Lengkap') : 'Belum lengkap', d.profil.lengkap ? (d.profil.perluKemasKini ? 'info' : 'ok') : 'warn'));
+      pf.appendChild(document.createElement('br')); pf.appendChild(go('Isi / kemas kini profiling', 'Fill / update profile', openProfiling));
+      card.appendChild(pf);
+      var st = ssu.perniagaan ? ssu.perniagaan.status : (ssu.permohonan.length ? ssu.permohonan[0].status : 'Belum mohon');
+      var sp = node('div', null, 'sec'); sp.appendChild(node('b', 'SSU ')); sp.appendChild(pill(st, PILL[st]));
+      sp.appendChild(document.createElement('br')); sp.appendChild(go('Urus SSU', 'Manage SSU', openSsu));
+      card.appendChild(sp);
+      out.appendChild(card);
+    });
+  }
+  UP.hooks.back = function () {
+    if (!BAGI) return false;
+    if (!$('v-profiling').hidden || !$('v-ssu').hidden) { var mat = BAGI.m; BAGI = null; paintBagi(); UP.show('v-bantu'); $('bt-matrik').value = mat; findBantu(); return true; }
+    return false;
+  };
+
   // ---------- Menu utama ----------
   function setItem(btn, pillEl, on, text, kind) {
     btn.disabled = !on; btn.classList.toggle('off', !on);
@@ -602,6 +657,8 @@
         $('pill-ssu').textContent = st; $('pill-ssu').className = 'pill ' + (PILL[st] || '');
       });
     }
+    BAGI = null; paintBagi();
+    $('go-bantu').hidden = ['Admin Penuh', 'Pegawai Modul'].indexOf(s.role) < 0;
     var adm = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati'].indexOf(s.role) >= 0;
     $('go-ssu-admin').hidden = !adm;
     if (adm) UP.api('ssu.admin.senarai', { status: 'Baharu' }).then(function (r) {
@@ -613,6 +670,9 @@
     $('go-profil').addEventListener('click', function () { if (!$('go-profil').disabled) openProfiling(); });
     $('go-ssu').addEventListener('click', function () { if (!$('go-ssu').disabled) openSsu(); });
     $('go-ssu-admin').addEventListener('click', function () { openSaList(false); });
+    $('go-bantu').addEventListener('click', openBantu);
+    $('btn-bt').addEventListener('click', findBantu);
+    $('bt-matrik').addEventListener('keydown', function (e) { if (e.key === 'Enter') findBantu(); });
     $('btn-pf').addEventListener('click', saveProfiling);
     $('btn-sf').addEventListener('click', submitSsu);
     $('btn-ssu-balik').addEventListener('click', function () { openSsu(); });

@@ -4,7 +4,7 @@ Peringkat 2 menambah: **Profiling pelajar**, **permohonan SSU** (Syarikat Pemula
 **sijil PDF** daripada templat Google Slides, **pembaharuan**, **SSU tamat tempoh**, dan **daftar SSU sedia ada** oleh admin.
 Peringkat 1 mesti sudah berjalan (log masuk OTP, import PELAJAR).
 
-> **Nota jujur:** 101 ujian setempat lulus (logik, pelayar Chromium dengan Google ditiru). Ujian itu tidak menyentuh
+> **Nota jujur:** 108 ujian setempat lulus (logik, pelayar Chromium dengan Google ditiru). Ujian itu tidak menyentuh
 > Google sebenar. Perkara yang hanya boleh dipastikan selepas `clasp push`: kebenaran **Slides**, penjanaan PDF sebenar,
 > kuota emel, dan muat naik fail besar. Gunakan senarai semak di bahagian 4 dalam projek **UJI** dahulu.
 
@@ -43,6 +43,12 @@ Peringkat 1 mesti sudah berjalan (log masuk OTP, import PELAJAR).
 (admin diberi amaran); (b) tarikh sijil pembaharuan ialah hari kelulusan; (c) kelulusan dibuat di dalam sistem tanpa
 perakuan rakan kongsi; (d) pilihan "Motivasi", "Hubungan keluarga" dan "Tempoh berniaga" ialah draf senarai.
 Aliran pilihan ialah empat pilihan daripada borang lama.
+
+**Bantu pelajar (bagi pihak):** menu admin "Bantu pelajar". Admin Penuh, atau Pegawai Modul yang modulnya kosong, "Semua" atau mengandungi
+SSU/Profiling, memasukkan No. Matrik, kemudian mengisi profiling dan memohon SSU untuk pelajar itu (boleh juga edit, perbaharui, dan
+"Luluskan terus" untuk menjana sijil). Pelajar tidak perlu sudah log masuk; apabila log masuk kemudian, dia melihat rekod itu.
+Pengesahan sama seperti pelajar. Audit merekod emel admin dengan tanda `[bagi pihak <No. Matrik>]` dan perakuan dibuat oleh admin.
+Pelajar menerima emel pengesahan. Modul Ruang Niaga, Kewangan dan Makerspace akan menyokong ini apabila dibina.
 
 ## 3. Had yang diketahui
 

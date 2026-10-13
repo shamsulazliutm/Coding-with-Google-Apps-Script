@@ -356,7 +356,7 @@ var Ssu = (function () {
       };
       if (cur) Db.update('Permohonan_SSU', cur._row, rec); else Db.append('Permohonan_SSU', rec);
       writeAhli_(id, m, v.ahli);
-      Audit.log(ctx, cur ? 'HANTAR_SEMULA_SSU' : (mode === 'baharuan' ? 'MOHON_PEMBAHARUAN_SSU' : 'MOHON_SSU'), 'SSU', id, cur ? Util.str(cur.Status) : '', 'Baharu', 'Perakuan pemohon diterima');
+      Audit.log(ctx, cur ? 'HANTAR_SEMULA_SSU' : (mode === 'baharuan' ? 'MOHON_PEMBAHARUAN_SSU' : 'MOHON_SSU'), 'SSU', id, cur ? Util.str(cur.Status) : '', 'Baharu', ctx.bagiPihak ? 'Perakuan diakui admin bagi pihak pemohon' : 'Perakuan pemohon diterima');
       sendMail_(emelOf_(m), 'Permohonan SSU diterima', 'SSU application received',
         ['Permohonan SSU anda (' + id + ', ' + v.nama + ') telah diterima dan akan disemak oleh UTMXCITE.'],
         ['Your SSU application (' + id + ', ' + v.nama + ') has been received and will be reviewed by UTMXCITE.']);
@@ -676,6 +676,18 @@ var Ssu = (function () {
     });
   }
 
+  /** Admin menghantar permohonan bagi pihak pelajar. p.terusLulus meluluskan serta-merta. */
+  function hantarBagiPihak_(ctx, p) {
+    var c = Bantu.ctx(ctx, p.noMatrik);
+    var terus = p.terusLulus === true;
+    if (terus) requireDecider_(ctx);
+    var r = hantar_(c, p);
+    if (!terus) return r;
+    var out = lulus_(c, r.id, 'Didaftar bagi pihak pelajar', {});
+    out.id = r.id;
+    return out;
+  }
+
   // ---------- Kerja harian: tamat tempoh dan peringatan pembaharuan ----------
   function jobHarian_() {
     var hasil = { tamat: 0, peringatan: 0 };
@@ -715,7 +727,7 @@ var Ssu = (function () {
   return {
     saya: saya_, dapat: dapat_, hantar: hantar_, fail: fail_,
     adminSenarai: adminSenarai_, adminButiran: adminButiran_, adminKeputusan: adminKeputusan_,
-    adminJanaSijil: adminJanaSijil_, adminDaftarSedia: adminDaftarSedia_,
+    hantarBagiPihak: hantarBagiPihak_, adminJanaSijil: adminJanaSijil_, adminDaftarSedia: adminDaftarSedia_, lulus: lulus_, butiran: adminButiran_,
     jobHarian: jobHarian_, check: check_
   };
 })();

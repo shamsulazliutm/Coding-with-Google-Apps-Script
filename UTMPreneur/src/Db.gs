@@ -276,7 +276,7 @@ var Audit = {
         Rujukan: rujukan || '',
         Nilai_Lama: lama === undefined || lama === null ? '' : String(lama).substr(0, 500),
         Nilai_Baharu: baharu === undefined || baharu === null ? '' : String(baharu).substr(0, 500),
-        Catatan: catatan || ''
+        Catatan: (catatan || '') + (ctx && ctx.bagiPihak ? ' [bagi pihak ' + ctx.noMatrik + ']' : '')
       });
     } catch (e) {
       console.error('Audit gagal: ' + e);

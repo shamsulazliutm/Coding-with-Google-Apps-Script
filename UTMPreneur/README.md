@@ -29,6 +29,7 @@ UTMPreneur/
     Profiling.gs         profiling pelajar
     Ssu.gs, Sijil.gs     permohonan SSU, kelulusan, sijil PDF (Slides)
     Jobs.gs              kerja harian (pencetus)
+    Bantu.gs             admin bertindak bagi pihak pelajar
     Code.gs              doGet dan rpc()
     Index.html, App.html, Styles.html, LogoData.html,
     ViewsModul.html, AppModul.html   (Profiling dan SSU)
@@ -46,4 +47,4 @@ npm run push:prod   # clasp push ke projek PRODUKSI
 
 ## Status
 
-Peringkat 1 (asas dan log masuk) dan Peringkat 2 (Profiling, SSU, sijil, pembaharuan) siap dibina dan diuji setempat (101 ujian). Peringkat seterusnya: Ruang Niaga, Kewangan, Makerspace.
+Peringkat 1 (asas dan log masuk) dan Peringkat 2 (Profiling, SSU, sijil, pembaharuan) siap dibina dan diuji setempat (108 ujian). Peringkat seterusnya: Ruang Niaga, Kewangan, Makerspace.

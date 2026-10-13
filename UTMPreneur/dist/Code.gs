@@ -344,6 +344,53 @@ var Auth = (function () {
 })();
 
 
+// ===== Bantu.gs =====
+/**
+ * UTMPreneur: admin bertindak bagi pihak pelajar ("Bantu pelajar").
+ * Admin Penuh, atau Pegawai Modul yang modulnya kosong / Semua / mengandungi SSU atau Profiling, boleh
+ * mengisi profiling dan memohon SSU untuk mana-mana pelajar dalam PELAJAR (pelajar tidak perlu sudah log masuk).
+ * Semua tindakan menggunakan peraturan pengesahan yang sama seperti pelajar dan direkod dalam Audit dengan
+ * emel admin serta tanda [bagi pihak]. Modul lain (Ruang Niaga, Kewangan, Makerspace) akan menggunakan Bantu.ctx yang sama.
+ */
+
+var Bantu = (function () {
+  function allowed_(ctx) {
+    if (ctx.role === ROLE.ADMIN_PENUH) return true;
+    if (ctx.role === ROLE.PEGAWAI_MODUL) {
+      var a = Admins.find(ctx.email);
+      var mod = a ? a.modul.toLowerCase() : '';
+      return !mod || mod.indexOf('semua') >= 0 || mod.indexOf('ssu') >= 0 || mod.indexOf('profil') >= 0;
+    }
+    return false;
+  }
+
+  /** Konteks pelajar untuk fungsi modul. Identiti audit kekal emel admin. */
+  function ctx_(ctx, noMatrik) {
+    if (!allowed_(ctx)) throw appError_('TIADA_KEBENARIAN');
+    var m = Util.normMatric(noMatrik);
+    var pel = Util.isMatric(m) ? Db.find('PELAJAR', function (r) { return Util.normMatric(r.No_Matrik) === m; }) : [];
+    if (!pel.length) throw appError_('MATRIK_TIDAK_DITEMUI');
+    return { email: ctx.email, role: ctx.role, noMatrik: m, nama: Util.str(pel[0].Nama_Penuh), bagiPihak: true };
+  }
+
+  function pelajar_(ctx, p) {
+    var c = ctx_(ctx, p.noMatrik);
+    var pel = Db.find('PELAJAR', function (r) { return Util.normMatric(r.No_Matrik) === c.noMatrik; })[0];
+    var pg = Db.find('Pengguna', function (r) { return Util.normMatric(r.No_Matrik) === c.noMatrik; });
+    return {
+      pelajar: {
+        noMatrik: c.noMatrik, nama: c.nama, emel: Util.str(pel.Emel), fakulti: Util.str(pel.Fakulti), program: Util.str(pel.Program),
+        statusPelajar: Util.str(pel.Status_Pelajar), sudahLogMasuk: pg.length > 0
+      },
+      profil: Profiling.status(c.noMatrik),
+      ssu: Ssu.saya(c)
+    };
+  }
+
+  return { ctx: ctx_, pelajar: pelajar_, allowed: allowed_ };
+})();
+
+
 // ===== Code.gs =====
 /**
  * UTMPreneur: titik masuk web app dan penghantar RPC.
@@ -405,6 +452,12 @@ function rpcTable_() {
     'ssu.admin.butiran':  { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminButiran(c, p); } },
     'ssu.admin.putus':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminKeputusan(c, p); } },
     'ssu.admin.sijil':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminJanaSijil(c, p); } },
+    'bantu.pelajar':      { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Bantu.pelajar(c, p); } },
+    'profil.admin.dapat': { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Profiling.view(Bantu.ctx(c, p.noMatrik)); } },
+    'profil.admin.simpan':{ auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Profiling.save(Bantu.ctx(c, p.noMatrik), p); } },
+    'ssu.admin.pelajar':  { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.saya(Bantu.ctx(c, p.noMatrik)); } },
+    'ssu.admin.dapat':    { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.dapat(Bantu.ctx(c, p.noMatrik), p); } },
+    'ssu.admin.hantar':   { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.hantarBagiPihak(c, p); } },
     'ssu.admin.sedia':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminDaftarSedia(c, p); } }
   };
 }
@@ -899,7 +952,7 @@ var Audit = {
         Rujukan: rujukan || '',
         Nilai_Lama: lama === undefined || lama === null ? '' : String(lama).substr(0, 500),
         Nilai_Baharu: baharu === undefined || baharu === null ? '' : String(baharu).substr(0, 500),
-        Catatan: catatan || ''
+        Catatan: (catatan || '') + (ctx && ctx.bagiPihak ? ' [bagi pihak ' + ctx.noMatrik + ']' : '')
       });
     } catch (e) {
       console.error('Audit gagal: ' + e);
@@ -1438,8 +1491,8 @@ var Profiling = (function () {
       v.keluarga.forEach(function (f) { keep.push({ ID_Profil: id, Hubungan: f.hubungan, Jenis_Perniagaan: f.jenis, Tempoh: f.tempoh }); });
       Db.replaceAll('Perniagaan_Keluarga', keep);
       // 4. Sinkron telefon ke Pengguna
-      var pg = Db.find('Pengguna', function (r) { return Util.normEmail(r.Emel) === ctx.email; });
-      if (pg.length) { Db.update('Pengguna', pg[0]._row, { Telefon: v.telefon }); Auth.invalidatePengguna(ctx.email); }
+      var pg = Db.find('Pengguna', function (r) { return Util.normMatric(r.No_Matrik) === m && Util.str(r.Peranan) === ROLE.PELAJAR; });
+      if (pg.length) { Db.update('Pengguna', pg[0]._row, { Telefon: v.telefon }); Auth.invalidatePengguna(Util.normEmail(pg[0].Emel)); }
       Audit.log(ctx, cur.length ? 'KEMAS_KINI_PROFIL' : 'SIMPAN_PROFIL', 'Profiling', id, '', sesi, '');
       return view_(ctx);
     });
@@ -2480,7 +2533,7 @@ var Ssu = (function () {
       };
       if (cur) Db.update('Permohonan_SSU', cur._row, rec); else Db.append('Permohonan_SSU', rec);
       writeAhli_(id, m, v.ahli);
-      Audit.log(ctx, cur ? 'HANTAR_SEMULA_SSU' : (mode === 'baharuan' ? 'MOHON_PEMBAHARUAN_SSU' : 'MOHON_SSU'), 'SSU', id, cur ? Util.str(cur.Status) : '', 'Baharu', 'Perakuan pemohon diterima');
+      Audit.log(ctx, cur ? 'HANTAR_SEMULA_SSU' : (mode === 'baharuan' ? 'MOHON_PEMBAHARUAN_SSU' : 'MOHON_SSU'), 'SSU', id, cur ? Util.str(cur.Status) : '', 'Baharu', ctx.bagiPihak ? 'Perakuan diakui admin bagi pihak pemohon' : 'Perakuan pemohon diterima');
       sendMail_(emelOf_(m), 'Permohonan SSU diterima', 'SSU application received',
         ['Permohonan SSU anda (' + id + ', ' + v.nama + ') telah diterima dan akan disemak oleh UTMXCITE.'],
         ['Your SSU application (' + id + ', ' + v.nama + ') has been received and will be reviewed by UTMXCITE.']);
@@ -2800,6 +2853,18 @@ var Ssu = (function () {
     });
   }
 
+  /** Admin menghantar permohonan bagi pihak pelajar. p.terusLulus meluluskan serta-merta. */
+  function hantarBagiPihak_(ctx, p) {
+    var c = Bantu.ctx(ctx, p.noMatrik);
+    var terus = p.terusLulus === true;
+    if (terus) requireDecider_(ctx);
+    var r = hantar_(c, p);
+    if (!terus) return r;
+    var out = lulus_(c, r.id, 'Didaftar bagi pihak pelajar', {});
+    out.id = r.id;
+    return out;
+  }
+
   // ---------- Kerja harian: tamat tempoh dan peringatan pembaharuan ----------
   function jobHarian_() {
     var hasil = { tamat: 0, peringatan: 0 };
@@ -2839,7 +2904,7 @@ var Ssu = (function () {
   return {
     saya: saya_, dapat: dapat_, hantar: hantar_, fail: fail_,
     adminSenarai: adminSenarai_, adminButiran: adminButiran_, adminKeputusan: adminKeputusan_,
-    adminJanaSijil: adminJanaSijil_, adminDaftarSedia: adminDaftarSedia_,
+    hantarBagiPihak: hantarBagiPihak_, adminJanaSijil: adminJanaSijil_, adminDaftarSedia: adminDaftarSedia_, lulus: lulus_, butiran: adminButiran_,
     jobHarian: jobHarian_, check: check_
   };
 })();

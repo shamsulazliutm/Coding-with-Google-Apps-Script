@@ -1,5 +1,6 @@
   <!-- Pelajar: Profiling -->
   <section id="v-profiling" class="view" hidden>
+    <div class="msg info bagi" hidden></div>
     <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
     <div class="card">
       <div class="h1">Profiling pelajar</div><div class="e">Student profile</div>
@@ -15,6 +16,7 @@
 
   <!-- Pelajar: SSU (status) -->
   <section id="v-ssu" class="view" hidden>
+    <div class="msg info bagi" hidden></div>
     <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
     <div class="card"><div class="h1">Pendaftaran SSU</div><div class="e">Student startup (SSU) registration</div></div>
     <div id="ssu-body"></div>
@@ -22,6 +24,7 @@
 
   <!-- Pelajar: SSU (borang) -->
   <section id="v-ssu-form" class="view" hidden>
+    <div class="msg info bagi" hidden></div>
     <button class="back" id="btn-ssu-balik" type="button">&larr; Kembali <span class="e">Back</span></button>
     <div class="card">
       <div class="h1" id="sf-tajuk">Borang SSU</div><div class="e">SSU application form</div>
@@ -68,4 +71,18 @@
       <div id="msg-sedia" class="msg" hidden></div>
       <button id="btn-sedia" class="btn" type="button">Daftar dan luluskan <i>Register and approve</i></button>
     </div>
+  </section>
+
+  <!-- Admin: bantu pelajar (bagi pihak) -->
+  <section id="v-bantu" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Bantu pelajar</div><div class="e">Register on behalf of a student</div>
+      <p class="muted">Isi profiling dan hantar permohonan SSU bagi pihak pelajar. Semua tindakan direkod dalam audit dengan nama anda. <span class="e">Every action is recorded in the audit log under your account.</span></p>
+      <label class="lab" for="bt-matrik"><span class="l">No. Matrik pelajar</span> <span class="e">Student matric no.</span></label>
+      <input id="bt-matrik" autocomplete="off" autocapitalize="characters" placeholder="A23EC0123">
+      <div id="msg-bt" class="msg" hidden></div>
+      <button id="btn-bt" class="btn" type="button">Cari <i>Find</i></button>
+    </div>
+    <div id="bt-hasil"></div>
   </section>
