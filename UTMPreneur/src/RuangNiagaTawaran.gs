@@ -523,7 +523,7 @@ var RnTawaran = (function () {
   }
 
   return {
-    jadualOf: jadualOf_, bilBulan: bilBulan_, teksJadual: teksJadual_, konteks: konteks_, alamatPenyewa: alamatPenyewa_, view: view_, dapat: dapat_, simpan: simpan_,
+    jadualOf: jadualOf_, semakJadual: semakJadual_, bilBulan: bilBulan_, teksJadual: teksJadual_, konteks: konteks_, alamatPenyewa: alamatPenyewa_, view: view_, dapat: dapat_, simpan: simpan_,
     jana: jana_, hantar: hantar_, untukPemohon: untukPemohon_, otpMinta: otpMinta_, jawab: jawab_, rekodSemula: rekodSemula_, semakLuput: semakLuput_,
     jobHarian: jobHarian_, salinanFizikal: salinanFizikal_, peringatanBertingkat: peringatanBertingkat_, ambang: ambang_
   };
