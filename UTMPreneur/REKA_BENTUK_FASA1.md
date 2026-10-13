@@ -302,3 +302,17 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 6. Senarai penguji kumpulan perintis dan penilai jawatankuasa.
 7. Nama admin tambahan (selain `utmxcite@utm.my`).
 
+
+## 12. Keputusan perjanjian penyewaan (semua lalai diterima, "ya")
+
+1. Sewa berperingkat: tab `Jadual_Sewa` bagi setiap sewaan (dari bulan, hingga bulan, kadar).
+2. Tarikh akhir bayar sewa: hari ke-7 setiap bulan (ikut perjanjian; menggantikan keputusan hari ke-10). Bil dijana hari ke-1 hingga ke-5.
+3. Caj elektrik/utiliti: kemasukan pilihan oleh admin pada bil bulanan.
+4. Tunggakan lebih 1 bulan: sistem menanda dan mencadangkan Notis Peringatan 1, 2 dan Notis Penamatan (7 hari kosongkan lot). Admin memutuskan dan menghantar; tiada tindakan automatik.
+5. Dua templat perjanjian: F&B dan bukan F&B.
+6. Lampiran 2: penyewa isi senarai pekerja (`Pekerja_Penyewa`); pekerja luar UTM perlu kelulusan admin.
+7. Lampiran 3: peralatan UTM per lot diurus admin (`Peralatan_Lot`).
+8. SSM: SSU berstatus "dalam proses" dibenarkan; amaran kepada admin.
+9. Pembaharuan selepas 1 tahun: diurus admin dengan dokumen baharu.
+10. Nama penandatangan dan saksi disimpan dalam `Tetapan`.
+- Percanggahan deposit: pemulangan 90 hari selepas tamat kontrak (surat tawaran) kekal; admin boleh menahan dengan alasan direkodkan.
