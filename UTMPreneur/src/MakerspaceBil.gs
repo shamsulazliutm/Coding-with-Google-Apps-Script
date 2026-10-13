@@ -208,7 +208,6 @@ var MkBil = (function () {
     var hariPeringatan = Cfg.num('BAYARAN_PERINGATAN_HARI', 4);
     Db.rows('Bayaran_Makerspace').forEach(function (b) {
       var st = Util.str(b.Status), idb = Util.str(b.ID_Bayaran);
-      var r = Mk.tempahan(Util.str(b.ID_Tempahan));
       var to = Util.normEmail(b.Emel_Pemohon);
       var akhir = Util.dateKey(b.Tarikh_Akhir), jana = Util.dateKey(b.Tarikh_Jana) || akhir;
       var jumlah = Mk.rm2(b.Kos_Sebenar_RM !== '' && b.Kos_Sebenar_RM !== undefined ? b.Kos_Sebenar_RM : b.Anggaran_RM).toFixed(2);
@@ -234,7 +233,6 @@ var MkBil = (function () {
             ['Bill ' + idb + ' (RM' + jumlah + ') is still unpaid since ' + akhir + '. Please settle it promptly.']);
         }
       }
-      if (!r) return;
     });
 
     // 4. Pinjaman: peringatan pulang dan lewat

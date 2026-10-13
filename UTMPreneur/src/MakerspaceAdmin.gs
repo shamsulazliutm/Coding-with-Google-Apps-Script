@@ -7,7 +7,8 @@
 var MkAdmin = (function () {
   var JENIS_MESIN = ['3D Printer', 'Laser Cut', 'Ruang'];
   var STATUS_MESIN = ['Aktif', 'Penyelenggaraan', 'Tidak aktif'];
-  var USER_TYPES = [ROLE.PELAJAR, ROLE.STAF, ROLE.LUAR];
+  // jenis pengguna (nilai ROLE; tidak merujuk ROLE semasa muat fail)
+  var USER_TYPES = ['Pelajar', 'Staf', 'Luar'];
   var STATUS_TEMPAHAN = ['Menunggu Perakuan', 'Menunggu Kelulusan', 'Diluluskan', 'Selesai', 'Ditolak', 'Dibatalkan'];
   var KOD_RE = /^[A-Z0-9][A-Z0-9_\-]{1,29}$/;
 
@@ -472,6 +473,13 @@ var MkAdmin = (function () {
       var cur = Db.find('KADAR', function (r) {
         return Util.str(r.Kod_Sumber) === kod && Util.str(r.Jenis_Pengguna) === jp && Util.dateKey(r.Berkuat_Kuasa) === bk;
       })[0];
+      if (!cur && !Util.str(p.berkuatKuasa) && kadar !== '') {
+        // menetapkan kadar yang masih kosong (belum ditetapkan): isi baris sedia ada supaya sesi lampau turut dapat dikira
+        var kosong = Db.find('KADAR', function (r) {
+          return Util.str(r.Kod_Sumber) === kod && Util.str(r.Jenis_Pengguna) === jp && Mk.rmOf(r.Kadar_RM) === null && Util.truthy(r.Aktif);
+        });
+        if (kosong.length) cur = kosong[kosong.length - 1];
+      }
       var nama = Util.str(p.nama).substr(0, 120) || (cur ? Util.str(cur.Nama_Sumber) : '');
       var unit = Util.str(p.unit).substr(0, 40) || (cur ? Util.str(cur.Unit) : '');
       if (!cur) {
@@ -483,7 +491,7 @@ var MkAdmin = (function () {
       if (!nama) e2.nama = 'Nama sumber wajib / Source name is required';
       if (!unit) e2.unit = 'Unit wajib / Unit is required';
       if (Object.keys(e2).length) throw jsonErr_(e2);
-      var rec = { Kod_Sumber: kod, Nama_Sumber: nama, Jenis_Pengguna: jp, Unit: unit, Kadar_RM: kadar, Berkuat_Kuasa: Util.toDate(bk), Aktif: yaTidak_(p.aktif, true) ? 'Ya' : 'Tidak' };
+      var rec = { Kod_Sumber: kod, Nama_Sumber: nama, Jenis_Pengguna: jp, Unit: unit, Kadar_RM: kadar, Berkuat_Kuasa: cur ? cur.Berkuat_Kuasa : Util.toDate(bk), Aktif: yaTidak_(p.aktif, true) ? 'Ya' : 'Tidak' };
       if (cur) Db.update('KADAR', cur._row, rec); else Db.append('KADAR', rec);
       Audit.log(ctx, cur ? 'MK_KEMAS_KINI_KADAR' : 'MK_TAMBAH_KADAR', 'Makerspace', kod + '/' + jp, cur ? Util.str(cur.Kadar_RM) : '', String(kadar), 'berkuat kuasa ' + bk);
       return kadarSenarai_(ctx);
