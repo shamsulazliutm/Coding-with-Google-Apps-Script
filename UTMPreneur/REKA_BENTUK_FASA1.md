@@ -102,9 +102,15 @@ Semakan automatik: tiada "UTM" pada nama atau alamat; alamat bukan kolej/fakulti
 
 Peraturan: hanya SSU Diluluskan; pelajar nampak lot Dibuka + Kosong sahaja; **satu lot bagi satu pelajar/perniagaan** (semakan atas No. Matrik pemilik dan rakan kongsi); permohonan lain dibenarkan jika terdahulu Ditolak/Dibatalkan/Tamat; kelulusan menukar `Status_Lot` kepada Disewa dan mencipta `Sewaan`. Q35/Q36 lama (kad matrik, salinan IC) dibuang.
 
+**Surat tawaran, setuju terima dan perjanjian (tambahan, disahkan sebagai keperluan):**
+- Selepas admin memutuskan **Diluluskan**, sistem menyediakan **surat tawaran** (PDF dijana daripada templat dalam Drive, didaftar dalam `Link_Dokumen`: `TEMPLAT_SURAT_TAWARAN`), kemudian **setuju terima** oleh pemohon, kemudian **perjanjian sewa** (templat `TEMPLAT_PERJANJIAN_SEWA`).
+- **Pemohon melihat semua dokumen ini dalam tab Ruang Niaga mereka dan boleh memuat turunnya bila-bila masa** (surat tawaran, rekod penerimaan, perjanjian, termasuk versi lama). Muat turun melalui pelayan kerana fail dimiliki akaun UTMXCITE.
+- Tab baharu `Dokumen_Sewaan` dalam `SS_RUANG_NIAGA`: `ID_Dokumen`, `ID_Permohonan`, `ID_Sewaan`, `Jenis` (Surat Tawaran / Penerimaan / Perjanjian / Perjanjian Bertandatangan), `Versi`, `Fail`, `Tarikh`, `Dijana_Oleh`, `Status`. Status permohonan lot ditambah: Ditawarkan, Diterima, Perjanjian, Sewaan Aktif (dan Tawaran Luput / Ditolak Pemohon).
+- **[TERBUKA]** bila surat tawaran dihantar, tempoh menerima dan luput tawaran, cara penerimaan, cara perjanjian ditandatangani, bila sewaan bermula, penanda templat, siapa boleh melihat (pemilik dan ahli pasukan).
+
 **Penilaian jawatankuasa (disahkan):**
 - Permohonan dikumpul dalam **tempoh tertentu** (tarikh buka dan tutup ditetapkan admin dalam `Tetapan`/`Lot`), kemudian dinilai dalam satu sesi.
-- Aliran: Baharu -> Disemak (kelayakan) -> Disenarai pendek -> **Pembentangan dan penilaian** -> Dinilai -> admin memutuskan Diluluskan/Ditolak -> `Sewaan` dicipta.
+- Aliran: Baharu -> Disemak (kelayakan) -> Disenarai pendek -> **Pembentangan dan penilaian** -> Dinilai -> admin memutuskan Diluluskan/Ditolak -> **Surat tawaran -> Setuju terima -> Perjanjian** -> `Sewaan` dicipta.
 - **Pemohon hadir membentang.** Sistem menghantar jemputan emel (tarikh, tempat, slot masa) kepada pemohon yang disenarai pendek.
 - **Penilai** menskor secara bebas dan tidak melihat skor penilai lain sehingga sesi ditutup. Skor dikunci selepas Hantar (admin boleh membuka semula, direkod dalam `Audit`).
 - Antara muka penilai (cadangan): satu skrin, jumlah /100 serta-merta, ulasan pantas, simpan draf automatik, berfungsi pada telefon/tablet; admin ditanda jika skor dua penilai berbeza jauh bagi pemohon sama.
