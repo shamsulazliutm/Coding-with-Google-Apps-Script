@@ -83,6 +83,7 @@ Status: Baharu / Disemak / Diluluskan / Ditolak / Perlu Pembetulan.
 - Tajuk templat: *Perakuan Pendaftaran Syarikat Pemula Pelajar, Universiti Teknologi Malaysia* (BM sahaja, mengikut templat Tuan).
 - **No. pendaftaran:** `XCITE-{tahun}S{5 digit}`, contoh `XCITE-2026S00001`, jujukan berasingan bagi setiap tahun.
 - Penanda dalam templat: `{{NAMA_PERNIAGAAN}}`, `{{NO_PENDAFTARAN}}`, `{{TARIKH_PENDAFTARAN}}`, `{{ALAMAT_PERNIAGAAN}}`, `{{KOD_SUBJEK}}` (jika berkaitan; jika tiada, `-`), `{{SENARAI_AHLI}}` (semua ahli termasuk pemilik, bernombor), `{{JUMLAH_AHLI}}`, `{{TEMPOH_SAH_LAKU}}`.
+- **Tempoh sah laku (disahkan): satu tahun dari tarikh pendaftaran** (`{{TEMPOH_SAH_LAKU}}` = tarikh pendaftaran + 1 tahun). Peraturan pembaharuan dan kesan tamat tempoh: lihat bahagian 8, perkara 13.
 - Penandatangan dalam templat: Pengarah UTMXCITE. Tiada kod QR.
 - Penanda tidak dikenali: dibiarkan kosong dan admin diberi amaran.
 Semakan automatik: tiada "UTM" pada nama atau alamat; alamat bukan kolej/fakulti; satu permohonan aktif bagi setiap pelajar; No. Matrik rakan kongsi wujud dan tidak pendua; pemilik bukan rakan kongsi dalam permohonan yang sama.
@@ -190,6 +191,7 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 | 8 | Visual: logo UTM + UTMXCITE (diterima); warna maroon UTM dan emas "X" diambil daripada logo; reka bentuk telefon dahulu; logo didaftar dalam `Link_Dokumen` (`LOGO_UTMXCITE`) supaya boleh diganti | Disahkan |
 | 9 | Bahasa antara muka: **dwibahasa**. Bahasa Melayu sebagai teks utama, terjemahan English dalam *italik* bersaiz kecil di bawah atau di sebelah label (seperti borang Makerspace lama) | Disahkan |
 | 10 | Domain emel: pelajar `@graduate.utm.my`, staf `@utm.my` (disimpan dalam `Tetapan`) | Disahkan |
+| 13 | **Pembaharuan SSU dan kesan tamat tempoh** (sijil sah satu tahun). **[LALAI]** pembaharuan melalui sistem (borang ringkas diisi awal, admin lulus, sijil baharu dengan no. baharu); peringatan emel 60, 30 dan 7 hari sebelum tamat; status SSU bertukar **Tamat Tempoh** selepas tarikh itu dan pemilik tidak boleh membuat permohonan lot/kredit baharu sehingga diperbaharui; sewaan dan laporan kewangan sedia ada tidak terjejas | **[TERBUKA]** |
 | 11 | **CGPA tidak diperlukan**: dibuang daripada skrin penilai dan tiada lajur dalam `PELAJAR` | Disahkan |
 | 12 | Kriteria rubrik dan markah daripada borang penilaian 11 Mei 2026 dijadikan rubrik awal; Tuan boleh ubah dalam tab `Rubrik` | Disahkan |
 
