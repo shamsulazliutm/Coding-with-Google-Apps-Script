@@ -166,7 +166,7 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 | 6 | Resit inkubator dipaut ke `Bayaran_Makerspace` (tiada muat naik berasingan dalam laporan kewangan); tiada medan tambahan lain dalam laporan | Disahkan |
 | 7 | Pautan templat laporan kewangan dan templat sijil SSU | Disediakan urusetia |
 | 8 | Reka bentuk visual (warna maroon/emas UTMXCITE, logo) | **[TERBUKA]** |
-| 9 | Bahasa antara muka: Bahasa Melayu (dengan label Inggeris seperti borang lama?) | **[TERBUKA]** |
+| 9 | Bahasa antara muka: **dwibahasa**. Bahasa Melayu sebagai teks utama, terjemahan English dalam *italik* bersaiz kecil di bawah atau di sebelah label (seperti borang Makerspace lama) | Disahkan |
 | 10 | Domain emel pelajar (`@graduate.utm.my`?) dan staf (`@utm.my`) untuk semakan peranan | **[TERBUKA]** |
 
 ---
