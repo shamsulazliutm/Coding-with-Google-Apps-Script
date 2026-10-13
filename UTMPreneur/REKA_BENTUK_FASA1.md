@@ -234,6 +234,7 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 
 ### Modul lain (belum dibincangkan; borang dan peraturan dibekalkan semasa fasa 2)
 - **Daftar startup: sama seperti SSU (disahkan)**, dengan **dua jenis**: (1) **Perniagaan** dan (2) **Startup untuk pembangunan produk/inovasi**. Satu proses, satu borang asas, satu sijil; medan `Jenis_SSU` membezakannya. **[TERBUKA]** medan khusus startup (peringkat produk, penerangan inovasi, hak harta intelek), kelayakan startup untuk lot/kewangan/kredit, dan sama ada tajuk sijil berbeza.
+- **Permohonan peruntukan program usahawan dan inovasi** (disahkan sebagai tambahan fasa 2): pelajar, kelab atau persatuan memohon peruntukan bagi program usahawan dan inovasi. **[TERBUKA]** pemohon yang layak, borang dan lampiran (kertas kerja, bajet), siapa menilai dan meluluskan (admin atau jawatankuasa), had jumlah, laporan selepas program dan pelaporan perbelanjaan.
 - **Inovasi** (pendaftaran projek/produk inovasi pelajar).
 - **Anugerah** (rekod anugerah, pertandingan dan pencapaian usahawan/inovator).
 - Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
