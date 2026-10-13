@@ -187,13 +187,14 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 
 ### Mikro Kredit (`SS_MIKRO_KREDIT`)
 Borang lama: 32 soalan. Pemetaan yang dicadangkan:
-- **Auto-isi:** emel, nama, No. KP, No. Matrik, program, tahun, jantina, alamat tetap, telefon (daripada `PELAJAR`); status Bumiputera (diterbitkan daripada etnik + kewarganegaraan); maklumat syarikat (daripada `Perniagaan`/SSU) bagi permohonan RM5,000 ke atas.
+- **Had pinjaman: maksimum RM3,000** (disahkan; disimpan dalam `Tetapan`). Percabangan RM5,000 dalam borang lama **dibuang**, jadi butiran syarikat (Q20-Q27) tidak lagi menjadi laluan wajib. Jumlah dimohon ialah satu medan nombor (RM tepat).
+- **Auto-isi:** emel, nama, No. KP, No. Matrik, program, tahun, jantina, alamat tetap, telefon (daripada `PELAJAR`); status Bumiputera (diterbitkan daripada etnik + kewarganegaraan). Perniagaan SSU boleh dipaut secara pilihan.
 - **Dibuang:** salinan KP dan kad matrik (selaras PDPA).
 - **Medan baharu (sensitif, admin sahaja):** agama, taraf perkahwinan, semester, alamat surat menyurat.
-- **Lampiran:** keputusan peperiksaan semester terkini, kertas cadangan, SSM dan penyata kewangan (RM5,000 ke atas, boleh dipaut daripada SSU/laporan kewangan).
-- **Isu dalam borang lama:** Q19 membenarkan RM5,000 ke atas tetapi Q31 hanya sehingga RM4,999; jumlah dalam julat (cadangan: nilai tepat RM); tiada medan pinjaman diluluskan, tempoh, bayaran balik, penjamin.
+- **Lampiran:** keputusan peperiksaan semester terkini, kertas cadangan projek/perniagaan.
+- **Isu dalam borang lama:** jumlah dalam julat (cadangan: nilai tepat RM); tiada medan pinjaman diluluskan, tempoh, bayaran balik, penjamin.
 - **Tab dicadangkan:** `Permohonan_Kredit`, `Pinjaman`, `Bayaran_Balik` (aliran bayaran seperti sewaan lot).
-- **Soalan terbuka:** syarat kelayakan (profiling/SSU), had jumlah, jejak pinjaman dan bayaran balik, had satu pinjaman aktif, perakuan penyelia, kaedah kelulusan.
+- **Soalan terbuka:** had minimum (borang lama bermula RM500), syarat kelayakan (profiling/SSU), jejak pinjaman dan bayaran balik, had satu pinjaman aktif, perakuan penyelia, kaedah kelulusan.
 
 ### Modul lain (belum dibincangkan)
 Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
