@@ -195,7 +195,8 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 - **Isu dalam borang lama:** jumlah dalam julat (cadangan: nilai tepat RM); tiada medan pinjaman diluluskan, tempoh, bayaran balik, penjamin.
 - **Tab dicadangkan:** `Permohonan_Kredit`, `Pinjaman`, `Bayaran_Balik` (aliran bayaran seperti sewaan lot).
 - **Kelulusan (disahkan): admin sahaja** (Admin Penuh / Pegawai Modul); tiada perakuan penyelia dan tiada jawatankuasa dalam sistem.
-- **Soalan terbuka:** jejak pinjaman dan bayaran balik, had satu pinjaman aktif.
+- **Had permohonan (disahkan): seorang pelajar satu permohonan.** Permohonan baharu hanya dibenarkan jika yang terdahulu Ditolak atau Dibatalkan (peraturan jika yang terdahulu Diluluskan: lihat soalan terbuka).
+- **Soalan terbuka:** jejak pinjaman dan bayaran balik; adakah "satu permohonan" bermaksud satu seumur hidup, atau satu bagi setiap pinjaman belum selesai.
 
 ### Modul lain (belum dibincangkan)
 Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
