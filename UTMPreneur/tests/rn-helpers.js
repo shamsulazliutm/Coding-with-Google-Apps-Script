@@ -147,3 +147,25 @@ function diterima(opts) {
   return c;
 }
 Object.assign(module.exports, { sediaDiluluskan, tawaranSiap, hantarTawaran, jawabTawaran, diterima });
+
+const cagaran = (env, jenis) => rows(env, 'Cagaran').find((c) => c.Jenis === (jenis || 'Sewaan'));
+/** Pemilik memuat naik resit cagaran sewaan. */
+function resitCagaran(c, patch) {
+  if (!cagaran(c.env)) return { ok: false };
+  return call(c.env, 'rn.cagaran.muatnaik', c.aina, Object.assign({ id: cagaran(c.env).ID_Cagaran, noResit: 'RR-2026-001234', tarikhResit: hari(c.env, 0), fail: pdfFile('resit.pdf') }, patch || {}));
+}
+/** Sewaan aktif dengan tarikh mula/tamat yang ditetapkan. */
+function sewaanAktif(mula, tamat, opts) {
+  const c = diterima(opts);
+  const { env, admin, aina, id } = c;
+  env.addDocTemplate('TEMPLAT_PERJANJIAN_SEWA_BUKAN_FNB', TPL_PERJANJIAN);
+  env.addDocTemplate('TEMPLAT_PERJANJIAN_SEWA_FNB', TPL_PERJANJIAN);
+  const rc = resitCagaran(c);
+  if (rc.ok) call(env, 'rn.admin.cagaran.sahkan', admin, { id: cagaran(env).ID_Cagaran });
+  call(env, 'rn.admin.perjanjian.jana', admin, { id });
+  call(env, 'rn.perjanjian.muatnaik', aina, { id, fail: pdfFile('tt.pdf') });
+  const sh = call(env, 'rn.admin.perjanjian.sahkan', admin, { id, tarikhMula: mula, tarikhTamat: tamat });
+  assert.equal(sh.data.aktivasi.aktif, true, JSON.stringify(sh));
+  return c;
+}
+Object.assign(module.exports, { cagaran, resitCagaran, sewaanAktif });

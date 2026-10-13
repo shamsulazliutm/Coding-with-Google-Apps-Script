@@ -46,7 +46,9 @@ var RnSewa = (function () {
     if (bilByKey_(S(sew.ID_Sewaan), tahun, bulan)) return null;
     var kadar = kadarBulan_(jadualSewaan_(sew), n, Number(sew.Kadar_RM) || 0);
     var akhir = tarikhAkhirBil_(tahun, bulan);
-    if (opts.awal && Util.daysBetween(new Date(), akhir) < 0) akhir = RnU.tambahHari(new Date(), Cfg.num('TARIKH_AKHIR_SEWA_HARI', 7));
+    // bil bulan semasa dijana selepas tarikh akhir biasa (sewaan baharu/pendaftaran lewat): tempoh bayar dikira dari hari dijana
+    var sekarang = new Date();
+    if (tahun === y_(sekarang) && bulan === m_(sekarang) && Util.daysBetween(sekarang, akhir) < 0) akhir = RnU.tambahHari(new Date(), Cfg.num('TARIKH_AKHIR_SEWA_HARI', 7));
     var rec = {
       ID_Bil: Util.formatId('BSW', tahun, Db.nextSeqLocked('BSW_' + tahun), 4), ID_Sewaan: S(sew.ID_Sewaan), Kod_Lot: S(sew.Kod_Lot), ID_Perniagaan: S(sew.ID_Perniagaan),
       Bulan: bulan, Tahun: tahun, Jumlah_RM: kadar, Tarikh_Akhir: akhir, Status: 'Belum Bayar', Sewa_RM: kadar, Caj_Utiliti_RM: 0, Tarikh_Jana: new Date(), Bulan_Sewa_Ke: n
