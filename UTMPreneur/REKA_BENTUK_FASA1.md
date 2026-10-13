@@ -77,7 +77,14 @@ Import mempunyai semakan: No. Matrik pendua, emel tidak sah, nilai tidak sepadan
 | `Permohonan_SSU` | `ID_Permohonan`, No. Matrik pemilik, nama perniagaan (HURUF BESAR), produk/perkhidmatan (berbilang), syarat subjek (UBSS1032 / ULRS3032 / **MFMS1143** / SBSF1023 / Tiada / Lain-lain) + pensyarah/seksyen/kumpulan, status SSM (Ya/Tidak/Dalam proses), sijil SSM + maklumat SSM (jika Ya), jenis perniagaan, kluster, sumber pembiayaan, modal permulaan (RM tepat), pendapatan kasar bulanan (RM tepat), alamat perniagaan, tarikh mula, laman/media sosial, bil. rakan kongsi, **status**, tarikh keputusan, catatan admin, no. sijil, pautan sijil PDF |
 | `Ahli_Pasukan` | `ID_Permohonan`, **No. Matrik** rakan kongsi + salinan butiran semasa hantar. **Hanya pelajar UTM**; boleh ditambah tanpa had tetap 12 |
 
-Status: Baharu / Disemak / Diluluskan / Ditolak / Perlu Pembetulan. Sijil PDF dijana daripada templat selepas kelulusan.
+Status: Baharu / Disemak / Diluluskan / Ditolak / Perlu Pembetulan. 
+
+**Sijil SSU (disahkan):** dijana sebagai PDF selepas kelulusan admin daripada **templat dalam folder Google Drive** (didaftar dalam `Link_Dokumen`: `FLD_TEMPLAT_SIJIL`, `FLD_SIJIL_SSU`). Templat dibaca pada masa penjanaan, tidak ditetapkan dalam kod; tandatangan, logo dan bingkai ialah sebahagian templat.
+- Tajuk templat: *Perakuan Pendaftaran Syarikat Pemula Pelajar, Universiti Teknologi Malaysia* (BM sahaja, mengikut templat Tuan).
+- **No. pendaftaran:** `XCITE-{tahun}S{5 digit}`, contoh `XCITE-2026S00001`, jujukan berasingan bagi setiap tahun.
+- Penanda dalam templat: `{{NAMA_PERNIAGAAN}}`, `{{NO_PENDAFTARAN}}`, `{{TARIKH_PENDAFTARAN}}`, `{{ALAMAT_PERNIAGAAN}}`, `{{KOD_SUBJEK}}` (jika berkaitan; jika tiada, `-`), `{{SENARAI_AHLI}}` (semua ahli termasuk pemilik, bernombor), `{{JUMLAH_AHLI}}`, `{{TEMPOH_SAH_LAKU}}`.
+- Penandatangan dalam templat: Pengarah UTMXCITE. Tiada kod QR.
+- Penanda tidak dikenali: dibiarkan kosong dan admin diberi amaran.
 Semakan automatik: tiada "UTM" pada nama atau alamat; alamat bukan kolej/fakulti; satu permohonan aktif bagi setiap pelajar; No. Matrik rakan kongsi wujud dan tidak pendua; pemilik bukan rakan kongsi dalam permohonan yang sama.
 
 ### SS_RUANG_NIAGA
@@ -179,7 +186,7 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 | 4 | Kertas kerja HEPA dan surat permohonan bagi tempahan ruang: kekal dimuat naik (surat penasihat digantikan perakuan sistem) | **[LALAI]** |
 | 5 | Bayaran Invois Dalaman (UTM): penanda dan pengesahan admin tanpa resit | Disahkan |
 | 6 | Resit inkubator dipaut ke `Bayaran_Makerspace` (tiada muat naik berasingan dalam laporan kewangan); tiada medan tambahan lain dalam laporan | Disahkan |
-| 7 | Pautan templat laporan kewangan dan templat sijil SSU | Disediakan urusetia |
+| 7 | Pautan templat laporan kewangan dan templat sijil SSU (templat sijil diterima; format dan penanda dipersetujui). **[TERBUKA]** peraturan **tempoh sah laku** sijil dan pembaharuan | Separa |
 | 8 | Visual: logo UTM + UTMXCITE (diterima); warna maroon UTM dan emas "X" diambil daripada logo; reka bentuk telefon dahulu; logo didaftar dalam `Link_Dokumen` (`LOGO_UTMXCITE`) supaya boleh diganti | Disahkan |
 | 9 | Bahasa antara muka: **dwibahasa**. Bahasa Melayu sebagai teks utama, terjemahan English dalam *italik* bersaiz kecil di bawah atau di sebelah label (seperti borang Makerspace lama) | Disahkan |
 | 10 | Domain emel: pelajar `@graduate.utm.my`, staf `@utm.my` (disimpan dalam `Tetapan`) | Disahkan |
