@@ -335,3 +335,8 @@ Fail: `16HKfrs-fu80ZxrrOrMlLq5Q9I1bS0XEK2oIjlOcjwYc` ("Perakuan Pendaftaran Syar
 - Nama dan jawatan penandatangan (Pengarah UTMXCITE) ditetap dalam templat; tiada tandatangan imej buat masa ini.
 - Jana PDF: salin slaid ke Drive, ganti penanda, eksport PDF, simpan ke folder sijil, padam salinan.
 - Soalan terbuka: tempoh sah laku lalai (cadangan 1 tahun, boleh diperbaharui), dan format nombor sijil (cadangan `SSU/2026/0001`).
+
+### Format nombor sijil (keputusan pengguna)
+`XCITE-2026S00001-01` = `XCITE-` + tahun + `S` + nombor turutan 5 digit + `-` + akhiran 2 digit.
+- Turutan (`SEQ_SIJIL`) dikira bersama tahun; tafsiran awal: `S` = Syarikat Pemula Pelajar.
+- Akhiran `-01`: tafsiran awal ialah bilangan pendaftaran/pembaharuan (01 = pertama, 02 = pembaharuan pertama), nombor turutan kekal sama. **Menunggu pengesahan pengguna.**
