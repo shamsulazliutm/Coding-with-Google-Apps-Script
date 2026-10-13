@@ -82,16 +82,16 @@ var SCHEMA = {
     nama: 'UTMPreneur - Makerspace',
     modul: 'Makerspace',
     tabs: {
-      Tempahan: ['ID_Tempahan', 'Jenis', 'Kod_Sumber', 'Jenis_Pengguna', 'Emel_Pemohon', 'Nama_Pemohon', 'Tarikh_Mula', 'Masa_Mula', 'Tarikh_Tamat', 'Masa_Tamat', 'Tujuan', 'Emel_Penyelia', 'Status_Perakuan', 'Tarikh_Perakuan', 'Status', 'Diluluskan_Oleh', 'Tarikh_Keputusan', 'Catatan'],
-      Butiran_Ruang: ['ID_Tempahan', 'Nama_Program', 'Bil_Hari', 'Bil_Peserta', 'Kaedah_Bayaran', 'No_VOT', 'Nama_Staf_Kewangan', 'Tel_Staf_Kewangan', 'Fail_Kertas_Kerja', 'Fail_Surat'],
+      Tempahan: ['ID_Tempahan', 'Jenis', 'Kod_Sumber', 'Jenis_Pengguna', 'Emel_Pemohon', 'Nama_Pemohon', 'Tarikh_Mula', 'Masa_Mula', 'Tarikh_Tamat', 'Masa_Tamat', 'Tujuan', 'Emel_Penyelia', 'Status_Perakuan', 'Tarikh_Perakuan', 'Status', 'Diluluskan_Oleh', 'Tarikh_Keputusan', 'Catatan', 'No_Matrik', 'Telefon', 'Jabatan', 'Anggaran_RM', 'Dicipta_Pada', 'Didaftar_Oleh', 'Token_Hash', 'Token_Tamat', 'Catatan_Penyelia', 'Bil_Pembaharuan'],
+      Butiran_Ruang: ['ID_Tempahan', 'Nama_Program', 'Bil_Hari', 'Bil_Peserta', 'Kaedah_Bayaran', 'No_VOT', 'Nama_Staf_Kewangan', 'Tel_Staf_Kewangan', 'Fail_Kertas_Kerja', 'Fail_Surat', 'Kaedah_Lain', 'Hari_Sebenar'],
       Item_Peralatan_Ruang: ['ID_Tempahan', 'Kod_Alat', 'Kuantiti'],
       Butiran_LaserCut: ['ID_Tempahan', 'Nama_Projek', 'Jenis_Bahan', 'Masa_Dijangka_Min', 'Masa_Sebenar_Min'],
-      Butiran_3DP: ['ID_Tempahan', 'Nama_Projek', 'Fail_Gambar', 'Berat_g', 'Warna', 'No_Mesin', 'Masa_Dijangka_Min', 'Masa_Sebenar_Min'],
+      Butiran_3DP: ['ID_Tempahan', 'Nama_Projek', 'Fail_Gambar', 'Berat_g', 'Warna', 'No_Mesin', 'Masa_Dijangka_Min', 'Masa_Sebenar_Min', 'Berat_Sebenar_g'],
       Item_Pinjaman: ['ID_Tempahan', 'Kod_Alat', 'Kuantiti', 'Tarikh_Dijangka_Pulang', 'Tarikh_Pulang', 'Status'],
       ALAT: ['Kod_Alat', 'Nama_Alat', 'Kategori', 'Kuantiti_Jumlah', 'Kuantiti_Rosak_Hilang', 'Boleh_Dipinjam', 'Aktif', 'Catatan'],
       PERALATAN: ['Kod_Mesin', 'Jenis', 'No_Mesin', 'Nama_Model', 'Kapasiti', 'Kod_Kadar', 'Status', 'Catatan'],
       KADAR: ['Kod_Sumber', 'Nama_Sumber', 'Jenis_Pengguna', 'Unit', 'Kadar_RM', 'Berkuat_Kuasa', 'Aktif'],
-      Bayaran_Makerspace: ['ID_Bayaran', 'ID_Tempahan', 'Emel_Pemohon', 'Anggaran_RM', 'Penggunaan_Sebenar', 'Kos_Sebenar_RM', 'Status', 'Tarikh_Akhir', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan'],
+      Bayaran_Makerspace: ['ID_Bayaran', 'ID_Tempahan', 'Emel_Pemohon', 'Anggaran_RM', 'Penggunaan_Sebenar', 'Kos_Sebenar_RM', 'Status', 'Tarikh_Akhir', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Tarikh_Jana', 'Catatan'],
       Laporan_Aktiviti: ['ID_Tempahan', 'Fail_Laporan', 'Tarikh_Hantar', 'Status']
     }
   }
@@ -106,6 +106,9 @@ var TEXT_COLS = {
   Ahli_Pasukan: ['No_Matrik'],
   Permohonan_SSU: ['No_Matrik_Pemilik', 'No_Pendaftaran'],
   Permohonan_Lot: ['No_Matrik'],
+  Tempahan: ['No_Matrik', 'Telefon', 'Masa_Mula', 'Masa_Tamat', 'Token_Hash'],
+  PERALATAN: ['Kod_Mesin', 'No_Mesin'],
+  Butiran_3DP: ['No_Mesin'],
   Butiran_Ruang: ['No_VOT', 'Tel_Staf_Kewangan']
 };
 
