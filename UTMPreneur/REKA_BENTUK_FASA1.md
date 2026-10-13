@@ -158,16 +158,16 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 
 | # | Perkara | Status |
 |---|---|---|
-| 1 | Penyewa lot sedia ada: admin daftar secara manual (Cadangan A, **disahkan**). Perlu keputusan: rekod **SSU** mereka dalam sistem baharu, sama ada admin mendaftar SSU sedia ada (status Diluluskan) atau mereka memohon semula | **[TERBUKA]** |
+| 1 | Penyewa lot sedia ada: admin mendaftar **SSU sedia ada** (terus Diluluskan, ditanda "Didaftar admin (sedia ada)") melalui borang ringkas, kemudian **sewaan sedia ada** melalui borang "Daftar sewaan sedia ada" | Disahkan |
 | 2 | Kadar sewa 15 lot, kadar sewa Maker Lab/Bilik Mesyuarat, kadar 3D Printer, extension wire, kadar bagi staf/luar | Diisi urusetia |
 | 3 | Pemulangan pinjaman lewat menyekat pinjaman baharu | **[LALAI]** |
 | 4 | Kertas kerja HEPA dan surat permohonan bagi tempahan ruang: kekal dimuat naik (surat penasihat digantikan perakuan sistem) | **[LALAI]** |
 | 5 | Bayaran Invois Dalaman (UTM): penanda dan pengesahan admin tanpa resit | Disahkan |
 | 6 | Resit inkubator dipaut ke `Bayaran_Makerspace` (tiada muat naik berasingan dalam laporan kewangan); tiada medan tambahan lain dalam laporan | Disahkan |
 | 7 | Pautan templat laporan kewangan dan templat sijil SSU | Disediakan urusetia |
-| 8 | Reka bentuk visual (warna maroon/emas UTMXCITE, logo) | **[TERBUKA]** |
+| 8 | Visual: logo UTM + UTMXCITE (diterima); warna maroon UTM dan emas "X" diambil daripada logo; reka bentuk telefon dahulu; logo didaftar dalam `Link_Dokumen` (`LOGO_UTMXCITE`) supaya boleh diganti | Disahkan |
 | 9 | Bahasa antara muka: **dwibahasa**. Bahasa Melayu sebagai teks utama, terjemahan English dalam *italik* bersaiz kecil di bawah atau di sebelah label (seperti borang Makerspace lama) | Disahkan |
-| 10 | Domain emel pelajar (`@graduate.utm.my`?) dan staf (`@utm.my`) untuk semakan peranan | **[TERBUKA]** |
+| 10 | Domain emel: pelajar `@graduate.utm.my`, staf `@utm.my` (disimpan dalam `Tetapan`) | Disahkan |
 
 ---
 
@@ -180,3 +180,20 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 5. **Kewangan:** laporan bulanan, semakan admin, peringatan.
 6. **Makerspace:** `PERALATAN`/`ALAT`/`KADAR`, empat jenis tempahan, perakuan penyelia, konflik masa, bil dan pembayaran.
 7. **Dashboard admin** dan ringkasan harian; panduan *deploy*.
+
+---
+
+## 10. Fasa 2 (nota awal, belum direka sepenuhnya)
+
+### Mikro Kredit (`SS_MIKRO_KREDIT`)
+Borang lama: 32 soalan. Pemetaan yang dicadangkan:
+- **Auto-isi:** emel, nama, No. KP, No. Matrik, program, tahun, jantina, alamat tetap, telefon (daripada `PELAJAR`); status Bumiputera (diterbitkan daripada etnik + kewarganegaraan); maklumat syarikat (daripada `Perniagaan`/SSU) bagi permohonan RM5,000 ke atas.
+- **Dibuang:** salinan KP dan kad matrik (selaras PDPA).
+- **Medan baharu (sensitif, admin sahaja):** agama, taraf perkahwinan, semester, alamat surat menyurat.
+- **Lampiran:** keputusan peperiksaan semester terkini, kertas cadangan, SSM dan penyata kewangan (RM5,000 ke atas, boleh dipaut daripada SSU/laporan kewangan).
+- **Isu dalam borang lama:** Q19 membenarkan RM5,000 ke atas tetapi Q31 hanya sehingga RM4,999; jumlah dalam julat (cadangan: nilai tepat RM); tiada medan pinjaman diluluskan, tempoh, bayaran balik, penjamin.
+- **Tab dicadangkan:** `Permohonan_Kredit`, `Pinjaman`, `Bayaran_Balik` (aliran bayaran seperti sewaan lot).
+- **Soalan terbuka:** syarat kelayakan (profiling/SSU), had jumlah, jejak pinjaman dan bayaran balik, had satu pinjaman aktif, perakuan penyelia, kaedah kelulusan.
+
+### Modul lain (belum dibincangkan)
+Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
