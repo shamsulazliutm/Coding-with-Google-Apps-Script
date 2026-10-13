@@ -28,6 +28,7 @@ Tanda: **[LALAI]** = andaian saya yang belum disahkan Tuan. **[TERBUKA]** = perl
 | **Admin Penuh** | Tab `Admin`; `utmxcite@utm.my` (dikunci) | Semua, urus admin, `Tetapan`, `Rujukan`, kadar; lihat data sensitif |
 | **Pegawai Modul** | Tab `Admin` + senarai modul | Kelulusan dan pengurusan modul yang ditetapkan sahaja |
 | **Pemerhati** | Tab `Admin` | Baca sahaja (dashboard, laporan) |
+| **Penilai** | Tab `Admin` (staf `@utm.my`, didaftar admin) | Hanya menskor permohonan lot yang ditugaskan dalam sesi penilaian; tidak boleh meluluskan atau mengubah kadar |
 
 - Admin **boleh meluluskan permohonan sendiri**; rekod `Audit` ditanda "Kelulusan sendiri".
 - Penyelia pelajar (perakuan Makerspace) **tidak perlu akaun**; mereka bertindak melalui pautan sekali guna.
@@ -86,8 +87,21 @@ Semakan automatik: tiada "UTM" pada nama atau alamat; alamat bukan kolej/fakulti
 | `Permohonan_Lot` | Pemohon (melalui `ID_Perniagaan`), lot dipilih, tempoh sewa dipohon, F&B (vaksin kepialu, kursus pengendali makanan; **hanya direkod, bukan syarat**) + lampiran pilihan, sumber pembiayaan, pemberi dana, jumlah dana, jangkaan jualan bulanan, bil. pekerja, **cadangan perniagaan (wajib, PDF)**, sebab berniaga, lokasi dirancang, status, keputusan admin |
 | `Sewaan` | `ID_Sewaan`, lot, `ID_Perniagaan`, kadar, tarikh mula/tamat, status (Aktif/Tamat). **Admin boleh daftar sewaan sedia ada** melalui borang khas |
 | `Bayaran_Sewa` | Satu baris bagi setiap lot setiap bulan: jumlah, tarikh akhir (10hb), status (Belum Bayar / Menunggu Pengesahan / Dibayar / Lewat / Dikecualikan), tarikh bayar, kaedah, no. rujukan, resit, disahkan oleh |
+| `Rubrik` | **Satu rubrik** untuk semua permohonan (jumlah 100): Organisasi Keseluruhan 10; Kandungan Pelan Perniagaan 20; Penerangan Perniagaan 20; Kebolehpasaran Produk/Perkhidmatan 20; Inovasi 20; Pengurusan Kewangan 10. Setiap kriteria ada sub-perkara sebagai panduan, BM + *English*. Diisi awal; diubah urusetia; versi disimpan bersama sesi |
+| `Sesi_Penilaian` | Tarikh, tempat, status (Dirancang / Berjalan / Ditutup), versi rubrik, senarai penilai, senarai permohonan disenarai pendek **dengan slot pembentangan** (masa bagi setiap pemohon) |
+| `Skor_Penilaian` | Satu baris bagi setiap penilai x permohonan x kriteria: markah (dihadkan pada maksimum), ulasan, masa hantar, dikunci. Jumlah /100 dikira automatik |
 
 Peraturan: hanya SSU Diluluskan; pelajar nampak lot Dibuka + Kosong sahaja; **satu lot bagi satu pelajar/perniagaan** (semakan atas No. Matrik pemilik dan rakan kongsi); permohonan lain dibenarkan jika terdahulu Ditolak/Dibatalkan/Tamat; kelulusan menukar `Status_Lot` kepada Disewa dan mencipta `Sewaan`. Q35/Q36 lama (kad matrik, salinan IC) dibuang.
+
+**Penilaian jawatankuasa (disahkan):**
+- Permohonan dikumpul dalam **tempoh tertentu** (tarikh buka dan tutup ditetapkan admin dalam `Tetapan`/`Lot`), kemudian dinilai dalam satu sesi.
+- Aliran: Baharu -> Disemak (kelayakan) -> Disenarai pendek -> **Pembentangan dan penilaian** -> Dinilai -> admin memutuskan Diluluskan/Ditolak -> `Sewaan` dicipta.
+- **Pemohon hadir membentang.** Sistem menghantar jemputan emel (tarikh, tempat, slot masa) kepada pemohon yang disenarai pendek.
+- **Penilai** menskor secara bebas dan tidak melihat skor penilai lain sehingga sesi ditutup. Skor dikunci selepas Hantar (admin boleh membuka semula, direkod dalam `Audit`).
+- Skrin penilai: maklumat calon diisi automatik (nama, No. Matrik, No. KP, tahun, fakulti, kursus, CGPA, nama syarikat/No. SSM, jenis perniagaan) + pautan **cadangan perniagaan**.
+- Apabila sesi ditutup: purata skor dan **kedudukan** dipaparkan. **Admin memutuskan selepas melihat kedudukan; tiada skor minimum dan tiada kelulusan automatik.**
+- Pemohon tidak melihat skor; hanya keputusan (dan ulasan ringkas jika admin mahu).
+- Pertindihan lot diselesaikan oleh penilaian jawatankuasa.
 
 ### SS_KEWANGAN
 | Tab | Isi |
@@ -168,6 +182,8 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 | 8 | Visual: logo UTM + UTMXCITE (diterima); warna maroon UTM dan emas "X" diambil daripada logo; reka bentuk telefon dahulu; logo didaftar dalam `Link_Dokumen` (`LOGO_UTMXCITE`) supaya boleh diganti | Disahkan |
 | 9 | Bahasa antara muka: **dwibahasa**. Bahasa Melayu sebagai teks utama, terjemahan English dalam *italik* bersaiz kecil di bawah atau di sebelah label (seperti borang Makerspace lama) | Disahkan |
 | 10 | Domain emel: pelajar `@graduate.utm.my`, staf `@utm.my` (disimpan dalam `Tetapan`) | Disahkan |
+| 11 | **CGPA** untuk skrin penilai: tambah lajur dalam `PELAJAR` (import pihak Tuan), atau pelajar isi dalam permohonan lot. Data sensitif: penilai dan admin sahaja | **[TERBUKA]** |
+| 12 | Kriteria rubrik dan markah daripada borang penilaian 11 Mei 2026 dijadikan rubrik awal; Tuan boleh ubah dalam tab `Rubrik` | Disahkan |
 
 ---
 
