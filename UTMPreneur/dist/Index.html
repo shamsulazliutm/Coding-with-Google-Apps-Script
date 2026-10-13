@@ -412,7 +412,106 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     <div id="kew-det-body"></div>
   </section>
 
-<!-- ViewsMk: skrin modul (diisi oleh modul) -->
+<!-- ViewsMk: skrin modul Makerspace (pengguna, perakuan penyelia tanpa log masuk, admin) -->
+<style>
+.mk-new{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.mk-new button{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;cursor:pointer;font:inherit;color:inherit;text-align:left}
+.mk-new button:hover:not(:disabled){border-color:var(--maroon)}
+.mk-new button:disabled{opacity:.5;cursor:not-allowed}
+.mk-new .l{display:block}
+.mk-item{border-top:1px solid var(--line);padding:12px 0;cursor:pointer}
+.mk-item:first-child{border-top:0}
+.mk-item:hover{background:var(--maroon-l)}
+.mk-avail{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:10px 0;font-size:12.5px;background:#FCFAFA}
+.mk-busy{display:inline-block;background:var(--bad-l);color:var(--bad);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-weight:600}
+.mk-busy.mk-wait{background:var(--warn-l);color:var(--warn)}
+.mk-free{color:var(--ok);font-weight:600}
+.mk-est{border:1.5px solid var(--gold);background:var(--gold-l);border-radius:10px;padding:10px 12px;margin-top:14px;font-size:13px}
+.mk-est table{margin-top:6px;font-size:12.5px}
+.mk-est .mk-total{font-size:16px;font-weight:700;margin-top:6px}
+.mk-sum{margin:10px 0}
+.mk-day{font-weight:700;color:var(--maroon);border-bottom:2px solid var(--gold);margin:16px 0 4px;padding-bottom:3px}
+.mk-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+.mk-stat{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.mk-stat .pill{font-size:12px}
+.mk-pk{max-width:520px;margin:0 auto}
+.mk-sel td{background:var(--maroon-l)}
+.mk-note{font-size:12px;color:var(--muted);margin-top:4px}
+.mk-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mk-actions-in{margin-top:8px}
+@media (max-width:420px){.mk-new{grid-template-columns:1fr}}
+</style>
+
+  <!-- Makerspace: pengguna (pelajar, staf, orang luar) -->
+  <section id="v-mk" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Makerspace</div><div class="e">Space, Laser Cut, 3D Printer and equipment loans</div>
+      <div id="mk-pemohon" class="muted" style="margin-top:6px;font-size:12px"></div>
+      <div id="mk-sekatan"></div>
+      <div id="mk-admin-note" class="msg info" hidden>Anda log masuk sebagai pentadbir. Gunakan menu <b>Makerspace (admin)</b> untuk menempah bagi pihak pemohon. <i>You are signed in as an admin. Use Makerspace (admin) to book on behalf of an applicant.</i></div>
+      <div class="mk-new" id="mk-new">
+        <button type="button" id="mk-new-ruang"><span class="l">Tempah ruang</span><span class="e">Book a space</span></button>
+        <button type="button" id="mk-new-laser"><span class="l">Laser Cut</span><span class="e">Laser cutting machine</span></button>
+        <button type="button" id="mk-new-tdp"><span class="l">3D Printer</span><span class="e">3D printing</span></button>
+        <button type="button" id="mk-new-pinjam"><span class="l">Pinjam peralatan</span><span class="e">Borrow equipment</span></button>
+      </div>
+      <div id="msg-mk" class="msg" hidden></div>
+    </div>
+    <div class="card">
+      <div class="h2">Tempahan saya <span class="e">My bookings</span></div>
+      <div id="mk-list" style="margin-top:6px"></div>
+    </div>
+  </section>
+
+  <!-- Makerspace: borang tempahan (pengguna dan admin bagi pihak) -->
+  <section id="v-mk-form" class="view" hidden>
+    <div class="msg info" id="mk-bagi-info" hidden></div>
+    <button class="back" id="btn-mk-form-balik" type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1" id="mk-form-tajuk">Tempahan baharu</div><div class="e" id="mk-form-tajuk-en">New booking</div>
+      <div id="mk-form-ops" class="muted" style="font-size:12px;margin-top:6px"></div>
+      <div id="mk-form-box" style="margin-top:6px"></div>
+      <div class="mk-avail" id="mk-avail" hidden></div>
+      <div class="mk-est" id="mk-est" hidden></div>
+      <div id="msg-mk-form" class="msg" hidden></div>
+      <button id="btn-mk-hantar" class="btn" type="button">Hantar tempahan <i>Submit booking</i></button>
+    </div>
+  </section>
+
+  <!-- Makerspace: butiran tempahan (pengguna) -->
+  <section id="v-mk-det" class="view" hidden>
+    <button class="back" id="btn-mk-det-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div id="mk-det-body"></div>
+  </section>
+
+  <!-- Makerspace: perakuan penyelia (tanpa log masuk, melalui pautan emel) -->
+  <section id="v-mk-perakuan" class="view" hidden>
+    <div class="mk-pk">
+      <div class="card">
+        <div class="h1">Perakuan tempahan Makerspace</div><div class="e">Makerspace booking endorsement</div>
+        <div id="mk-pk-body" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Makerspace: admin -->
+  <section id="v-mk-admin" class="view" data-wide hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Makerspace (admin)</div><div class="e">Bookings, payments, equipment and rates</div>
+      <div id="mk-ad-ringkas" class="mk-stat"></div>
+      <div id="mk-ad-amaran"></div>
+      <div class="mk-tabs" id="mk-ad-tabs"></div>
+    </div>
+    <div id="mk-ad-panel"></div>
+  </section>
+
+  <!-- Makerspace: butiran tempahan (admin) -->
+  <section id="v-mk-adet" class="view" data-wide hidden>
+    <button class="back" id="btn-mk-adet-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div id="mk-adet-body"></div>
+  </section>
 
 
 </main>
@@ -1892,7 +1991,1015 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
 </script>
 
 <script>
-(function () { 'use strict'; var UP = window.UP; /* AppMk: skrip modul; guna UP.Form, UP.api, UP.show, UP.homeHooks, UP.backHooks, UP.initHooks */ })();
+/* AppMk: antara muka Makerspace (pengguna, perakuan penyelia tanpa log masuk, admin). Guna UP.Form, UP.api, UP.show, UP.homeHooks, UP.initHooks. */
+(function () {
+  'use strict';
+  var UP = window.UP;
+  var $ = function (id) { return document.getElementById(id); };
+  var node = UP.node, msg = UP.msg, msgErr = UP.msgErr, clearMsg = UP.clearMsg, busy = UP.busy;
+  var ADMIN = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati', 'Penilai'];
+  var MK = { info: null, jenis: '', bagi: null, form: null, seqA: 0, seqE: 0, timer: null, availTimer: null, confirm: '', detId: '', adId: '' };
+  var AD = { tab: 'tempahan', ring: null, q: '', jenis: 'SEMUA', status: 'AKTIF', dari: '', hingga: '', bayStatus: 'SEMUA', timer: null, pilih: null };
+
+  var ST = { 'Menunggu Perakuan': 'warn', 'Menunggu Kelulusan': 'info', Diluluskan: 'ok', Selesai: 'ok', Ditolak: 'bad', Dibatalkan: 'bad',
+    'Belum Bayar': 'warn', 'Menunggu Pengesahan': 'info', Dibayar: 'ok', Dikecualikan: '', Lewat: 'bad', 'Belum Dihantar': 'warn', Dihantar: 'ok' };
+  var JENIS = [{ kod: 'Ruang', bm: 'Ruang', en: 'Space' }, { kod: 'Laser Cut', bm: 'Laser Cut', en: '' }, { kod: '3D Printer', bm: '3D Printer', en: '' }, { kod: 'Pinjaman', bm: 'Pinjaman peralatan', en: 'Equipment loan' }];
+  var KAEDAH_BAYAR = [{ kod: 'Tunai', bm: 'Tunai', en: 'Cash' }, { kod: 'Pindahan Bank', bm: 'Pindahan bank', en: 'Bank transfer' }, { kod: 'Invois Dalaman', bm: 'Invois Dalaman (UTM)', en: 'Internal invoice' }, { kod: 'Lain-lain', bm: 'Lain-lain', en: 'Other' }];
+
+  function rm(n) { return n === null || n === undefined || n === '' ? '' : 'RM' + Number(n).toFixed(2); }
+  function pill(text, kind) { return UP.pill(text, kind || ''); }
+  function wait(el) { el.textContent = ''; el.appendChild(node('div', null, 'spinner')); }
+  function errBox(el, r) { el.textContent = ''; var m = node('div', null, 'msg err'); el.appendChild(m); msgErr(m, r); }
+  function row2(a, b) { var d = node('div', null, 'row'); d.appendChild(a); d.appendChild(node('span', null, 'sp')); if (b) d.appendChild(b); return d; }
+  function card() { return node('div', null, 'card'); }
+  function h2(bm, en) { var d = node('div', bm, 'h2'); if (en) { d.appendChild(document.createTextNode(' ')); d.appendChild(node('span', en, 'e')); } return d; }
+  function btn(bm, en, cls, fn) {
+    var b = node('button', bm + ' ', 'btn ' + (cls || '')); b.type = 'button';
+    if (en) b.appendChild(node('span', en, 'e'));
+    if (fn) b.addEventListener('click', fn);
+    return b;
+  }
+  function smallBtn(bm, en, cls, fn) { return btn(bm, en, 'sm ' + (cls || ''), fn); }
+  function tarikhTeks(o) {
+    var t = o.tarikhMula + (o.tarikhTamat && o.tarikhTamat !== o.tarikhMula ? ' hingga ' + o.tarikhTamat : '');
+    return t + (o.masaMula ? ' · ' + o.masaMula + (o.masaTamat ? '-' + o.masaTamat : '') : '');
+  }
+  function sel(id, options, value) {
+    var s = document.createElement('select'); s.id = id;
+    options.forEach(function (o) { var op = node('option', o[1]); op.value = o[0]; s.appendChild(op); });
+    if (value !== undefined) s.value = value;
+    return s;
+  }
+  function lab(bm, en, forId) {
+    var l = node('label', null, 'lab'); if (forId) l.htmlFor = forId;
+    l.appendChild(node('span', bm, 'l')); l.appendChild(document.createTextNode(' ')); l.appendChild(node('span', en, 'e')); return l;
+  }
+  function slots(mula, tamat, step) {
+    var out = [];
+    for (var m = mula; m <= tamat; m += step) { var t = ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); out.push({ kod: t, bm: t, en: '' }); }
+    return out;
+  }
+  function toMin(s) { var p = String(s || '').split(':'); return p.length === 2 ? parseInt(p[0], 10) * 60 + parseInt(p[1], 10) : 0; }
+  function isAdmin() { return !!(UP.S.session && ADMIN.indexOf(UP.S.session.role) >= 0); }
+
+  // ---------- Jenis borang tambahan: senarai item (alat + kuantiti) ----------
+  UP.formTypes.mkitems = function (f, wrap, api, h) {
+    var box = h.node('div');
+    var add = h.node('button', '+ Tambah / Add', 'btn link'); add.type = 'button';
+    function addRow(v) {
+      var row = h.node('div', null, 'rep-row');
+      var s = document.createElement('select'); var p0 = h.node('option', '— pilih / select —'); p0.value = ''; s.appendChild(p0);
+      h.optList(f).forEach(function (o) { var op = h.node('option', o.bm); op.value = o.kod; s.appendChild(op); });
+      var q = document.createElement('input'); q.type = 'number'; q.min = '1'; q.placeholder = 'Kuantiti'; q.style.maxWidth = '90px'; q.setAttribute('aria-label', 'Kuantiti');
+      if (v) { s.value = v.kod; q.value = v.kuantiti; } else q.value = '1';
+      var rmv = h.node('button', '×', 'btn alt sm'); rmv.type = 'button'; rmv.setAttribute('aria-label', 'Buang / Remove');
+      rmv.addEventListener('click', function () { box.removeChild(row); box.dispatchEvent(new Event('change', { bubbles: true })); });
+      row.appendChild(s); row.appendChild(q); row.appendChild(rmv); box.appendChild(row);
+    }
+    add.addEventListener('click', function () { addRow(null); box.dispatchEvent(new Event('change', { bubbles: true })); });
+    wrap.appendChild(box); wrap.appendChild(add);
+    api.get = function () {
+      return Array.prototype.map.call(box.children, function (row) { var c = row.querySelectorAll('input,select'); return { kod: c[0].value, kuantiti: c[1].value }; })
+        .filter(function (x) { return x.kod || x.kuantiti; });
+    };
+    api.set = function (arr) { box.textContent = ''; (arr || []).forEach(addRow); };
+  };
+
+  // ---------- Menu utama ----------
+  function setItem(b, p, on, text, kind) {
+    b.disabled = !on; b.classList.toggle('off', !on);
+    p.textContent = text; p.className = 'pill ' + (kind || '');
+  }
+  UP.homeHooks.push(function (s) {
+    var admin = ADMIN.indexOf(s.role) >= 0;
+    setItem($('go-mk'), $('pill-mk'), true, admin ? 'Menu pentadbir / Admin menu' : '…');
+    if (!admin) {
+      UP.api('mk.saya').then(function (r) {
+        if (!r.ok) { $('pill-mk').textContent = ''; return; }
+        var d = r.data, aktif = d.senarai.filter(function (x) { return ['Menunggu Perakuan', 'Menunggu Kelulusan', 'Diluluskan'].indexOf(x.status) >= 0; }).length;
+        var sekat = d.sekatan.bil.length || d.sekatan.laporan.length || d.sekatan.pinjaman.length;
+        $('pill-mk').textContent = sekat ? 'Perlu tindakan / Action needed' : (aktif ? aktif + ' aktif / active' : 'Tempah / Book');
+        $('pill-mk').className = 'pill ' + (sekat ? 'warn' : (aktif ? 'info' : ''));
+      });
+    }
+    var adm = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati'].indexOf(s.role) >= 0;
+    $('go-mk-admin').hidden = !adm;
+    if (adm) UP.api('mk.admin.ringkasan').then(function (r) {
+      if (!r.ok) return;
+      var n = r.data.menungguKelulusan + r.data.bayaranMenunggu;
+      $('pill-mk-admin').textContent = n + ' menunggu / pending'; $('pill-mk-admin').className = 'pill ' + (n ? 'warn' : '');
+    });
+  });
+
+  // ---------- Pengguna: hub ----------
+  function openHub(notice) {
+    UP.show('v-mk'); clearMsg($('msg-mk'));
+    var admin = isAdmin();
+    $('mk-admin-note').hidden = !admin; $('mk-new').hidden = admin; $('mk-sekatan').textContent = '';
+    var list = $('mk-list');
+    if (admin) { list.textContent = ''; list.appendChild(node('p', 'Tiada tempahan sendiri bagi pentadbir. / No personal bookings for admins.', 'muted')); $('mk-pemohon').textContent = ''; return; }
+    wait(list);
+    Promise.all([UP.api('mk.maklumat'), UP.api('mk.saya')]).then(function (res) {
+      list.textContent = '';
+      if (!res[0].ok) { errBox(list, res[0]); return; }
+      if (!res[1].ok) { errBox(list, res[1]); return; }
+      var info = MK.info = res[0].data, d = res[1].data;
+      $('mk-pemohon').textContent = info.pemohon.nama + ' · ' + info.pemohon.jenisPengguna;
+      var sk = $('mk-sekatan');
+      var warn = function (bm, en) { var m = node('div', null, 'msg err'); m.setAttribute('data-sekatan', '1'); m.appendChild(document.createTextNode(bm)); m.appendChild(node('i', en)); sk.appendChild(m); };
+      if (info.sekatan.bil) warn('Anda mempunyai bil Makerspace yang lewat. Tempahan baharu disekat sehingga bil dijelaskan.', 'You have an overdue Makerspace bill. New bookings are blocked until it is settled.');
+      if (info.sekatan.laporan) warn('Laporan aktiviti tempahan ruang terdahulu belum dihantar. Tempahan ruang baharu disekat.', 'An activity report is overdue. New space bookings are blocked.');
+      if (info.sekatan.pinjaman) warn('Anda mempunyai pinjaman peralatan yang lewat dipulangkan. Pinjaman baharu disekat.', 'You have overdue borrowed equipment. New loans are blocked.');
+      var blokAll = info.sekatan.bil;
+      var set = function (id, on, tip) { var b = $(id); b.disabled = !on; b.title = on ? '' : tip; };
+      set('mk-new-ruang', !blokAll && !info.sekatan.laporan && info.ruang.length > 0, info.ruang.length ? 'Disekat / Blocked' : 'Belum tersedia / Not available yet');
+      set('mk-new-laser', !blokAll && info.laser.length > 0, info.laser.length ? 'Disekat / Blocked' : 'Belum tersedia / Not available yet');
+      set('mk-new-tdp', !blokAll && info.tdp.length > 0, info.tdp.length ? 'Disekat / Blocked' : 'Belum tersedia / Not available yet');
+      set('mk-new-pinjam', !blokAll && !info.sekatan.pinjaman && info.alat.length > 0, info.alat.length ? 'Disekat / Blocked' : 'Belum tersedia / Not available yet');
+      if (notice) { var nt = node('div', null, 'msg ok'); nt.textContent = notice; list.appendChild(nt); }
+      if (!d.senarai.length) { list.appendChild(node('p', 'Belum ada tempahan. / No bookings yet.', 'muted')); return; }
+      d.senarai.forEach(function (o) {
+        var it = node('div', null, 'mk-item'); it.setAttribute('data-id', o.id);
+        var hd = row2(node('b', o.sumberNama + ' · ' + o.jenis), pill(o.status, ST[o.status]));
+        it.appendChild(hd);
+        it.appendChild(node('div', o.id + ' · ' + tarikhTeks(o), 'e'));
+        var ex = node('div', null, 'mk-stat');
+        if (o.bayaran) ex.appendChild(pill('Bil ' + o.bayaran.id + ': ' + o.bayaran.status + (o.bayaran.jumlah !== null ? ' ' + rm(o.bayaran.jumlah) : ''), ST[o.bayaran.status]));
+        if (o.lewat) ex.appendChild(pill('Lewat pulang / Overdue', 'bad'));
+        if (ex.children.length) it.appendChild(ex);
+        it.addEventListener('click', function () { openDet(o.id); });
+        list.appendChild(it);
+      });
+    });
+  }
+
+  // ---------- Pengguna: borang ----------
+  function pilihanSumber(arr, jenis) {
+    return arr.map(function (x) {
+      var bm = x.nama + (jenis === 'Ruang' ? ' (kapasiti ' + x.kapasiti + ')' : '');
+      var k = jenis === 'Ruang' ? x.kadar : (jenis === 'Laser Cut' ? x.kadar : null);
+      if (k) bm += k.ada ? ' · ' + rm(k.rm) + ' ' + k.unit : ' · kadar belum ditetapkan';
+      return { kod: x.kod, bm: bm, en: '' };
+    });
+  }
+  function tail(info, bagi) {
+    var out = [];
+    if (bagi && !bagi.adaProfil) {
+      out.push({ t: 'sect', k: '_p', bm: 'Maklumat pemohon (belum ada profil)', en: 'Applicant details (no profile yet)' });
+      out.push({ k: 'namaPemohon', t: 'text', bm: 'Nama pemohon', en: 'Applicant name', req: 1, max: 120 });
+      out.push({ k: 'telefonPemohon', t: 'tel', bm: 'No. telefon pemohon', en: 'Applicant phone', req: 1 });
+      out.push({ k: 'jabatanPemohon', t: 'text', bm: 'Jabatan / organisasi', en: 'Department / organisation', max: 160 });
+    }
+    if (info.jenisPengguna === 'Pelajar') {
+      out.push({ t: 'sect', k: '_s', bm: 'Penyelia / pensyarah', en: 'Supervisor / lecturer' });
+      out.push({ k: 'emelPenyelia', t: 'text', bm: 'Emel penyelia (@utm.my)', en: 'Supervisor email', req: 1, max: 120, ph: 'pensyarah@utm.my',
+        hint: 'Pautan perakuan dan kod OTP akan dihantar ke emel ini. Mesti emel staf dan bukan emel anda. / An endorsement link and OTP are sent here. Must be a staff email.' });
+    }
+    out.push({ t: 'sect', k: '_z', bm: 'Perakuan', en: 'Declaration' });
+    out.push({ k: 'perakuan', t: 'check', bm: bagi ? 'Pemohon telah bersetuju dan bertanggungjawab ke atas keselamatan, kerosakan, kebersihan dan caj yang dikenakan.' : 'Saya bertanggungjawab ke atas keselamatan peralatan, penggantian kerosakan akibat kecuaian, kebersihan dan bersetuju dengan kadar caj yang dikenakan.',
+      en: 'The applicant takes responsibility for safety, damage, cleanliness and agrees to the charges.' });
+    return out;
+  }
+  function specFor(jenis, info, bagi) {
+    var o = info.operasi;
+    var ruangBuka = slots(toMin(o.buka), toMin(o.tutup) - 30, 30), ruangTutup = slots(toMin(o.buka) + 30, toMin(o.tutup), 30);
+    var mesinSlot = slots(toMin(o.buka), toMin(o.tutup) - o.slot, o.slot);
+    var tarikhHint = 'Isnin hingga Jumaat, ' + o.buka + ' - ' + o.tutup + ' (kecuali cuti). / Mon-Fri, ' + o.buka + ' - ' + o.tutup + ' (except holidays).';
+    var spec;
+    if (jenis === 'Ruang') {
+      spec = [
+        { t: 'sect', k: '_a', bm: 'Ruang dan masa', en: 'Space and time' },
+        { k: 'kodSumber', t: 'select', o: pilihanSumber(info.ruang, 'Ruang'), bm: 'Ruang', en: 'Space', req: 1 },
+        { k: 'namaProgram', t: 'text', bm: 'Tujuan / program', en: 'Purpose / programme', req: 1, max: 200, hint: 'Penggunaan ruang wajib berkaitan inovasi dan keusahawanan. / Use must relate to innovation and entrepreneurship.' },
+        { k: 'tarikh', t: 'date', bm: 'Tarikh mula', en: 'Start date', req: 1, hint: 'Tempahan sekurang-kurangnya ' + o.notisHari + ' hari bekerja lebih awal. ' + tarikhHint },
+        { k: 'bilHari', t: 'number', bm: 'Bilangan hari', en: 'Number of days', req: 1, hint: 'Hari operasi berturut-turut (hujung minggu dan cuti dilangkau). Maksimum ' + info.had.maksHariRuang + '.' },
+        { k: 'masaMula', t: 'select', o: ruangBuka, bm: 'Masa mula', en: 'Start time', req: 1 },
+        { k: 'masaTamat', t: 'select', o: ruangTutup, bm: 'Masa tamat', en: 'End time', req: 1 },
+        { k: 'bilPeserta', t: 'number', bm: 'Jumlah peserta', en: 'Number of participants', req: 1 },
+        { t: 'sect', k: '_b', bm: 'Pembayaran', en: 'Payment' },
+        { k: 'kaedahBayaran', t: 'radio', o: KAEDAH_BAYAR.filter(function (x) { return x.kod !== 'Pindahan Bank' && info.kaedahBayaran.indexOf(x.kod) >= 0; }), bm: 'Kaedah pembayaran', en: 'Payment method', req: 1 },
+        { k: 'kaedahLain', t: 'text', bm: 'Nyatakan kaedah', en: 'Specify', max: 120, show: function (v) { return v.kaedahBayaran === 'Lain-lain'; } },
+        { k: 'noVot', t: 'text', bm: 'No. VOT / cajline PTJ', en: 'VOT / cajline no.', max: 40, show: function (v) { return v.kaedahBayaran === 'Invois Dalaman'; } },
+        { k: 'namaStafKewangan', t: 'text', bm: 'Nama staf kewangan bertanggungjawab', en: 'Finance officer in charge', max: 120, show: function (v) { return v.kaedahBayaran === 'Invois Dalaman'; } },
+        { k: 'telStafKewangan', t: 'tel', bm: 'No. telefon staf kewangan', en: 'Finance officer phone', show: function (v) { return v.kaedahBayaran === 'Invois Dalaman'; } },
+        { t: 'sect', k: '_c', bm: 'Peralatan tambahan (sehari)', en: 'Additional equipment (per day)' },
+        { k: 'peralatan', t: 'mkitems', o: info.peralatanRuang.map(function (x) {
+          return { kod: x.kod, bm: x.nama + (x.kadar.ada ? (x.kadar.rm > 0 ? ' (' + rm(x.kadar.rm) + ' ' + x.unit + ')' : ' (disediakan)') : ' (kadar belum ditetapkan)'), en: '' };
+        }), bm: 'Peralatan dan kuantiti', en: 'Equipment and quantity' },
+        { t: 'sect', k: '_d', bm: 'Dokumen', en: 'Documents' },
+        { k: 'failKertasKerja', t: 'file', accept: '.pdf', bm: 'Kertas kerja program (PDF)', en: 'Programme paper', req: 1 },
+        { k: 'failSurat', t: 'file', accept: '.pdf', bm: 'Surat permohonan (PDF)' + (info.jenisPengguna === 'Pelajar' ? ' - pilihan' : ''), en: 'Application letter' + (info.jenisPengguna === 'Pelajar' ? ' - optional (supervisor endorsement replaces it)' : '') }
+      ];
+    } else if (jenis === 'Pinjaman') {
+      spec = [
+        { t: 'sect', k: '_a', bm: 'Peralatan dan tempoh', en: 'Equipment and period' },
+        { k: 'item', t: 'mkitems', o: info.alat.map(function (a) { return { kod: a.kod, bm: a.nama + ' (baki ' + a.baki + ')', en: '' }; }), bm: 'Alat dan kuantiti', en: 'Items and quantity', req: 1 },
+        { k: 'tarikh', t: 'date', bm: 'Tarikh pinjam', en: 'Loan date', req: 1, hint: tarikhHint },
+        { k: 'tarikhPulang', t: 'date', bm: 'Tarikh dijangka pulang', en: 'Expected return date', req: 1, hint: 'Maksimum ' + info.had.pinjamanBulan + ' bulan; boleh diperbaharui sekali. / Maximum ' + info.had.pinjamanBulan + ' month; one renewal.' },
+        { k: 'tujuan', t: 'textarea', bm: 'Tujuan', en: 'Purpose', req: 1, max: 300 }
+      ];
+    } else {
+      var laser = jenis === 'Laser Cut';
+      spec = [
+        { t: 'sect', k: '_a', bm: laser ? 'Mesin Laser Cut' : 'Mesin 3D Printer', en: laser ? 'Laser cutting machine' : '3D printer' },
+        { k: 'kodSumber', t: 'select', o: info[laser ? 'laser' : 'tdp'].map(function (x) {
+          var bm = x.nama;
+          if (laser) bm += x.kadar.ada ? ' · ' + rm(x.kadar.rm) + ' ' + x.kadar.unit : ' · kadar belum ditetapkan';
+          return { kod: x.kod, bm: bm, en: '' };
+        }), bm: 'Mesin', en: 'Machine', req: 1 },
+        { k: 'namaProjek', t: 'text', bm: 'Nama projek', en: 'Project name', req: 1, max: 120 },
+        { k: 'tujuan', t: 'textarea', bm: 'Tujuan penggunaan', en: 'Purpose of use', req: 1, max: 300 },
+        { k: 'tarikh', t: 'date', bm: 'Tarikh', en: 'Date', req: 1, hint: tarikhHint },
+        { k: 'masaMula', t: 'select', o: mesinSlot, bm: 'Masa mula (slot ' + o.slot + ' minit)', en: 'Start time', req: 1 },
+        { k: 'masaDijangkaMin', t: 'number', bm: 'Masa dijangka (minit)', en: 'Expected time (minutes)', req: 1, hint: 'Maksimum ' + o.maksMinit + ' minit sesi. / Maximum ' + o.maksMinit + ' minutes.' }
+      ];
+      if (laser) spec.push({ k: 'jenisBahan', t: 'text', bm: 'Jenis bahan', en: 'Material', req: 1, max: 80 });
+      else {
+        spec.push({ k: 'beratG', t: 'number', bm: 'Berat dijangka (gram)', en: 'Expected weight (g)', req: 1 });
+        spec.push({ k: 'warna', t: 'text', bm: 'Warna', en: 'Colour', req: 1, max: 40 });
+        spec.push({ k: 'gambar', t: 'file', accept: '.jpg,.jpeg,.png', bm: 'Gambar projek (JPG/PNG)', en: 'Project picture', req: 1 });
+      }
+    }
+    return spec.concat(tail(info, bagi));
+  }
+
+  var TITLE = { Ruang: ['Tempah ruang', 'Book a space'], 'Laser Cut': ['Tempahan Laser Cut', 'Laser Cut booking'], '3D Printer': ['Tempahan 3D Printer', '3D Printer booking'], Pinjaman: ['Pinjaman peralatan', 'Equipment loan'] };
+
+  function openForm(jenis, bagi) {
+    MK.jenis = jenis; MK.bagi = bagi || null; MK.form = null;
+    UP.show('v-mk-form'); clearMsg($('msg-mk-form'));
+    $('mk-form-tajuk').textContent = TITLE[jenis][0]; $('mk-form-tajuk-en').textContent = TITLE[jenis][1];
+    var bi = $('mk-bagi-info');
+    bi.hidden = !bagi; bi.textContent = bagi ? 'Bertindak bagi pihak: ' + bagi.nama + ' (' + (bagi.noMatrik || bagi.emel) + ') · ' + bagi.jenis + ' / Acting on behalf of the applicant' : '';
+    $('mk-avail').hidden = true; $('mk-est').hidden = true;
+    var box = $('mk-form-box'); wait(box);
+    UP.api('mk.maklumat', bagi ? { jenisPengguna: bagi.jenis } : {}).then(function (r) {
+      box.textContent = '';
+      if (!r.ok) { msgErr($('msg-mk-form'), r); return; }
+      MK.info = r.data;
+      var o = r.data.operasi;
+      $('mk-form-ops').textContent = 'Waktu operasi: Isnin hingga Jumaat, ' + o.buka + ' - ' + o.tutup + ' · Operating hours Mon-Fri';
+      MK.form = UP.Form(specFor(jenis, r.data, bagi));
+      box.appendChild(MK.form.el);
+      var init = { masaMula: slotDefault(jenis, r.data), perakuan: false };
+      if (jenis === 'Ruang') { init.bilHari = 1; init.masaTamat = '16:00'; init.kaedahBayaran = 'Tunai'; init.bilPeserta = ''; }
+      if (jenis === 'Pinjaman') init.item = [{ kod: '', kuantiti: 1 }];
+      MK.form.set(init);
+      MK.form.el.addEventListener('change', onFormChange);
+      MK.form.el.addEventListener('input', onFormChange);
+      $('btn-mk-hantar').disabled = false;
+    });
+  }
+  function slotDefault(jenis, info) { return info.operasi.buka; }
+
+  function onFormChange() {
+    clearTimeout(MK.timer); clearTimeout(MK.availTimer);
+    MK.availTimer = setTimeout(refreshAvail, 250);
+    MK.timer = setTimeout(refreshEstimate, 450);
+  }
+  function refreshAvail() {
+    var box = $('mk-avail');
+    if (!MK.form || MK.jenis === 'Pinjaman') { box.hidden = true; return; }
+    var v = MK.form.values();
+    if (!v.kodSumber || !v.tarikh) { box.hidden = true; return; }
+    var my = ++MK.seqA;
+    UP.api('mk.ketersediaan', { kodSumber: v.kodSumber, tarikh: v.tarikh }).then(function (r) {
+      if (my !== MK.seqA) return;
+      box.textContent = ''; box.hidden = false;
+      if (!r.ok) { box.appendChild(document.createTextNode((r.error && r.error.bm) || 'Ralat')); return; }
+      var d = r.data;
+      if (!d.operasi) { box.appendChild(node('span', 'Tidak beroperasi pada tarikh ini: ' + d.sebab, 'mk-busy')); return; }
+      box.appendChild(node('b', 'Slot sudah ditempah pada ' + d.tarikh + ': '));
+      if (!d.sibuk.length) box.appendChild(node('span', 'tiada (' + d.buka + '-' + d.tutup + ' kosong) / none', 'mk-free'));
+      d.sibuk.forEach(function (s) { box.appendChild(node('span', s.mula + '-' + s.tamat + (s.menunggu ? ' (menunggu)' : ''), 'mk-busy' + (s.menunggu ? ' mk-wait' : ''))); });
+    });
+  }
+  function payloadAnggar(v) {
+    var o = {}; Object.keys(v).forEach(function (k) { if (k !== 'failKertasKerja' && k !== 'failSurat' && k !== 'gambar') o[k] = v[k]; });
+    o.jenis = MK.jenis; addBagi(o); return o;
+  }
+  function addBagi(o) {
+    if (!MK.bagi) return o;
+    if (MK.bagi.noMatrik) o.noMatrik = MK.bagi.noMatrik; else o.emelPemohon = MK.bagi.emel;
+    return o;
+  }
+  function refreshEstimate() {
+    var box = $('mk-est');
+    if (!MK.form) return;
+    var my = ++MK.seqE;
+    UP.api(MK.bagi ? 'mk.admin.anggar' : 'mk.anggar', payloadAnggar(MK.form.values())).then(function (r) {
+      if (my !== MK.seqE) return;
+      if (!r.ok || r.data.jumlah === null || r.data.jumlah === undefined) { box.hidden = true; return; }
+      var d = r.data;
+      box.textContent = ''; box.hidden = false;
+      box.appendChild(node('b', 'Anggaran kos ')); box.appendChild(node('span', 'Estimated cost', 'e'));
+      if (d.baris.length) {
+        var tb = node('table'), body = node('tbody');
+        d.baris.forEach(function (b) {
+          var tr = node('tr');
+          [b.nama + ' (' + b.unit + ')', String(b.kuantiti) + ' x ' + (b.kadar === null ? 'belum ditetapkan' : rm(b.kadar)), b.jumlah === null ? '-' : rm(b.jumlah)].forEach(function (t) { tr.appendChild(node('td', t)); });
+          body.appendChild(tr);
+        });
+        tb.appendChild(body); box.appendChild(tb);
+      }
+      var tot = node('div', null, 'mk-total');
+      tot.setAttribute('data-total', d.belum.length ? '' : String(d.jumlah));
+      tot.textContent = d.belum.length ? 'Jumlah: belum ditetapkan (kadar belum ditetapkan oleh urusetia)' : 'Jumlah anggaran: ' + rm(d.jumlah);
+      box.appendChild(tot);
+      box.appendChild(node('div', 'Bil dijana selepas sesi; kos sebenar mengikut penggunaan sebenar. / Billed after the session, based on actual use.', 'mk-note'));
+    });
+  }
+  function submitForm() {
+    var m = $('msg-mk-form'); clearMsg(m);
+    if (!MK.form) return;
+    var v = MK.form.values(); v.jenis = MK.jenis; addBagi(v);
+    var b = $('btn-mk-hantar'); busy(b, true); MK.form.clear();
+    UP.api(MK.bagi ? 'mk.admin.hantar' : 'mk.hantar', v).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) MK.form.errors(r.error.extra.medan); return; }
+      var notis = 'Tempahan dihantar: ' + r.data.id + (r.data.status === 'Menunggu Perakuan' ? (r.data.emelPerakuanDihantar ? '. Pautan perakuan telah dihantar kepada penyelia.' : '. Emel perakuan tidak dapat dihantar; gunakan Hantar semula pautan.') : '. Menunggu kelulusan UTMXCITE.');
+      if (MK.bagi) { openAdet(r.data.id, notis); } else openDet(r.data.id, notis);
+    });
+  }
+
+  // ---------- Pengguna: butiran ----------
+  function kvBox(rows) { return UP.kv(rows.filter(function (r) { return r[1] !== '' && r[1] !== null && r[1] !== undefined; })); }
+  function butiranRows(d) {
+    var b = d.butiran || {}, rows = [];
+    if (d.jenis === 'Ruang') {
+      rows = [['Program', b.namaProgram], ['Bil. hari', b.bilHari], ['Peserta', b.bilPeserta + ' / kapasiti ' + b.kapasiti], ['Kaedah bayaran', b.kaedahBayaran + (b.kaedahLain ? ' (' + b.kaedahLain + ')' : '')],
+        ['No. VOT', b.noVot], ['Staf kewangan', b.namaStafKewangan ? b.namaStafKewangan + ' ' + b.telStafKewangan : ''], ['Hari sebenar', b.hariSebenar]];
+      if (d.peralatan && d.peralatan.length) rows.push(['Peralatan', d.peralatan.map(function (x) { return x.nama + ' x' + x.kuantiti; }).join(', ')]);
+    } else if (d.jenis === 'Laser Cut') {
+      rows = [['Projek', b.namaProjek], ['Bahan', b.jenisBahan], ['Masa dijangka', b.minitDijangka + ' minit'], ['Masa sebenar', b.minitSebenar === null ? '' : b.minitSebenar + ' minit']];
+    } else if (d.jenis === '3D Printer') {
+      rows = [['Projek', b.namaProjek], ['Berat dijangka', b.beratG + ' g'], ['Warna', b.warna], ['No. mesin', b.noMesin], ['Masa dijangka', b.minitDijangka + ' minit'],
+        ['Berat sebenar', b.beratSebenarG === null ? '' : b.beratSebenarG + ' g'], ['Masa sebenar', b.minitSebenar === null ? '' : b.minitSebenar + ' minit']];
+    } else if (d.item) {
+      rows = [['Alat', d.item.map(function (x) { return x.nama + ' x' + x.kuantiti + ' (' + x.status + ')'; }).join('; ')], ['Dijangka pulang', d.tarikhTamat], ['Pembaharuan', d.bilPembaharuan + ' kali']];
+    }
+    return rows;
+  }
+  function openDet(id, notice) {
+    MK.detId = id; MK.confirm = '';
+    UP.show('v-mk-det');
+    var body = $('mk-det-body'); wait(body);
+    UP.api('mk.butiran', { id: id }).then(function (r) { renderDet(r, notice); });
+  }
+  function renderDet(r, notice) {
+    var body = $('mk-det-body'); body.textContent = '';
+    if (!r.ok) { errBox(body, r); return; }
+    var d = r.data, out = node('div', null, 'msg err'); out.hidden = true;
+    if (notice) { var nt = node('div', null, 'msg ok'); nt.textContent = notice; body.appendChild(nt); }
+    var c1 = card();
+    c1.appendChild(row2(node('div', d.sumberNama, 'h1'), pill(d.status, ST[d.status])));
+    c1.appendChild(node('div', d.id + ' · ' + d.jenis + ' · ' + d.jenisPengguna, 'e'));
+    var rows = [['Tarikh dan masa', tarikhTeks(d)], ['Tujuan', d.tujuan]].concat(butiranRows(d));
+    if (d.anggaran !== null) rows.push(['Anggaran kos', rm(d.anggaran)]);
+    if (d.catatan) rows.push(['Catatan UTMXCITE', d.catatan]);
+    c1.appendChild(kvBox(rows));
+    var fl = node('div');
+    if (d.fail && d.fail.kertas) fl.appendChild(UP.fileBtn('Kertas kerja', 'Programme paper', 'mk.fail', { id: d.id, jenis: 'kertas' }, out));
+    if (d.fail && d.fail.surat) fl.appendChild(UP.fileBtn('Surat', 'Letter', 'mk.fail', { id: d.id, jenis: 'surat' }, out));
+    if (d.fail && d.fail.gambar) fl.appendChild(UP.fileBtn('Gambar projek', 'Project picture', 'mk.fail', { id: d.id, jenis: 'gambar' }, out));
+    c1.appendChild(fl); c1.appendChild(out);
+    body.appendChild(c1);
+
+    if (d.statusPerakuan && d.statusPerakuan !== 'Tidak Perlu') {
+      var c2 = card(); c2.appendChild(h2('Perakuan penyelia', 'Supervisor endorsement'));
+      c2.appendChild(kvBox([['Penyelia', d.penyelia], ['Status', d.statusPerakuan], ['Tarikh perakuan', d.tarikhPerakuan], ['Pautan sah sehingga', d.pautanTamat], ['Catatan penyelia', d.catatanPenyelia]]));
+      if (d.boleh.hantarSemulaPerakuan) {
+        var inp = document.createElement('input'); inp.id = 'mk-semula-emel'; inp.type = 'email'; inp.placeholder = 'Emel penyelia baharu (pilihan) / New supervisor email (optional)';
+        inp.style.marginTop = '8px';
+        var mm = node('div', null, 'msg'); mm.hidden = true; mm.id = 'msg-mk-semula';
+        var hb = smallBtn('Hantar semula pautan', 'Resend link', '', function () {
+          hb.disabled = true; clearMsg(mm);
+          UP.api('mk.perakuan.hantarSemula', { id: d.id, emelPenyelia: inp.value }).then(function (res) {
+            hb.disabled = false;
+            if (!res.ok) { msgErr(mm, res); return; }
+            msg(mm, res.data.emelDihantar ? 'ok' : 'err', res.data.emelDihantar ? 'Pautan baharu dihantar kepada ' + res.data.penyelia + '. Pautan lama tidak sah lagi.' : 'Emel tidak dapat dihantar.', 'New link sent');
+          });
+        });
+        hb.style.marginTop = '8px';
+        c2.appendChild(inp); c2.appendChild(hb); c2.appendChild(mm);
+      }
+      body.appendChild(c2);
+    }
+
+    if (d.bayaran) {
+      var b = d.bayaran, c3 = card(); c3.appendChild(row2(h2('Bil dan bayaran', 'Bill and payment'), pill(b.status, ST[b.status])));
+      c3.appendChild(kvBox([['No. bil', b.id], ['Jumlah', rm(b.jumlah) + (b.kosSebenar !== null ? ' (kos sebenar)' : ' (anggaran)')], ['Penggunaan sebenar', b.penggunaan], ['Tarikh akhir', b.tarikhAkhir],
+        ['Kaedah', b.kaedah], ['No. rujukan', b.noRujukan], ['Disahkan oleh', b.disahkanOleh], ['Catatan', b.catatan]]));
+      if (b.adaResit) c3.appendChild(UP.fileBtn('Resit', 'Receipt', 'mk.fail', { id: d.id, jenis: 'resit' }, out));
+      if (d.boleh.bayar) {
+        c3.appendChild(node('div', 'Rekod bayaran anda / Record your payment', 'sech'));
+        var pf = UP.Form([
+          { k: 'kaedah', t: 'select', o: KAEDAH_BAYAR, bm: 'Kaedah bayaran', en: 'Payment method', req: 1 },
+          { k: 'noRujukan', t: 'text', bm: 'No. rujukan / resit / invois', en: 'Reference no.', req: 1, max: 60 },
+          { k: 'resit', t: 'file', accept: '.pdf,.jpg,.jpeg,.png', bm: 'Resit (PDF/JPG/PNG)', en: 'Receipt', show: function (v) { return v.kaedah !== 'Invois Dalaman'; } }
+        ]);
+        pf.set({ kaedah: 'Tunai' });
+        c3.appendChild(pf.el);
+        var mp = node('div', null, 'msg'); mp.hidden = true; mp.id = 'msg-mk-bayar';
+        var pb = btn('Hantar bayaran', 'Submit payment', '', function () {
+          clearMsg(mp); pf.clear(); busy(pb, true);
+          var v = pf.values(); v.idBayaran = b.id;
+          UP.api('mk.bayaran.rekod', v).then(function (res) {
+            busy(pb, false);
+            if (!res.ok) { msgErr(mp, res); if (res.error && res.error.extra && res.error.extra.medan) pf.errors(res.error.extra.medan); return; }
+            renderDet(res, 'Bayaran direkod dan menunggu pengesahan UTMXCITE.');
+          });
+        });
+        pb.id = 'btn-mk-bayar';
+        c3.appendChild(mp); c3.appendChild(pb);
+      }
+      body.appendChild(c3);
+    }
+
+    if (d.laporan) {
+      var c4 = card(); c4.appendChild(row2(h2('Laporan aktiviti', 'Activity report'), d.laporan.status ? pill(d.laporan.status, ST[d.laporan.status]) : null));
+      c4.appendChild(kvBox([['Tarikh akhir hantar', d.laporan.tarikhHad], ['Dihantar pada', d.laporan.tarikhHantar]]));
+      if (d.laporan.ada) c4.appendChild(UP.fileBtn('Laporan', 'Report', 'mk.fail', { id: d.id, jenis: 'laporan' }, out));
+      if (d.boleh.laporan) {
+        var lf = UP.Form([{ k: 'fail', t: 'file', accept: '.pdf', bm: 'Laporan aktiviti (PDF)', en: 'Activity report (attendance, forms, photos)', req: 1 }]);
+        var ml = node('div', null, 'msg'); ml.hidden = true; ml.id = 'msg-mk-lap';
+        var lb = btn('Hantar laporan', 'Submit report', '', function () {
+          clearMsg(ml); lf.clear(); busy(lb, true);
+          UP.api('mk.laporan.hantar', { id: d.id, fail: lf.values().fail }).then(function (res) {
+            busy(lb, false);
+            if (!res.ok) { msgErr(ml, res); if (res.error && res.error.extra && res.error.extra.medan) lf.errors(res.error.extra.medan); return; }
+            renderDet(res, 'Laporan aktiviti dihantar.');
+          });
+        });
+        lb.id = 'btn-mk-lap';
+        c4.appendChild(lf.el); c4.appendChild(ml); c4.appendChild(lb);
+      }
+      body.appendChild(c4);
+    }
+
+    var acts = node('div', null, 'mk-act'); var ma = node('div', null, 'msg'); ma.hidden = true; ma.id = 'msg-mk-act';
+    if (d.boleh.perbaharui) {
+      acts.appendChild(smallBtn('Perbaharui pinjaman', 'Renew loan', '', function (ev) {
+        ev.target.disabled = true; clearMsg(ma);
+        UP.api('mk.pinjaman.perbaharui', { id: d.id }).then(function (res) { if (!res.ok) { ev.target.disabled = false; msgErr(ma, res); return; } renderDet(res, 'Pinjaman diperbaharui.'); });
+      }));
+    }
+    if (d.boleh.batal) {
+      var cb = smallBtn('Batalkan tempahan', 'Cancel booking', 'alt', function () {
+        if (MK.confirm !== 'batal') { MK.confirm = 'batal'; cb.firstChild.textContent = 'Tekan sekali lagi untuk sahkan '; return; }
+        MK.confirm = ''; cb.disabled = true; clearMsg(ma);
+        UP.api('mk.batal', { id: d.id }).then(function (res) { if (!res.ok) { cb.disabled = false; msgErr(ma, res); return; } renderDet(res, 'Tempahan dibatalkan.'); });
+      });
+      cb.setAttribute('data-act', 'batal');
+      acts.appendChild(cb);
+    }
+    if (acts.children.length) { var c5 = card(); c5.appendChild(acts); c5.appendChild(ma); body.appendChild(c5); }
+  }
+
+  // ---------- Perakuan penyelia (tanpa log masuk) ----------
+  function openPerakuan(tok) {
+    UP.show('v-mk-perakuan');
+    var body = $('mk-pk-body'); wait(body);
+    UP.api('mk.perakuan.maklumat', { token: tok }).then(function (r) {
+      body.textContent = '';
+      if (!r.ok) {
+        var m = node('div', null, 'msg err'); body.appendChild(m); msgErr(m, r);
+        return;
+      }
+      var d = r.data;
+      body.appendChild(node('p', 'Anda diminta memperakui tempahan berikut. Semak butiran dan sahkan dengan kod OTP yang dihantar ke emel anda.', 'muted'));
+      body.appendChild(node('p', 'You are asked to endorse the following booking. Review the details and confirm with the OTP sent to your email.', 'e'));
+      var rows = [['Pemohon', d.namaPemohon], ['Jenis', d.jenis], ['Sumber', d.sumberNama], ['Tarikh dan masa', tarikhTeks(d)], ['Tujuan / projek', d.projek || d.tujuan], ['Peserta', d.bilPeserta || ''],
+        ['Emel anda', d.emelPenyelia]];
+      if (d.item) rows.push(['Alat', d.item.map(function (x) { return x.nama + ' x' + x.kuantiti; }).join(', ')]);
+      var sum = kvBox(rows); sum.className += ' mk-sum'; sum.id = 'mk-pk-ringkasan';
+      body.appendChild(sum);
+      var step = node('div'); body.appendChild(step);
+      var m1 = node('div', null, 'msg'); m1.hidden = true; m1.id = 'msg-mk-pk';
+      var send = btn('Hantar kod OTP ke emel saya', 'Send OTP to my email', '', function () {
+        clearMsg(m1); busy(send, true);
+        UP.api('mk.perakuan.otp', { token: tok }).then(function (res) {
+          busy(send, false);
+          if (!res.ok) { msgErr(m1, res); return; }
+          msg(m1, 'ok', 'Kod OTP dihantar ke ' + res.data.emelPenyelia + '. Sah ' + res.data.tamatMinit + ' minit.', 'OTP sent');
+          showStep2();
+        });
+      });
+      send.id = 'mk-pk-otp';
+      step.appendChild(send); step.appendChild(m1);
+      function showStep2() {
+        if ($('mk-pk-kod')) return;
+        var f = UP.Form([
+          { k: 'tindakan', t: 'radio', o: [{ kod: 'perakui', bm: 'Perakui tempahan', en: 'Endorse' }, { kod: 'tolak', bm: 'Tidak perakui', en: 'Do not endorse' }], bm: 'Keputusan anda', en: 'Your decision', req: 1 },
+          { k: 'catatan', t: 'textarea', bm: 'Catatan (wajib jika tidak memperakui)', en: 'Note (required if not endorsing)', max: 300 },
+          { k: 'kod', t: 'text', bm: 'Kod OTP (6 digit)', en: 'OTP code', req: 1, max: 6 }
+        ]);
+        f.set({ tindakan: 'perakui' });
+        f.fields.kod.wrap.querySelector('input').id = 'mk-pk-kod';
+        f.fields.kod.wrap.querySelector('input').setAttribute('inputmode', 'numeric');
+        var m2 = node('div', null, 'msg'); m2.hidden = true; m2.id = 'msg-mk-pk2';
+        var ok = btn('Sahkan keputusan', 'Confirm decision', '', function () {
+          clearMsg(m2); f.clear(); busy(ok, true);
+          var v = f.values(); v.token = tok;
+          UP.api('mk.perakuan.sahkan', v).then(function (res) {
+            busy(ok, false);
+            if (!res.ok) { msgErr(m2, res); return; }
+            body.textContent = '';
+            var fin = node('div', null, 'msg ok'); fin.id = 'mk-pk-selesai';
+            fin.appendChild(document.createTextNode(res.data.tindakan === 'perakui' ? 'Terima kasih. Tempahan telah diperakui dan akan disemak oleh UTMXCITE.' : 'Terima kasih. Keputusan anda telah direkodkan dan pemohon dimaklumkan.'));
+            fin.appendChild(node('i', res.data.tindakan === 'perakui' ? 'Thank you. The booking has been endorsed.' : 'Thank you. Your decision has been recorded.'));
+            body.appendChild(fin);
+          });
+        });
+        ok.id = 'mk-pk-sahkan';
+        step.appendChild(f.el); step.appendChild(m2); step.appendChild(ok);
+      }
+    });
+  }
+  UP.initHooks.push(function () {
+    return new Promise(function (resolve) {
+      var done = false;
+      var fin = function (v) { if (!done) { done = true; resolve(v); } };
+      try {
+        if (!(window.google && google.script && google.script.url && typeof google.script.url.getLocation === 'function')) { fin(false); return; }
+        setTimeout(function () { fin(false); }, 4000);
+        google.script.url.getLocation(function (loc) {
+          var tok = loc && loc.parameter ? loc.parameter.perakuan : null;
+          if (Array.isArray(tok)) tok = tok[0];
+          if (!tok || done) { fin(false); return; }
+          openPerakuan(String(tok)); fin(true);
+        });
+      } catch (e) { fin(false); }
+    });
+  });
+
+  // ---------- Admin ----------
+  var TABS = [['tempahan', 'Tempahan', 'Bookings'], ['jadual', 'Jadual', 'Schedule'], ['bayaran', 'Bayaran', 'Payments'], ['alat', 'Alat pinjaman', 'Loan items'],
+    ['peralatan', 'Ruang dan mesin', 'Spaces and machines'], ['kadar', 'Kadar', 'Rates'], ['bagi', 'Tempah bagi pihak', 'Book on behalf']];
+
+  function openAdmin(tab) {
+    UP.show('v-mk-admin');
+    if (tab) AD.tab = tab;
+    UP.api('mk.admin.ringkasan').then(function (r) {
+      if (!r.ok) { errBox($('mk-ad-ringkas'), r); return; }
+      AD.ring = r.data;
+      var d = r.data, st = $('mk-ad-ringkas'); st.textContent = '';
+      [['Menunggu perakuan', d.menungguPerakuan, 'info'], ['Menunggu kelulusan', d.menungguKelulusan, d.menungguKelulusan ? 'warn' : ''], ['Diluluskan', d.diluluskan, 'ok'],
+        ['Bayaran menunggu pengesahan', d.bayaranMenunggu, d.bayaranMenunggu ? 'warn' : ''], ['Bil lewat', d.bayaranLewat, d.bayaranLewat ? 'bad' : ''], ['Pinjaman lewat', d.pinjamanLewat, d.pinjamanLewat ? 'bad' : '']]
+        .forEach(function (x) { st.appendChild(pill(x[0] + ': ' + x[1], x[2])); });
+      var am = $('mk-ad-amaran'); am.textContent = '';
+      if (d.kadarBelum) {
+        var w = node('div', null, 'msg info'); w.setAttribute('data-amaran', 'kadar');
+        w.appendChild(document.createTextNode(d.kadarBelum + ' kadar belum ditetapkan (bil tidak dijana sehingga ditetapkan): ' + d.kadarBelumKod.map(function (x) { return x.nama; }).join(', ') + '.'));
+        w.appendChild(node('i', 'Rates not set yet. Bills are not generated until they are set (see the Rates tab).'));
+        am.appendChild(w);
+      }
+      if (d.peralatanKosong) {
+        var w2 = node('div', null, 'msg info'); w2.setAttribute('data-amaran', 'peralatan');
+        w2.appendChild(document.createTextNode('Belum ada ruang atau mesin. Tambah dalam tab Ruang dan mesin. / No spaces or machines yet; add them in the Spaces and machines tab.'));
+        am.appendChild(w2);
+      }
+      renderTabs();
+    });
+  }
+  function renderTabs() {
+    var t = $('mk-ad-tabs'); t.textContent = '';
+    TABS.forEach(function (x) {
+      var b = node('button', x[1], 'chip' + (AD.tab === x[0] ? ' on' : '')); b.type = 'button'; b.setAttribute('data-tab', x[0]);
+      b.addEventListener('click', function () { AD.tab = x[0]; renderTabs(); });
+      t.appendChild(b);
+    });
+    var p = $('mk-ad-panel'); p.textContent = '';
+    ({ tempahan: tabTempahan, jadual: tabJadual, bayaran: tabBayaran, alat: tabAlat, peralatan: tabPeralatan, kadar: tabKadar, bagi: tabBagi })[AD.tab](p);
+  }
+  function canEdit() { return !!(AD.ring && AD.ring.bolehPutus); }
+  function table(headers) {
+    var tb = node('table'), th = node('thead'), tr = node('tr');
+    headers.forEach(function (h) { tr.appendChild(node('th', h)); }); th.appendChild(tr); tb.appendChild(th);
+    var body = node('tbody'); tb.appendChild(body);
+    var sc = node('div', null, 'scroll'); sc.appendChild(tb);
+    return { el: sc, body: body };
+  }
+  function tr(cells, onClick) {
+    var r = node('tr', null, onClick ? 'click' : '');
+    cells.forEach(function (c) { var td = node('td'); if (c && c.nodeType) td.appendChild(c); else td.textContent = c === null || c === undefined ? '' : String(c); r.appendChild(td); });
+    if (onClick) r.addEventListener('click', onClick);
+    return r;
+  }
+
+  function tabTempahan(p) {
+    var c = card();
+    var f = node('div', null, 'row');
+    var sj = sel('mk-f-jenis', [['SEMUA', 'Semua jenis']].concat(JENIS.map(function (j) { return [j.kod, j.bm]; })), AD.jenis);
+    var ss = sel('mk-f-status', [['AKTIF', 'Aktif (menunggu/diluluskan)'], ['SEMUA', 'Semua status'], ['Menunggu Perakuan', 'Menunggu Perakuan'], ['Menunggu Kelulusan', 'Menunggu Kelulusan'], ['Diluluskan', 'Diluluskan'], ['Selesai', 'Selesai'], ['Ditolak', 'Ditolak'], ['Dibatalkan', 'Dibatalkan']], AD.status);
+    var q = document.createElement('input'); q.id = 'mk-f-q'; q.placeholder = 'Cari ID, nama, emel, No. Matrik / Search'; q.value = AD.q; q.setAttribute('aria-label', 'Cari');
+    sj.style.maxWidth = '180px'; ss.style.maxWidth = '240px';
+    f.appendChild(sj); f.appendChild(ss); f.appendChild(q);
+    c.appendChild(f);
+    var res = node('div'); res.style.marginTop = '10px'; c.appendChild(res);
+    p.appendChild(c);
+    function load() {
+      AD.jenis = sj.value; AD.status = ss.value; AD.q = q.value.trim();
+      UP.api('mk.admin.senarai', { jenis: AD.jenis, status: AD.status, q: AD.q }).then(function (r) {
+        res.textContent = '';
+        if (!r.ok) { errBox(res, r); return; }
+        var t = table(['ID', 'Jenis', 'Sumber', 'Pemohon', 'Tarikh dan masa', 'Status', 'Bil']);
+        t.el.id = 'mk-ad-senarai';
+        r.data.senarai.forEach(function (x) {
+          var row = tr([x.id, x.jenis, x.sumberNama, x.namaPemohon + ' (' + x.jenisPengguna + ')', tarikhTeks(x), pill(x.status, ST[x.status]), x.bayaran ? pill(x.bayaran, ST[x.bayaran]) : ''], function () { openAdet(x.id); });
+          row.setAttribute('data-id', x.id); t.body.appendChild(row);
+        });
+        res.appendChild(t.el);
+        if (!r.data.senarai.length) res.appendChild(node('p', 'Tiada tempahan. / No bookings.', 'muted'));
+      });
+    }
+    sj.addEventListener('change', load); ss.addEventListener('change', load);
+    q.addEventListener('input', function () { clearTimeout(AD.timer); AD.timer = setTimeout(load, 300); });
+    load();
+  }
+
+  function tabJadual(p) {
+    var c = card(); c.appendChild(h2('Jadual tempahan aktif', 'Active booking schedule'));
+    var today = (MK.info && MK.info.hariIni) || new Date().toISOString().slice(0, 10);
+    var f = node('div', null, 'row');
+    var d1 = document.createElement('input'); d1.type = 'date'; d1.id = 'mk-j-dari'; d1.value = AD.dari || today; d1.style.maxWidth = '170px';
+    var d2 = document.createElement('input'); d2.type = 'date'; d2.id = 'mk-j-hingga'; d2.value = AD.hingga || ''; d2.style.maxWidth = '170px';
+    f.appendChild(node('span', 'Dari', 'e')); f.appendChild(d1); f.appendChild(node('span', 'Hingga', 'e')); f.appendChild(d2);
+    c.appendChild(f);
+    var res = node('div'); res.id = 'mk-j-hasil'; c.appendChild(res); p.appendChild(c);
+    function load() {
+      AD.dari = d1.value; AD.hingga = d2.value;
+      var pl = { susun: 'tarikh', status: 'AKTIF', dari: d1.value }; if (d2.value) pl.hingga = d2.value;
+      UP.api('mk.admin.senarai', pl).then(function (r) {
+        res.textContent = '';
+        if (!r.ok) { errBox(res, r); return; }
+        if (!r.data.senarai.length) { res.appendChild(node('p', 'Tiada tempahan aktif dalam julat ini. / No active bookings in this range.', 'muted')); return; }
+        var by = {};
+        r.data.senarai.forEach(function (x) { (by[x.tarikhMula] = by[x.tarikhMula] || []).push(x); });
+        Object.keys(by).sort().forEach(function (k) {
+          res.appendChild(node('div', k, 'mk-day'));
+          var t = table(['Masa', 'Sumber', 'Pemohon', 'Tujuan', 'Status']);
+          by[k].forEach(function (x) {
+            t.body.appendChild(tr([(x.masaMula ? x.masaMula + '-' + x.masaTamat : 'Pinjaman') + (x.tarikhTamat !== x.tarikhMula ? ' (hingga ' + x.tarikhTamat + ')' : ''), x.sumberNama, x.namaPemohon, x.tujuan, pill(x.status, ST[x.status])], function () { openAdet(x.id); }));
+          });
+          res.appendChild(t.el);
+        });
+      });
+    }
+    d1.addEventListener('change', load); d2.addEventListener('change', load);
+    load();
+  }
+
+  function tabBayaran(p) {
+    var c = card(); c.appendChild(h2('Bil dan bayaran Makerspace', 'Makerspace bills and payments'));
+    var chips = node('div', null, 'chips'); c.appendChild(chips);
+    var res = node('div'); c.appendChild(res);
+    var act = node('div'); act.id = 'mk-bay-aksi'; p.appendChild(c); p.appendChild(act);
+    function load() {
+      UP.api('mk.admin.bayaran.senarai', { status: AD.bayStatus }).then(function (r) {
+        chips.textContent = ''; res.textContent = '';
+        if (!r.ok) { errBox(res, r); return; }
+        ['SEMUA', 'Belum Bayar', 'Menunggu Pengesahan', 'Lewat', 'Dibayar', 'Dikecualikan'].forEach(function (s) {
+          var n = s === 'SEMUA' ? Object.keys(r.data.kiraan).reduce(function (a, k) { return a + r.data.kiraan[k]; }, 0) : r.data.kiraan[s];
+          var b = node('button', (s === 'SEMUA' ? 'Semua' : s) + ' (' + n + ')', 'chip' + (AD.bayStatus === s ? ' on' : '')); b.type = 'button';
+          b.addEventListener('click', function () { AD.bayStatus = s; AD.pilih = null; act.textContent = ''; load(); });
+          chips.appendChild(b);
+        });
+        var t = table(['No. bil', 'Tempahan', 'Pemohon', 'Jumlah', 'Tarikh akhir', 'Status']);
+        r.data.senarai.forEach(function (b) {
+          var row = tr([b.id, b.idTempahan, b.namaPemohon, rm(b.jumlah), b.tarikhAkhir + (b.lewatHari ? ' (lewat ' + b.lewatHari + ' hari)' : ''), pill(b.status, ST[b.status])], function () { pilih(b); });
+          row.setAttribute('data-id', b.id); t.body.appendChild(row);
+        });
+        res.appendChild(t.el);
+        if (!r.data.senarai.length) res.appendChild(node('p', 'Tiada bil. / No bills.', 'muted'));
+        if (AD.pilih) { var cur = r.data.senarai.filter(function (x) { return x.id === AD.pilih; })[0]; if (cur) pilih(cur); }
+      });
+    }
+    function pilih(b) {
+      AD.pilih = b.id;
+      act.textContent = '';
+      var ac = card(); ac.appendChild(row2(h2('Bil ' + b.id, 'Bill'), pill(b.status, ST[b.status])));
+      ac.appendChild(kvBox([['Tempahan', b.idTempahan], ['Pemohon', b.namaPemohon + ' (' + b.emel + ')'], ['Jumlah', rm(b.jumlah) + (b.kosSebenar !== null ? ' (kos sebenar)' : ' (anggaran)')],
+        ['Penggunaan sebenar', b.penggunaan], ['Kaedah dinyatakan', b.kaedah], ['No. rujukan', b.noRujukan], ['Catatan', b.catatan]]));
+      var out = node('div', null, 'msg err'); out.hidden = true;
+      if (b.adaResit) ac.appendChild(UP.fileBtn('Lihat resit', 'View receipt', 'mk.fail', { id: b.idTempahan, jenis: 'resit' }, out));
+      ac.appendChild(out);
+      if (canEdit() && ['Dibayar', 'Dikecualikan'].indexOf(b.status) < 0) {
+        var cat = document.createElement('textarea'); cat.id = 'mk-bay-cat'; cat.placeholder = 'Catatan (wajib untuk tolak dan kecuali) / Note'; cat.style.minHeight = '56px'; cat.style.fontFamily = 'inherit'; cat.style.fontSize = '14px'; cat.style.marginTop = '8px';
+        ac.appendChild(cat);
+        var kae = null, noR = null;
+        if (b.status !== 'Menunggu Pengesahan') {
+          kae = sel('mk-bay-kaedah', [['', '— kaedah bayaran di kaunter —']].concat(KAEDAH_BAYAR.map(function (k) { return [k.kod, k.bm]; })), '');
+          noR = document.createElement('input'); noR.id = 'mk-bay-noruj'; noR.placeholder = 'No. resit / rujukan';
+          kae.style.marginTop = '8px'; noR.style.marginTop = '8px';
+          ac.appendChild(kae); ac.appendChild(noR);
+        }
+        var m = node('div', null, 'msg'); m.hidden = true; m.id = 'msg-mk-bay'; ac.appendChild(m);
+        var row = node('div', null, 'mk-act');
+        var go = function (t, bm, en, cls) {
+          var bt = smallBtn(bm, en, cls, function () {
+            clearMsg(m); bt.disabled = true;
+            var pl = { id: b.id, tindakan: t, catatan: cat.value, penapis: AD.bayStatus };
+            if (kae) { pl.kaedah = kae.value; pl.noRujukan = noR.value; }
+            UP.api('mk.admin.bayaran.putus', pl).then(function (res) {
+              bt.disabled = false;
+              if (!res.ok) { msgErr(m, res); return; }
+              AD.pilih = null; act.textContent = ''; load(); UP.api('mk.admin.ringkasan').then(function (x) { if (x.ok) AD.ring = x.data; });
+            });
+          });
+          bt.setAttribute('data-act', t); row.appendChild(bt);
+        };
+        go('sahkan', 'Sahkan dibayar', 'Confirm paid', '');
+        if (b.status === 'Menunggu Pengesahan') go('tolak', 'Tolak bayaran', 'Reject', 'alt');
+        go('kecuali', 'Kecualikan', 'Waive', 'alt');
+        ac.appendChild(row);
+      }
+      act.appendChild(ac);
+    }
+    load();
+  }
+
+  function simpanForm(p, opts) {
+    // opts: {tajuk, en, spec, listMethod, saveMethod, cols, rowCells, fill, readonlyOk, lead}
+    var c = card(); c.appendChild(h2(opts.tajuk, opts.en));
+    if (opts.lead) opts.lead(c);
+    var res = node('div'); c.appendChild(res); p.appendChild(c);
+    var fc = card(); fc.appendChild(h2(opts.formTajuk, opts.formEn)); p.appendChild(fc);
+    var fm = null, m = node('div', null, 'msg'); m.hidden = true; m.id = opts.msgId;
+    var save = btn('Simpan', 'Save', '', null); save.id = opts.saveId;
+    var nw = smallBtn('Baharu', 'New', 'alt', function () { build(null); });
+    nw.style.marginBottom = '6px';
+    function build(data) {
+      var keep = fc.querySelector('.fbox'); if (keep) fc.removeChild(keep);
+      var box = node('div', null, 'fbox'); fc.insertBefore(box, m);
+      fm = UP.Form(opts.spec(data)); box.appendChild(fm.el); fm.set(data || opts.defaults || {});
+      if (data && opts.lockKey) opts.lockKey.forEach(function (k) { var i = fm.fields[k].wrap.querySelector('input,select'); if (i) { if (i.tagName === 'SELECT') i.disabled = true; else i.readOnly = true; } });
+      clearMsg(m);
+    }
+    fc.appendChild(nw); fc.appendChild(m); fc.appendChild(save);
+    if (!canEdit()) { save.disabled = true; nw.disabled = true; fc.appendChild(node('p', 'Anda hanya boleh melihat (tiada kebenaran mengubah). / View only.', 'muted')); }
+    save.addEventListener('click', function () {
+      if (!fm) return;
+      clearMsg(m); fm.clear(); busy(save, true);
+      UP.api(opts.saveMethod, opts.payload(fm.values())).then(function (r) {
+        busy(save, false);
+        if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) fm.errors(r.error.extra.medan); return; }
+        paint(r.data); build(null);
+        msg(m, 'ok', 'Disimpan.', 'Saved.');
+        UP.api('mk.admin.ringkasan').then(function (x) { if (x.ok) { AD.ring = x.data; } });
+      });
+    });
+    function paint(data) {
+      res.textContent = '';
+      var t = table(opts.cols);
+      data.senarai.forEach(function (x) { var row = tr(opts.rowCells(x), function () { build(opts.fill(x)); window.scrollTo(0, document.body.scrollHeight); }); row.setAttribute('data-kod', x.kod); t.body.appendChild(row); });
+      res.appendChild(t.el);
+      if (!data.senarai.length) res.appendChild(node('p', 'Tiada rekod. / No records.', 'muted'));
+    }
+    UP.api(opts.listMethod).then(function (r) { if (!r.ok) { errBox(res, r); return; } paint(r.data); });
+    build(null);
+  }
+
+  function tabAlat(p) {
+    simpanForm(p, {
+      tajuk: 'Alat pinjaman (stok)', en: 'Loan items (stock)', formTajuk: 'Tambah atau sunting alat', formEn: 'Add or edit an item', listMethod: 'mk.admin.alat.senarai', saveMethod: 'mk.admin.alat.simpan', msgId: 'msg-mk-alat', saveId: 'btn-mk-alat',
+      cols: ['Kod', 'Nama', 'Kategori', 'Jumlah', 'Rosak/hilang', 'Dipinjam', 'Baki', 'Boleh dipinjam', 'Aktif'],
+      rowCells: function (x) { return [x.kod, x.nama, x.kategori, x.jumlah, x.rosak, x.dipinjam, x.baki, x.bolehDipinjam ? 'Ya' : 'Tidak', x.aktif ? 'Ya' : 'Tidak']; },
+      fill: function (x) { return { kod: x.kod, nama: x.nama, kategori: x.kategori, jumlah: x.jumlah, rosak: x.rosak, bolehDipinjam: x.bolehDipinjam, aktif: x.aktif, catatan: x.catatan }; },
+      defaults: { bolehDipinjam: true, aktif: true, rosak: 0 },
+      spec: function () {
+        return [{ k: 'kod', t: 'text', bm: 'Kod alat', en: 'Item code', req: 1, max: 30 }, { k: 'nama', t: 'text', bm: 'Nama alat', en: 'Name', req: 1, max: 120 }, { k: 'kategori', t: 'text', bm: 'Kategori', en: 'Category', max: 60 },
+          { k: 'jumlah', t: 'number', bm: 'Kuantiti jumlah', en: 'Total quantity', req: 1 }, { k: 'rosak', t: 'number', bm: 'Kuantiti rosak / hilang', en: 'Damaged / lost' },
+          { k: 'bolehDipinjam', t: 'check', bm: 'Boleh dipinjam', en: 'Can be borrowed' }, { k: 'aktif', t: 'check', bm: 'Aktif', en: 'Active' }, { k: 'catatan', t: 'text', bm: 'Catatan', en: 'Note', max: 300 }];
+      },
+      payload: function (v) { return v; }
+    });
+  }
+
+  function tabPeralatan(p) {
+    simpanForm(p, {
+      tajuk: 'Ruang dan mesin', en: 'Spaces and machines', formTajuk: 'Tambah atau sunting ruang / mesin', formEn: 'Add or edit a space / machine', listMethod: 'mk.admin.peralatan.senarai', saveMethod: 'mk.admin.peralatan.simpan', msgId: 'msg-mk-per', saveId: 'btn-mk-per',
+      cols: ['Kod', 'Jenis', 'Nama / model', 'No. mesin', 'Kapasiti', 'Kod kadar', 'Status'],
+      rowCells: function (x) { return [x.kod, x.jenis, x.nama, x.noMesin, x.kapasiti || '', x.kodKadar, x.status]; },
+      fill: function (x) { return { kod: x.kod, jenis: x.jenis, noMesin: x.noMesin, nama: x.nama, kapasiti: x.kapasiti || '', kodKadar: x.kodKadar, status: x.status, catatan: x.catatan }; },
+      defaults: { status: 'Aktif' },
+      lead: function (c) {
+        if (!canEdit()) return;
+        var b = smallBtn('Tambah ruang lalai (Maker Lab 200, Bilik Mesyuarat 20)', 'Add default spaces', 'alt', function () {
+          b.disabled = true;
+          UP.api('mk.admin.peralatan.lalai').then(function (r) { b.disabled = false; if (r.ok) renderTabs(); });
+        });
+        b.id = 'btn-mk-lalai'; b.style.marginTop = '8px'; c.appendChild(b);
+      },
+      spec: function () {
+        return [{ k: 'kod', t: 'text', bm: 'Kod', en: 'Code', req: 1, max: 30 }, { k: 'jenis', t: 'select', o: [{ kod: 'Ruang', bm: 'Ruang', en: '' }, { kod: 'Laser Cut', bm: 'Laser Cut', en: '' }, { kod: '3D Printer', bm: '3D Printer', en: '' }], bm: 'Jenis', en: 'Type', req: 1 },
+          { k: 'nama', t: 'text', bm: 'Nama / model', en: 'Name / model', req: 1, max: 120 }, { k: 'noMesin', t: 'text', bm: 'No. mesin', en: 'Machine no.', max: 30 },
+          { k: 'kapasiti', t: 'number', bm: 'Kapasiti (ruang sahaja)', en: 'Capacity (spaces only)' },
+          { k: 'kodKadar', t: 'text', bm: 'Kod kadar', en: 'Rate code', max: 60, hint: 'Ruang: cth RUANG_MAKER_LAB. Laser: LASER_CUT. 3D: 3D_PRINTER (kadar _GRAM dan _JAM). / e.g. RUANG_MAKER_LAB, LASER_CUT, 3D_PRINTER' },
+          { k: 'status', t: 'select', o: [{ kod: 'Aktif', bm: 'Aktif', en: '' }, { kod: 'Penyelenggaraan', bm: 'Penyelenggaraan', en: 'Maintenance' }, { kod: 'Tidak aktif', bm: 'Tidak aktif', en: 'Inactive' }], bm: 'Status', en: 'Status', req: 1 },
+          { k: 'catatan', t: 'text', bm: 'Catatan', en: 'Note', max: 300 }];
+      },
+      payload: function (v) { return v; }
+    });
+  }
+
+  function tabKadar(p) {
+    simpanForm(p, {
+      tajuk: 'Kadar mengikut jenis pengguna', en: 'Rates by user type', formTajuk: 'Tetapkan atau tambah kadar', formEn: 'Set or add a rate', listMethod: 'mk.admin.kadar.senarai', saveMethod: 'mk.admin.kadar.simpan', msgId: 'msg-mk-kadar', saveId: 'btn-mk-kadar',
+      cols: ['Kod', 'Nama', 'Pengguna', 'Unit', 'Kadar', 'Berkuat kuasa', 'Aktif'],
+      rowCells: function (x) { return [x.kod, x.nama, x.jenisPengguna, x.unit, x.belumDitetapkan ? 'Belum ditetapkan' : rm(x.kadar), x.berkuatKuasa, x.aktif ? 'Ya' : 'Tidak']; },
+      fill: function (x) { return { kod: x.kod, jenisPengguna: x.jenisPengguna, nama: x.nama, unit: x.unit, kadar: x.kadar === null ? '' : String(x.kadar), berkuatKuasa: x.berkuatKuasa, aktif: x.aktif }; },
+      defaults: { aktif: true, jenisPengguna: 'Pelajar' },
+      lockKey: ['kod', 'jenisPengguna', 'berkuatKuasa'],
+      spec: function () {
+        return [{ k: 'kod', t: 'text', bm: 'Kod sumber', en: 'Source code', req: 1, max: 60 },
+          { k: 'jenisPengguna', t: 'select', o: [{ kod: 'Pelajar', bm: 'Pelajar', en: 'Student' }, { kod: 'Staf', bm: 'Staf', en: 'Staff' }, { kod: 'Luar', bm: 'Orang luar', en: 'External' }], bm: 'Jenis pengguna', en: 'User type', req: 1 },
+          { k: 'nama', t: 'text', bm: 'Nama sumber (baris baharu)', en: 'Source name', max: 120 }, { k: 'unit', t: 'text', bm: 'Unit (baris baharu), cth per hari', en: 'Unit', max: 40 },
+          { k: 'kadar', t: 'text', bm: 'Kadar (RM)', en: 'Rate (RM)', ph: '0.00', hint: 'Kosongkan = belum ditetapkan (bil tidak dijana). 0 = percuma. / Blank = not set; 0 = free.' },
+          { k: 'berkuatKuasa', t: 'date', bm: 'Berkuat kuasa', en: 'Effective from', hint: 'Kosongkan untuk hari ini. Sesi menggunakan kadar yang berkuat pada tarikh sesi. / Blank = today.' },
+          { k: 'aktif', t: 'check', bm: 'Aktif', en: 'Active' }];
+      },
+      payload: function (v) { return v; }
+    });
+  }
+
+  function tabBagi(p) {
+    var c = card(); c.appendChild(h2('Tempah bagi pihak pemohon', 'Book on behalf of an applicant'));
+    c.appendChild(node('p', 'Pelajar: guna No. Matrik. Staf atau orang luar: guna emel mereka. Peraturan yang sama dikenakan dan semua tindakan direkod dalam audit. / Same rules apply; every action is audited.', 'muted'));
+    var jenis = sel('mk-bg-jenis', [['pelajar', 'Pelajar (No. Matrik)'], ['emel', 'Staf / orang luar (emel)']], 'pelajar');
+    var inp = document.createElement('input'); inp.id = 'mk-bg-nilai'; inp.placeholder = 'A23EC0123'; inp.autocapitalize = 'characters'; inp.style.marginTop = '8px';
+    jenis.addEventListener('change', function () { inp.placeholder = jenis.value === 'pelajar' ? 'A23EC0123' : 'nama@utm.my'; });
+    var m = node('div', null, 'msg'); m.hidden = true; m.id = 'msg-mk-bg';
+    var out = node('div'); out.id = 'mk-bg-hasil';
+    var go = btn('Cari pemohon', 'Find applicant', '', function () {
+      clearMsg(m); out.textContent = ''; busy(go, true);
+      UP.api('mk.admin.pemohon', jenis.value === 'pelajar' ? { noMatrik: inp.value } : { emel: inp.value }).then(function (r) {
+        busy(go, false);
+        if (!r.ok) { msgErr(m, r); return; }
+        var d = r.data, cc = card();
+        cc.appendChild(row2(node('div', d.nama || d.emel, 'big'), pill(d.jenis, 'info')));
+        cc.appendChild(kvBox([['Emel', d.emel], ['No. Matrik', d.noMatrik], ['Telefon', d.telefon], ['Jabatan', d.jabatan], ['Profil', d.adaProfil ? 'Ada' : 'Belum ada (nama dan telefon diperlukan semasa menempah)']]));
+        if (d.sekatan.bil || d.sekatan.laporan || d.sekatan.pinjaman) {
+          var w = node('div', null, 'msg err'); w.textContent = 'Sekatan: ' + [d.sekatan.bil ? 'bil lewat' : '', d.sekatan.laporan ? 'laporan lewat' : '', d.sekatan.pinjaman ? 'pinjaman lewat' : ''].filter(Boolean).join(', ') + '.'; cc.appendChild(w);
+        }
+        var row = node('div', null, 'mk-act');
+        JENIS.forEach(function (j) {
+          var b = smallBtn(j.bm, j.en || '', '', function () { openForm(j.kod, { jenis: d.jenis, nama: d.nama, emel: d.emel, noMatrik: d.noMatrik, adaProfil: d.adaProfil }); });
+          b.setAttribute('data-jenis', j.kod); b.disabled = !canEdit(); row.appendChild(b);
+        });
+        cc.appendChild(row);
+        out.appendChild(cc);
+      });
+    });
+    go.id = 'btn-mk-bg';
+    c.appendChild(jenis); c.appendChild(inp); c.appendChild(m); c.appendChild(go);
+    p.appendChild(c); p.appendChild(out);
+  }
+
+  // ---------- Admin: butiran tempahan ----------
+  function openAdet(id, notice) {
+    MK.adId = id; MK.confirm = '';
+    UP.show('v-mk-adet');
+    var body = $('mk-adet-body'); wait(body);
+    UP.api('mk.admin.butiran', { id: id }).then(function (r) { renderAdet(r, notice); });
+  }
+  function renderAdet(r, notice) {
+    var body = $('mk-adet-body'); body.textContent = '';
+    if (!r.ok) { errBox(body, r); return; }
+    var d = r.data, out = node('div', null, 'msg err'); out.hidden = true;
+    if (notice) { var nt = node('div', null, 'msg ok'); nt.textContent = notice; body.appendChild(nt); }
+    if (d.amaranPenggunaan && d.amaranPenggunaan.length) d.amaranPenggunaan.forEach(function (t) { var w = node('div', null, 'msg info'); w.textContent = t; body.appendChild(w); });
+    var c1 = card();
+    c1.appendChild(row2(node('div', d.sumberNama, 'h1'), pill(d.status, ST[d.status])));
+    c1.appendChild(node('div', d.id + ' · ' + d.jenis + (d.bagiPihak ? ' · didaftar admin' : ''), 'e'));
+    (d.amaran || []).forEach(function (t) { var w = node('div', null, 'msg info'); w.setAttribute('data-amaran', '1'); w.textContent = t; c1.appendChild(w); });
+    body.appendChild(c1);
+    var c2 = card(); c2.appendChild(h2('Pemohon', 'Applicant'));
+    c2.appendChild(kvBox([['Nama', d.namaPemohon], ['Jenis', d.jenisPengguna], ['Emel', d.pemohon.emel], ['No. Matrik', d.pemohon.noMatrik], ['Telefon', d.pemohon.telefon], ['Jabatan', d.pemohon.jabatan], ['Didaftar oleh', d.pemohon.didaftarOleh]]));
+    body.appendChild(c2);
+    var c3 = card(); c3.appendChild(h2('Tempahan', 'Booking'));
+    var rows = [['Tarikh dan masa', tarikhTeks(d)], ['Tujuan', d.tujuan]].concat(butiranRows(d));
+    rows.push(['Penyelia', d.penyelia]); rows.push(['Status perakuan', d.statusPerakuan]); rows.push(['Catatan penyelia', d.catatanPenyelia]);
+    rows.push(['Anggaran', d.anggaran === null ? '' : rm(d.anggaran)]); rows.push(['Diluluskan oleh', d.diluluskanOleh]); rows.push(['Catatan', d.catatan]);
+    c3.appendChild(kvBox(rows));
+    var fl = node('div');
+    if (d.fail && d.fail.kertas) fl.appendChild(UP.fileBtn('Kertas kerja', 'Paper', 'mk.fail', { id: d.id, jenis: 'kertas' }, out));
+    if (d.fail && d.fail.surat) fl.appendChild(UP.fileBtn('Surat', 'Letter', 'mk.fail', { id: d.id, jenis: 'surat' }, out));
+    if (d.fail && d.fail.gambar) fl.appendChild(UP.fileBtn('Gambar projek', 'Picture', 'mk.fail', { id: d.id, jenis: 'gambar' }, out));
+    if (d.laporan && d.laporan.ada) fl.appendChild(UP.fileBtn('Laporan aktiviti', 'Report', 'mk.fail', { id: d.id, jenis: 'laporan' }, out));
+    c3.appendChild(fl); c3.appendChild(out);
+    body.appendChild(c3);
+
+    var kira = d.kira && (d.kira.sebenar && d.kira.sebenar.baris.length ? d.kira : null);
+    if (d.kira && d.kira.anggaran.baris.length) {
+      var ck = card(); ck.appendChild(h2('Pengiraan kos', 'Cost calculation'));
+      var t = table(['Perkara', 'Kuantiti', 'Kadar', 'Anggaran', 'Sebenar']);
+      d.kira.anggaran.baris.forEach(function (b, i) {
+        var s = d.kira.sebenar.baris[i] || {};
+        t.body.appendChild(tr([b.nama + ' (' + b.unit + ')', b.kuantiti, b.kadar === null ? 'belum ditetapkan' : rm(b.kadar), b.jumlah === null ? '-' : rm(b.jumlah), s.jumlah === null || s.jumlah === undefined ? '-' : rm(s.jumlah)]));
+      });
+      ck.appendChild(t.el);
+      body.appendChild(ck);
+    }
+    if (d.bayaran) {
+      var b = d.bayaran, cb = card(); cb.appendChild(row2(h2('Bil', 'Bill'), pill(b.status, ST[b.status])));
+      cb.appendChild(kvBox([['No. bil', b.id], ['Jumlah', rm(b.jumlah) + (b.kosSebenar !== null ? ' (kos sebenar)' : ' (anggaran)')], ['Tarikh akhir', b.tarikhAkhir], ['Kaedah', b.kaedah], ['No. rujukan', b.noRujukan], ['Catatan', b.catatan]]));
+      var lnk = btn('Urus dalam tab Bayaran', 'Manage in Payments', 'alt sm', function () { AD.tab = 'bayaran'; AD.bayStatus = 'SEMUA'; AD.pilih = b.id; openAdmin('bayaran'); });
+      lnk.className = 'btn alt sm'; cb.appendChild(lnk);
+      body.appendChild(cb);
+    }
+
+    var c4 = card(); c4.appendChild(h2('Tindakan', 'Actions'));
+    var ma = node('div', null, 'msg'); ma.hidden = true; ma.id = 'msg-mk-adet';
+    if (!d.boleh.putus) c4.appendChild(node('p', 'Anda hanya boleh melihat (tiada kebenaran memutuskan). / View only.', 'muted'));
+    else {
+      var cat = document.createElement('textarea'); cat.id = 'mk-ad-cat'; cat.placeholder = 'Catatan (wajib untuk tolak dan batal) / Note'; cat.style.minHeight = '56px'; cat.style.fontFamily = 'inherit'; cat.style.fontSize = '14px';
+      if (d.boleh.lulus || d.boleh.tolak || d.boleh.batal) c4.appendChild(cat);
+      var row = node('div', null, 'mk-act');
+      var act = function (t, bm, en, cls, confirm) {
+        var bt = smallBtn(bm, en, cls, function () {
+          if (confirm && MK.confirm !== t) { MK.confirm = t; bt.firstChild.textContent = 'Tekan sekali lagi untuk sahkan '; return; }
+          MK.confirm = ''; bt.disabled = true; clearMsg(ma);
+          UP.api('mk.admin.putus', { id: d.id, tindakan: t, catatan: cat.value }).then(function (res) {
+            if (!res.ok) { bt.disabled = false; msgErr(ma, res); return; }
+            renderAdet(res);
+          });
+        });
+        bt.setAttribute('data-act', t); row.appendChild(bt);
+      };
+      if (d.boleh.lulus) act('lulus', d.jenisPengguna === 'Pelajar' ? 'Luluskan' : 'Perakui dan luluskan', 'Approve', '', true);
+      if (d.boleh.tolak) act('tolak', 'Tolak', 'Reject', 'alt', true);
+      if (d.boleh.batal) act('batal', 'Batalkan', 'Cancel', 'alt', true);
+      c4.appendChild(row);
+      if (d.boleh.penggunaan) {
+        c4.appendChild(node('div', 'Rekod penggunaan sebenar / Record actual usage', 'sech'));
+        var fields = [];
+        var inpt = function (id, ph) { var i = document.createElement('input'); i.id = id; i.type = 'number'; i.placeholder = ph; i.style.marginTop = '6px'; fields.push(i); c4.appendChild(i); return i; };
+        if (d.jenis === 'Ruang') inpt('mk-pg-hari', 'Hari sebenar / Actual days (1-' + d.butiran.bilHari + ')');
+        else { inpt('mk-pg-minit', 'Masa sebenar (minit) / Actual minutes'); if (d.jenis === '3D Printer') inpt('mk-pg-berat', 'Berat sebenar (gram) / Actual grams'); }
+        var pb = btn('Simpan penggunaan sebenar', 'Save actual usage', 'alt sm', function () {
+          clearMsg(ma); pb.disabled = true;
+          var pl = { id: d.id };
+          if ($('mk-pg-hari')) pl.hariSebenar = $('mk-pg-hari').value;
+          if ($('mk-pg-minit')) pl.minitSebenar = $('mk-pg-minit').value;
+          if ($('mk-pg-berat')) pl.beratSebenarG = $('mk-pg-berat').value;
+          UP.api('mk.admin.penggunaan', pl).then(function (res) {
+            pb.disabled = false;
+            if (!res.ok) { msgErr(ma, res); if (res.error && res.error.extra && res.error.extra.medan) msgErr(ma, { error: { bm: Object.keys(res.error.extra.medan).map(function (k) { return res.error.extra.medan[k]; }).join('; '), en: '' } }); return; }
+            renderAdet(res, 'Penggunaan sebenar direkod.');
+          });
+        });
+        pb.id = 'btn-mk-penggunaan'; pb.style.marginTop = '8px'; c4.appendChild(pb);
+      }
+      if (d.boleh.pulang || d.boleh.perbaharui) {
+        var r2 = node('div', null, 'mk-act');
+        if (d.boleh.pulang) {
+          r2.appendChild(smallBtn('Tandakan semua dipulangkan', 'Mark all returned', '', function (ev) {
+            ev.target.disabled = true; clearMsg(ma);
+            UP.api('mk.admin.pulang', { id: d.id }).then(function (res) { if (!res.ok) { ev.target.disabled = false; msgErr(ma, res); return; } renderAdet(res, 'Pemulangan direkod.'); });
+          }));
+          (d.item || []).filter(function (x) { return x.status !== 'Dipulangkan'; }).forEach(function (x) {
+            if ((d.item || []).filter(function (y) { return y.status !== 'Dipulangkan'; }).length < 2) return;
+            r2.appendChild(smallBtn('Pulang: ' + x.nama, 'Return', 'alt', function (ev) {
+              ev.target.disabled = true; clearMsg(ma);
+              UP.api('mk.admin.pulang', { id: d.id, kod: x.kod }).then(function (res) { if (!res.ok) { ev.target.disabled = false; msgErr(ma, res); return; } renderAdet(res, 'Pemulangan direkod.'); });
+            }));
+          });
+        }
+        if (d.boleh.perbaharui) {
+          r2.appendChild(smallBtn('Perbaharui pinjaman', 'Renew', 'alt', function (ev) {
+            ev.target.disabled = true; clearMsg(ma);
+            UP.api('mk.admin.perbaharui', { id: d.id }).then(function (res) { if (!res.ok) { ev.target.disabled = false; msgErr(ma, res); return; } renderAdet(res, 'Pinjaman diperbaharui.'); });
+          }));
+        }
+        c4.appendChild(r2);
+      }
+    }
+    c4.appendChild(ma);
+    body.appendChild(c4);
+
+    if (d.sejarah && d.sejarah.length) {
+      var ch = card(); ch.appendChild(h2('Sejarah', 'History'));
+      var th = table(['Masa', 'Oleh', 'Tindakan', 'Perubahan', 'Catatan']);
+      d.sejarah.forEach(function (a) { th.body.appendChild(tr([a.masa.slice(0, 16).replace('T', ' '), a.emel, a.tindakan, (a.lama ? a.lama + ' → ' : '') + a.baharu, a.catatan])); });
+      ch.appendChild(th.el); body.appendChild(ch);
+    }
+  }
+
+  function init() {
+    $('go-mk').addEventListener('click', function () { if (!$('go-mk').disabled) openHub(); });
+    $('go-mk-admin').addEventListener('click', function () { AD.tab = 'tempahan'; openAdmin(); });
+    $('mk-new-ruang').addEventListener('click', function () { openForm('Ruang'); });
+    $('mk-new-laser').addEventListener('click', function () { openForm('Laser Cut'); });
+    $('mk-new-tdp').addEventListener('click', function () { openForm('3D Printer'); });
+    $('mk-new-pinjam').addEventListener('click', function () { openForm('Pinjaman'); });
+    $('btn-mk-form-balik').addEventListener('click', function () { if (MK.bagi) { openAdmin('bagi'); } else openHub(); });
+    $('btn-mk-hantar').addEventListener('click', submitForm);
+    $('btn-mk-det-balik').addEventListener('click', function () { openHub(); });
+    $('btn-mk-adet-balik').addEventListener('click', function () { openAdmin(); });
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
 </script>
 
 </body>

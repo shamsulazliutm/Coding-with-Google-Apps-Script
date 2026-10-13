@@ -1,1 +1,100 @@
-<!-- ViewsMk: skrin modul (diisi oleh modul) -->
+<!-- ViewsMk: skrin modul Makerspace (pengguna, perakuan penyelia tanpa log masuk, admin) -->
+<style>
+.mk-new{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.mk-new button{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;cursor:pointer;font:inherit;color:inherit;text-align:left}
+.mk-new button:hover:not(:disabled){border-color:var(--maroon)}
+.mk-new button:disabled{opacity:.5;cursor:not-allowed}
+.mk-new .l{display:block}
+.mk-item{border-top:1px solid var(--line);padding:12px 0;cursor:pointer}
+.mk-item:first-child{border-top:0}
+.mk-item:hover{background:var(--maroon-l)}
+.mk-avail{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:10px 0;font-size:12.5px;background:#FCFAFA}
+.mk-busy{display:inline-block;background:var(--bad-l);color:var(--bad);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-weight:600}
+.mk-busy.mk-wait{background:var(--warn-l);color:var(--warn)}
+.mk-free{color:var(--ok);font-weight:600}
+.mk-est{border:1.5px solid var(--gold);background:var(--gold-l);border-radius:10px;padding:10px 12px;margin-top:14px;font-size:13px}
+.mk-est table{margin-top:6px;font-size:12.5px}
+.mk-est .mk-total{font-size:16px;font-weight:700;margin-top:6px}
+.mk-sum{margin:10px 0}
+.mk-day{font-weight:700;color:var(--maroon);border-bottom:2px solid var(--gold);margin:16px 0 4px;padding-bottom:3px}
+.mk-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+.mk-stat{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.mk-stat .pill{font-size:12px}
+.mk-pk{max-width:520px;margin:0 auto}
+.mk-sel td{background:var(--maroon-l)}
+.mk-note{font-size:12px;color:var(--muted);margin-top:4px}
+.mk-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mk-actions-in{margin-top:8px}
+@media (max-width:420px){.mk-new{grid-template-columns:1fr}}
+</style>
+
+  <!-- Makerspace: pengguna (pelajar, staf, orang luar) -->
+  <section id="v-mk" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Makerspace</div><div class="e">Space, Laser Cut, 3D Printer and equipment loans</div>
+      <div id="mk-pemohon" class="muted" style="margin-top:6px;font-size:12px"></div>
+      <div id="mk-sekatan"></div>
+      <div id="mk-admin-note" class="msg info" hidden>Anda log masuk sebagai pentadbir. Gunakan menu <b>Makerspace (admin)</b> untuk menempah bagi pihak pemohon. <i>You are signed in as an admin. Use Makerspace (admin) to book on behalf of an applicant.</i></div>
+      <div class="mk-new" id="mk-new">
+        <button type="button" id="mk-new-ruang"><span class="l">Tempah ruang</span><span class="e">Book a space</span></button>
+        <button type="button" id="mk-new-laser"><span class="l">Laser Cut</span><span class="e">Laser cutting machine</span></button>
+        <button type="button" id="mk-new-tdp"><span class="l">3D Printer</span><span class="e">3D printing</span></button>
+        <button type="button" id="mk-new-pinjam"><span class="l">Pinjam peralatan</span><span class="e">Borrow equipment</span></button>
+      </div>
+      <div id="msg-mk" class="msg" hidden></div>
+    </div>
+    <div class="card">
+      <div class="h2">Tempahan saya <span class="e">My bookings</span></div>
+      <div id="mk-list" style="margin-top:6px"></div>
+    </div>
+  </section>
+
+  <!-- Makerspace: borang tempahan (pengguna dan admin bagi pihak) -->
+  <section id="v-mk-form" class="view" hidden>
+    <div class="msg info" id="mk-bagi-info" hidden></div>
+    <button class="back" id="btn-mk-form-balik" type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1" id="mk-form-tajuk">Tempahan baharu</div><div class="e" id="mk-form-tajuk-en">New booking</div>
+      <div id="mk-form-ops" class="muted" style="font-size:12px;margin-top:6px"></div>
+      <div id="mk-form-box" style="margin-top:6px"></div>
+      <div class="mk-avail" id="mk-avail" hidden></div>
+      <div class="mk-est" id="mk-est" hidden></div>
+      <div id="msg-mk-form" class="msg" hidden></div>
+      <button id="btn-mk-hantar" class="btn" type="button">Hantar tempahan <i>Submit booking</i></button>
+    </div>
+  </section>
+
+  <!-- Makerspace: butiran tempahan (pengguna) -->
+  <section id="v-mk-det" class="view" hidden>
+    <button class="back" id="btn-mk-det-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div id="mk-det-body"></div>
+  </section>
+
+  <!-- Makerspace: perakuan penyelia (tanpa log masuk, melalui pautan emel) -->
+  <section id="v-mk-perakuan" class="view" hidden>
+    <div class="mk-pk">
+      <div class="card">
+        <div class="h1">Perakuan tempahan Makerspace</div><div class="e">Makerspace booking endorsement</div>
+        <div id="mk-pk-body" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Makerspace: admin -->
+  <section id="v-mk-admin" class="view" data-wide hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Makerspace (admin)</div><div class="e">Bookings, payments, equipment and rates</div>
+      <div id="mk-ad-ringkas" class="mk-stat"></div>
+      <div id="mk-ad-amaran"></div>
+      <div class="mk-tabs" id="mk-ad-tabs"></div>
+    </div>
+    <div id="mk-ad-panel"></div>
+  </section>
+
+  <!-- Makerspace: butiran tempahan (admin) -->
+  <section id="v-mk-adet" class="view" data-wide hidden>
+    <button class="back" id="btn-mk-adet-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div id="mk-adet-body"></div>
+  </section>
