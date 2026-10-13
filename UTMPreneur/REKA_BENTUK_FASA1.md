@@ -110,7 +110,8 @@ Peraturan: hanya SSU Diluluskan; pelajar nampak lot Dibuka + Kosong sahaja; **sa
 - **Perjanjian (disahkan): dicetak, ditandatangani, salinan bertandatangan dimuat naik oleh pemohon dan disahkan admin.** Status dokumen: Menunggu salinan bertandatangan -> Dimuat naik -> Disahkan (atau Dikembalikan dengan catatan).
 - **Surat tawaran (disahkan): admin menyemak pratonton dahulu, kemudian menekan "Hantar surat tawaran".** Sistem menjana pratonton PDF; hanya selepas admin menghantar, dokumen kelihatan kepada pemohon dan emel pemberitahuan dihantar. Admin boleh menjana semula (versi baharu) sebelum menghantar.
 - **Tempoh menerima tawaran (disahkan): 7 hari** dari tarikh surat tawaran dihantar (`TAWARAN_TEMPOH_HARI` dalam `Tetapan`). Peringatan emel pada hari ke-4 dan ke-6. **[LALAI]** jika tamat tanpa jawapan: status **Tawaran Luput**, lot kembali Kosong, admin dimaklumkan dan boleh menawar pemohon seterusnya mengikut kedudukan.
-- **[TERBUKA]** cara penerimaan, bila sewaan bermula, penanda templat, siapa boleh melihat (pemilik dan ahli pasukan).
+- **Setuju terima (disahkan): pemohon menekan "Saya terima" atau "Saya tolak" dalam sistem, disahkan dengan OTP ke emel mereka.** Sistem merekod tarikh, masa dan emel, lalu menjana **Rekod Penerimaan Tawaran (PDF)** yang dipaparkan dalam senarai dokumen ("Tawaran telah diterima pada <tarikh masa>"). Penerimaan tidak boleh ditarik balik oleh pemohon (hanya admin boleh membatalkan, direkod dalam `Audit`).
+- **[TERBUKA]** bila sewaan bermula, penanda templat, siapa boleh melihat (pemilik dan ahli pasukan).
 
 **Penilaian jawatankuasa (disahkan):**
 - Permohonan dikumpul dalam **tempoh tertentu** (tarikh buka dan tutup ditetapkan admin dalam `Tetapan`/`Lot`), kemudian dinilai dalam satu sesi.
