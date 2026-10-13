@@ -590,16 +590,16 @@ var SCHEMA = {
     nama: 'UTMPreneur - Makerspace',
     modul: 'Makerspace',
     tabs: {
-      Tempahan: ['ID_Tempahan', 'Jenis', 'Kod_Sumber', 'Jenis_Pengguna', 'Emel_Pemohon', 'Nama_Pemohon', 'Tarikh_Mula', 'Masa_Mula', 'Tarikh_Tamat', 'Masa_Tamat', 'Tujuan', 'Emel_Penyelia', 'Status_Perakuan', 'Tarikh_Perakuan', 'Status', 'Diluluskan_Oleh', 'Tarikh_Keputusan', 'Catatan'],
-      Butiran_Ruang: ['ID_Tempahan', 'Nama_Program', 'Bil_Hari', 'Bil_Peserta', 'Kaedah_Bayaran', 'No_VOT', 'Nama_Staf_Kewangan', 'Tel_Staf_Kewangan', 'Fail_Kertas_Kerja', 'Fail_Surat'],
+      Tempahan: ['ID_Tempahan', 'Jenis', 'Kod_Sumber', 'Jenis_Pengguna', 'Emel_Pemohon', 'Nama_Pemohon', 'Tarikh_Mula', 'Masa_Mula', 'Tarikh_Tamat', 'Masa_Tamat', 'Tujuan', 'Emel_Penyelia', 'Status_Perakuan', 'Tarikh_Perakuan', 'Status', 'Diluluskan_Oleh', 'Tarikh_Keputusan', 'Catatan', 'No_Matrik', 'Telefon', 'Jabatan', 'Anggaran_RM', 'Dicipta_Pada', 'Didaftar_Oleh', 'Token_Hash', 'Token_Tamat', 'Catatan_Penyelia', 'Bil_Pembaharuan'],
+      Butiran_Ruang: ['ID_Tempahan', 'Nama_Program', 'Bil_Hari', 'Bil_Peserta', 'Kaedah_Bayaran', 'No_VOT', 'Nama_Staf_Kewangan', 'Tel_Staf_Kewangan', 'Fail_Kertas_Kerja', 'Fail_Surat', 'Kaedah_Lain', 'Hari_Sebenar'],
       Item_Peralatan_Ruang: ['ID_Tempahan', 'Kod_Alat', 'Kuantiti'],
       Butiran_LaserCut: ['ID_Tempahan', 'Nama_Projek', 'Jenis_Bahan', 'Masa_Dijangka_Min', 'Masa_Sebenar_Min'],
-      Butiran_3DP: ['ID_Tempahan', 'Nama_Projek', 'Fail_Gambar', 'Berat_g', 'Warna', 'No_Mesin', 'Masa_Dijangka_Min', 'Masa_Sebenar_Min'],
+      Butiran_3DP: ['ID_Tempahan', 'Nama_Projek', 'Fail_Gambar', 'Berat_g', 'Warna', 'No_Mesin', 'Masa_Dijangka_Min', 'Masa_Sebenar_Min', 'Berat_Sebenar_g'],
       Item_Pinjaman: ['ID_Tempahan', 'Kod_Alat', 'Kuantiti', 'Tarikh_Dijangka_Pulang', 'Tarikh_Pulang', 'Status'],
       ALAT: ['Kod_Alat', 'Nama_Alat', 'Kategori', 'Kuantiti_Jumlah', 'Kuantiti_Rosak_Hilang', 'Boleh_Dipinjam', 'Aktif', 'Catatan'],
       PERALATAN: ['Kod_Mesin', 'Jenis', 'No_Mesin', 'Nama_Model', 'Kapasiti', 'Kod_Kadar', 'Status', 'Catatan'],
       KADAR: ['Kod_Sumber', 'Nama_Sumber', 'Jenis_Pengguna', 'Unit', 'Kadar_RM', 'Berkuat_Kuasa', 'Aktif'],
-      Bayaran_Makerspace: ['ID_Bayaran', 'ID_Tempahan', 'Emel_Pemohon', 'Anggaran_RM', 'Penggunaan_Sebenar', 'Kos_Sebenar_RM', 'Status', 'Tarikh_Akhir', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan'],
+      Bayaran_Makerspace: ['ID_Bayaran', 'ID_Tempahan', 'Emel_Pemohon', 'Anggaran_RM', 'Penggunaan_Sebenar', 'Kos_Sebenar_RM', 'Status', 'Tarikh_Akhir', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Tarikh_Jana', 'Catatan'],
       Laporan_Aktiviti: ['ID_Tempahan', 'Fail_Laporan', 'Tarikh_Hantar', 'Status']
     }
   }
@@ -614,6 +614,9 @@ var TEXT_COLS = {
   Ahli_Pasukan: ['No_Matrik'],
   Permohonan_SSU: ['No_Matrik_Pemilik', 'No_Pendaftaran'],
   Permohonan_Lot: ['No_Matrik'],
+  Tempahan: ['No_Matrik', 'Telefon', 'Masa_Mula', 'Masa_Tamat', 'Token_Hash'],
+  PERALATAN: ['Kod_Mesin', 'No_Mesin'],
+  Butiran_3DP: ['No_Mesin'],
   Butiran_Ruang: ['No_VOT', 'Tel_Staf_Kewangan']
 };
 
@@ -1327,6 +1330,2090 @@ var Mail = {
     });
   }
 };
+
+
+// ===== Makerspace.gs =====
+/**
+ * UTMPreneur: modul Makerspace (tempahan ruang, Laser Cut, 3D Printer dan pinjaman peralatan).
+ * Dipecahkan kepada beberapa fail Makerspace*.gs. Objek global tunggal `Makerspace` mendedahkan routes(), jobHarian() dan seed().
+ * Fail ini mengandungi mesej, Tetapan, fungsi pembantu kongsi (objek Mk) dan jadual laluan RPC.
+ * PERHATIAN: tiada kebergantungan semasa muat antara fail; fungsi fail lain dipanggil di dalam fungsi sahaja.
+ */
+
+var MSG_MK = {
+  MK_TIDAK_SAH: ['Maklumat tempahan tidak sah. Semak medan yang bertanda.', 'The booking is invalid. Check the highlighted fields.'],
+  MK_ADMIN_TIDAK_SAH: ['Maklumat tidak sah. Semak medan yang bertanda.', 'The details are invalid. Check the highlighted fields.'],
+  MK_KONFLIK: ['Slot masa ini sudah ditempah atau sedang menunggu kelulusan.', 'This time slot is already booked or awaiting approval.'],
+  MK_STOK: ['Baki stok alat tidak mencukupi.', 'Not enough stock available.'],
+  MK_BIL_LEWAT: ['Anda mempunyai bil Makerspace yang lewat. Sila jelaskan bayaran dahulu sebelum menempah.', 'You have an overdue Makerspace bill. Please settle it before booking.'],
+  MK_LAPORAN_LEWAT: ['Laporan aktiviti bagi tempahan ruang terdahulu belum dihantar. Sila hantar laporan dahulu sebelum menempah ruang.', 'The activity report for a previous space booking is overdue. Please submit it before booking a space.'],
+  MK_PINJAMAN_LEWAT: ['Anda mempunyai pinjaman peralatan yang lewat dipulangkan. Sila pulangkan dahulu sebelum meminjam semula.', 'You have overdue borrowed equipment. Please return it before borrowing again.'],
+  MK_PROFIL_DULU: ['Sila lengkapkan profil akaun anda dahulu.', 'Please complete your account profile first.'],
+  MK_EMEL_PEMOHON: ['Emel pemohon tidak sah atau tiada dalam rekod.', 'The applicant email is invalid or not on record.'],
+  MK_TIDAK_DITEMUI: ['Tempahan tidak ditemui.', 'Booking not found.'],
+  MK_PERALIHAN_TIDAK_SAH: ['Tindakan ini tidak sah pada status semasa.', 'This action is not valid in the current status.'],
+  MK_CATATAN_WAJIB: ['Catatan wajib diisi untuk tindakan ini.', 'A note is required for this action.'],
+  MK_BELUM_DIPERAKUI: ['Tempahan pelajar ini belum diperakui oleh penyelia.', 'This student booking has not been endorsed by the supervisor yet.'],
+  MK_PERAKUAN_TIDAK_SAH: ['Pautan tidak sah atau telah tamat tempoh.', 'The link is invalid or has expired.'],
+  MK_PERAKUAN_HAD: ['Terlalu banyak percubaan. Cuba lagi sebentar lagi.', 'Too many attempts. Please try again shortly.'],
+  MK_KADAR_TIADA: ['Kadar belum ditetapkan oleh urusetia, bil belum boleh dijana.', 'The rate has not been set by the secretariat, so the bill cannot be generated yet.'],
+  MK_BAYARAN_TIDAK_SAH: ['Maklumat bayaran tidak sah. Semak medan yang bertanda.', 'The payment details are invalid. Check the highlighted fields.'],
+  MK_BAYARAN_TIDAK_DITEMUI: ['Bil tidak ditemui.', 'Bill not found.'],
+  MK_BATAL_TIDAK_BOLEH: ['Tempahan ini tidak boleh dibatalkan pada masa ini. Sila hubungi UTMXCITE.', 'This booking cannot be cancelled now. Please contact UTMXCITE.'],
+  MK_PEMBAHARUAN_TIDAK_SAH: ['Pinjaman ini tidak boleh diperbaharui (pembaharuan hanya sekali, sebelum lewat, dan maksimum sebulan).', 'This loan cannot be renewed (once only, before it is overdue, up to one month).'],
+  MK_PENGGUNAAN_TIDAK_SAH: ['Maklumat penggunaan sebenar tidak sah.', 'The actual usage details are invalid.'],
+  MK_FAIL_TIADA: ['Fail tidak tersedia.', 'The file is not available.'],
+  MK_LAPORAN_TIDAK_SAH: ['Laporan aktiviti tidak boleh dihantar bagi tempahan ini.', 'An activity report cannot be submitted for this booking.']
+};
+
+var TETAPAN_MK = [
+  ['PERAKUAN_TAMAT_HARI', '5', 'Makerspace: tempoh sah pautan perakuan penyelia (hari kalendar)'],
+  ['PERAKUAN_HAD_10MIN', '30', 'Makerspace: had permintaan pada halaman perakuan bagi setiap pautan dalam 10 minit'],
+  ['LAPORAN_AKTIVITI_HARI', '3', 'Makerspace: hari selepas aktiviti ruang untuk menghantar laporan aktiviti'],
+  ['RUANG_MAKS_HARI', '14', 'Makerspace: bilangan hari operasi maksimum bagi satu tempahan ruang'],
+  ['TEMPAHAN_MAKS_HARI_DEPAN', '180', 'Makerspace: tempahan paling awal boleh dibuat (hari dari hari ini)'],
+  ['PINJAMAN_MAKS_BULAN', '1', 'Makerspace: tempoh pinjaman peralatan maksimum (bulan)'],
+  ['PINJAMAN_MAKS_PEMBAHARUAN', '1', 'Makerspace: bilangan pembaharuan pinjaman maksimum'],
+  ['BAYARAN_PERINGATAN_HARI', '4', 'Makerspace: hari ke- selepas bil dijana untuk emel peringatan bayaran']
+];
+
+var Mk = (function () {
+  var AKTIF = ['Menunggu Perakuan', 'Menunggu Kelulusan', 'Diluluskan'];
+  var JENIS = ['Ruang', 'Laser Cut', '3D Printer', 'Pinjaman'];
+  var PREFIX_ID = 'TMP';
+
+  // ---------- Tarikh dan masa (kunci tarikh yyyy-MM-dd, masa HH:mm) ----------
+  function todayKey_() { return Util.dateKey(new Date()); }
+  function nowMin_() {
+    return parseInt(Util.fmtDate(new Date(), 'HH'), 10) * 60 + parseInt(Util.fmtDate(new Date(), 'mm'), 10);
+  }
+  function validKey_(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s == null ? '' : s));
+    if (!m) return false;
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+  }
+  function addDays_(key, n) {
+    var p = key.split('-');
+    return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n)).toISOString().substr(0, 10);
+  }
+  function dow_(key) {
+    var p = key.split('-');
+    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay();
+    return d === 0 ? 7 : d;
+  }
+  /** Date setempat (getter tempatan memberi tarikh yang sama) untuk Util.workingDaysBetween. */
+  function local_(key) { var p = key.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function toMin_(s) {
+    var m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(s == null ? '' : s).trim());
+    return m ? +m[1] * 60 + +m[2] : null;
+  }
+  function fmtMin_(n) { return Util.pad(Math.floor(n / 60), 2) + ':' + Util.pad(n % 60, 2); }
+  function rm2_(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+  function intOf_(v) { return /^\d{1,6}$/.test(String(v == null ? '' : v).trim()) ? parseInt(String(v).trim(), 10) : null; }
+
+  function cutiMap_() {
+    var m = {};
+    Db.rows('Cuti').forEach(function (r) { var k = Util.dateKey(r.Tarikh); if (k) m[k] = Util.str(r.Nama) || 'Cuti'; });
+    return m;
+  }
+
+  /** Tetapan waktu operasi dan cuti. */
+  function ops_() {
+    var hari = Cfg.list('HARI_OPERASI').map(function (x) { return parseInt(x, 10); }).filter(function (x) { return x >= 1 && x <= 7; });
+    if (!hari.length) hari = [1, 2, 3, 4, 5];
+    var buka = toMin_(Cfg.get('JAM_MULA', '08:00')); if (buka === null) buka = 480;
+    var tutup = toMin_(Cfg.get('JAM_TAMAT', '17:00')); if (tutup === null || tutup <= buka) tutup = 1020;
+    var slot = Math.max(5, Cfg.num('SLOT_MINIT', 30));
+    return {
+      hari: hari, buka: buka, tutup: tutup, slot: slot,
+      maksMin: Math.max(slot, Cfg.num('SLOT_MAKS_JAM', 4) * 60),
+      notis: Cfg.num('NOTIS_HARI_BEKERJA_RUANG', 3),
+      cuti: cutiMap_()
+    };
+  }
+  function isOp_(key, ops) { return ops.hari.indexOf(dow_(key)) >= 0 && !ops.cuti[key]; }
+  /** Hari operasi dalam julat [mula, tamat] (dihadkan 400 hari). */
+  function opDaysIn_(mula, tamat, ops) {
+    var out = [], k = mula, n = 0;
+    while (k <= tamat && n < 400) { if (isOp_(k, ops)) out.push(k); k = addDays_(k, 1); n++; }
+    return out;
+  }
+  /** Sebanyak `count` hari operasi bermula pada `mula` (mula mesti hari operasi). */
+  function opDaysFrom_(mula, count, ops) {
+    var out = [], k = mula, n = 0;
+    while (out.length < count && n < 800) { if (isOp_(k, ops)) out.push(k); k = addDays_(k, 1); n++; }
+    return out;
+  }
+  function workingDays_(fromKey, toKey, ops) {
+    return Util.workingDaysBetween(local_(fromKey), local_(toKey), Object.keys(ops.cuti), ops.hari);
+  }
+
+  // ---------- Data ----------
+  function pelajarRow_(m) {
+    var l = Db.find('PELAJAR', function (r) { return Util.normMatric(r.No_Matrik) === m; });
+    return l.length ? l[0] : null;
+  }
+  function penggunaOf_(email) {
+    var l = Db.find('Pengguna', function (r) { return Util.normEmail(r.Emel) === email; });
+    return l.length ? l[0] : null;
+  }
+  function tempahan_(id) {
+    var l = Db.find('Tempahan', function (r) { return Util.str(r.ID_Tempahan) === id; });
+    return l.length ? l[0] : null;
+  }
+  function byId_(tab, id) {
+    return Db.find(tab, function (r) { return Util.str(r.ID_Tempahan) === id; })[0] || null;
+  }
+  function listById_(tab, id) {
+    return Db.find(tab, function (r) { return Util.str(r.ID_Tempahan) === id; });
+  }
+  function sumber_(kod) {
+    var l = Db.find('PERALATAN', function (r) { return Util.str(r.Kod_Mesin) === kod; });
+    return l.length ? l[0] : null;
+  }
+  function alat_(kod) {
+    var l = Db.find('ALAT', function (r) { return Util.str(r.Kod_Alat) === kod; });
+    return l.length ? l[0] : null;
+  }
+  function sumberAktif_(r) { return Util.str(r.Status || 'Aktif') === 'Aktif'; }
+
+  // ---------- Kadar ----------
+  function rmOf_(v) {
+    if (v === '' || v === null || v === undefined) return null;
+    if (typeof v === 'number') return isNaN(v) || v < 0 ? null : v;
+    return Util.parseRm(v);
+  }
+  /**
+   * Fungsi pencari kadar: fn(kod, jenisPengguna, tarikhKunci) -> {ada, rm, unit, nama}.
+   * Kadar kosong atau tiada baris ialah "belum ditetapkan" (ada = false).
+   */
+  function kadarFn_() {
+    var rows = Db.rows('KADAR');
+    return function (kod, jenisPengguna, onKey) {
+      var best = null, bestKey = '';
+      rows.forEach(function (r) {
+        if (Util.str(r.Kod_Sumber) !== kod || Util.str(r.Jenis_Pengguna) !== jenisPengguna || !Util.truthy(r.Aktif)) return;
+        var bk = Util.dateKey(r.Berkuat_Kuasa) || '0000-00-00';
+        if (onKey && bk > onKey) return;
+        if (!best || bk >= bestKey) { best = r; bestKey = bk; }
+      });
+      if (!best) return { ada: false, rm: null, unit: '', nama: kod };
+      var rm = rmOf_(best.Kadar_RM);
+      return { ada: rm !== null, rm: rm, unit: Util.str(best.Unit), nama: Util.str(best.Nama_Sumber) || kod };
+    };
+  }
+
+  // ---------- Emel dan pautan ----------
+  function mel_(to, subjectBm, subjectEn, bm, en, tanpaPautan) {
+    if (!to) return false;
+    try {
+      var url = Cfg.get('WEBAPP_URL', '');
+      if (url && !tanpaPautan) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
+      return Mail.send(to, { subjectBm: subjectBm, subjectEn: subjectEn, bm: bm, en: en });
+    } catch (err) { console.error('Emel Makerspace gagal: ' + err); return false; }
+  }
+
+  function status_(r) { return Util.str(r.Status); }
+  function tokenTamat_(r) {
+    var t = Util.toDate(r.Token_Tamat);
+    return !t || t.getTime() < new Date().getTime();
+  }
+  /** Adakah tempahan menduduki slot (mengira Menunggu Perakuan yang pautannya masih sah)? */
+  function menduduki_(r) {
+    var st = status_(r);
+    if (AKTIF.indexOf(st) < 0) return false;
+    if (st === 'Menunggu Perakuan' && tokenTamat_(r)) return false;
+    return true;
+  }
+
+  /**
+   * Konflik masa bagi satu sumber. days = hari operasi diminta; mulaMin/tamatMin = tetingkap harian.
+   * Pulang senarai baris Tempahan yang bertindih.
+   */
+  function konflik_(kod, days, mulaMin, tamatMin, excludeId, ops) {
+    var set = {}; days.forEach(function (d) { set[d] = true; });
+    return Db.find('Tempahan', function (r) {
+      if (Util.str(r.Kod_Sumber) !== kod || Util.str(r.ID_Tempahan) === excludeId || !menduduki_(r)) return false;
+      var a = toMin_(r.Masa_Mula), b = toMin_(r.Masa_Tamat);
+      if (a === null || b === null) return false;
+      if (!(mulaMin < b && a < tamatMin)) return false;
+      return opDaysIn_(Util.dateKey(r.Tarikh_Mula), Util.dateKey(r.Tarikh_Tamat), ops).some(function (d) { return set[d]; });
+    });
+  }
+
+  // ---------- Stok pinjaman ----------
+  /** Kuantiti sedang dipinjam atau ditempah (menunggu/diluluskan, belum dipulangkan) bagi satu kod alat. */
+  function dipinjam_(kod, excludeId) {
+    var aktif = {};
+    Db.rows('Tempahan').forEach(function (r) { if (Util.str(r.Jenis) === 'Pinjaman' && menduduki_(r)) aktif[Util.str(r.ID_Tempahan)] = true; });
+    var n = 0;
+    Db.rows('Item_Pinjaman').forEach(function (it) {
+      var id = Util.str(it.ID_Tempahan);
+      if (id === excludeId || Util.str(it.Kod_Alat) !== kod || Util.str(it.Status) === 'Dipulangkan' || !aktif[id]) return;
+      n += Number(it.Kuantiti) || 0;
+    });
+    return n;
+  }
+  function baki_(alat, excludeId) {
+    var jumlah = Number(alat.Kuantiti_Jumlah) || 0, rosak = Number(alat.Kuantiti_Rosak_Hilang) || 0;
+    var dip = dipinjam_(Util.str(alat.Kod_Alat), excludeId || '');
+    return { jumlah: jumlah, rosak: rosak, dipinjam: dip, baki: Math.max(0, jumlah - rosak - dip) };
+  }
+
+  // ---------- Pemohon ----------
+  /** Pemohon bagi pengguna yang log masuk sendiri. */
+  function pemohonSendiri_(ctx) {
+    if (ctx.role === ROLE.PELAJAR) {
+      if (!ctx.noMatrik) throw appError_('MATRIK_TIDAK_DITEMUI');
+      var pel = pelajarRow_(ctx.noMatrik);
+      var pg = penggunaOf_(ctx.email);
+      return {
+        emel: ctx.email, nama: ctx.nama || Util.str(pel && pel.Nama_Penuh), jenis: ROLE.PELAJAR, noMatrik: ctx.noMatrik,
+        telefon: Util.str(pg && pg.Telefon) || Util.str(pel && pel.No_Telefon), jabatan: Util.str(pel && pel.Fakulti), bagiPihak: false
+      };
+    }
+    if (ctx.role === ROLE.STAF || ctx.role === ROLE.LUAR) {
+      var p = penggunaOf_(ctx.email);
+      if (!p) throw appError_('MK_PROFIL_DULU');
+      return {
+        emel: ctx.email, nama: Util.str(p.Nama), jenis: ctx.role, noMatrik: '', telefon: Util.str(p.Telefon),
+        jabatan: Util.str(p.Jabatan_Organisasi), bagiPihak: false
+      };
+    }
+    throw appError_('TIADA_KEBENARIAN');
+  }
+
+  /** Pemohon bagi admin yang menempah bagi pihak (noMatrik pelajar, atau emel staf/luar). */
+  function pemohonBagi_(ctx, p) {
+    if (Util.str(p.noMatrik)) {
+      var c = Bantu.ctx(ctx, p.noMatrik, 'makerspace'); // semak kebenaran dan rekod PELAJAR
+      var pel = pelajarRow_(c.noMatrik);
+      var pgs = Db.find('Pengguna', function (r) { return Util.normMatric(r.No_Matrik) === c.noMatrik; });
+      var emel = Util.normEmail(pgs.length ? pgs[0].Emel : pel.Emel);
+      if (!Util.isEmail(emel)) throw appError_('MK_EMEL_PEMOHON');
+      return {
+        emel: emel, nama: c.nama, jenis: ROLE.PELAJAR, noMatrik: c.noMatrik,
+        telefon: Util.str(pgs.length ? pgs[0].Telefon : '') || Util.str(pel.No_Telefon), jabatan: Util.str(pel.Fakulti), bagiPihak: true
+      };
+    }
+    if (!Bantu.allowed(ctx, 'makerspace')) throw appError_('TIADA_KEBENARIAN');
+    var e = Util.normEmail(p.emelPemohon);
+    if (!Util.isEmail(e)) throw appError_('MK_EMEL_PEMOHON');
+    var jenis = Util.roleByDomain(e, Cfg.get('DOMAIN_PELAJAR', '@graduate.utm.my'), Cfg.get('DOMAIN_STAF', '@utm.my'));
+    if (jenis === ROLE.PELAJAR) throw appError_('MK_EMEL_PEMOHON', { medan: { emelPemohon: 'Pelajar: gunakan No. Matrik / Students: use the matric number' } });
+    if (Admins.find(e)) throw appError_('MK_EMEL_PEMOHON', { medan: { emelPemohon: 'Emel pentadbir tidak boleh menjadi pemohon / An admin email cannot be an applicant' } });
+    var pg = penggunaOf_(e);
+    var nama = Util.str(pg && pg.Nama) || Util.str(p.namaPemohon).substr(0, 120);
+    var tel = Util.str(pg && pg.Telefon) || Util.str(p.telefonPemohon).substr(0, 20);
+    var ralat = {};
+    if (!nama) ralat.namaPemohon = 'Wajib diisi / Required';
+    if (!/^[0-9+\-\s]{8,16}$/.test(tel)) ralat.telefonPemohon = 'No. telefon tidak sah / Invalid phone number';
+    if (Object.keys(ralat).length) throw appError_('MK_TIDAK_SAH', { medan: ralat });
+    return {
+      emel: e, nama: nama, jenis: jenis, noMatrik: '', telefon: tel,
+      jabatan: Util.str(pg && pg.Jabatan_Organisasi) || Util.str(p.jabatanPemohon).substr(0, 160), bagiPihak: true
+    };
+  }
+
+  // ---------- Kebenaran admin ----------
+  function adminLihat_(ctx) {
+    if (ADMIN_ROLES.indexOf(ctx.role) < 0 || ctx.role === ROLE.PENILAI) throw appError_('TIADA_KEBENARIAN');
+  }
+  function bolehPutus_(ctx) {
+    if (ctx.role === ROLE.ADMIN_PENUH) return true;
+    if (ctx.role === ROLE.PEGAWAI_MODUL) {
+      var a = Admins.find(ctx.email);
+      var mod = a ? a.modul.toLowerCase() : '';
+      return !mod || mod.indexOf('semua') >= 0 || mod.indexOf('makerspace') >= 0;
+    }
+    return false;
+  }
+  function adminPutus_(ctx) {
+    adminLihat_(ctx);
+    if (!bolehPutus_(ctx)) throw appError_('TIADA_KEBENARIAN');
+  }
+
+  // ---------- Had kadar ringkas (CacheService) ----------
+  /** Pulang true jika masih dalam had; menambah kiraan. */
+  function had_(key, maks, saat) {
+    var c = Db.cache();
+    var n = parseInt(c.get(key) || '0', 10);
+    if (n >= maks) return false;
+    c.put(key, String(n + 1), saat);
+    return true;
+  }
+
+  function idBaharu_(prefix, tab, lajur) {
+    var tahun = parseInt(Util.fmtDate(new Date(), 'yyyy'), 10);
+    return Util.formatId(prefix, tahun, Db.nextSeqLocked(prefix + '_' + tahun), 4);
+  }
+
+  function tarikhSel_(v) { return v ? Util.toDate(v) : ''; }
+
+  return {
+    AKTIF: AKTIF, JENIS: JENIS, PREFIX_ID: PREFIX_ID,
+    todayKey: todayKey_, nowMin: nowMin_, validKey: validKey_, addDays: addDays_, dow: dow_, toMin: toMin_, fmtMin: fmtMin_,
+    rm2: rm2_, int: intOf_, ops: ops_, isOp: isOp_, opDaysIn: opDaysIn_, opDaysFrom: opDaysFrom_, workingDays: workingDays_,
+    pelajarRow: pelajarRow_, penggunaOf: penggunaOf_, tempahan: tempahan_, byId: byId_, listById: listById_, sumber: sumber_, alat: alat_,
+    sumberAktif: sumberAktif_, kadarFn: kadarFn_, rmOf: rmOf_, mel: mel_, menduduki: menduduki_, tokenTamat: tokenTamat_, konflik: konflik_,
+    dipinjam: dipinjam_, baki: baki_, pemohonSendiri: pemohonSendiri_, pemohonBagi: pemohonBagi_,
+    adminLihat: adminLihat_, bolehPutus: bolehPutus_, adminPutus: adminPutus_, had: had_, idBaharu: idBaharu_, tarikhSel: tarikhSel_
+  };
+})();
+
+var Makerspace = {
+  /** Laluan RPC modul Makerspace (digabungkan oleh rpcTable_ dalam Code.gs). */
+  routes: function () {
+    var PENGGUNA = [ROLE.PELAJAR, ROLE.STAF, ROLE.LUAR];
+    var BAGI = [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL];
+    return {
+      // pengguna
+      'mk.maklumat':         { auth: true, roles: PENGGUNA.concat(ADMIN_ROLES), fn: function (c, p) { return MkTempahan.maklumat(c, p); } },
+      'mk.ketersediaan':     { auth: true, roles: PENGGUNA.concat(ADMIN_ROLES), fn: function (c, p) { return MkTempahan.ketersediaan(c, p); } },
+      'mk.anggar':           { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkTempahan.anggar(c, p, false); } },
+      'mk.hantar':           { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkTempahan.hantar(c, p, Mk.pemohonSendiri(c)); } },
+      'mk.saya':             { auth: true, roles: PENGGUNA, fn: function (c) { return MkTempahan.saya(c); } },
+      'mk.butiran':          { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkTempahan.butiran(c, p); } },
+      'mk.batal':            { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkTempahan.batal(c, p); } },
+      'mk.perakuan.hantarSemula': { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkPerakuan.hantarSemula(c, p); } },
+      'mk.pinjaman.perbaharui': { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkTempahan.perbaharui(c, p, false); } },
+      'mk.bayaran.rekod':    { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkBil.rekodBayaran(c, p); } },
+      'mk.laporan.hantar':   { auth: true, roles: PENGGUNA, fn: function (c, p) { return MkTempahan.hantarLaporan(c, p); } },
+      'mk.fail':             { auth: true, roles: PENGGUNA.concat(ADMIN_ROLES), fn: function (c, p) { return MkTempahan.fail(c, p); } },
+      // perakuan penyelia: tanpa sesi
+      'mk.perakuan.maklumat': { auth: false, fn: function (c, p) { return MkPerakuan.maklumat(p); } },
+      'mk.perakuan.otp':      { auth: false, fn: function (c, p) { return MkPerakuan.otp(p); } },
+      'mk.perakuan.sahkan':   { auth: false, fn: function (c, p) { return MkPerakuan.sahkan(p); } },
+      // admin
+      'mk.admin.ringkasan':  { auth: true, roles: ADMIN_ROLES, fn: function (c) { return MkAdmin.ringkasan(c); } },
+      'mk.admin.senarai':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.senarai(c, p); } },
+      'mk.admin.butiran':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.butiran(c, p); } },
+      'mk.admin.putus':      { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.putus(c, p); } },
+      'mk.admin.penggunaan': { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.penggunaan(c, p); } },
+      'mk.admin.pulang':     { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.pulang(c, p); } },
+      'mk.admin.perbaharui': { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkTempahan.perbaharui(c, p, true); } },
+      'mk.admin.bayaran.senarai': { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.bayaranSenarai(c, p); } },
+      'mk.admin.bayaran.putus':   { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.bayaranPutus(c, p); } },
+      'mk.admin.alat.senarai':    { auth: true, roles: ADMIN_ROLES, fn: function (c) { return MkAdmin.alatSenarai(c); } },
+      'mk.admin.alat.simpan':     { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.alatSimpan(c, p); } },
+      'mk.admin.peralatan.senarai': { auth: true, roles: ADMIN_ROLES, fn: function (c) { return MkAdmin.peralatanSenarai(c); } },
+      'mk.admin.peralatan.simpan':  { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.peralatanSimpan(c, p); } },
+      'mk.admin.peralatan.lalai':   { auth: true, roles: ADMIN_ROLES, fn: function (c) { return MkAdmin.peralatanLalai(c); } },
+      'mk.admin.kadar.senarai':   { auth: true, roles: ADMIN_ROLES, fn: function (c) { return MkAdmin.kadarSenarai(c); } },
+      'mk.admin.kadar.simpan':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return MkAdmin.kadarSimpan(c, p); } },
+      'mk.admin.pemohon':    { auth: true, roles: BAGI, fn: function (c, p) { return MkAdmin.pemohon(c, p); } },
+      'mk.admin.anggar':     { auth: true, roles: BAGI, fn: function (c, p) { return MkTempahan.anggar(c, p, true); } },
+      'mk.admin.hantar':     { auth: true, roles: BAGI, fn: function (c, p) { return MkTempahan.hantar(c, p, Mk.pemohonBagi(c, p)); } }
+    };
+  },
+
+  /** Kerja harian (dipanggil oleh Jobs.harian). Idempotent. */
+  jobHarian: function () { return MkBil.jobHarian(); }
+};
+
+
+// ===== MakerspaceAdmin.gs =====
+/**
+ * UTMPreneur: Makerspace, tindakan admin: senarai/butiran tempahan, kelulusan, penggunaan sebenar, pemulangan pinjaman,
+ * pengesahan bayaran, urus ALAT / PERALATAN / KADAR dan carian pemohon (tempah bagi pihak).
+ * Kebenaran: Admin Penuh dan Pegawai Modul (modul kosong/Semua/Makerspace) memutuskan; Pemerhati baca sahaja; Penilai tiada akses.
+ */
+
+var MkAdmin = (function () {
+  var JENIS_MESIN = ['3D Printer', 'Laser Cut', 'Ruang'];
+  var STATUS_MESIN = ['Aktif', 'Penyelenggaraan', 'Tidak aktif'];
+  // jenis pengguna (nilai ROLE; tidak merujuk ROLE semasa muat fail)
+  var USER_TYPES = ['Pelajar', 'Staf', 'Luar'];
+  var STATUS_TEMPAHAN = ['Menunggu Perakuan', 'Menunggu Kelulusan', 'Diluluskan', 'Selesai', 'Ditolak', 'Dibatalkan'];
+  var KOD_RE = /^[A-Z0-9][A-Z0-9_\-]{1,29}$/;
+
+  function yaTidak_(v, def) {
+    if (v === undefined || v === null || v === '') return def;
+    return v === true || Util.truthy(v);
+  }
+  function jsonErr_(e) { return appError_('MK_ADMIN_TIDAK_SAH', { medan: e }); }
+
+  // ---------- Ringkasan ----------
+  function ringkasan_(ctx) {
+    Mk.adminLihat(ctx);
+    var tmp = Db.rows('Tempahan');
+    var k = { menungguPerakuan: 0, menungguKelulusan: 0, diluluskan: 0 };
+    tmp.forEach(function (r) {
+      var st = Util.str(r.Status);
+      if (st === 'Menunggu Perakuan' && Mk.menduduki(r)) k.menungguPerakuan++;
+      else if (st === 'Menunggu Kelulusan') k.menungguKelulusan++;
+      else if (st === 'Diluluskan') k.diluluskan++;
+    });
+    var today = Mk.todayKey();
+    var bil = Db.rows('Bayaran_Makerspace');
+    k.bayaranMenunggu = bil.filter(function (b) { return Util.str(b.Status) === 'Menunggu Pengesahan'; }).length;
+    k.bayaranLewat = bil.filter(function (b) { return Util.str(b.Status) === 'Lewat' || (Util.str(b.Status) === 'Belum Bayar' && Util.dateKey(b.Tarikh_Akhir) < today); }).length;
+    var items = Db.rows('Item_Pinjaman');
+    var lewatId = {};
+    items.forEach(function (it) { if (Util.str(it.Status) !== 'Dipulangkan' && Util.dateKey(it.Tarikh_Dijangka_Pulang) < today) lewatId[Util.str(it.ID_Tempahan)] = true; });
+    k.pinjamanLewat = tmp.filter(function (r) { return Util.str(r.Status) === 'Diluluskan' && lewatId[Util.str(r.ID_Tempahan)]; }).length;
+    var belum = {}, bilBelum = 0;
+    Db.rows('KADAR').forEach(function (r) {
+      if (Util.truthy(r.Aktif) && Mk.rmOf(r.Kadar_RM) === null && Util.str(r.Kod_Sumber) !== 'PERALATAN_TANGAN') { bilBelum++; belum[Util.str(r.Kod_Sumber)] = Util.str(r.Nama_Sumber); }
+    });
+    k.kadarBelum = bilBelum;
+    k.kadarBelumKod = Object.keys(belum).map(function (kod) { return { kod: kod, nama: belum[kod] }; });
+    k.peralatanKosong = Db.rows('PERALATAN').length === 0;
+    k.bolehPutus = Mk.bolehPutus(ctx);
+    return k;
+  }
+
+  // ---------- Senarai ----------
+  function senarai_(ctx, p) {
+    Mk.adminLihat(ctx);
+    p = p || {};
+    var jenis = Util.str(p.jenis), status = Util.str(p.status), kod = Util.str(p.kodSumber);
+    var dari = Mk.validKey(Util.str(p.dari)) ? Util.str(p.dari) : '', hingga = Mk.validKey(Util.str(p.hingga)) ? Util.str(p.hingga) : '';
+    var q = Util.str(p.q).toLowerCase();
+    var all = Db.rows('Tempahan');
+    var kiraan = {};
+    STATUS_TEMPAHAN.forEach(function (s) { kiraan[s] = 0; });
+    all.forEach(function (r) { var s = Util.str(r.Status); if (kiraan[s] !== undefined) kiraan[s]++; });
+    var rows = all.filter(function (r) {
+      if (jenis && jenis !== 'SEMUA' && Util.str(r.Jenis) !== jenis) return false;
+      var st = Util.str(r.Status);
+      if (status === 'AKTIF') { if (Mk.AKTIF.indexOf(st) < 0) return false; }
+      else if (status && status !== 'SEMUA' && st !== status) return false;
+      if (kod && Util.str(r.Kod_Sumber) !== kod) return false;
+      if (dari && Util.dateKey(r.Tarikh_Tamat) < dari) return false;
+      if (hingga && Util.dateKey(r.Tarikh_Mula) > hingga) return false;
+      if (q) {
+        var h = (Util.str(r.ID_Tempahan) + ' ' + Util.str(r.Nama_Pemohon) + ' ' + Util.str(r.Emel_Pemohon) + ' ' + Util.str(r.No_Matrik) + ' ' + Util.str(r.Tujuan)).toLowerCase();
+        if (h.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    if (Util.str(p.susun) === 'tarikh') {
+      rows.sort(function (a, b) {
+        var x = Util.dateKey(a.Tarikh_Mula) + ' ' + Util.str(a.Masa_Mula), y = Util.dateKey(b.Tarikh_Mula) + ' ' + Util.str(b.Masa_Mula);
+        return x < y ? -1 : (x > y ? 1 : 0);
+      });
+    } else rows.sort(function (a, b) { return (Util.toDate(b.Dicipta_Pada) || 0) - (Util.toDate(a.Dicipta_Pada) || 0); });
+    var bilMap = {};
+    Db.rows('Bayaran_Makerspace').forEach(function (b) { bilMap[Util.str(b.ID_Tempahan)] = Util.str(b.Status); });
+    var senarai = rows.slice(0, 400).map(function (r) {
+      var o = MkTempahan.paparan(r, { admin: true });
+      return {
+        id: o.id, jenis: o.jenis, sumberNama: o.sumberNama, kodSumber: o.kodSumber, namaPemohon: o.namaPemohon, jenisPengguna: o.jenisPengguna, emel: o.pemohon.emel,
+        noMatrik: o.pemohon.noMatrik, tarikhMula: o.tarikhMula, tarikhTamat: o.tarikhTamat, masaMula: o.masaMula, masaTamat: o.masaTamat, tujuan: o.tujuan,
+        status: o.status, bayaran: bilMap[o.id] || '', lewat: !!o.lewat, bagiPihak: o.bagiPihak
+      };
+    });
+    return { kiraan: kiraan, jumlah: rows.length, senarai: senarai, bolehPutus: Mk.bolehPutus(ctx) };
+  }
+
+  // ---------- Butiran ----------
+  function butiran_(ctx, p) {
+    Mk.adminLihat(ctx);
+    var id = Util.str((p || {}).id);
+    var r = Mk.tempahan(id);
+    if (!r) throw appError_('MK_TIDAK_DITEMUI');
+    var o = MkTempahan.paparan(r, { admin: true });
+    var amaran = [];
+    var ops = Mk.ops();
+    var kd = Mk.kadarFn();
+    var kira = MkBil.kiraTempahan(r, false, kd);
+    var kiraSebenar = MkBil.kiraTempahan(r, true, kd);
+    o.kira = { anggaran: kira, sebenar: kiraSebenar };
+    if (kira.belum.length && o.jenis !== 'Pinjaman') amaran.push('Kadar belum ditetapkan oleh urusetia: ' + kira.belum.join(', ') + '. Bil tidak boleh dijana sehingga ditetapkan.');
+    var st = o.status;
+    if (Mk.AKTIF.indexOf(st) >= 0 && o.jenis !== 'Pinjaman') {
+      var days = Mk.opDaysIn(o.tarikhMula, o.tarikhTamat, ops);
+      var kf = Mk.konflik(o.kodSumber, days, Mk.toMin(o.masaMula), Mk.toMin(o.masaTamat), id, ops);
+      if (kf.length) amaran.push('Bertindih dengan tempahan ' + kf.map(function (x) { return Util.str(x.ID_Tempahan); }).join(', ') + '.');
+    }
+    if (st === 'Menunggu Perakuan') amaran.push('Menunggu perakuan penyelia (' + o.penyelia + '). Pautan sah sehingga ' + o.pautanTamat + '.');
+    if (o.jenis === 'Pinjaman' && Mk.AKTIF.indexOf(st) >= 0) {
+      o.item.forEach(function (it) {
+        var a = Mk.alat(it.kod);
+        if (a && it.status !== 'Dipulangkan' && st !== 'Diluluskan') {
+          var b = Mk.baki(a, id);
+          if (it.kuantiti > b.baki) amaran.push('Stok ' + it.nama + ' tidak mencukupi (baki ' + b.baki + ').');
+        }
+      });
+    }
+    var sk = MkTempahan.sekatan(Util.normEmail(r.Emel_Pemohon), Util.normMatric(r.No_Matrik));
+    if (sk.bil.length) amaran.push('Pemohon mempunyai bil Makerspace lewat (' + sk.bil.join(', ') + ').');
+    if (sk.laporan.length) amaran.push('Pemohon mempunyai laporan aktiviti lewat (' + sk.laporan.join(', ') + ').');
+    if (sk.pinjaman.length) amaran.push('Pemohon mempunyai pinjaman lewat dipulangkan (' + sk.pinjaman.join(', ') + ').');
+    o.amaran = amaran;
+    var putus = Mk.bolehPutus(ctx);
+    var today = Mk.todayKey();
+    var belumPulang = o.item ? o.item.some(function (x) { return x.status !== 'Dipulangkan'; }) : false;
+    o.boleh = {
+      putus: putus,
+      lulus: putus && st === 'Menunggu Kelulusan',
+      tolak: putus && (st === 'Menunggu Perakuan' || st === 'Menunggu Kelulusan'),
+      batal: putus && Mk.AKTIF.indexOf(st) >= 0,
+      penggunaan: putus && o.jenis !== 'Pinjaman' && ['Diluluskan', 'Selesai'].indexOf(st) >= 0 && o.tarikhMula <= today,
+      pulang: putus && o.jenis === 'Pinjaman' && st === 'Diluluskan' && belumPulang,
+      perbaharui: putus && o.jenis === 'Pinjaman' && st === 'Diluluskan' && o.bilPembaharuan < Cfg.num('PINJAMAN_MAKS_PEMBAHARUAN', 1) && belumPulang
+    };
+    o.sejarah = Db.find('Audit', function (a) { return Util.str(a.Rujukan) === id && Util.str(a.Modul) === 'Makerspace'; }).slice(-25).map(function (a) {
+      return { masa: Util.str(a.Masa), emel: Util.str(a.Emel), tindakan: Util.str(a.Tindakan), lama: Util.str(a.Nilai_Lama), baharu: Util.str(a.Nilai_Baharu), catatan: Util.str(a.Catatan) };
+    });
+    return o;
+  }
+
+  // ---------- Keputusan ----------
+  function putus_(ctx, p) {
+    Mk.adminPutus(ctx);
+    p = p || {};
+    var id = Util.str(p.id), t = Util.str(p.tindakan), cat = Util.str(p.catatan).substr(0, 500);
+    if (['lulus', 'tolak', 'batal'].indexOf(t) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+    if ((t === 'tolak' || t === 'batal') && !cat) throw appError_('MK_CATATAN_WAJIB');
+    var info = Db.withLock(function () {
+      var r = Mk.tempahan(id);
+      if (!r) throw appError_('MK_TIDAK_DITEMUI');
+      var lama = Util.str(r.Status), jenis = Util.str(r.Jenis), now = new Date();
+      if (t === 'lulus') {
+        if (lama === 'Menunggu Perakuan') throw appError_('MK_BELUM_DIPERAKUI');
+        if (lama !== 'Menunggu Kelulusan') throw appError_('MK_PERALIHAN_TIDAK_SAH');
+        var ops = Mk.ops();
+        if (jenis === 'Pinjaman') {
+          Mk.listById('Item_Pinjaman', id).forEach(function (it) {
+            var a = Mk.alat(Util.str(it.Kod_Alat));
+            if (!a || Number(it.Kuantiti) > Mk.baki(a, id).baki) throw appError_('MK_STOK');
+          });
+        } else if (Mk.konflik(Util.str(r.Kod_Sumber), Mk.opDaysIn(Util.dateKey(r.Tarikh_Mula), Util.dateKey(r.Tarikh_Tamat), ops), Mk.toMin(r.Masa_Mula), Mk.toMin(r.Masa_Tamat), id, ops).length) {
+          throw appError_('MK_KONFLIK');
+        }
+        var patch = { Status: 'Diluluskan', Diluluskan_Oleh: ctx.email, Tarikh_Keputusan: now, Catatan: cat || Util.str(r.Catatan) };
+        if (Util.str(r.Status_Perakuan) === 'Tidak Perlu') { patch.Status_Perakuan = 'Diperakui (Admin)'; patch.Tarikh_Perakuan = now; }
+        Db.update('Tempahan', r._row, patch);
+        if (jenis === 'Pinjaman') Mk.listById('Item_Pinjaman', id).forEach(function (it) { Db.update('Item_Pinjaman', it._row, { Status: 'Dipinjam' }); });
+        Audit.log(ctx, 'MK_LULUS', 'Makerspace', id, lama, 'Diluluskan', cat);
+      } else if (t === 'tolak') {
+        if (['Menunggu Perakuan', 'Menunggu Kelulusan'].indexOf(lama) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+        Db.update('Tempahan', r._row, { Status: 'Ditolak', Diluluskan_Oleh: ctx.email, Tarikh_Keputusan: now, Catatan: cat, Token_Hash: '' });
+        Audit.log(ctx, 'MK_TOLAK', 'Makerspace', id, lama, 'Ditolak', cat);
+      } else {
+        if (Mk.AKTIF.indexOf(lama) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+        Db.update('Tempahan', r._row, { Status: 'Dibatalkan', Diluluskan_Oleh: ctx.email, Tarikh_Keputusan: now, Catatan: cat, Token_Hash: '' });
+        Audit.log(ctx, 'MK_BATAL_ADMIN', 'Makerspace', id, lama, 'Dibatalkan', cat);
+      }
+      return { emel: Util.normEmail(r.Emel_Pemohon), jenis: jenis };
+    });
+    var teks = { lulus: ['diluluskan', 'approved'], tolak: ['ditolak', 'rejected'], batal: ['dibatalkan oleh UTMXCITE', 'cancelled by UTMXCITE'] }[t];
+    Mk.mel(info.emel, 'Tempahan Makerspace ' + teks[0], 'Makerspace booking ' + teks[1],
+      ['Tempahan ' + id + ' telah ' + teks[0] + '.' + (cat ? ' Catatan: ' + cat : '')],
+      ['Booking ' + id + ' has been ' + teks[1] + '.' + (cat ? ' Note: ' + cat : '')]);
+    return butiran_(ctx, { id: id });
+  }
+
+  // ---------- Penggunaan sebenar ----------
+  function penggunaan_(ctx, p) {
+    Mk.adminPutus(ctx);
+    p = p || {};
+    var id = Util.str(p.id);
+    var amaran = [];
+    Db.withLock(function () {
+      var r = Mk.tempahan(id);
+      if (!r) throw appError_('MK_TIDAK_DITEMUI');
+      var jenis = Util.str(r.Jenis), st = Util.str(r.Status);
+      if (jenis === 'Pinjaman' || ['Diluluskan', 'Selesai'].indexOf(st) < 0 || Util.dateKey(r.Tarikh_Mula) > Mk.todayKey()) throw appError_('MK_PENGGUNAAN_TIDAK_SAH');
+      var e = {};
+      var minit = Mk.int(p.minitSebenar), hari = Mk.int(p.hariSebenar), g = Util.parseRm(p.beratSebenarG);
+      if (jenis === 'Ruang') {
+        var b = Mk.byId('Butiran_Ruang', id) || {};
+        if (hari === null || hari < 1 || hari > (Number(b.Bil_Hari) || 1)) e.hariSebenar = 'Hari sebenar 1 hingga ' + (Number(b.Bil_Hari) || 1) + ' / Actual days';
+      } else {
+        if (minit === null || minit < 1 || minit > 2880) e.minitSebenar = 'Masukkan minit sebenar (1 hingga 2880) / Enter actual minutes';
+        if (jenis === '3D Printer' && (g === null || g <= 0 || g > 5000)) e.beratSebenarG = 'Masukkan berat sebenar dalam gram / Enter the actual weight in grams';
+      }
+      if (Object.keys(e).length) throw appError_('MK_PENGGUNAAN_TIDAK_SAH', { medan: e });
+      if (jenis === 'Ruang') Db.update('Butiran_Ruang', Mk.byId('Butiran_Ruang', id)._row, { Hari_Sebenar: hari });
+      else if (jenis === 'Laser Cut') Db.update('Butiran_LaserCut', Mk.byId('Butiran_LaserCut', id)._row, { Masa_Sebenar_Min: minit });
+      else Db.update('Butiran_3DP', Mk.byId('Butiran_3DP', id)._row, { Masa_Sebenar_Min: minit, Berat_Sebenar_g: g });
+      var kd = Mk.kadarFn();
+      var sebenar = MkBil.kiraTempahan(r, true, kd);
+      var bil = MkTempahan.bilOf(id);
+      if (sebenar.belum.length) {
+        amaran.push('Kadar belum ditetapkan (' + sebenar.belum.join(', ') + '): kos sebenar dan bil belum dikira. Tetapkan kadar kemudian rekod semula penggunaan.');
+      } else if (bil) {
+        var lamaKos = bil.Kos_Sebenar_RM === '' ? bil.Anggaran_RM : bil.Kos_Sebenar_RM;
+        var patch = { Kos_Sebenar_RM: sebenar.jumlah, Penggunaan_Sebenar: MkBil.penggunaanTeks(Mk.tempahan(id)) };
+        if (['Dibayar', 'Dikecualikan'].indexOf(Util.str(bil.Status)) >= 0 && Mk.rm2(lamaKos) !== sebenar.jumlah) {
+          patch.Catatan = (Util.str(bil.Catatan) ? Util.str(bil.Catatan) + ' | ' : '') + 'Kos sebenar dikemas kini selepas bayaran: RM' + Mk.rm2(lamaKos).toFixed(2) + ' ke RM' + sebenar.jumlah.toFixed(2);
+          amaran.push('Bil sudah ' + Util.str(bil.Status) + ': kos sebenar berubah daripada RM' + Mk.rm2(lamaKos).toFixed(2) + ' kepada RM' + sebenar.jumlah.toFixed(2) + '. Urus beza secara manual.');
+        }
+        Db.update('Bayaran_Makerspace', bil._row, patch);
+      } else {
+        var res = MkBil.janaLocked(Mk.tempahan(id), { sebenar: true, oleh: ctx.email });
+        if (res.dijana) MkBil.emelBil(r, res.bil);
+        else if (res.sebab === 'PERCUMA') amaran.push('Kos sebenar RM0: tiada bil dijana.');
+      }
+      Db.update('Tempahan', r._row, { Status: 'Selesai' });
+      Audit.log(ctx, 'MK_PENGGUNAAN', 'Makerspace', id, st, 'Selesai', MkBil.penggunaanTeks(Mk.tempahan(id)));
+    });
+    var out = butiran_(ctx, { id: id });
+    out.amaranPenggunaan = amaran;
+    return out;
+  }
+
+  // ---------- Pemulangan pinjaman ----------
+  function pulang_(ctx, p) {
+    Mk.adminPutus(ctx);
+    p = p || {};
+    var id = Util.str(p.id), kod = Util.str(p.kod);
+    var email = '';
+    Db.withLock(function () {
+      var r = Mk.tempahan(id);
+      if (!r) throw appError_('MK_TIDAK_DITEMUI');
+      if (Util.str(r.Jenis) !== 'Pinjaman' || Util.str(r.Status) !== 'Diluluskan') throw appError_('MK_PERALIHAN_TIDAK_SAH');
+      email = Util.normEmail(r.Emel_Pemohon);
+      var items = Mk.listById('Item_Pinjaman', id).filter(function (it) { return Util.str(it.Status) !== 'Dipulangkan' && (!kod || Util.str(it.Kod_Alat) === kod); });
+      if (!items.length) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+      items.forEach(function (it) { Db.update('Item_Pinjaman', it._row, { Status: 'Dipulangkan', Tarikh_Pulang: new Date() }); });
+      Audit.log(ctx, 'MK_PULANG', 'Makerspace', id, '', items.map(function (it) { return Util.str(it.Kod_Alat); }).join(','), Util.str(p.catatan).substr(0, 300));
+      var tinggal = Mk.listById('Item_Pinjaman', id).some(function (it) { return Util.str(it.Status) !== 'Dipulangkan'; });
+      if (!tinggal) {
+        Db.update('Tempahan', r._row, { Status: 'Selesai' });
+        var res = MkBil.janaLocked(Mk.tempahan(id), { sebenar: false, oleh: ctx.email });
+        if (res.dijana) MkBil.emelBil(r, res.bil);
+      }
+    });
+    Mk.mel(email, 'Pemulangan peralatan direkod', 'Equipment return recorded',
+      ['Pemulangan peralatan bagi tempahan ' + id + ' telah direkod. Terima kasih.'], ['The return of equipment for booking ' + id + ' has been recorded. Thank you.']);
+    return butiran_(ctx, { id: id });
+  }
+
+  // ---------- Bayaran ----------
+  function bayaranSenarai_(ctx, p) {
+    Mk.adminLihat(ctx);
+    p = p || {};
+    var status = Util.str(p.status), q = Util.str(p.q).toLowerCase();
+    var all = Db.rows('Bayaran_Makerspace');
+    var today = Mk.todayKey();
+    var kiraan = { 'Belum Bayar': 0, 'Menunggu Pengesahan': 0, Dibayar: 0, Dikecualikan: 0, Lewat: 0 };
+    all.forEach(function (b) { var s = Util.str(b.Status); if (kiraan[s] !== undefined) kiraan[s]++; });
+    var rows = all.filter(function (b) {
+      if (status && status !== 'SEMUA' && Util.str(b.Status) !== status) return false;
+      if (q) {
+        var r = Mk.tempahan(Util.str(b.ID_Tempahan));
+        var h = (Util.str(b.ID_Bayaran) + ' ' + Util.str(b.ID_Tempahan) + ' ' + Util.str(b.Emel_Pemohon) + ' ' + (r ? Util.str(r.Nama_Pemohon) : '')).toLowerCase();
+        if (h.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    rows.sort(function (a, b) { return Util.dateKey(b.Tarikh_Jana) < Util.dateKey(a.Tarikh_Jana) ? -1 : 1; });
+    return {
+      kiraan: kiraan, bolehPutus: Mk.bolehPutus(ctx),
+      senarai: rows.slice(0, 300).map(function (b) {
+        var v = MkTempahan.bilView(b);
+        var r = Mk.tempahan(v.idTempahan);
+        v.namaPemohon = r ? Util.str(r.Nama_Pemohon) : '';
+        v.jenis = r ? Util.str(r.Jenis) : '';
+        v.emel = Util.normEmail(b.Emel_Pemohon);
+        v.lewatHari = v.tarikhAkhir && v.tarikhAkhir < today && ['Belum Bayar', 'Lewat'].indexOf(v.status) >= 0 ? Util.daysBetween(v.tarikhAkhir, today) : 0;
+        return v;
+      })
+    };
+  }
+
+  function bayaranPutus_(ctx, p) {
+    Mk.adminPutus(ctx);
+    p = p || {};
+    var idb = Util.str(p.id || p.idBayaran), t = Util.str(p.tindakan), cat = Util.str(p.catatan).substr(0, 300);
+    if (['sahkan', 'tolak', 'kecuali'].indexOf(t) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+    if ((t === 'tolak' || t === 'kecuali') && !cat) throw appError_('MK_CATATAN_WAJIB');
+    var emel = '', idt = '';
+    Db.withLock(function () {
+      var b = Db.find('Bayaran_Makerspace', function (x) { return Util.str(x.ID_Bayaran) === idb; })[0];
+      if (!b) throw appError_('MK_BAYARAN_TIDAK_DITEMUI');
+      var lama = Util.str(b.Status), now = new Date();
+      emel = Util.normEmail(b.Emel_Pemohon); idt = Util.str(b.ID_Tempahan);
+      if (t === 'sahkan') {
+        if (['Menunggu Pengesahan', 'Belum Bayar', 'Lewat'].indexOf(lama) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+        var patch = { Status: 'Dibayar', Disahkan_Oleh: ctx.email, Tarikh_Pengesahan: now, Catatan: cat || Util.str(b.Catatan) };
+        if (lama !== 'Menunggu Pengesahan') {
+          var kaedah = Util.str(p.kaedah);
+          if (MkBil.KAEDAH_BAYARAN.indexOf(kaedah) < 0) throw appError_('MK_BAYARAN_TIDAK_SAH', { medan: { kaedah: 'Pilih kaedah bayaran / Choose a payment method' } });
+          patch.Kaedah = kaedah; patch.No_Rujukan = Util.str(p.noRujukan).substr(0, 60); patch.Tarikh_Bayar = now;
+        }
+        Db.update('Bayaran_Makerspace', b._row, patch);
+        Audit.log(ctx, 'MK_SAHKAN_BAYARAN', 'Makerspace', idb, lama, 'Dibayar', cat);
+      } else if (t === 'tolak') {
+        if (lama !== 'Menunggu Pengesahan') throw appError_('MK_PERALIHAN_TIDAK_SAH');
+        var baru = Util.dateKey(b.Tarikh_Akhir) < Mk.todayKey() ? 'Lewat' : 'Belum Bayar';
+        Db.update('Bayaran_Makerspace', b._row, { Status: baru, Kaedah: '', No_Rujukan: '', Fail_Resit: '', Tarikh_Bayar: '', Catatan: 'Bayaran ditolak: ' + cat });
+        Audit.log(ctx, 'MK_TOLAK_BAYARAN', 'Makerspace', idb, lama, baru, cat);
+      } else {
+        if (['Menunggu Pengesahan', 'Belum Bayar', 'Lewat'].indexOf(lama) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+        Db.update('Bayaran_Makerspace', b._row, { Status: 'Dikecualikan', Disahkan_Oleh: ctx.email, Tarikh_Pengesahan: now, Catatan: cat });
+        Audit.log(ctx, 'MK_KECUALI_BAYARAN', 'Makerspace', idb, lama, 'Dikecualikan', cat);
+      }
+    });
+    var tk = { sahkan: ['disahkan', 'confirmed'], tolak: ['ditolak (' + cat + ')', 'rejected (' + cat + ')'], kecuali: ['dikecualikan', 'waived'] }[t];
+    Mk.mel(emel, 'Bayaran Makerspace ' + tk[0], 'Makerspace payment ' + tk[1],
+      ['Bayaran bagi bil ' + idb + ' (tempahan ' + idt + ') telah ' + tk[0] + '.'], ['Payment for bill ' + idb + ' (booking ' + idt + ') has been ' + tk[1] + '.']);
+    return bayaranSenarai_(ctx, { status: Util.str(p.penapis) || 'SEMUA' });
+  }
+
+  // ---------- ALAT ----------
+  function alatSenarai_(ctx) {
+    Mk.adminLihat(ctx);
+    return {
+      bolehPutus: Mk.bolehPutus(ctx),
+      senarai: Db.rows('ALAT').map(function (a) {
+        var b = Mk.baki(a);
+        return {
+          kod: Util.str(a.Kod_Alat), nama: Util.str(a.Nama_Alat), kategori: Util.str(a.Kategori), jumlah: b.jumlah, rosak: b.rosak, dipinjam: b.dipinjam, baki: b.baki,
+          bolehDipinjam: Util.truthy(a.Boleh_Dipinjam), aktif: Util.truthy(a.Aktif), catatan: Util.str(a.Catatan)
+        };
+      })
+    };
+  }
+
+  function alatSimpan_(ctx, p) {
+    Mk.adminPutus(ctx);
+    p = p || {};
+    var e = {};
+    var kod = Util.str(p.kod).toUpperCase();
+    if (!KOD_RE.test(kod)) e.kod = 'Kod 2 hingga 30 aksara (A-Z, 0-9, _ atau -) / Code of 2 to 30 characters';
+    var nama = Util.str(p.nama).substr(0, 120);
+    if (nama.length < 2) e.nama = 'Nama alat wajib / Name is required';
+    var jumlah = Mk.int(p.jumlah), rosak = Mk.int(p.rosak === '' || p.rosak === undefined ? 0 : p.rosak);
+    if (jumlah === null || jumlah > 100000) e.jumlah = 'Kuantiti jumlah tidak sah / Invalid total quantity';
+    if (rosak === null || (jumlah !== null && rosak > jumlah)) e.rosak = 'Rosak/hilang tidak sah (tidak melebihi jumlah) / Invalid damaged/lost quantity';
+    if (Object.keys(e).length) throw jsonErr_(e);
+    return Db.withLock(function () {
+      var cur = Mk.alat(kod);
+      var rec = {
+        Kod_Alat: kod, Nama_Alat: nama, Kategori: Util.str(p.kategori).substr(0, 60), Kuantiti_Jumlah: jumlah, Kuantiti_Rosak_Hilang: rosak,
+        Boleh_Dipinjam: yaTidak_(p.bolehDipinjam, true) ? 'Ya' : 'Tidak', Aktif: yaTidak_(p.aktif, true) ? 'Ya' : 'Tidak', Catatan: Util.str(p.catatan).substr(0, 300)
+      };
+      if (cur) Db.update('ALAT', cur._row, rec); else Db.append('ALAT', rec);
+      Audit.log(ctx, cur ? 'MK_KEMAS_KINI_ALAT' : 'MK_TAMBAH_ALAT', 'Makerspace', kod, cur ? cur.Kuantiti_Jumlah + '/' + cur.Kuantiti_Rosak_Hilang : '', jumlah + '/' + rosak, nama);
+      return alatSenarai_(ctx);
+    });
+  }
+
+  // ---------- PERALATAN ----------
+  function peralatanSenarai_(ctx) {
+    Mk.adminLihat(ctx);
+    return {
+      bolehPutus: Mk.bolehPutus(ctx),
+      senarai: Db.rows('PERALATAN').map(function (s) {
+        return {
+          kod: Util.str(s.Kod_Mesin), jenis: Util.str(s.Jenis), noMesin: Util.str(s.No_Mesin), nama: Util.str(s.Nama_Model), kapasiti: Number(s.Kapasiti) || 0,
+          kodKadar: Util.str(s.Kod_Kadar), status: Util.str(s.Status) || 'Aktif', catatan: Util.str(s.Catatan)
+        };
+      })
+    };
+  }
+
+  function peralatanSimpan_(ctx, p) {
+    Mk.adminPutus(ctx);
+    p = p || {};
+    var e = {};
+    var kod = Util.str(p.kod).toUpperCase();
+    if (!KOD_RE.test(kod)) e.kod = 'Kod 2 hingga 30 aksara (A-Z, 0-9, _ atau -) / Code of 2 to 30 characters';
+    var jenis = Util.str(p.jenis);
+    if (JENIS_MESIN.indexOf(jenis) < 0) e.jenis = 'Pilih jenis / Choose a type';
+    var nama = Util.str(p.nama).substr(0, 120);
+    if (nama.length < 2) e.nama = 'Nama atau model wajib / Name or model is required';
+    var kap = '';
+    if (Util.str(p.kapasiti) !== '') { kap = Mk.int(p.kapasiti); if (kap === null || kap < 1 || kap > 5000) e.kapasiti = 'Kapasiti tidak sah / Invalid capacity'; }
+    else if (jenis === 'Ruang') e.kapasiti = 'Kapasiti ruang wajib / Space capacity is required';
+    var kodKadar = Util.str(p.kodKadar).substr(0, 60);
+    if (kodKadar && !/^[A-Za-z0-9_\-]+$/.test(kodKadar)) e.kodKadar = 'Kod kadar tidak sah / Invalid rate code';
+    var status = Util.str(p.status) || 'Aktif';
+    if (STATUS_MESIN.indexOf(status) < 0) e.status = 'Status tidak sah / Invalid status';
+    if (Object.keys(e).length) throw jsonErr_(e);
+    return Db.withLock(function () {
+      var cur = Mk.sumber(kod);
+      var rec = {
+        Kod_Mesin: kod, Jenis: jenis, No_Mesin: Util.str(p.noMesin).substr(0, 30), Nama_Model: nama, Kapasiti: kap,
+        Kod_Kadar: kodKadar, Status: status, Catatan: Util.str(p.catatan).substr(0, 300)
+      };
+      if (cur) Db.update('PERALATAN', cur._row, rec); else Db.append('PERALATAN', rec);
+      Audit.log(ctx, cur ? 'MK_KEMAS_KINI_PERALATAN' : 'MK_TAMBAH_PERALATAN', 'Makerspace', kod, cur ? Util.str(cur.Status) : '', status, jenis + ' ' + nama);
+      return peralatanSenarai_(ctx);
+    });
+  }
+
+  /** Tambah ruang lalai (Maker Lab 200, Bilik Mesyuarat 20) jika belum ada. */
+  function peralatanLalai_(ctx) {
+    Mk.adminPutus(ctx);
+    return Db.withLock(function () {
+      [['MAKER_LAB', 'Maker Lab', 200, 'RUANG_MAKER_LAB'], ['BILIK_MESYUARAT', 'Bilik Mesyuarat', 20, 'RUANG_BILIK_MESYUARAT']].forEach(function (x) {
+        if (Mk.sumber(x[0])) return;
+        Db.append('PERALATAN', { Kod_Mesin: x[0], Jenis: 'Ruang', No_Mesin: '', Nama_Model: x[1], Kapasiti: x[2], Kod_Kadar: x[3], Status: 'Aktif', Catatan: '' });
+        Audit.log(ctx, 'MK_TAMBAH_PERALATAN', 'Makerspace', x[0], '', 'Aktif', 'Ruang lalai');
+      });
+      return peralatanSenarai_(ctx);
+    });
+  }
+
+  // ---------- KADAR ----------
+  function kadarSenarai_(ctx) {
+    Mk.adminLihat(ctx);
+    var senarai = Db.rows('KADAR').map(function (r) {
+      var rm = Mk.rmOf(r.Kadar_RM);
+      return {
+        kod: Util.str(r.Kod_Sumber), nama: Util.str(r.Nama_Sumber), jenisPengguna: Util.str(r.Jenis_Pengguna), unit: Util.str(r.Unit),
+        kadar: rm, berkuatKuasa: Util.dateKey(r.Berkuat_Kuasa), aktif: Util.truthy(r.Aktif), belumDitetapkan: rm === null
+      };
+    });
+    senarai.sort(function (a, b) {
+      if (a.kod !== b.kod) return a.kod < b.kod ? -1 : 1;
+      return USER_TYPES.indexOf(a.jenisPengguna) - USER_TYPES.indexOf(b.jenisPengguna) || (a.berkuatKuasa < b.berkuatKuasa ? -1 : 1);
+    });
+    return { bolehPutus: Mk.bolehPutus(ctx), jenisPengguna: USER_TYPES, senarai: senarai };
+  }
+
+  function kadarSimpan_(ctx, p) {
+    Mk.adminPutus(ctx);
+    p = p || {};
+    var e = {};
+    var kod = Util.str(p.kod).toUpperCase();
+    if (!/^[A-Z0-9][A-Z0-9_\-]{1,59}$/.test(kod)) e.kod = 'Kod sumber tidak sah / Invalid source code';
+    var jp = Util.str(p.jenisPengguna);
+    if (USER_TYPES.indexOf(jp) < 0) e.jenisPengguna = 'Pilih jenis pengguna / Choose a user type';
+    var bk = Util.str(p.berkuatKuasa) || Mk.todayKey();
+    if (!Mk.validKey(bk)) e.berkuatKuasa = 'Tarikh tidak sah / Invalid date';
+    var kadar = '';
+    if (Util.str(p.kadar) !== '') {
+      kadar = Util.parseRm(p.kadar);
+      if (kadar === null) e.kadar = 'Masukkan RM yang sah atau kosongkan (belum ditetapkan) / Enter a valid RM value or leave blank (not set)';
+    }
+    if (Object.keys(e).length) throw jsonErr_(e);
+    return Db.withLock(function () {
+      var cur = Db.find('KADAR', function (r) {
+        return Util.str(r.Kod_Sumber) === kod && Util.str(r.Jenis_Pengguna) === jp && Util.dateKey(r.Berkuat_Kuasa) === bk;
+      })[0];
+      if (!cur && !Util.str(p.berkuatKuasa) && kadar !== '') {
+        // menetapkan kadar yang masih kosong (belum ditetapkan): isi baris sedia ada supaya sesi lampau turut dapat dikira
+        var kosong = Db.find('KADAR', function (r) {
+          return Util.str(r.Kod_Sumber) === kod && Util.str(r.Jenis_Pengguna) === jp && Mk.rmOf(r.Kadar_RM) === null && Util.truthy(r.Aktif);
+        });
+        if (kosong.length) cur = kosong[kosong.length - 1];
+      }
+      var nama = Util.str(p.nama).substr(0, 120) || (cur ? Util.str(cur.Nama_Sumber) : '');
+      var unit = Util.str(p.unit).substr(0, 40) || (cur ? Util.str(cur.Unit) : '');
+      if (!cur) {
+        var lain = Db.find('KADAR', function (r) { return Util.str(r.Kod_Sumber) === kod; })[0];
+        if (!nama && lain) nama = Util.str(lain.Nama_Sumber);
+        if (!unit && lain) unit = Util.str(lain.Unit);
+      }
+      var e2 = {};
+      if (!nama) e2.nama = 'Nama sumber wajib / Source name is required';
+      if (!unit) e2.unit = 'Unit wajib / Unit is required';
+      if (Object.keys(e2).length) throw jsonErr_(e2);
+      var rec = { Kod_Sumber: kod, Nama_Sumber: nama, Jenis_Pengguna: jp, Unit: unit, Kadar_RM: kadar, Berkuat_Kuasa: cur ? cur.Berkuat_Kuasa : Util.toDate(bk), Aktif: yaTidak_(p.aktif, true) ? 'Ya' : 'Tidak' };
+      if (cur) Db.update('KADAR', cur._row, rec); else Db.append('KADAR', rec);
+      Audit.log(ctx, cur ? 'MK_KEMAS_KINI_KADAR' : 'MK_TAMBAH_KADAR', 'Makerspace', kod + '/' + jp, cur ? Util.str(cur.Kadar_RM) : '', String(kadar), 'berkuat kuasa ' + bk);
+      return kadarSenarai_(ctx);
+    });
+  }
+
+  // ---------- Pemohon (tempah bagi pihak) ----------
+  function pemohon_(ctx, p) {
+    Mk.adminLihat(ctx);
+    p = p || {};
+    var out;
+    if (Util.str(p.noMatrik)) {
+      var pem = Mk.pemohonBagi(ctx, { noMatrik: p.noMatrik });
+      var pg = Db.find('Pengguna', function (r) { return Util.normMatric(r.No_Matrik) === pem.noMatrik; });
+      out = { jenis: pem.jenis, nama: pem.nama, emel: pem.emel, noMatrik: pem.noMatrik, telefon: pem.telefon, jabatan: pem.jabatan, adaProfil: true, sudahLogMasuk: pg.length > 0 };
+    } else {
+      if (!Bantu.allowed(ctx, 'makerspace')) throw appError_('TIADA_KEBENARIAN');
+      var e = Util.normEmail(p.emel);
+      if (!Util.isEmail(e)) throw appError_('MK_EMEL_PEMOHON');
+      var jenis = Util.roleByDomain(e, Cfg.get('DOMAIN_PELAJAR', '@graduate.utm.my'), Cfg.get('DOMAIN_STAF', '@utm.my'));
+      if (jenis === ROLE.PELAJAR) throw appError_('MK_EMEL_PEMOHON', { medan: { emel: 'Pelajar: gunakan No. Matrik / Students: use the matric number' } });
+      var g = Mk.penggunaOf(e);
+      out = { jenis: jenis, nama: g ? Util.str(g.Nama) : '', emel: e, noMatrik: '', telefon: g ? Util.str(g.Telefon) : '', jabatan: g ? Util.str(g.Jabatan_Organisasi) : '', adaProfil: !!g };
+    }
+    var s = MkTempahan.sekatan(out.emel, out.noMatrik);
+    out.sekatan = { bil: s.bil.length > 0, laporan: s.laporan.length > 0, pinjaman: s.pinjaman.length > 0 };
+    return out;
+  }
+
+  return {
+    ringkasan: ringkasan_, senarai: senarai_, butiran: butiran_, putus: putus_, penggunaan: penggunaan_, pulang: pulang_,
+    bayaranSenarai: bayaranSenarai_, bayaranPutus: bayaranPutus_, alatSenarai: alatSenarai_, alatSimpan: alatSimpan_,
+    peralatanSenarai: peralatanSenarai_, peralatanSimpan: peralatanSimpan_, peralatanLalai: peralatanLalai_,
+    kadarSenarai: kadarSenarai_, kadarSimpan: kadarSimpan_, pemohon: pemohon_
+  };
+})();
+
+
+// ===== MakerspaceBil.gs =====
+/**
+ * UTMPreneur: Makerspace, kiraan kos, bil (Bayaran_Makerspace), bayaran oleh pemohon dan kerja harian.
+ * Kadar kosong atau tiada = "belum ditetapkan": bil tidak dijana sehingga ditetapkan dan admin diberi amaran.
+ * Bil dijana selepas sesi (kerja harian) atau apabila admin merekod penggunaan sebenar.
+ */
+
+var MkBil = (function () {
+  var PAYMENT_METHODS = ['Tunai', 'Pindahan Bank', 'Invois Dalaman', 'Lain-lain'];
+
+  // ---------- Kiraan ----------
+  /**
+   * Kira kos. bu: {bilHari, peralatan:[{kod,kuantiti}]} (Ruang), {minit} (Laser Cut), {minit, beratG} (3D Printer).
+   * Pulang {jumlah, baris:[{kod,nama,unit,kuantiti,kadar,jumlah}], belum:[kod]}.
+   */
+  function kira_(jenis, kodSumber, jenisPengguna, tarikhKey, bu, kd) {
+    var baris = [], belum = [], jumlah = 0;
+    var add = function (kod, kuantiti, unitLabel, fallbackNama) {
+      var k = kd(kod, jenisPengguna, tarikhKey);
+      if (!k.ada) { belum.push(kod); baris.push({ kod: kod, nama: k.nama || fallbackNama || kod, unit: unitLabel || k.unit, kuantiti: kuantiti, kadar: null, jumlah: null }); return; }
+      var j = Mk.rm2(k.rm * kuantiti);
+      jumlah += j;
+      baris.push({ kod: kod, nama: k.nama || fallbackNama || kod, unit: unitLabel || k.unit, kuantiti: kuantiti, kadar: k.rm, jumlah: j });
+    };
+    var s = jenis === 'Pinjaman' ? null : Mk.sumber(kodSumber);
+    var kk = s ? Util.str(s.Kod_Kadar) : '';
+    if (jenis === 'Ruang') {
+      var hari = Number(bu.bilHari) || 0;
+      if (kk) add(kk, hari, 'per hari'); else { belum.push('Kod_Kadar:' + kodSumber); baris.push({ kod: kodSumber, nama: 'Sewa ruang', unit: 'per hari', kuantiti: hari, kadar: null, jumlah: null }); }
+      add('RUANG_CAJ_PERKHIDMATAN', 1, 'per tempahan');
+      (bu.peralatan || []).forEach(function (x) { add(x.kod, (Number(x.kuantiti) || 0) * hari, 'unit-hari'); });
+    } else if (jenis === 'Laser Cut') {
+      var kod = kk || 'LASER_CUT';
+      var k = kd(kod, jenisPengguna, tarikhKey);
+      var blok = parseInt((/(\d+)\s*minit/i.exec(k.unit || '') || [0, 5])[1], 10) || 5;
+      add(kod, Math.ceil((Number(bu.minit) || 0) / blok), 'per ' + blok + ' minit');
+    } else if (jenis === '3D Printer') {
+      var base = kk || '3D_PRINTER';
+      add(base + '_GRAM', Number(bu.beratG) || 0, 'per gram');
+      add(base + '_JAM', Mk.rm2((Number(bu.minit) || 0) / 60), 'per jam');
+    } else if (jenis === 'Pinjaman') {
+      var pk = kd('PERALATAN_TANGAN', jenisPengguna, tarikhKey);
+      if (pk.ada && pk.rm > 0) add('PERALATAN_TANGAN', 1, 'per pinjaman');
+    }
+    return { jumlah: Mk.rm2(jumlah), baris: baris, belum: belum };
+  }
+
+  /** Kira kos sebenar bagi satu tempahan daripada data butiran (penggunaan sebenar jika ada). */
+  function kiraTempahan_(r, sebenar, kd) {
+    var id = Util.str(r.ID_Tempahan), jenis = Util.str(r.Jenis), jp = Util.str(r.Jenis_Pengguna), tarikh = Util.dateKey(r.Tarikh_Mula);
+    var kod = Util.str(r.Kod_Sumber);
+    if (jenis === 'Ruang') {
+      var b = Mk.byId('Butiran_Ruang', id) || {};
+      var hari = sebenar && b.Hari_Sebenar !== '' && b.Hari_Sebenar !== undefined ? Number(b.Hari_Sebenar) : Number(b.Bil_Hari) || 1;
+      var per = Mk.listById('Item_Peralatan_Ruang', id).map(function (x) { return { kod: Util.str(x.Kod_Alat), kuantiti: Number(x.Kuantiti) || 0 }; });
+      return kira_(jenis, kod, jp, tarikh, { bilHari: hari, peralatan: per }, kd);
+    }
+    if (jenis === 'Laser Cut') {
+      var l = Mk.byId('Butiran_LaserCut', id) || {};
+      var m = sebenar && l.Masa_Sebenar_Min !== '' && l.Masa_Sebenar_Min !== undefined ? Number(l.Masa_Sebenar_Min) : Number(l.Masa_Dijangka_Min) || 0;
+      return kira_(jenis, kod, jp, tarikh, { minit: m }, kd);
+    }
+    if (jenis === '3D Printer') {
+      var t = Mk.byId('Butiran_3DP', id) || {};
+      var mn = sebenar && t.Masa_Sebenar_Min !== '' && t.Masa_Sebenar_Min !== undefined ? Number(t.Masa_Sebenar_Min) : Number(t.Masa_Dijangka_Min) || 0;
+      var g = sebenar && t.Berat_Sebenar_g !== '' && t.Berat_Sebenar_g !== undefined ? Number(t.Berat_Sebenar_g) : Number(t.Berat_g) || 0;
+      return kira_(jenis, kod, jp, tarikh, { minit: mn, beratG: g }, kd);
+    }
+    return kira_(jenis, kod, jp, tarikh, {}, kd);
+  }
+
+  function penggunaanTeks_(r) {
+    var id = Util.str(r.ID_Tempahan), jenis = Util.str(r.Jenis);
+    if (jenis === 'Ruang') { var b = Mk.byId('Butiran_Ruang', id) || {}; return (b.Hari_Sebenar !== '' && b.Hari_Sebenar !== undefined ? b.Hari_Sebenar : b.Bil_Hari) + ' hari'; }
+    if (jenis === 'Laser Cut') { var l = Mk.byId('Butiran_LaserCut', id) || {}; return (l.Masa_Sebenar_Min !== '' && l.Masa_Sebenar_Min !== undefined ? l.Masa_Sebenar_Min : l.Masa_Dijangka_Min) + ' minit'; }
+    if (jenis === '3D Printer') {
+      var t = Mk.byId('Butiran_3DP', id) || {};
+      return (t.Berat_Sebenar_g !== '' && t.Berat_Sebenar_g !== undefined ? t.Berat_Sebenar_g : t.Berat_g) + ' g, ' + (t.Masa_Sebenar_Min !== '' && t.Masa_Sebenar_Min !== undefined ? t.Masa_Sebenar_Min : t.Masa_Dijangka_Min) + ' minit';
+    }
+    return 'Pinjaman';
+  }
+
+  function bilOf_(id) { return MkTempahan.bilOf(id); }
+
+  /**
+   * Jana bil bagi tempahan jika belum ada dan semua kadar telah ditetapkan. MESTI dipanggil dalam Db.withLock.
+   * opts.sebenar: guna penggunaan sebenar. Pulang {dijana, bil, sebab, belum}.
+   */
+  function janaLocked_(r, opts) {
+    opts = opts || {};
+    var id = Util.str(r.ID_Tempahan);
+    var ada = bilOf_(id);
+    if (ada) return { dijana: false, bil: ada, sebab: 'ADA' };
+    var kd = Mk.kadarFn();
+    var anggaran = kiraTempahan_(r, false, kd);
+    var sebenar = opts.sebenar ? kiraTempahan_(r, true, kd) : null;
+    var belum = (sebenar || anggaran).belum;
+    if (belum.length) return { dijana: false, sebab: 'KADAR', belum: belum };
+    var ang = r.Anggaran_RM !== '' && r.Anggaran_RM !== null && r.Anggaran_RM !== undefined ? Number(r.Anggaran_RM) : anggaran.jumlah;
+    var jumlah = sebenar ? sebenar.jumlah : ang;
+    if (!(jumlah > 0)) return { dijana: false, sebab: 'PERCUMA' };
+    var hari = Cfg.num('TARIKH_AKHIR_BAYARAN_MAKERSPACE_HARI', 7);
+    var today = Mk.todayKey();
+    var tahun = parseInt(Util.fmtDate(new Date(), 'yyyy'), 10);
+    var idb = Util.formatId('BMK', tahun, Db.nextSeqLocked('BMK_' + tahun), 4);
+    var rec = {
+      ID_Bayaran: idb, ID_Tempahan: id, Emel_Pemohon: Util.normEmail(r.Emel_Pemohon), Anggaran_RM: ang,
+      Penggunaan_Sebenar: opts.sebenar ? penggunaanTeks_(r) : '', Kos_Sebenar_RM: sebenar ? sebenar.jumlah : '',
+      Status: 'Belum Bayar', Tarikh_Akhir: Util.toDate(Mk.addDays(today, hari)), Tarikh_Jana: Util.toDate(today)
+    };
+    Db.append('Bayaran_Makerspace', rec);
+    Audit.log({ email: opts.oleh || 'sistem', role: opts.oleh ? ROLE.ADMIN_PENUH : '-' }, 'MK_JANA_BIL', 'Makerspace', idb, id, String(jumlah), Util.str(r.Jenis));
+    return { dijana: true, bil: bilOf_(id), sebab: '' };
+  }
+
+  function emelBil_(r, b) {
+    var j = Mk.rm2(b.Kos_Sebenar_RM !== '' && b.Kos_Sebenar_RM !== undefined ? b.Kos_Sebenar_RM : b.Anggaran_RM);
+    Mk.mel(Util.normEmail(r.Emel_Pemohon), 'Bil Makerspace dijana', 'Makerspace bill issued',
+      ['Bil ' + Util.str(b.ID_Bayaran) + ' bagi tempahan ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Tarikh akhir bayaran: ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '. Sila rekod bayaran dalam UTMPreneur (Makerspace).'],
+      ['Bill ' + Util.str(b.ID_Bayaran) + ' for booking ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Payment due date: ' + Util.dateKey(b.Tarikh_Akhir) + '. Please record the payment in UTMPreneur (Makerspace).']);
+  }
+
+  // ---------- Bayaran oleh pemohon ----------
+  function rekodBayaran_(ctx, p) {
+    var pem = Mk.pemohonSendiri(ctx);
+    var idb = Util.str(p.idBayaran || p.id);
+    var b = Db.find('Bayaran_Makerspace', function (x) { return Util.str(x.ID_Bayaran) === idb; })[0];
+    var r = b ? Mk.tempahan(Util.str(b.ID_Tempahan)) : null;
+    if (!b || !r || !MkTempahan.milik(r, pem.emel, pem.noMatrik)) throw appError_('MK_BAYARAN_TIDAK_DITEMUI');
+    if (['Belum Bayar', 'Lewat'].indexOf(Util.str(b.Status)) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+    var e = {};
+    var kaedah = Util.str(p.kaedah);
+    if (PAYMENT_METHODS.indexOf(kaedah) < 0) e.kaedah = 'Pilih kaedah bayaran / Choose a payment method';
+    else if (kaedah === 'Invois Dalaman' && pem.jenis === ROLE.LUAR) e.kaedah = 'Invois Dalaman untuk warga UTM sahaja / Internal invoice is for UTM members only';
+    var noRujukan = Util.str(p.noRujukan).substr(0, 60);
+    if (noRujukan.length < 2) e.noRujukan = 'Masukkan no. rujukan / Enter the reference number';
+    var fail = null;
+    if (kaedah !== 'Invois Dalaman') {
+      if (p.resit && p.resit.data) {
+        try { fail = Files.validate(p.resit, ['pdf', 'jpg', 'jpeg', 'png']); } catch (er) { e.resit = 'Resit PDF/JPG/PNG sahaja (saiz dihadkan) / PDF, JPG or PNG receipt only'; }
+      } else e.resit = 'Muat naik resit (PDF/JPG/PNG) / Upload the receipt';
+    }
+    if (Object.keys(e).length) throw appError_('MK_BAYARAN_TIDAK_SAH', { medan: e });
+    var url = fail ? Files.save('FLD_RESIT_MAKERSPACE', 'RESIT_' + idb + '_' + Util.fmtDate(new Date(), 'yyyyMMddHHmm'), fail) : '';
+    Db.withLock(function () {
+      var cur = Db.find('Bayaran_Makerspace', function (x) { return Util.str(x.ID_Bayaran) === idb; })[0];
+      if (['Belum Bayar', 'Lewat'].indexOf(Util.str(cur.Status)) < 0) throw appError_('MK_PERALIHAN_TIDAK_SAH');
+      Db.update('Bayaran_Makerspace', cur._row, { Status: 'Menunggu Pengesahan', Kaedah: kaedah, No_Rujukan: noRujukan, Fail_Resit: url, Tarikh_Bayar: new Date() });
+      Audit.log(ctx, 'MK_REKOD_BAYARAN', 'Makerspace', idb, Util.str(cur.Status), 'Menunggu Pengesahan', kaedah);
+    });
+    return MkTempahan.butiran(ctx, { id: Util.str(b.ID_Tempahan) });
+  }
+
+  // ---------- Kerja harian ----------
+  function jobHarian_() {
+    var hasil = { selesai: 0, tamatPerakuan: 0, bilDijana: 0, bilLewat: 0, peringatan: 0, amaranKadar: 0, laporan: 0 };
+    var today = Mk.todayKey();
+    var logs = {};
+    Db.rows('Peringatan').forEach(function (l) { logs[Util.str(l.Jenis)] = true; });
+    var sistem = { email: 'sistem', role: '-' };
+
+    // log + hantar sekali sahaja bagi setiap kunci
+    var sekali = function (kunci, to, ref, subjBm, subjEn, bm, en, catatan) {
+      if (logs[kunci]) return false;
+      var sent = Mk.mel(to, subjBm, subjEn, bm, en);
+      Db.append('Peringatan', { Masa: new Date(), Emel: to, Jenis: kunci, Rujukan: ref, Status: sent ? 'Dihantar' : 'Dilangkau', Catatan: catatan || '' });
+      logs[kunci] = true;
+      hasil.peringatan++;
+      return true;
+    };
+
+    var tempahan = Db.rows('Tempahan');
+    // 1. Pautan perakuan tamat tempoh -> Dibatalkan; sesi tamat -> Selesai
+    tempahan.forEach(function (r) {
+      var st = Util.str(r.Status), id = Util.str(r.ID_Tempahan);
+      if (st === 'Menunggu Perakuan' && Mk.tokenTamat(r)) {
+        Db.update('Tempahan', r._row, { Status: 'Dibatalkan', Token_Hash: '', Tarikh_Keputusan: new Date(), Catatan: 'Pautan perakuan penyelia tamat tempoh tanpa tindakan' });
+        Audit.log(sistem, 'MK_PERAKUAN_TAMAT', 'Makerspace', id, st, 'Dibatalkan', '');
+        r.Status = 'Dibatalkan';
+        hasil.tamatPerakuan++;
+        Mk.mel(Util.normEmail(r.Emel_Pemohon), 'Tempahan Makerspace dibatalkan', 'Makerspace booking cancelled',
+          ['Tempahan ' + id + ' dibatalkan kerana penyelia tidak memperakuinya dalam tempoh yang ditetapkan. Sila buat tempahan baharu.'],
+          ['Booking ' + id + ' was cancelled because the supervisor did not endorse it in time. Please make a new booking.']);
+      } else if (st === 'Diluluskan' && Util.str(r.Jenis) !== 'Pinjaman' && Util.dateKey(r.Tarikh_Tamat) < today) {
+        Db.update('Tempahan', r._row, { Status: 'Selesai' });
+        Audit.log(sistem, 'MK_SELESAI', 'Makerspace', id, st, 'Selesai', '');
+        r.Status = 'Selesai';
+        hasil.selesai++;
+      }
+    });
+
+    // 2. Jana bil selepas sesi (bukan Pinjaman)
+    var warnKadar = [];
+    tempahan.forEach(function (r) {
+      var st = Util.str(r.Status), id = Util.str(r.ID_Tempahan);
+      if (Util.str(r.Jenis) === 'Pinjaman' || ['Diluluskan', 'Selesai'].indexOf(st) < 0 || Util.dateKey(r.Tarikh_Tamat) >= today) return;
+      var res = Db.withLock(function () { return janaLocked_(Mk.tempahan(id), { sebenar: false }); });
+      if (res.dijana) { hasil.bilDijana++; emelBil_(r, res.bil); }
+      else if (res.sebab === 'KADAR') warnKadar.push({ id: id, belum: res.belum });
+    });
+    warnKadar.forEach(function (w) {
+      if (sekali('MK_KADAR_TIADA:' + w.id, ADMIN_UTAMA, w.id, 'Amaran: kadar Makerspace belum ditetapkan', 'Warning: Makerspace rate not set',
+        ['Bil bagi tempahan ' + w.id + ' tidak dapat dijana kerana kadar belum ditetapkan: ' + w.belum.join(', ') + '. Sila tetapkan kadar dalam UTMPreneur (Makerspace admin, Kadar).'],
+        ['The bill for booking ' + w.id + ' cannot be generated because rates are not set: ' + w.belum.join(', ') + '. Please set the rates in UTMPreneur (Makerspace admin, Rates).'], w.belum.join(','))) hasil.amaranKadar++;
+    });
+
+    // 3. Bil: peringatan, Lewat dan susulan
+    var susulan = Math.max(1, Cfg.num('PERINGATAN_SUSULAN_HARI', 3));
+    var hariPeringatan = Cfg.num('BAYARAN_PERINGATAN_HARI', 4);
+    Db.rows('Bayaran_Makerspace').forEach(function (b) {
+      var st = Util.str(b.Status), idb = Util.str(b.ID_Bayaran);
+      var to = Util.normEmail(b.Emel_Pemohon);
+      var akhir = Util.dateKey(b.Tarikh_Akhir), jana = Util.dateKey(b.Tarikh_Jana) || akhir;
+      var jumlah = Mk.rm2(b.Kos_Sebenar_RM !== '' && b.Kos_Sebenar_RM !== undefined ? b.Kos_Sebenar_RM : b.Anggaran_RM).toFixed(2);
+      if (st === 'Belum Bayar' && akhir && today > akhir) {
+        Db.update('Bayaran_Makerspace', b._row, { Status: 'Lewat' });
+        Audit.log(sistem, 'MK_BIL_LEWAT', 'Makerspace', idb, st, 'Lewat', '');
+        st = 'Lewat';
+        hasil.bilLewat++;
+        sekali('MK_LEWAT:' + idb, to, idb, 'Bil Makerspace lewat dibayar', 'Makerspace bill overdue',
+          ['Bil ' + idb + ' (RM' + jumlah + ') telah lewat. Tempahan Makerspace baharu disekat sehingga bil dijelaskan.'],
+          ['Bill ' + idb + ' (RM' + jumlah + ') is overdue. New Makerspace bookings are blocked until it is settled.']);
+      }
+      if (st === 'Belum Bayar' && akhir && today <= akhir && Util.daysBetween(jana, today) >= hariPeringatan) {
+        sekali('MK_PERINGATAN:' + idb, to, idb, 'Peringatan bayaran Makerspace', 'Makerspace payment reminder',
+          ['Peringatan: bil ' + idb + ' (RM' + jumlah + ') perlu dibayar sebelum ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '.'],
+          ['Reminder: bill ' + idb + ' (RM' + jumlah + ') is due by ' + akhir + '.']);
+      }
+      if (st === 'Lewat' && akhir) {
+        var n = Math.floor(Util.daysBetween(akhir, today) / susulan);
+        if (n >= 1) {
+          sekali('MK_SUSULAN:' + idb + ':' + n, to, idb, 'Susulan: bil Makerspace belum dijelaskan', 'Follow-up: Makerspace bill unpaid',
+            ['Bil ' + idb + ' (RM' + jumlah + ') masih belum dijelaskan sejak ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '. Sila jelaskan segera.'],
+            ['Bill ' + idb + ' (RM' + jumlah + ') is still unpaid since ' + akhir + '. Please settle it promptly.']);
+        }
+      }
+    });
+
+    // 4. Pinjaman: peringatan pulang dan lewat
+    var itemRows = Db.rows('Item_Pinjaman');
+    Db.rows('Tempahan').forEach(function (r) {
+      if (Util.str(r.Jenis) !== 'Pinjaman' || Util.str(r.Status) !== 'Diluluskan') return;
+      var id = Util.str(r.ID_Tempahan), to = Util.normEmail(r.Emel_Pemohon);
+      var belum = itemRows.filter(function (it) { return Util.str(it.ID_Tempahan) === id && Util.str(it.Status) !== 'Dipulangkan'; });
+      if (!belum.length) return;
+      var due = Util.dateKey(r.Tarikh_Tamat);
+      var senarai = belum.map(function (it) { var a = Mk.alat(Util.str(it.Kod_Alat)); return (a ? Util.str(a.Nama_Alat) : Util.str(it.Kod_Alat)) + ' x' + it.Kuantiti; }).join(', ');
+      var d = Util.daysBetween(today, due);
+      if (d === 1) {
+        sekali('MK_PULANG_H1:' + id + ':' + due, to, id, 'Peringatan: pulangkan peralatan esok', 'Reminder: return equipment tomorrow',
+          ['Peralatan pinjaman (' + senarai + ') perlu dipulangkan esok (' + Util.fmtTarikhBM(due) + ') bagi tempahan ' + id + '.'],
+          ['Borrowed equipment (' + senarai + ') is due tomorrow (' + due + ') for booking ' + id + '.']);
+      } else if (d < 0) {
+        var over = -d;
+        var n = Math.floor((over - 1) / susulan) + 1;
+        sekali('MK_PULANG_LEWAT:' + id + ':' + due + ':' + n, to, id, 'Pinjaman peralatan lewat dipulangkan', 'Borrowed equipment overdue',
+          ['Peralatan pinjaman (' + senarai + ') bagi tempahan ' + id + ' lewat ' + over + ' hari. Sila pulangkan segera; pinjaman baharu disekat.'],
+          ['Borrowed equipment (' + senarai + ') for booking ' + id + ' is ' + over + ' day(s) overdue. Please return it promptly; new loans are blocked.']);
+      }
+    });
+
+    // 5. Peringatan tempahan akan datang (1 hari lagi)
+    Db.rows('Tempahan').forEach(function (r) {
+      if (Util.str(r.Status) !== 'Diluluskan') return;
+      var id = Util.str(r.ID_Tempahan), mula = Util.dateKey(r.Tarikh_Mula);
+      if (Util.daysBetween(today, mula) !== 1) return;
+      sekali('MK_AKAN:' + id, Util.normEmail(r.Emel_Pemohon), id, 'Peringatan tempahan Makerspace esok', 'Reminder: Makerspace booking tomorrow',
+        ['Tempahan ' + id + ' (' + Util.str(r.Jenis) + ') anda bermula esok, ' + Util.fmtTarikhBM(mula) + (Util.str(r.Masa_Mula) ? ' pukul ' + Util.str(r.Masa_Mula) : '') + '.'],
+        ['Your booking ' + id + ' (' + Util.str(r.Jenis) + ') starts tomorrow, ' + mula + (Util.str(r.Masa_Mula) ? ' at ' + Util.str(r.Masa_Mula) : '') + '.']);
+    });
+
+    // 6. Laporan aktiviti bagi tempahan ruang
+    var hariLap = Cfg.num('LAPORAN_AKTIVITI_HARI', 3);
+    Db.rows('Tempahan').forEach(function (r) {
+      if (Util.str(r.Jenis) !== 'Ruang' || ['Diluluskan', 'Selesai'].indexOf(Util.str(r.Status)) < 0) return;
+      var id = Util.str(r.ID_Tempahan), tamat = Util.dateKey(r.Tarikh_Tamat);
+      if (tamat >= today) return;
+      var lap = Mk.byId('Laporan_Aktiviti', id);
+      if (!lap) { Db.append('Laporan_Aktiviti', { ID_Tempahan: id, Fail_Laporan: '', Tarikh_Hantar: '', Status: 'Belum Dihantar' }); lap = Mk.byId('Laporan_Aktiviti', id); hasil.laporan++; }
+      if (Util.str(lap.Status) === 'Dihantar') return;
+      var had = Mk.addDays(tamat, hariLap), to = Util.normEmail(r.Emel_Pemohon);
+      if (today > had) {
+        if (Util.str(lap.Status) !== 'Lewat') {
+          Db.update('Laporan_Aktiviti', lap._row, { Status: 'Lewat' });
+          Audit.log(sistem, 'MK_LAPORAN_LEWAT', 'Makerspace', id, Util.str(lap.Status), 'Lewat', '');
+        }
+        sekali('MK_LAPORAN_LEWAT:' + id, to, id, 'Laporan aktiviti Makerspace lewat', 'Makerspace activity report overdue',
+          ['Laporan aktiviti bagi tempahan ' + id + ' lewat dihantar (tarikh akhir ' + Util.fmtTarikhBM(had) + '). Tempahan ruang baharu disekat sehingga laporan dihantar.'],
+          ['The activity report for booking ' + id + ' is overdue (due ' + had + '). New space bookings are blocked until it is submitted.']);
+      } else {
+        sekali('MK_LAPORAN:' + id, to, id, 'Peringatan: hantar laporan aktiviti', 'Reminder: submit the activity report',
+          ['Sila hantar laporan aktiviti bagi tempahan ' + id + ' sebelum ' + Util.fmtTarikhBM(had) + ' melalui UTMPreneur (Makerspace).'],
+          ['Please submit the activity report for booking ' + id + ' by ' + had + ' via UTMPreneur (Makerspace).']);
+      }
+    });
+    return hasil;
+  }
+
+  return { kira: kira_, kiraTempahan: kiraTempahan_, janaLocked: janaLocked_, rekodBayaran: rekodBayaran_, jobHarian: jobHarian_, emelBil: emelBil_, penggunaanTeks: penggunaanTeks_, KAEDAH_BAYARAN: PAYMENT_METHODS };
+})();
+
+
+// ===== MakerspacePerakuan.gs =====
+/**
+ * UTMPreneur: Makerspace, perakuan penyelia melalui pautan emel (tanpa log masuk).
+ * Token rawak sekali guna (hanya hash disimpan dalam sheet), tamat tempoh, pengesahan OTP ke emel penyelia
+ * (Otp.issue/verify dengan tujuan unik bagi setiap tempahan), had kadar dan mesej generik. Direkod dalam Audit.
+ * Halaman hanya memaparkan ringkasan tempahan, bukan data peribadi tambahan.
+ */
+
+var MkPerakuan = (function () {
+  function hash_(tok) { return Util.sha256('mk-perakuan|' + String(tok).toLowerCase()); }
+  function bentuk_(tok) { return typeof tok === 'string' && /^[a-f0-9]{64}$/i.test(tok); }
+  function tujuan_(id) { return 'MK_PERAKUAN:' + id; }
+
+  /** Had kadar: setiap pautan, dan kiraan global bagi token tidak sah. */
+  function jaga_(tok) {
+    var ok = bentuk_(tok);
+    var key = ok ? 'mkpk:' + hash_(tok).substr(0, 24) : 'mkpk:bad';
+    if (!Mk.had(key, ok ? Cfg.num('PERAKUAN_HAD_10MIN', 30) : 60, 600)) throw appError_('MK_PERAKUAN_HAD');
+    return ok;
+  }
+
+  /** Cari tempahan bagi token yang masih sah; null jika tidak. Pelbagai sebab dilaporkan sama (generik). */
+  function cari_(tok) {
+    if (!bentuk_(tok)) { Mk.had('mkpk:nf', 200, 600); return null; }
+    var h = hash_(tok);
+    var l = Db.find('Tempahan', function (r) { return Util.str(r.Token_Hash) === h; });
+    var r = l.length ? l[0] : null;
+    if (!r || Util.str(r.Status) !== 'Menunggu Perakuan' || Mk.tokenTamat(r)) {
+      if (!Mk.had('mkpk:nf', 200, 600)) throw appError_('MK_PERAKUAN_HAD');
+      return null;
+    }
+    return r;
+  }
+
+  function pautan_(tok) {
+    var url = Cfg.get('WEBAPP_URL', '');
+    if (!url) return '';
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'perakuan=' + tok;
+  }
+
+  /** Hantar emel pautan perakuan kepada penyelia. Pulang true jika emel dihantar. */
+  function hantarPautan_(r, tok) {
+    var id = Util.str(r.ID_Tempahan);
+    var url = pautan_(tok);
+    var bm = [
+      'Pelajar ' + Util.str(r.Nama_Pemohon) + ' memohon tempahan Makerspace UTM (' + Util.str(r.Jenis) + ', ' + id + ') dan menamakan anda sebagai penyelia / pensyarah yang memperakui.',
+      url ? 'Sila semak dan perakui melalui pautan ini (sah sehingga ' + Util.fmtTarikhBM(r.Token_Tamat) + '): ' + url : 'Pautan perakuan tidak dapat dijana kerana URL aplikasi belum ditetapkan. Sila hubungi UTMXCITE.',
+      'Anda akan diminta memasukkan kod OTP yang dihantar ke emel ini. Jangan kongsikan pautan ini. Jika anda tidak mengenali pemohon, abaikan emel ini.'
+    ];
+    var en = [
+      'Student ' + Util.str(r.Nama_Pemohon) + ' requested a UTM Makerspace booking (' + Util.str(r.Jenis) + ', ' + id + ') and named you as the endorsing supervisor.',
+      url ? 'Please review and endorse it using this link (valid until ' + Util.dateKey(r.Token_Tamat) + '): ' + url : 'The endorsement link could not be created because the application URL is not set. Please contact UTMXCITE.',
+      'You will be asked to enter an OTP sent to this email. Do not share this link. If you do not know the applicant, ignore this email.'
+    ];
+    var sent = Mk.mel(Util.normEmail(r.Emel_Penyelia), 'Permohonan perakuan tempahan Makerspace', 'Makerspace booking endorsement request', bm, en, true);
+    return !!sent && !!url;
+  }
+
+  // ---------- Awam (tanpa sesi) ----------
+  function maklumat_(p) {
+    p = p || {};
+    jaga_(p.token);
+    var r = cari_(p.token);
+    if (!r) throw appError_('MK_PERAKUAN_TIDAK_SAH');
+    var o = MkTempahan.paparan(r, {});
+    var ring = {
+      id: o.id, jenis: o.jenis, sumberNama: o.sumberNama, namaPemohon: o.namaPemohon, tujuan: o.tujuan,
+      tarikhMula: o.tarikhMula, tarikhTamat: o.tarikhTamat, masaMula: o.masaMula, masaTamat: o.masaTamat,
+      emelPenyelia: MkTempahan.maskEmel(Util.str(r.Emel_Penyelia)), pautanTamat: Util.dateKey(r.Token_Tamat)
+    };
+    if (o.butiran) {
+      ring.projek = o.butiran.namaProjek || o.butiran.namaProgram || '';
+      if (o.jenis === 'Ruang') ring.bilPeserta = o.butiran.bilPeserta;
+    }
+    if (o.item) ring.item = o.item.map(function (x) { return { nama: x.nama, kuantiti: x.kuantiti }; });
+    return ring;
+  }
+
+  function otp_(p) {
+    p = p || {};
+    jaga_(p.token);
+    var r = cari_(p.token);
+    if (!r) throw appError_('MK_PERAKUAN_TIDAK_SAH');
+    var id = Util.str(r.ID_Tempahan);
+    var emel = Util.normEmail(r.Emel_Penyelia);
+    var res = Otp.issue(tujuan_(id), emel, {
+      subjectBm: 'Kod pengesahan perakuan tempahan Makerspace', subjectEn: 'Makerspace booking endorsement code',
+      bm: ['Kod pengesahan untuk memperakui tempahan ' + id + ' (pemohon: ' + Util.str(r.Nama_Pemohon) + ') ialah: {kod}', 'Kod ini sah beberapa minit sahaja. Jangan kongsikannya.'],
+      en: ['Your code to endorse booking ' + id + ' (applicant: ' + Util.str(r.Nama_Pemohon) + ') is: {kod}', 'This code is valid for a few minutes only. Do not share it.']
+    });
+    return { jedaSaat: res.jedaSaat, tamatMinit: res.tamatMinit, emelPenyelia: MkTempahan.maskEmel(emel) };
+  }
+
+  function sahkan_(p) {
+    p = p || {};
+    jaga_(p.token);
+    var r = cari_(p.token);
+    if (!r) throw appError_('MK_PERAKUAN_TIDAK_SAH');
+    var tindakan = Util.str(p.tindakan);
+    if (tindakan !== 'perakui' && tindakan !== 'tolak') throw appError_('MK_PERAKUAN_TIDAK_SAH');
+    var catatan = Util.str(p.catatan).substr(0, 300);
+    if (tindakan === 'tolak' && !catatan) throw appError_('MK_CATATAN_WAJIB');
+    var id = Util.str(r.ID_Tempahan);
+    var emel = Util.normEmail(r.Emel_Penyelia);
+    Otp.verify(tujuan_(id), emel, p.kod); // lempar OTP_SALAH / OTP_TAMAT / OTP_TERLALU_BANYAK
+    var h = hash_(p.token);
+    var pemohon = Db.withLock(function () {
+      var cur = Db.find('Tempahan', function (x) { return Util.str(x.Token_Hash) === h; })[0];
+      if (!cur || Util.str(cur.Status) !== 'Menunggu Perakuan' || Mk.tokenTamat(cur)) throw appError_('MK_PERAKUAN_TIDAK_SAH');
+      var now = new Date();
+      if (tindakan === 'perakui') {
+        Db.update('Tempahan', cur._row, { Status: 'Menunggu Kelulusan', Status_Perakuan: 'Diperakui', Tarikh_Perakuan: now, Token_Hash: '', Catatan_Penyelia: catatan });
+      } else {
+        Db.update('Tempahan', cur._row, {
+          Status: 'Ditolak', Status_Perakuan: 'Ditolak', Tarikh_Perakuan: now, Tarikh_Keputusan: now, Token_Hash: '', Catatan_Penyelia: catatan,
+          Catatan: 'Ditolak oleh penyelia: ' + catatan
+        });
+      }
+      Audit.log({ email: emel, role: 'Penyelia' }, tindakan === 'perakui' ? 'MK_PERAKUAN' : 'MK_PERAKUAN_TOLAK', 'Makerspace', id, 'Menunggu Perakuan',
+        tindakan === 'perakui' ? 'Menunggu Kelulusan' : 'Ditolak', catatan);
+      return Util.normEmail(cur.Emel_Pemohon);
+    });
+    if (tindakan === 'perakui') {
+      Mk.mel(pemohon, 'Tempahan Makerspace diperakui', 'Makerspace booking endorsed',
+        ['Penyelia anda telah memperakui tempahan ' + id + '. Tempahan kini menunggu kelulusan UTMXCITE.'],
+        ['Your supervisor has endorsed booking ' + id + '. It is now awaiting UTMXCITE approval.']);
+    } else {
+      Mk.mel(pemohon, 'Tempahan Makerspace tidak diperakui', 'Makerspace booking not endorsed',
+        ['Penyelia anda tidak memperakui tempahan ' + id + '. Catatan: ' + catatan],
+        ['Your supervisor did not endorse booking ' + id + '. Note: ' + catatan]);
+    }
+    return { diproses: true, tindakan: tindakan };
+  }
+
+  // ---------- Pemohon: hantar semula pautan ----------
+  function hantarSemula_(ctx, p) {
+    var pem = Mk.pemohonSendiri(ctx);
+    var id = Util.str(p.id);
+    var r = Mk.tempahan(id);
+    if (!r || !MkTempahan.milik(r, pem.emel, pem.noMatrik)) throw appError_('MK_TIDAK_DITEMUI');
+    if (Util.str(r.Status) !== 'Menunggu Perakuan') throw appError_('MK_PERALIHAN_TIDAK_SAH');
+    var penyelia = Util.normEmail(p.emelPenyelia) || Util.normEmail(r.Emel_Penyelia);
+    var dp = Cfg.get('DOMAIN_PELAJAR', '@graduate.utm.my'), ds = Cfg.get('DOMAIN_STAF', '@utm.my');
+    var e = {};
+    if (!Util.isEmail(penyelia)) e.emelPenyelia = 'Masukkan emel penyelia yang sah / Enter a valid supervisor email';
+    else if (!Util.isStaffEmail(penyelia, dp, ds)) e.emelPenyelia = 'Emel penyelia mesti emel staf ' + ds + ' / Must be a staff email ' + ds;
+    else if (penyelia === pem.emel) e.emelPenyelia = 'Emel penyelia tidak boleh sama dengan emel pemohon / Cannot be the applicant\'s own email';
+    if (Object.keys(e).length) throw appError_('MK_TIDAK_SAH', { medan: e });
+    if (!Mk.had('mkpk:re:' + id, 3, 3600)) throw appError_('RATE_JEDA');
+    var tok = Util.randomToken();
+    var tamat = new Date(new Date().getTime() + Cfg.num('PERAKUAN_TAMAT_HARI', 5) * 86400000);
+    Db.withLock(function () {
+      var cur = Mk.tempahan(id);
+      if (Util.str(cur.Status) !== 'Menunggu Perakuan') throw appError_('MK_PERALIHAN_TIDAK_SAH');
+      Db.update('Tempahan', cur._row, { Emel_Penyelia: penyelia, Token_Hash: hash_(tok), Token_Tamat: tamat });
+      Audit.log(ctx, 'MK_HANTAR_SEMULA_PERAKUAN', 'Makerspace', id, Util.str(cur.Emel_Penyelia), penyelia, '');
+    });
+    var dihantar = hantarPautan_(Mk.tempahan(id), tok);
+    return { emelDihantar: dihantar, penyelia: MkTempahan.maskEmel(penyelia) };
+  }
+
+  return { hash: hash_, hantarPautan: hantarPautan_, maklumat: maklumat_, otp: otp_, sahkan: sahkan_, hantarSemula: hantarSemula_ };
+})();
+
+
+// ===== MakerspaceTempahan.gs =====
+/**
+ * UTMPreneur: Makerspace, tempahan oleh pengguna (pelajar, staf, orang luar) dan bagi pihak oleh admin.
+ * Empat jenis: Ruang, Laser Cut, 3D Printer, Pinjaman. Semua pengesahan di pelayan.
+ */
+
+var MkTempahan = (function () {
+  var MESIN_KADAR = { 'Laser Cut': 'LASER_CUT', '3D Printer': '3D_PRINTER' };
+  var KAEDAH = ['Tunai', 'Invois Dalaman', 'Lain-lain'];
+  var DIBENARKAN_BATAL = ['Menunggu Perakuan', 'Menunggu Kelulusan'];
+
+  function isMesin_(jenis) { return jenis === 'Laser Cut' || jenis === '3D Printer'; }
+
+  // ---------- Sekatan ----------
+  function milik_(r, emel, noMatrik) {
+    return Util.normEmail(r.Emel_Pemohon) === emel || (noMatrik && Util.normMatric(r.No_Matrik) === noMatrik);
+  }
+
+  /** Sekatan tempahan baharu bagi pemohon: bil Lewat, laporan aktiviti lewat, pinjaman lewat pulang. */
+  function sekatan_(emel, noMatrik) {
+    var today = Mk.todayKey();
+    var tmp = Db.rows('Tempahan').filter(function (r) { return milik_(r, emel, noMatrik); });
+    var ids = {}; tmp.forEach(function (r) { ids[Util.str(r.ID_Tempahan)] = r; });
+    var bil = Db.rows('Bayaran_Makerspace').filter(function (b) {
+      if (!ids[Util.str(b.ID_Tempahan)]) return false;
+      var st = Util.str(b.Status);
+      if (st === 'Lewat') return true;
+      var ta = Util.dateKey(b.Tarikh_Akhir);
+      return st === 'Belum Bayar' && ta && ta < today;
+    }).map(function (b) { return Util.str(b.ID_Bayaran); });
+    var hari = Cfg.num('LAPORAN_AKTIVITI_HARI', 3);
+    var lap = {};
+    Db.rows('Laporan_Aktiviti').forEach(function (l) { lap[Util.str(l.ID_Tempahan)] = Util.str(l.Status); });
+    var laporan = tmp.filter(function (r) {
+      if (Util.str(r.Jenis) !== 'Ruang' || ['Diluluskan', 'Selesai'].indexOf(Util.str(r.Status)) < 0) return false;
+      var tamat = Util.dateKey(r.Tarikh_Tamat);
+      return Mk.addDays(tamat, hari) < today && lap[Util.str(r.ID_Tempahan)] !== 'Dihantar';
+    }).map(function (r) { return Util.str(r.ID_Tempahan); });
+    var itemRows = Db.rows('Item_Pinjaman');
+    var pinjaman = tmp.filter(function (r) {
+      return Util.str(r.Jenis) === 'Pinjaman' && Util.str(r.Status) === 'Diluluskan';
+    }).filter(function (r) {
+      var id = Util.str(r.ID_Tempahan);
+      return itemRows.some(function (it) {
+        return Util.str(it.ID_Tempahan) === id && Util.str(it.Status) !== 'Dipulangkan' && Util.dateKey(it.Tarikh_Dijangka_Pulang) < today;
+      });
+    }).map(function (r) { return Util.str(r.ID_Tempahan); });
+    return { bil: bil, laporan: laporan, pinjaman: pinjaman };
+  }
+
+  function semakSekatan_(pem, jenis) {
+    var s = sekatan_(pem.emel, pem.noMatrik);
+    if (s.bil.length) throw appError_('MK_BIL_LEWAT');
+    if (jenis === 'Ruang' && s.laporan.length) throw appError_('MK_LAPORAN_LEWAT');
+    if (jenis === 'Pinjaman' && s.pinjaman.length) throw appError_('MK_PINJAMAN_LEWAT');
+  }
+
+  // ---------- Maklumat untuk borang ----------
+  function maklumat_(ctx, p) {
+    p = p || {};
+    var admin = ADMIN_ROLES.indexOf(ctx.role) >= 0;
+    var jenisPengguna, pemohon = null;
+    if (admin) {
+      Mk.adminLihat(ctx);
+      jenisPengguna = [ROLE.PELAJAR, ROLE.STAF, ROLE.LUAR].indexOf(Util.str(p.jenisPengguna)) >= 0 ? Util.str(p.jenisPengguna) : ROLE.PELAJAR;
+    } else {
+      var pem = Mk.pemohonSendiri(ctx);
+      jenisPengguna = pem.jenis;
+      pemohon = { nama: pem.nama, jenisPengguna: pem.jenis, emel: pem.emel, noMatrik: pem.noMatrik };
+    }
+    var ops = Mk.ops();
+    var today = Mk.todayKey();
+    var kd = Mk.kadarFn();
+    var rate = function (kod) { var r = kd(kod, jenisPengguna, today); return { ada: r.ada, rm: r.rm, unit: r.unit }; };
+    var sumber = Db.rows('PERALATAN').filter(Mk.sumberAktif);
+    var mk = function (jenis) {
+      return sumber.filter(function (s) { return Util.str(s.Jenis) === jenis; }).map(function (s) {
+        var kod = Util.str(s.Kod_Mesin), kk = Util.str(s.Kod_Kadar);
+        var o = { kod: kod, nama: nama_(s), noMesin: Util.str(s.No_Mesin), kapasiti: Number(s.Kapasiti) || 0 };
+        if (jenis === 'Ruang') o.kadar = kk ? rate(kk) : { ada: false, rm: null, unit: '' };
+        else if (jenis === 'Laser Cut') o.kadar = rate(kk || 'LASER_CUT');
+        else { var b = kk || '3D_PRINTER'; o.kadarGram = rate(b + '_GRAM'); o.kadarJam = rate(b + '_JAM'); }
+        return o;
+      });
+    };
+    var alat = Db.rows('ALAT').filter(function (a) { return Util.truthy(a.Aktif) && Util.truthy(a.Boleh_Dipinjam); }).map(function (a) {
+      var b = Mk.baki(a);
+      return { kod: Util.str(a.Kod_Alat), nama: Util.str(a.Nama_Alat), kategori: Util.str(a.Kategori), baki: b.baki };
+    });
+    var peralatanRuang = peralatanRuang_(jenisPengguna, kd, today);
+    var cuti = Object.keys(ops.cuti).filter(function (k) { return k >= today; }).sort().map(function (k) { return { tarikh: k, nama: ops.cuti[k] }; });
+    var out = {
+      admin: admin, pemohon: pemohon, jenisPengguna: jenisPengguna,
+      operasi: { hari: ops.hari, buka: Mk.fmtMin(ops.buka), tutup: Mk.fmtMin(ops.tutup), slot: ops.slot, maksMinit: ops.maksMin, notisHari: ops.notis },
+      cuti: cuti.slice(0, 60),
+      ruang: mk('Ruang'), laser: mk('Laser Cut'), tdp: mk('3D Printer'), alat: alat, peralatanRuang: peralatanRuang,
+      kadar: { caj: rate('RUANG_CAJ_PERKHIDMATAN'), pinjaman: rate('PERALATAN_TANGAN') },
+      kaedahBayaran: KAEDAH.filter(function (k) { return !(k === 'Invois Dalaman' && jenisPengguna === ROLE.LUAR); }),
+      had: {
+        maksHariRuang: Cfg.num('RUANG_MAKS_HARI', 14), maksHariDepan: Cfg.num('TEMPAHAN_MAKS_HARI_DEPAN', 180),
+        pinjamanBulan: Cfg.num('PINJAMAN_MAKS_BULAN', 1), pinjamanPembaharuan: Cfg.num('PINJAMAN_MAKS_PEMBAHARUAN', 1)
+      },
+      hariIni: today
+    };
+    if (!admin) {
+      var s = sekatan_(pemohon.emel, pemohon.noMatrik);
+      out.sekatan = { bil: s.bil.length > 0, laporan: s.laporan.length > 0, pinjaman: s.pinjaman.length > 0 };
+    }
+    return out;
+  }
+
+  function nama_(s) {
+    var n = Util.str(s.Nama_Model) || Util.str(s.Kod_Mesin);
+    var no = Util.str(s.No_Mesin);
+    return no && n.indexOf(no) < 0 ? n + ' (' + no + ')' : n;
+  }
+
+  /** Peralatan tambahan bagi ruang: baris KADAR berkod ALAT_ yang aktif. */
+  function peralatanRuang_(jenisPengguna, kd, onKey) {
+    var seen = {}, out = [];
+    Db.rows('KADAR').forEach(function (r) {
+      var kod = Util.str(r.Kod_Sumber);
+      if (kod.indexOf('ALAT_') !== 0 || seen[kod] || !Util.truthy(r.Aktif)) return;
+      seen[kod] = true;
+      var k = kd(kod, jenisPengguna, onKey);
+      out.push({ kod: kod, nama: Util.str(r.Nama_Sumber) || kod, unit: k.unit || Util.str(r.Unit), kadar: { ada: k.ada, rm: k.rm } });
+    });
+    return out;
+  }
+
+  // ---------- Ketersediaan ----------
+  function ketersediaan_(ctx, p) {
+    p = p || {};
+    var kod = Util.str(p.kodSumber), tarikh = Util.str(p.tarikh);
+    var ops = Mk.ops();
+    var s = Mk.sumber(kod);
+    if (!s || !Mk.sumberAktif(s)) throw new AppError('MK_TIDAK_DITEMUI', 'Sumber tidak ditemui.', 'Resource not found.');
+    var out = { kodSumber: kod, tarikh: tarikh, buka: Mk.fmtMin(ops.buka), tutup: Mk.fmtMin(ops.tutup), slot: ops.slot, operasi: false, sebab: '', sibuk: [] };
+    if (!Mk.validKey(tarikh)) { out.sebab = 'Tarikh tidak sah / Invalid date'; return out; }
+    if (ops.cuti[tarikh]) { out.sebab = 'Cuti: ' + ops.cuti[tarikh]; return out; }
+    if (!Mk.isOp(tarikh, ops)) { out.sebab = 'Bukan hari operasi / Not an operating day'; return out; }
+    out.operasi = true;
+    Db.rows('Tempahan').forEach(function (r) {
+      if (Util.str(r.Kod_Sumber) !== kod || !Mk.menduduki(r)) return;
+      if (Mk.opDaysIn(Util.dateKey(r.Tarikh_Mula), Util.dateKey(r.Tarikh_Tamat), ops).indexOf(tarikh) < 0) return;
+      var a = Mk.toMin(r.Masa_Mula), b = Mk.toMin(r.Masa_Tamat);
+      if (a === null || b === null) return;
+      out.sibuk.push({ mula: Mk.fmtMin(a), tamat: Mk.fmtMin(b), menunggu: Util.str(r.Status) !== 'Diluluskan' });
+    });
+    out.sibuk.sort(function (x, y) { return x.mula < y.mula ? -1 : 1; });
+    return out;
+  }
+
+  // ---------- Pengesahan ----------
+  function fieldErr_(e, k, bm, en) { e[k] = bm + ' / ' + en; }
+
+  /** Parse senarai item [{kod, kuantiti}]. Pulang {senarai, ralat}. */
+  function parseItems_(arr, max) {
+    var out = [], seen = {}, err = '';
+    if (!Array.isArray(arr)) return { senarai: [], ralat: '' };
+    arr.forEach(function (x) {
+      if (!x || typeof x !== 'object') return;
+      var kod = Util.str(x.kod);
+      var q = Mk.int(x.kuantiti);
+      if (!kod && (x.kuantiti === '' || x.kuantiti === undefined || x.kuantiti === null)) return; // baris kosong
+      if (!kod || q === null || q < 1 || q > 1000) { err = 'Pilih alat dan kuantiti 1 hingga 1000 / Choose an item and a quantity of 1 to 1000'; return; }
+      if (seen[kod]) { err = 'Alat pendua: ' + kod + ' / Duplicate item'; return; }
+      seen[kod] = true;
+      out.push({ kod: kod, kuantiti: q });
+    });
+    if (out.length > max) err = 'Terlalu banyak item (maksimum ' + max + ') / Too many items';
+    return { senarai: out, ralat: err };
+  }
+
+  /**
+   * Semak medan tempahan. Pulang {v, ralat, fail}. opts.langkasFail: jangan semak fail (anggaran).
+   * v mengandungi nilai yang telah dinormalkan.
+   */
+  function semak_(pem, d, opts) {
+    opts = opts || {};
+    d = d || {};
+    var e = {}, v = {};
+    var ops = Mk.ops(), today = Mk.todayKey();
+    var bad = function (k, bm, en) { fieldErr_(e, k, bm || 'Wajib diisi', en || 'Required'); };
+    v.jenis = Util.str(d.jenis);
+    if (Mk.JENIS.indexOf(v.jenis) < 0) { bad('jenis', 'Pilih jenis tempahan', 'Choose a booking type'); return { v: v, ralat: e, fail: {} }; }
+    var pelajar = pem.jenis === ROLE.PELAJAR;
+
+    // tarikh
+    v.tarikh = Util.str(d.tarikh);
+    var tarikhOk = false;
+    if (!Mk.validKey(v.tarikh)) bad('tarikh', 'Pilih tarikh', 'Choose a date');
+    else if (v.tarikh < today) bad('tarikh', 'Tarikh telah berlalu', 'The date has passed');
+    else if (Util.daysBetween(today, v.tarikh) > Cfg.num('TEMPAHAN_MAKS_HARI_DEPAN', 180)) bad('tarikh', 'Terlalu jauh ke hadapan', 'Too far ahead');
+    else if (ops.cuti[v.tarikh]) bad('tarikh', 'Cuti: ' + ops.cuti[v.tarikh], 'Public/university holiday');
+    else if (!Mk.isOp(v.tarikh, ops)) bad('tarikh', 'Bukan hari operasi (Isnin hingga Jumaat)', 'Not an operating day');
+    else tarikhOk = true;
+
+    // tujuan
+    v.tujuan = Util.str(d.tujuan).replace(/\s+/g, ' ').substr(0, 300);
+    if (v.jenis !== 'Ruang' && v.tujuan.length < 3) bad('tujuan', 'Nyatakan tujuan (sekurang-kurangnya 3 aksara)', 'State the purpose (at least 3 characters)');
+
+    if (v.jenis === 'Ruang') semakRuang_(pem, d, v, e, ops, tarikhOk, bad, opts);
+    else if (isMesin_(v.jenis)) semakMesin_(pem, d, v, e, ops, tarikhOk, bad, opts);
+    else semakPinjaman_(pem, d, v, e, ops, tarikhOk, bad, today);
+
+    // penyelia (pelajar sahaja)
+    v.penyelia = '';
+    if (pelajar) {
+      v.penyelia = Util.normEmail(d.emelPenyelia);
+      var dp = Cfg.get('DOMAIN_PELAJAR', '@graduate.utm.my'), ds = Cfg.get('DOMAIN_STAF', '@utm.my');
+      if (!Util.isEmail(v.penyelia)) bad('emelPenyelia', 'Masukkan emel penyelia yang sah', 'Enter a valid supervisor email');
+      else if (!Util.isStaffEmail(v.penyelia, dp, ds)) bad('emelPenyelia', 'Emel penyelia mesti emel staf ' + ds, 'The supervisor email must be a staff email ' + ds);
+      else if (v.penyelia === pem.emel) bad('emelPenyelia', 'Emel penyelia tidak boleh sama dengan emel pemohon', 'The supervisor email cannot be the applicant\'s own');
+    }
+    if (d.perakuan !== true) bad('perakuan', 'Perakuan wajib', 'The declaration is required');
+    v.fail = v.fail || {};
+    return { v: v, ralat: e, fail: v.fail };
+  }
+
+  function semakMasaMesin_(d, v, e, ops, tarikhOk, bad) {
+    var mm = Mk.toMin(d.masaMula);
+    v.mula = mm;
+    var minit = Mk.int(d.masaDijangkaMin);
+    v.minit = minit;
+    if (minit === null || minit < 1 || minit > ops.maksMin) bad('masaDijangkaMin', 'Masa dijangka 1 hingga ' + ops.maksMin + ' minit', 'Expected time 1 to ' + ops.maksMin + ' minutes');
+    if (mm === null) bad('masaMula', 'Pilih masa mula', 'Choose a start time');
+    else if (mm < ops.buka || (mm - ops.buka) % ops.slot !== 0) bad('masaMula', 'Pilih masa mengikut slot ' + ops.slot + ' minit bermula ' + Mk.fmtMin(ops.buka), 'Choose a time on the ' + ops.slot + '-minute slots from ' + Mk.fmtMin(ops.buka));
+    if (mm !== null && minit !== null && minit >= 1 && minit <= ops.maksMin && !e.masaMula) {
+      v.tamat = mm + Math.ceil(minit / ops.slot) * ops.slot;
+      if (v.tamat > ops.tutup) bad('masaMula', 'Sesi melebihi waktu operasi (tamat ' + Mk.fmtMin(ops.tutup) + ')', 'The session exceeds operating hours (ends ' + Mk.fmtMin(ops.tutup) + ')');
+      else if (tarikhOk && v.tarikh === Mk.todayKey() && mm <= Mk.nowMin()) bad('masaMula', 'Masa telah berlalu', 'The time has passed');
+    }
+  }
+
+  function semakMesin_(pem, d, v, e, ops, tarikhOk, bad, opts) {
+    v.kod = Util.str(d.kodSumber);
+    var s = Mk.sumber(v.kod);
+    if (!s || Util.str(s.Jenis) !== v.jenis || !Mk.sumberAktif(s)) bad('kodSumber', 'Pilih mesin yang tersedia', 'Choose an available machine');
+    else v.sumber = s;
+    v.namaProjek = Util.str(d.namaProjek).substr(0, 120);
+    if (v.namaProjek.length < 3) bad('namaProjek', 'Nama projek sekurang-kurangnya 3 aksara', 'Project name of at least 3 characters');
+    v.tarikhTamat = v.tarikh;
+    semakMasaMesin_(d, v, e, ops, tarikhOk, bad);
+    if (v.jenis === 'Laser Cut') {
+      v.jenisBahan = Util.str(d.jenisBahan).substr(0, 80);
+      if (v.jenisBahan.length < 2) bad('jenisBahan', 'Nyatakan jenis bahan', 'State the material');
+    } else {
+      v.warna = Util.str(d.warna).substr(0, 40);
+      if (v.warna.length < 2) bad('warna', 'Nyatakan warna', 'State the colour');
+      var g = Util.parseRm(d.beratG);
+      if (g === null || g <= 0 || g > 5000) bad('beratG', 'Berat dalam gram (lebih daripada 0 hingga 5000)', 'Weight in grams (above 0 up to 5000)');
+      else v.beratG = g;
+      v.fail = {};
+      if (!opts.langkasFail) {
+        if (d.gambar && d.gambar.data) {
+          try { v.fail.gambar = Files.validate(d.gambar, ['jpg', 'jpeg', 'png']); } catch (er) { bad('gambar', 'Gambar JPG atau PNG sahaja (saiz dihadkan)', 'JPG or PNG image only (limited size)'); }
+        } else bad('gambar', 'Muat naik gambar projek (JPG/PNG)', 'Upload a project picture (JPG/PNG)');
+      }
+    }
+    if (tarikhOk && v.sumber && v.mula !== null && v.tamat && !e.masaMula && !e.masaDijangkaMin) {
+      var k = Mk.konflik(v.kod, [v.tarikh], v.mula, v.tamat, '', ops);
+      if (k.length) bad('masaMula', 'Slot bertindih dengan tempahan lain (' + Mk.fmtMin(Mk.toMin(k[0].Masa_Mula)) + ' - ' + Mk.fmtMin(Mk.toMin(k[0].Masa_Tamat)) + ')', 'The slot overlaps another booking');
+    }
+  }
+
+  function semakRuang_(pem, d, v, e, ops, tarikhOk, bad, opts) {
+    v.kod = Util.str(d.kodSumber);
+    var s = Mk.sumber(v.kod);
+    if (!s || Util.str(s.Jenis) !== 'Ruang' || !Mk.sumberAktif(s)) bad('kodSumber', 'Pilih ruang yang tersedia', 'Choose an available space');
+    else v.sumber = s;
+    v.namaProgram = Util.str(d.namaProgram).replace(/\s+/g, ' ').substr(0, 200);
+    if (v.namaProgram.length < 3) bad('namaProgram', 'Nyatakan tujuan / program (sekurang-kurangnya 3 aksara)', 'State the purpose / programme (at least 3 characters)');
+    v.tujuan = v.namaProgram;
+    v.bilHari = Mk.int(d.bilHari);
+    var maksHari = Cfg.num('RUANG_MAKS_HARI', 14);
+    if (v.bilHari === null || v.bilHari < 1 || v.bilHari > maksHari) bad('bilHari', 'Bilangan hari 1 hingga ' + maksHari, 'Number of days 1 to ' + maksHari);
+    var a = Mk.toMin(d.masaMula), b = Mk.toMin(d.masaTamat);
+    if (a === null) bad('masaMula', 'Pilih masa mula', 'Choose a start time');
+    if (b === null) bad('masaTamat', 'Pilih masa tamat', 'Choose an end time');
+    if (a !== null && b !== null) {
+      if (a < ops.buka || b > ops.tutup) bad('masaMula', 'Masa mesti dalam waktu operasi ' + Mk.fmtMin(ops.buka) + ' - ' + Mk.fmtMin(ops.tutup), 'Time must be within operating hours');
+      else if (a >= b) bad('masaTamat', 'Masa tamat mesti selepas masa mula', 'The end time must be after the start time');
+    }
+    v.mula = a; v.tamat = b;
+    // notis hari bekerja
+    if (tarikhOk && Mk.workingDays(Mk.todayKey(), v.tarikh, ops) < ops.notis) {
+      bad('tarikh', 'Tempahan ruang mesti dibuat sekurang-kurangnya ' + ops.notis + ' hari bekerja lebih awal', 'Space bookings need at least ' + ops.notis + ' working days\' notice');
+      tarikhOk = false;
+    }
+    v.hari = [];
+    if (tarikhOk && v.bilHari !== null && !e.bilHari) {
+      v.hari = Mk.opDaysFrom(v.tarikh, v.bilHari, ops);
+      v.tarikhTamat = v.hari[v.hari.length - 1];
+    } else v.tarikhTamat = v.tarikh;
+    v.bilPeserta = Mk.int(d.bilPeserta);
+    var kap = s ? Number(s.Kapasiti) || 0 : 0;
+    if (v.bilPeserta === null || v.bilPeserta < 1) bad('bilPeserta', 'Masukkan jumlah peserta', 'Enter the number of participants');
+    else if (kap > 0 && v.bilPeserta > kap) bad('bilPeserta', 'Melebihi kapasiti ruang (' + kap + ')', 'Exceeds the capacity (' + kap + ')');
+    // bayaran
+    v.kaedah = Util.str(d.kaedahBayaran);
+    if (KAEDAH.indexOf(v.kaedah) < 0) bad('kaedahBayaran', 'Pilih kaedah bayaran', 'Choose a payment method');
+    else if (v.kaedah === 'Invois Dalaman' && pem.jenis === ROLE.LUAR) bad('kaedahBayaran', 'Invois Dalaman untuk warga UTM sahaja', 'Internal invoice is for UTM members only');
+    v.kaedahLain = Util.str(d.kaedahLain).substr(0, 120);
+    if (v.kaedah === 'Lain-lain' && v.kaedahLain.length < 2) bad('kaedahLain', 'Nyatakan kaedah bayaran', 'Specify the payment method');
+    v.noVot = Util.str(d.noVot).substr(0, 40);
+    v.namaStafKewangan = Util.str(d.namaStafKewangan).substr(0, 120);
+    v.telStafKewangan = Util.str(d.telStafKewangan).substr(0, 20);
+    if (v.kaedah === 'Invois Dalaman') {
+      if (!/^[A-Za-z0-9\-\/. ]{3,40}$/.test(v.noVot)) bad('noVot', 'Masukkan No. VOT / cajline', 'Enter the VOT / cajline number');
+      if (v.namaStafKewangan.length < 2) bad('namaStafKewangan', 'Nama staf kewangan wajib', 'Finance officer name is required');
+      if (!/^[0-9+\-\s]{8,16}$/.test(v.telStafKewangan)) bad('telStafKewangan', 'No. telefon tidak sah', 'Invalid phone number');
+    }
+    // peralatan tambahan
+    var it = parseItems_(d.peralatan, 30);
+    v.peralatan = it.senarai;
+    if (it.ralat) bad('peralatan', it.ralat.split(' / ')[0], it.ralat.split(' / ')[1]);
+    else {
+      var valid = {};
+      Db.rows('KADAR').forEach(function (r) { if (Util.truthy(r.Aktif) && Util.str(r.Kod_Sumber).indexOf('ALAT_') === 0) valid[Util.str(r.Kod_Sumber)] = true; });
+      v.peralatan.forEach(function (x) { if (!valid[x.kod]) bad('peralatan', 'Peralatan tidak sah: ' + x.kod, 'Invalid equipment: ' + x.kod); });
+    }
+    // fail
+    v.fail = {};
+    if (!opts.langkasFail) {
+      var chk = function (key, f, wajib, bm, en) {
+        if (f && f.data) {
+          try { v.fail[key] = Files.validate(f, ['pdf']); } catch (er) { bad(key === 'kertas' ? 'failKertasKerja' : 'failSurat', 'Fail PDF sahaja (saiz dihadkan)', 'PDF only (limited size)'); }
+        } else if (wajib) bad(key === 'kertas' ? 'failKertasKerja' : 'failSurat', bm, en);
+      };
+      chk('kertas', d.failKertasKerja, true, 'Muat naik kertas kerja program (PDF)', 'Upload the programme paper (PDF)');
+      chk('surat', d.failSurat, pem.jenis !== ROLE.PELAJAR, 'Muat naik surat permohonan (PDF)', 'Upload the application letter (PDF)');
+    }
+    // konflik
+    if (s && v.hari.length && a !== null && b !== null && !e.masaMula && !e.masaTamat && !e.tarikh) {
+      var k = Mk.konflik(v.kod, v.hari, a, b, '', ops);
+      if (k.length) bad('tarikh', 'Ruang telah ditempah atau sedang menunggu kelulusan pada tarikh/masa ini', 'The space is already booked or awaiting approval at this date/time');
+    }
+  }
+
+  function semakPinjaman_(pem, d, v, e, ops, tarikhOk, bad, today) {
+    v.kod = 'PINJAMAN';
+    v.tarikhTamat = '';
+    var it = parseItems_(d.item, 10);
+    v.item = it.senarai;
+    if (it.ralat) bad('item', it.ralat.split(' / ')[0], it.ralat.split(' / ')[1]);
+    else if (!v.item.length) bad('item', 'Pilih sekurang-kurangnya satu alat', 'Choose at least one item');
+    else {
+      v.item.forEach(function (x) {
+        var a = Mk.alat(x.kod);
+        if (!a || !Util.truthy(a.Aktif) || !Util.truthy(a.Boleh_Dipinjam)) { bad('item', 'Alat tidak boleh dipinjam: ' + x.kod, 'Item cannot be borrowed: ' + x.kod); return; }
+        var b = Mk.baki(a);
+        if (x.kuantiti > b.baki && !e.item) bad('item', 'Baki stok ' + Util.str(a.Nama_Alat) + ' tidak mencukupi (baki ' + b.baki + ')', 'Not enough stock of ' + Util.str(a.Nama_Alat) + ' (available ' + b.baki + ')');
+      });
+    }
+    v.tarikhPulang = Util.str(d.tarikhPulang);
+    if (!Mk.validKey(v.tarikhPulang)) bad('tarikhPulang', 'Pilih tarikh dijangka pulang', 'Choose the expected return date');
+    else if (tarikhOk) {
+      var maks = Util.dateKey(Util.addMonths(v.tarikh, Cfg.num('PINJAMAN_MAKS_BULAN', 1)));
+      if (v.tarikhPulang < v.tarikh) bad('tarikhPulang', 'Tarikh pulang mesti selepas tarikh pinjam', 'The return date must not be before the loan date');
+      else if (v.tarikhPulang > maks) bad('tarikhPulang', 'Tempoh pinjaman maksimum ' + Cfg.num('PINJAMAN_MAKS_BULAN', 1) + ' bulan (sehingga ' + maks + ')', 'Maximum loan period of ' + Cfg.num('PINJAMAN_MAKS_BULAN', 1) + ' month(s) (up to ' + maks + ')');
+      else if (!Mk.isOp(v.tarikhPulang, ops)) bad('tarikhPulang', 'Tarikh pulang mesti hari operasi dan bukan cuti', 'The return date must be an operating day, not a holiday');
+      else v.tarikhTamat = v.tarikhPulang;
+    }
+    v.mula = null; v.tamat = null;
+  }
+
+  // ---------- Anggaran ----------
+  function anggar_(ctx, p, admin) {
+    var pem = admin ? Mk.pemohonBagi(ctx, p) : Mk.pemohonSendiri(ctx);
+    var r = semak_(pem, p, { langkasFail: true });
+    var out = { ralat: r.ralat, jumlah: null, baris: [], belum: [] };
+    var kira = kiraDari_(r.v, pem);
+    if (kira) { out.jumlah = kira.jumlah; out.baris = kira.baris; out.belum = kira.belum; }
+    return out;
+  }
+
+  function kiraDari_(v, pem) {
+    if (!v.jenis || !v.tarikh) return null;
+    var bu = {};
+    if (v.jenis === 'Ruang') { if (!v.sumber || !v.bilHari || v.bilHari < 1) return null; bu = { bilHari: v.bilHari, peralatan: v.peralatan || [] }; }
+    else if (v.jenis === 'Laser Cut') { if (!v.sumber || !v.minit) return null; bu = { minit: v.minit }; }
+    else if (v.jenis === '3D Printer') { if (!v.sumber || !v.minit || !v.beratG) return null; bu = { minit: v.minit, beratG: v.beratG }; }
+    else bu = {};
+    return MkBil.kira(v.jenis, v.kod, pem.jenis, Mk.validKey(v.tarikh) ? v.tarikh : Mk.todayKey(), bu, Mk.kadarFn());
+  }
+
+  // ---------- Hantar ----------
+  function hantar_(ctx, d, pem) {
+    d = d || {};
+    var jenis = Util.str(d.jenis);
+    if (Mk.JENIS.indexOf(jenis) < 0) throw appError_('MK_TIDAK_SAH', { medan: { jenis: 'Pilih jenis tempahan / Choose a booking type' } });
+    semakSekatan_(pem, jenis);
+    var r = semak_(pem, d, {});
+    if (Object.keys(r.ralat).length) throw appError_('MK_TIDAK_SAH', { medan: r.ralat });
+    var v = r.v;
+    var pelajar = pem.jenis === ROLE.PELAJAR;
+    var kira = kiraDari_(v, pem);
+    var anggaran = kira && !kira.belum.length ? kira.jumlah : '';
+
+    // fail disimpan dahulu (di luar kunci)
+    var stamp = Util.fmtDate(new Date(), 'yyyyMMddHHmm') + '_' + Util.randomToken().substr(0, 6);
+    var url = { kertas: '', surat: '', gambar: '' };
+    if (v.fail.kertas) url.kertas = Files.save('FLD_LAMPIRAN_MAKERSPACE', 'KERTAS_KERJA_' + stamp, v.fail.kertas);
+    if (v.fail.surat) url.surat = Files.save('FLD_LAMPIRAN_MAKERSPACE', 'SURAT_' + stamp, v.fail.surat);
+    if (v.fail.gambar) url.gambar = Files.save('FLD_LAMPIRAN_MAKERSPACE', 'GAMBAR_3DP_' + stamp, v.fail.gambar);
+
+    var token = pelajar ? Util.randomToken() : '';
+    var now = new Date();
+    var hasil = Db.withLock(function () {
+      // semak semula dalam kunci: konflik dan stok
+      var ops = Mk.ops();
+      if (v.jenis === 'Pinjaman') {
+        v.item.forEach(function (x) {
+          if (x.kuantiti > Mk.baki(Mk.alat(x.kod)).baki) throw appError_('MK_STOK');
+        });
+      } else {
+        var days = v.jenis === 'Ruang' ? v.hari : [v.tarikh];
+        if (Mk.konflik(v.kod, days, v.mula, v.tamat, '', ops).length) throw appError_('MK_KONFLIK');
+      }
+      var id = Mk.idBaharu(Mk.PREFIX_ID);
+      var tamatToken = pelajar ? new Date(now.getTime() + Cfg.num('PERAKUAN_TAMAT_HARI', 5) * 86400000) : '';
+      Db.append('Tempahan', {
+        ID_Tempahan: id, Jenis: v.jenis, Kod_Sumber: v.kod, Jenis_Pengguna: pem.jenis, Emel_Pemohon: pem.emel, Nama_Pemohon: pem.nama,
+        Tarikh_Mula: Util.toDate(v.tarikh), Masa_Mula: v.mula === null ? '' : Mk.fmtMin(v.mula),
+        Tarikh_Tamat: v.tarikhTamat ? Util.toDate(v.tarikhTamat) : '', Masa_Tamat: v.tamat === null ? '' : Mk.fmtMin(v.tamat),
+        Tujuan: v.tujuan, Emel_Penyelia: v.penyelia, Status_Perakuan: pelajar ? 'Menunggu' : 'Tidak Perlu', Tarikh_Perakuan: '',
+        Status: pelajar ? 'Menunggu Perakuan' : 'Menunggu Kelulusan', Diluluskan_Oleh: '', Tarikh_Keputusan: '', Catatan: '',
+        No_Matrik: pem.noMatrik, Telefon: pem.telefon, Jabatan: pem.jabatan, Anggaran_RM: anggaran, Dicipta_Pada: now,
+        Didaftar_Oleh: pem.bagiPihak ? ctx.email : '', Token_Hash: token ? MkPerakuan.hash(token) : '', Token_Tamat: tamatToken,
+        Catatan_Penyelia: '', Bil_Pembaharuan: 0
+      });
+      if (v.jenis === 'Ruang') {
+        Db.append('Butiran_Ruang', {
+          ID_Tempahan: id, Nama_Program: v.namaProgram, Bil_Hari: v.bilHari, Bil_Peserta: v.bilPeserta, Kaedah_Bayaran: v.kaedah,
+          No_VOT: v.kaedah === 'Invois Dalaman' ? v.noVot : '', Nama_Staf_Kewangan: v.kaedah === 'Invois Dalaman' ? v.namaStafKewangan : '',
+          Tel_Staf_Kewangan: v.kaedah === 'Invois Dalaman' ? v.telStafKewangan : '', Fail_Kertas_Kerja: url.kertas, Fail_Surat: url.surat,
+          Kaedah_Lain: v.kaedah === 'Lain-lain' ? v.kaedahLain : ''
+        });
+        v.peralatan.forEach(function (x) { Db.append('Item_Peralatan_Ruang', { ID_Tempahan: id, Kod_Alat: x.kod, Kuantiti: x.kuantiti }); });
+      } else if (v.jenis === 'Laser Cut') {
+        Db.append('Butiran_LaserCut', { ID_Tempahan: id, Nama_Projek: v.namaProjek, Jenis_Bahan: v.jenisBahan, Masa_Dijangka_Min: v.minit });
+      } else if (v.jenis === '3D Printer') {
+        Db.append('Butiran_3DP', {
+          ID_Tempahan: id, Nama_Projek: v.namaProjek, Fail_Gambar: url.gambar, Berat_g: v.beratG, Warna: v.warna,
+          No_Mesin: Util.str(v.sumber.No_Mesin), Masa_Dijangka_Min: v.minit
+        });
+      } else {
+        v.item.forEach(function (x) {
+          Db.append('Item_Pinjaman', { ID_Tempahan: id, Kod_Alat: x.kod, Kuantiti: x.kuantiti, Tarikh_Dijangka_Pulang: Util.toDate(v.tarikhTamat), Status: 'Dimohon' });
+        });
+      }
+      Audit.log(auditCtx_(ctx, pem), 'MK_TEMPAH', 'Makerspace', id, '', pelajar ? 'Menunggu Perakuan' : 'Menunggu Kelulusan', v.jenis + ' ' + v.kod);
+      return id;
+    });
+
+    var out = { id: hasil, status: pelajar ? 'Menunggu Perakuan' : 'Menunggu Kelulusan', anggaran: anggaran === '' ? null : anggaran, belumDitetapkan: kira ? kira.belum : [] };
+    if (pelajar) out.emelPerakuanDihantar = MkPerakuan.hantarPautan(Mk.tempahan(hasil), token);
+    Mk.mel(pem.emel, 'Tempahan Makerspace diterima', 'Makerspace booking received',
+      ['Tempahan ' + hasil + ' (' + v.jenis + ') pada ' + Util.fmtTarikhBM(v.tarikh) + ' telah diterima.' +
+        (pelajar ? ' Pautan perakuan telah dihantar kepada penyelia anda (' + v.penyelia + '). Tempahan akan disemak oleh UTMXCITE selepas diperakui.' : ' Tempahan akan disemak oleh UTMXCITE.')],
+      ['Booking ' + hasil + ' (' + v.jenis + ') on ' + v.tarikh + ' has been received.' +
+        (pelajar ? ' An endorsement link has been sent to your supervisor (' + v.penyelia + '). UTMXCITE will review it once endorsed.' : ' UTMXCITE will review it.')]);
+    return out;
+  }
+
+  function auditCtx_(ctx, pem) {
+    return { email: ctx.email, role: ctx.role, noMatrik: pem.noMatrik || pem.emel, bagiPihak: pem.bagiPihak };
+  }
+
+  // ---------- Paparan ----------
+  function maskEmel_(e) {
+    var m = /^(.)(.*)(@.+)$/.exec(e || '');
+    return m ? m[1] + '***' + m[3] : '';
+  }
+  function bilOf_(id) {
+    var l = Db.find('Bayaran_Makerspace', function (b) { return Util.str(b.ID_Tempahan) === id; });
+    return l.length ? l[0] : null;
+  }
+  function bilView_(b) {
+    if (!b) return null;
+    var kos = b.Kos_Sebenar_RM === '' || b.Kos_Sebenar_RM === null || b.Kos_Sebenar_RM === undefined ? null : Number(b.Kos_Sebenar_RM);
+    var ang = b.Anggaran_RM === '' || b.Anggaran_RM === null || b.Anggaran_RM === undefined ? null : Number(b.Anggaran_RM);
+    return {
+      id: Util.str(b.ID_Bayaran), idTempahan: Util.str(b.ID_Tempahan), status: Util.str(b.Status), anggaran: ang, kosSebenar: kos,
+      jumlah: kos !== null ? kos : ang, penggunaan: Util.str(b.Penggunaan_Sebenar), tarikhJana: Util.dateKey(b.Tarikh_Jana), tarikhAkhir: Util.dateKey(b.Tarikh_Akhir),
+      tarikhBayar: Util.dateKey(b.Tarikh_Bayar), kaedah: Util.str(b.Kaedah), noRujukan: Util.str(b.No_Rujukan), adaResit: !!Util.str(b.Fail_Resit),
+      disahkanOleh: Util.str(b.Disahkan_Oleh), tarikhPengesahan: Util.dateKey(b.Tarikh_Pengesahan), catatan: Util.str(b.Catatan)
+    };
+  }
+
+  /** Paparan penuh satu tempahan. opts.admin: sertakan emel penuh dan maklumat hubungan. */
+  function paparan_(r, opts) {
+    opts = opts || {};
+    var id = Util.str(r.ID_Tempahan), jenis = Util.str(r.Jenis);
+    var s = jenis === 'Pinjaman' ? null : Mk.sumber(Util.str(r.Kod_Sumber));
+    var o = {
+      id: id, jenis: jenis, kodSumber: Util.str(r.Kod_Sumber), sumberNama: s ? nama_(s) : (jenis === 'Pinjaman' ? 'Pinjaman peralatan' : Util.str(r.Kod_Sumber)),
+      jenisPengguna: Util.str(r.Jenis_Pengguna), namaPemohon: Util.str(r.Nama_Pemohon),
+      tarikhMula: Util.dateKey(r.Tarikh_Mula), tarikhTamat: Util.dateKey(r.Tarikh_Tamat), masaMula: Util.str(r.Masa_Mula), masaTamat: Util.str(r.Masa_Tamat),
+      tujuan: Util.str(r.Tujuan), status: Util.str(r.Status), statusPerakuan: Util.str(r.Status_Perakuan),
+      tarikhPerakuan: Util.dateKey(r.Tarikh_Perakuan), catatan: Util.str(r.Catatan), catatanPenyelia: Util.str(r.Catatan_Penyelia),
+      anggaran: r.Anggaran_RM === '' || r.Anggaran_RM === null ? null : Number(r.Anggaran_RM),
+      dicipta: Util.dateKey(r.Dicipta_Pada), bagiPihak: !!Util.str(r.Didaftar_Oleh), diluluskanOleh: Util.str(r.Diluluskan_Oleh),
+      tarikhKeputusan: Util.dateKey(r.Tarikh_Keputusan), bilPembaharuan: Number(r.Bil_Pembaharuan) || 0,
+      penyelia: opts.admin ? Util.str(r.Emel_Penyelia) : maskEmel_(Util.str(r.Emel_Penyelia)),
+      pautanTamat: Util.str(r.Status) === 'Menunggu Perakuan' ? Util.dateKey(r.Token_Tamat) : ''
+    };
+    if (opts.admin) {
+      o.pemohon = { emel: Util.str(r.Emel_Pemohon), noMatrik: Util.str(r.No_Matrik), telefon: Util.str(r.Telefon), jabatan: Util.str(r.Jabatan), didaftarOleh: Util.str(r.Didaftar_Oleh) };
+    } else {
+      o.pemohon = { jabatan: Util.str(r.Jabatan) };
+    }
+    if (jenis === 'Ruang') {
+      var b = Mk.byId('Butiran_Ruang', id) || {};
+      o.butiran = {
+        namaProgram: Util.str(b.Nama_Program), bilHari: Number(b.Bil_Hari) || 0, bilPeserta: Number(b.Bil_Peserta) || 0,
+        kaedahBayaran: Util.str(b.Kaedah_Bayaran), kaedahLain: Util.str(b.Kaedah_Lain), noVot: Util.str(b.No_VOT),
+        namaStafKewangan: Util.str(b.Nama_Staf_Kewangan), telStafKewangan: Util.str(b.Tel_Staf_Kewangan),
+        hariSebenar: b.Hari_Sebenar === '' || b.Hari_Sebenar === undefined ? null : Number(b.Hari_Sebenar),
+        kapasiti: s ? Number(s.Kapasiti) || 0 : 0
+      };
+      o.fail = { kertas: !!Util.str(b.Fail_Kertas_Kerja), surat: !!Util.str(b.Fail_Surat) };
+      var kd = Mk.kadarFn();
+      o.peralatan = Mk.listById('Item_Peralatan_Ruang', id).map(function (x) {
+        var kk = kd(Util.str(x.Kod_Alat), Util.str(r.Jenis_Pengguna), o.tarikhMula);
+        return { kod: Util.str(x.Kod_Alat), nama: kk.nama, kuantiti: Number(x.Kuantiti) || 0 };
+      });
+      var lap = Mk.byId('Laporan_Aktiviti', id);
+      var had = Cfg.num('LAPORAN_AKTIVITI_HARI', 3);
+      o.laporan = { status: lap ? Util.str(lap.Status) : '', tarikhHantar: lap ? Util.dateKey(lap.Tarikh_Hantar) : '', tarikhHad: o.tarikhTamat ? Mk.addDays(o.tarikhTamat, had) : '', ada: !!(lap && Util.str(lap.Fail_Laporan)) };
+    } else if (jenis === 'Laser Cut') {
+      var l = Mk.byId('Butiran_LaserCut', id) || {};
+      o.butiran = { namaProjek: Util.str(l.Nama_Projek), jenisBahan: Util.str(l.Jenis_Bahan), minitDijangka: Number(l.Masa_Dijangka_Min) || 0, minitSebenar: l.Masa_Sebenar_Min === '' || l.Masa_Sebenar_Min === undefined ? null : Number(l.Masa_Sebenar_Min) };
+    } else if (jenis === '3D Printer') {
+      var t = Mk.byId('Butiran_3DP', id) || {};
+      o.butiran = {
+        namaProjek: Util.str(t.Nama_Projek), beratG: Number(t.Berat_g) || 0, warna: Util.str(t.Warna), noMesin: Util.str(t.No_Mesin), minitDijangka: Number(t.Masa_Dijangka_Min) || 0,
+        minitSebenar: t.Masa_Sebenar_Min === '' || t.Masa_Sebenar_Min === undefined ? null : Number(t.Masa_Sebenar_Min),
+        beratSebenarG: t.Berat_Sebenar_g === '' || t.Berat_Sebenar_g === undefined ? null : Number(t.Berat_Sebenar_g)
+      };
+      o.fail = { gambar: !!Util.str(t.Fail_Gambar) };
+    } else {
+      var today = Mk.todayKey();
+      o.item = Mk.listById('Item_Pinjaman', id).map(function (it) {
+        var a = Mk.alat(Util.str(it.Kod_Alat));
+        var due = Util.dateKey(it.Tarikh_Dijangka_Pulang);
+        var st = Util.str(it.Status);
+        return {
+          kod: Util.str(it.Kod_Alat), nama: a ? Util.str(a.Nama_Alat) : Util.str(it.Kod_Alat), kuantiti: Number(it.Kuantiti) || 0, tarikhPulangDijangka: due,
+          tarikhPulang: Util.dateKey(it.Tarikh_Pulang), status: st, lewat: st !== 'Dipulangkan' && o.status === 'Diluluskan' && due !== '' && due < today
+        };
+      });
+      o.lewat = o.item.some(function (x) { return x.lewat; });
+    }
+    o.bayaran = bilView_(bilOf_(id));
+    return o;
+  }
+
+  function saya_(ctx) {
+    var pem = Mk.pemohonSendiri(ctx);
+    var rows = Db.rows('Tempahan').filter(function (r) { return milik_(r, pem.emel, pem.noMatrik); });
+    rows.sort(function (a, b) { return (Util.toDate(b.Dicipta_Pada) || 0) - (Util.toDate(a.Dicipta_Pada) || 0); });
+    var s = sekatan_(pem.emel, pem.noMatrik);
+    return {
+      senarai: rows.slice(0, 200).map(function (r) { var o = paparan_(r, {}); return ringkas_(o); }),
+      sekatan: { bil: s.bil, laporan: s.laporan, pinjaman: s.pinjaman }
+    };
+  }
+
+  function ringkas_(o) {
+    return {
+      id: o.id, jenis: o.jenis, sumberNama: o.sumberNama, tarikhMula: o.tarikhMula, tarikhTamat: o.tarikhTamat, masaMula: o.masaMula, masaTamat: o.masaTamat,
+      tujuan: o.tujuan, status: o.status, statusPerakuan: o.statusPerakuan, bayaran: o.bayaran ? { id: o.bayaran.id, status: o.bayaran.status, jumlah: o.bayaran.jumlah, tarikhAkhir: o.bayaran.tarikhAkhir } : null,
+      laporan: o.laporan ? o.laporan.status : '', lewat: !!o.lewat
+    };
+  }
+
+  function milikOrThrow_(ctx, id) {
+    var pem = Mk.pemohonSendiri(ctx);
+    var r = Mk.tempahan(Util.str(id));
+    if (!r || !milik_(r, pem.emel, pem.noMatrik)) throw appError_('MK_TIDAK_DITEMUI');
+    return { r: r, pem: pem };
+  }
+
+  /** Tindakan yang dibenarkan kepada pemohon. */
+  function bolehPemohon_(o) {
+    var today = Mk.todayKey();
+    var aktifSelesai = o.status === 'Diluluskan' || o.status === 'Selesai';
+    var bayarStatus = o.bayaran ? o.bayaran.status : '';
+    return {
+      batal: DIBENARKAN_BATAL.indexOf(o.status) >= 0 || (o.status === 'Diluluskan' && o.tarikhMula > today),
+      hantarSemulaPerakuan: o.status === 'Menunggu Perakuan',
+      perbaharui: o.jenis === 'Pinjaman' && o.status === 'Diluluskan' && o.bilPembaharuan < Cfg.num('PINJAMAN_MAKS_PEMBAHARUAN', 1) && !o.lewat,
+      bayar: ['Belum Bayar', 'Lewat'].indexOf(bayarStatus) >= 0,
+      laporan: o.jenis === 'Ruang' && aktifSelesai && o.tarikhTamat <= today
+    };
+  }
+
+  function butiran_(ctx, p) {
+    var m = milikOrThrow_(ctx, p.id);
+    var o = paparan_(m.r, {});
+    o.boleh = bolehPemohon_(o);
+    return o;
+  }
+
+  function batal_(ctx, p) {
+    var m = milikOrThrow_(ctx, p.id);
+    var id = Util.str(m.r.ID_Tempahan);
+    var catatan = Util.str(p.catatan).substr(0, 300);
+    Db.withLock(function () {
+      var r = Mk.tempahan(id);
+      var o = paparan_(r, {});
+      if (!bolehPemohon_(o).batal) throw appError_('MK_BATAL_TIDAK_BOLEH');
+      Db.update('Tempahan', r._row, { Status: 'Dibatalkan', Token_Hash: '', Tarikh_Keputusan: new Date(), Catatan: 'Dibatalkan oleh pemohon' + (catatan ? ': ' + catatan : '') });
+      Audit.log(ctx, 'MK_BATAL', 'Makerspace', id, Util.str(r.Status), 'Dibatalkan', catatan);
+    });
+    return butiran_(ctx, { id: id });
+  }
+
+  function perbaharui_(ctx, p, admin) {
+    var id = Util.str(p.id);
+    var r, pem = null;
+    if (admin) { Mk.adminPutus(ctx); r = Mk.tempahan(id); if (!r) throw appError_('MK_TIDAK_DITEMUI'); }
+    else { var m = milikOrThrow_(ctx, id); r = m.r; pem = m.pem; }
+    var due;
+    Db.withLock(function () {
+      r = Mk.tempahan(id);
+      var ops = Mk.ops();
+      if (Util.str(r.Jenis) !== 'Pinjaman' || Util.str(r.Status) !== 'Diluluskan') throw appError_('MK_PEMBAHARUAN_TIDAK_SAH');
+      if ((Number(r.Bil_Pembaharuan) || 0) >= Cfg.num('PINJAMAN_MAKS_PEMBAHARUAN', 1)) throw appError_('MK_PEMBAHARUAN_TIDAK_SAH');
+      var items = Mk.listById('Item_Pinjaman', id).filter(function (it) { return Util.str(it.Status) !== 'Dipulangkan'; });
+      if (!items.length) throw appError_('MK_PEMBAHARUAN_TIDAK_SAH');
+      var lama = Util.dateKey(r.Tarikh_Tamat);
+      if (!admin && lama < Mk.todayKey()) throw appError_('MK_PEMBAHARUAN_TIDAK_SAH');
+      due = Util.dateKey(Util.addMonths(lama, Cfg.num('PINJAMAN_MAKS_BULAN', 1)));
+      var n = 0;
+      while (!Mk.isOp(due, ops) && n++ < 10) due = Mk.addDays(due, -1);
+      if (due <= lama) throw appError_('MK_PEMBAHARUAN_TIDAK_SAH');
+      items.forEach(function (it) { Db.update('Item_Pinjaman', it._row, { Tarikh_Dijangka_Pulang: Util.toDate(due) }); });
+      Db.update('Tempahan', r._row, { Tarikh_Tamat: Util.toDate(due), Bil_Pembaharuan: (Number(r.Bil_Pembaharuan) || 0) + 1 });
+      Audit.log(ctx, 'MK_PERBAHARUI_PINJAMAN', 'Makerspace', id, lama, due, admin ? 'oleh admin' : 'oleh pemohon');
+    });
+    Mk.mel(Util.normEmail(r.Emel_Pemohon), 'Pinjaman diperbaharui', 'Loan renewed',
+      ['Pinjaman ' + id + ' diperbaharui. Tarikh dijangka pulang baharu: ' + Util.fmtTarikhBM(due) + '.'],
+      ['Loan ' + id + ' has been renewed. New expected return date: ' + due + '.']);
+    return admin ? MkAdmin.butiran(ctx, { id: id }) : butiran_(ctx, { id: id });
+  }
+
+  function hantarLaporan_(ctx, p) {
+    var m = milikOrThrow_(ctx, p.id);
+    var id = Util.str(m.r.ID_Tempahan);
+    var o = paparan_(m.r, {});
+    if (!bolehPemohon_(o).laporan) throw appError_('MK_LAPORAN_TIDAK_SAH');
+    var v;
+    try { v = Files.validate(p.fail, ['pdf']); } catch (e) { throw appError_('MK_TIDAK_SAH', { medan: { fail: 'Fail PDF sahaja (saiz dihadkan) / PDF only (limited size)' } }); }
+    var url = Files.save('FLD_LAMPIRAN_MAKERSPACE', 'LAPORAN_' + id + '_' + Util.fmtDate(new Date(), 'yyyyMMddHHmm'), v);
+    Db.withLock(function () {
+      var lap = Mk.byId('Laporan_Aktiviti', id);
+      var rec = { ID_Tempahan: id, Fail_Laporan: url, Tarikh_Hantar: new Date(), Status: 'Dihantar' };
+      if (lap) Db.update('Laporan_Aktiviti', lap._row, rec); else Db.append('Laporan_Aktiviti', rec);
+      Audit.log(ctx, 'MK_LAPORAN_HANTAR', 'Makerspace', id, lap ? Util.str(lap.Status) : '', 'Dihantar', '');
+    });
+    return butiran_(ctx, { id: id });
+  }
+
+  function fail_(ctx, p) {
+    var id = Util.str(p.id), jenis = Util.str(p.jenis);
+    var r = Mk.tempahan(id);
+    if (!r) throw appError_('MK_TIDAK_DITEMUI');
+    var admin = ADMIN_ROLES.indexOf(ctx.role) >= 0;
+    if (admin) Mk.adminLihat(ctx);
+    else {
+      var pem = Mk.pemohonSendiri(ctx);
+      if (!milik_(r, pem.emel, pem.noMatrik)) throw appError_('MK_TIDAK_DITEMUI');
+    }
+    var url = '';
+    if (jenis === 'kertas' || jenis === 'surat') {
+      var b = Mk.byId('Butiran_Ruang', id);
+      url = b ? Util.str(jenis === 'kertas' ? b.Fail_Kertas_Kerja : b.Fail_Surat) : '';
+    } else if (jenis === 'gambar') {
+      var t = Mk.byId('Butiran_3DP', id);
+      url = t ? Util.str(t.Fail_Gambar) : '';
+    } else if (jenis === 'laporan') {
+      var l = Mk.byId('Laporan_Aktiviti', id);
+      url = l ? Util.str(l.Fail_Laporan) : '';
+    } else if (jenis === 'resit') {
+      var bil = bilOf_(id);
+      url = bil ? Util.str(bil.Fail_Resit) : '';
+    }
+    if (!url) throw appError_('MK_FAIL_TIADA');
+    if (admin) Audit.log(ctx, 'MK_PAPAR_FAIL', 'Makerspace', id, '', jenis, '');
+    return Files.read(url);
+  }
+
+  return {
+    maklumat: maklumat_, ketersediaan: ketersediaan_, anggar: anggar_, hantar: hantar_, saya: saya_, butiran: butiran_, batal: batal_,
+    perbaharui: perbaharui_, hantarLaporan: hantarLaporan_, fail: fail_, paparan: paparan_, bilOf: bilOf_, bilView: bilView_, sekatan: sekatan_,
+    semak: semak_, kiraDari: kiraDari_, auditCtx: auditCtx_, maskEmel: maskEmel_, milik: milik_, nama: nama_, bolehPemohon: bolehPemohon_
+  };
+})();
 
 
 // ===== Otp.gs =====
