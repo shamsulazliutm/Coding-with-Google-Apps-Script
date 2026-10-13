@@ -188,7 +188,7 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 ### Mikro Kredit (`SS_MIKRO_KREDIT`)
 Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 - **Had pinjaman: minimum RM500, maksimum RM3,000** (disahkan; disimpan dalam `Tetapan`). Percabangan RM5,000 dalam borang lama **dibuang**, jadi butiran syarikat (Q20-Q27) tidak lagi menjadi laluan wajib. Jumlah dimohon ialah satu medan nombor (RM tepat), antara RM500 dan RM3,000.
-- **Auto-isi:** emel, nama, No. KP, No. Matrik, program, tahun, jantina, alamat tetap, telefon (daripada `PELAJAR`); status Bumiputera (diterbitkan daripada etnik + kewarganegaraan). Perniagaan SSU boleh dipaut secara pilihan.
+- **Auto-isi:** emel, nama, No. KP, No. Matrik, program, tahun, jantina, alamat tetap, telefon (daripada `PELAJAR`); status Bumiputera (diterbitkan daripada etnik + kewarganegaraan). **Kelayakan (disahkan): profiling lengkap wajib dan SSU Diluluskan wajib**; permohonan dipaut kepada `ID_Perniagaan` pemohon.
 - **Dibuang:** salinan KP dan kad matrik (selaras PDPA).
 - **Medan baharu (sensitif, admin sahaja):** agama, taraf perkahwinan, semester, alamat surat menyurat.
 - **Lampiran:** keputusan peperiksaan semester terkini, kertas cadangan projek/perniagaan.
