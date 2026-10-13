@@ -1,0 +1,41 @@
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Dashboard admin</title><link rel="stylesheet" href="mockup.css"></head>
+<body><div class="desk">
+<div class="demo">ILUSTRASI</div>
+<div class="top"><img src="logo.png"><div><b style="color:var(--maroon);font-size:16px">UTMPreneur</b><div class="e">Panel pentadbir / Admin panel</div></div><span class="sp"></span><div style="text-align:right;font-size:12px"><b>utmxcite@utm.my</b><div class="e">Admin Penuh / Full Admin</div></div></div>
+<div style="display:flex;flex:1;overflow:hidden">
+  <div class="side">
+    <div class="on">Dashboard</div><div>Permohonan SSU <span class="pill bad" style="float:right">7</span></div><div>Ruang niaga &amp; lot</div><div>Sesi penilaian</div><div>Bil sewa</div><div>Laporan kewangan <span class="pill warn" style="float:right">12</span></div><div>Makerspace <span class="pill warn" style="float:right">5</span></div><div>Pengguna</div><div>Tetapan &amp; kadar</div><div>Audit</div>
+  </div>
+  <div style="flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div class="row"><div><div class="h1">Ringkasan</div><div class="e">Overview · Oktober 2026</div></div><span class="sp"></span><span class="btn sm alt">Eksport CSV / Export</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+      <div class="kpi"><div class="muted" style="font-size:12px">Usahawan SSU aktif</div><div class="n">128</div><div class="e">Active SSU entrepreneurs · +9 bulan ini</div></div>
+      <div class="kpi"><div class="muted" style="font-size:12px">Okupansi lot</div><div class="n">12 / 15</div><div class="e">Lot occupancy · 80%</div></div>
+      <div class="kpi"><div class="muted" style="font-size:12px">Kutipan sewa Oktober</div><div class="n">RM 3,850</div><div class="e">Rent collected · daripada RM 4,200</div></div>
+      <div class="kpi"><div class="muted" style="font-size:12px">Laporan kewangan lewat</div><div class="n" style="color:var(--bad)">9</div><div class="e">Overdue financial reports · daripada 128</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;flex:1;overflow:hidden">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="row" style="padding:12px 16px"><div class="h2">Perlu tindakan <span class="e" style="font-size:11px">Needs action</span></div></div>
+        <table><tr><th>Jenis</th><th>Pemohon / Perniagaan</th><th>Status</th><th>Sejak</th></tr>
+          <tr><td>SSU baharu</td><td><b>Seni Kek Aina</b><br><span class="muted" style="font-size:11px">A23EC0123</span></td><td><span class="pill info">Baharu</span></td><td>2 hari</td></tr>
+          <tr><td>SSU pembaharuan</td><td><b>Kopi Siswa</b><br><span class="muted" style="font-size:11px">XCITE-2025S00041</span></td><td><span class="pill info">Baharu</span></td><td>3 hari</td></tr>
+          <tr><td>Resit sewa</td><td><b>Student Mall - Lot 3</b><br><span class="muted" style="font-size:11px">Sewa Oktober · RM 350</span></td><td><span class="pill warn">Menunggu pengesahan</span></td><td>1 hari</td></tr>
+          <tr><td>Laporan kewangan</td><td><b>Kopi Siswa</b><br><span class="muted" style="font-size:11px">September 2026</span></td><td><span class="pill warn">Dihantar</span></td><td>4 hari</td></tr>
+          <tr><td>Tempahan Makerspace</td><td><b>Laser Cut LCM-01</b><br><span class="muted" style="font-size:11px">19 Okt · 10:00–11:30 · Diperakui</span></td><td><span class="pill warn">Menunggu kelulusan</span></td><td>5 jam</td></tr>
+          <tr><td>Pinjaman peralatan</td><td><b>Gerudi tanpa wayar ×1</b><br><span class="muted" style="font-size:11px">Pulang 8 Okt</span></td><td><span class="pill bad">Lewat pulang</span></td><td>5 hari</td></tr>
+        </table>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card"><div class="h2">SSU akan tamat <span class="e" style="font-size:11px">Expiring SSU</span></div>
+          <div class="row" style="padding:7px 0;border-bottom:1px solid var(--line)"><span>Kopi Siswa</span><span class="sp"></span><span class="pill warn">12 hari</span></div>
+          <div class="row" style="padding:7px 0;border-bottom:1px solid var(--line)"><span>Bengkel Mini Faris</span><span class="sp"></span><span class="pill warn">27 hari</span></div>
+          <div class="row" style="padding:7px 0;border-bottom:1px solid var(--line)"><span>Tuisyen Pintar</span><span class="sp"></span><span class="pill gray">51 hari</span></div>
+          <div class="row" style="padding:7px 0"><span>Dobi Kampus</span><span class="sp"></span><span class="pill bad">Tamat 8 hari lalu</span></div></div>
+        <div class="card"><div class="h2">Pematuhan laporan September <span class="e" style="font-size:11px">Reporting compliance</span></div>
+          <div style="height:12px;background:#ECE7E8;border-radius:6px;margin:10px 0 6px;overflow:hidden;display:flex"><div style="width:72%;background:var(--ok)"></div><div style="width:12%;background:var(--warn)"></div><div style="width:7%;background:var(--bad)"></div></div>
+          <div class="row" style="font-size:11px;gap:12px"><span>● Diterima 92</span><span>● Dihantar 15</span><span>● Lewat 9</span></div></div>
+      </div>
+    </div>
+  </div>
+</div></div></body></html>
