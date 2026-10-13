@@ -77,4 +77,23 @@ function mohon(env, tok, patch) {
   return r.data.id;
 }
 
-module.exports = { AINA, AMIRUL, WEIJIE, KAVITHA, ADMIN, rows, setRow, hari, rnReady, ssuLulus, bukaLot, RN_APP, mohon, pdfFile, b64 };
+/** Kod OTP terakhir yang dihantar kepada emel. */
+function otpCode(env, emel) {
+  const m = env.sentTo(emel).filter((x) => /\d{6}/.test(x.htmlBody));
+  const t = m[m.length - 1].htmlBody.match(/: (\d{6})/);
+  return t[1];
+}
+
+/** Tetapkan permohonan terus ke status (melangkau penilaian) bagi ujian peringkat lanjut. */
+function tetapStatus(env, id, status) { setRow(env, 'Permohonan_Lot', 'ID_Permohonan', id, { Status: status }); }
+
+/** Muatan tawaran yang sah. */
+function TAWARAN(env, patch) {
+  return Object.assign({
+    noRujukan: 'UTM.J.06.11/13.16/11 (12)', tarikhSurat: hari(env, 0), jenisPerniagaan: 'Kek dan pastri', tarikhMula: hari(env, 10), tarikhTamat: hari(env, 10 + 364),
+    utiliti: 'Tanggungjawab syarikat (Air & Elektrik)', cagaranSewaan: '150', cagaranUtiliti: '0', waktuOperasi: '12.00 tengahari - 9.00 malam',
+    jadual: [{ dari: 1, hingga: 6, kadar: '150' }, { dari: 7, hingga: '', kadar: '250' }]
+  }, patch || {});
+}
+
+module.exports = { otpCode, tetapStatus, TAWARAN, AINA, AMIRUL, WEIJIE, KAVITHA, ADMIN, rows, setRow, hari, rnReady, ssuLulus, bukaLot, RN_APP, mohon, pdfFile, b64 };

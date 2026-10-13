@@ -12,6 +12,8 @@ var RnU = (function () {
   function str_(v) { return Util.str(v); }
   function today_() { return Util.toDate(Util.dateKey(new Date())); }
   function dk_(v) { return Util.dateKey(v); }
+  /** Tarikh (tengah malam MYT) = tarikh v + n hari. v: Date atau yyyy-MM-dd. */
+  function tambahHari_(v, n) { var b = Util.toDate(Util.dateKey(v)); return new Date(b.getTime() + n * 86400000); }
   function csv_(a) { return (a || []).join(','); }
   function split_(s) { return str_(s) ? str_(s).split(',').map(function (x) { return x.trim(); }).filter(Boolean) : []; }
   function num_(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
@@ -177,7 +179,7 @@ var RnU = (function () {
   }
 
   return {
-    AKTIF: AKTIF, STATUS_PER: STATUS_PER, str: str_, today: today_, dk: dk_, csv: csv_, split: split_, num: num_, rm: rm_, isDate: isDate_,
+    AKTIF: AKTIF, STATUS_PER: STATUS_PER, str: str_, today: today_, tambahHari: tambahHari_, dk: dk_, csv: csv_, split: split_, num: num_, rm: rm_, isDate: isDate_,
     perById: perById_, lotById: lotById_, pelajar: pelajar_, perniagaan: perniagaan_, perniagaanOwner: perniagaanOwner_,
     tawaranById: tawaranById_, sewaanById: sewaanById_, statusPer: statusPer_, ssuLulus: ssuLulus_, peta: peta_,
     ahliMatrik: ahliMatrik_, perniagaanAhli: perniagaanAhli_, bercanggah: bercanggah_, emelOf: emelOf_,
