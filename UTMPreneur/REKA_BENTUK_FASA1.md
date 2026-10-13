@@ -247,7 +247,7 @@ Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dash
 | 13 | Sewaan lot | Tempoh dimasukkan admin; tiada deposit; admin menamatkan atau memperbaharui sewaan secara manual |
 | 14 | Tempoh permohonan lot | Satu tempoh global (tarikh buka dan tutup) dalam `Tetapan` |
 | 15 | Sistem KPI sedia ada | Tab `Ringkasan_KPI` mudah dalam `SS_INDUK` yang boleh dibaca oleh `IMPORTRANGE`; padanan terperinci dibuat kemudian apabila senarai petunjuk dibekalkan |
-| 16 | Data lama | Alat import CSV untuk SSU (admin); data lain bermula kosong |
+| 16 | Data lama | **Mula kosong** (disahkan, menggantikan lalai alat import CSV). Tiada import data lama. Usahawan sedia ada didaftar melalui borang admin "Daftar SSU sedia ada" atau memohon melalui sistem |
 | 17 | Laporan universiti/KPT | Eksport CSV/Excel bagi setiap senarai; tiada laporan PDF khas |
 | 18 | PDPA | Notis privasi dwibahasa umum pada log masuk pertama untuk disemak Tuan; tiada penghapusan automatik |
 | 19 | Panduan | Panduan pengguna pelajar dan panduan admin (BM) dalam `UTMPreneur/docs/` |
