@@ -74,7 +74,7 @@ Import mempunyai semakan: No. Matrik pendua, emel tidak sah, nilai tidak sepadan
 ### SS_SSU
 | Tab | Isi |
 |---|---|
-| `Permohonan_SSU` | `ID_Permohonan`, No. Matrik pemilik, nama perniagaan (HURUF BESAR), produk/perkhidmatan (berbilang), syarat subjek (UBSS1032 / ULRS3032 / **MFMS1143** / SBSF1023 / Tiada / Lain-lain) + pensyarah/seksyen/kumpulan, status SSM (Ya/Tidak/Dalam proses), sijil SSM + maklumat SSM (jika Ya), jenis perniagaan, kluster, sumber pembiayaan, modal permulaan (RM tepat), pendapatan kasar bulanan (RM tepat), alamat perniagaan, tarikh mula, laman/media sosial, bil. rakan kongsi, **status**, tarikh keputusan, catatan admin, no. sijil, pautan sijil PDF |
+| `Permohonan_SSU` | `ID_Permohonan`, **`Jenis_SSU` (Perniagaan / Startup pembangunan produk-inovasi; lalai Perniagaan, ditambah dalam fasa 1 supaya tiada migrasi kemudian)**, No. Matrik pemilik, nama perniagaan (HURUF BESAR), produk/perkhidmatan (berbilang), syarat subjek (UBSS1032 / ULRS3032 / **MFMS1143** / SBSF1023 / Tiada / Lain-lain) + pensyarah/seksyen/kumpulan, status SSM (Ya/Tidak/Dalam proses), sijil SSM + maklumat SSM (jika Ya), jenis perniagaan, kluster, sumber pembiayaan, modal permulaan (RM tepat), pendapatan kasar bulanan (RM tepat), alamat perniagaan, tarikh mula, laman/media sosial, bil. rakan kongsi, **status**, tarikh keputusan, catatan admin, no. sijil, pautan sijil PDF |
 | `Ahli_Pasukan` | `ID_Permohonan`, **No. Matrik** rakan kongsi + salinan butiran semasa hantar. **Hanya pelajar UTM**; **had 12 ahli keseluruhan termasuk pemilik** (disahkan; selaras sijil yang memuatkan 12 nama; had dalam `Tetapan`); butang "Tambah rakan kongsi" dilumpuhkan apabila had dicapai |
 
 Status: Baharu / Disemak / Diluluskan / Ditolak / Perlu Pembetulan. 
@@ -233,7 +233,7 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 - **Soalan terbuka:** jejak pinjaman dan bayaran balik; adakah "satu permohonan" bermaksud satu seumur hidup, atau satu bagi setiap pinjaman belum selesai.
 
 ### Modul lain (belum dibincangkan; borang dan peraturan dibekalkan semasa fasa 2)
-- **Daftar startup** (cadangan Tuan; perbezaan daripada SSU perlu diperjelas).
+- **Daftar startup: sama seperti SSU (disahkan)**, dengan **dua jenis**: (1) **Perniagaan** dan (2) **Startup untuk pembangunan produk/inovasi**. Satu proses, satu borang asas, satu sijil; medan `Jenis_SSU` membezakannya. **[TERBUKA]** medan khusus startup (peringkat produk, penerangan inovasi, hak harta intelek), kelayakan startup untuk lot/kewangan/kredit, dan sama ada tajuk sijil berbeza.
 - **Inovasi** (pendaftaran projek/produk inovasi pelajar).
 - **Anugerah** (rekod anugerah, pertandingan dan pencapaian usahawan/inovator).
 - Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
