@@ -463,8 +463,9 @@ var RnSewa = (function () {
     RnU.requireDecider(ctx);
     p = p || {};
     var e = {}, bad = function (k, msg) { e[k] = msg || 'Wajib diisi / Required'; };
-    var per = RnU.perniagaan(S(p.idPerniagaan));
-    if (!per) bad('idPerniagaan', 'Perniagaan tidak ditemui (daftar SSU sedia ada dahulu) / Business not found');
+    var kunci = S(p.idPerniagaan).toUpperCase();
+    var per = RnU.perniagaan(kunci) || (kunci ? RnU.perniagaanOwner(Util.normMatric(kunci)) : null);
+    if (!per) bad('idPerniagaan', 'Perniagaan tidak ditemui (masukkan ID Perniagaan atau No. Matrik pemilik; daftar SSU sedia ada dahulu) / Business not found');
     var lot = RnU.lotById(S(p.kodLot));
     if (!lot) bad('kodLot', 'Lot tidak ditemui / Lot not found');
     else if (S(lot.Status_Lot) !== 'Kosong') bad('kodLot', 'Lot mesti berstatus Kosong / The lot must be vacant');

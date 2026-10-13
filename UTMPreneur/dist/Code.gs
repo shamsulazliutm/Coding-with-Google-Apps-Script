@@ -2788,7 +2788,7 @@ var RnNilai = (function () {
       var tahap = S(x.tahap) === '' ? '' : parseInt(x.tahap, 10);
       var markahRaw = S(x.markah);
       var ulasan = S(x.ulasan).replace(/\s+/g, ' ').substr(0, 500);
-      if (tahap === '' && markahRaw === '' && !ulasan) return;
+      if (tahap === '' && markahRaw === '') { if (ulasan) baru[kod] = { tahap: '', markah: '', ulasan: ulasan }; return; }
       if (tahap === '' || isNaN(tahap) || tahap < 1 || tahap > 5) { e[kod] = 'Pilih tahap / Choose a level'; return; }
       var markah;
       if (markahRaw === '') markah = auto_(k.maks, tahap);
@@ -4170,8 +4170,9 @@ var RnSewa = (function () {
     RnU.requireDecider(ctx);
     p = p || {};
     var e = {}, bad = function (k, msg) { e[k] = msg || 'Wajib diisi / Required'; };
-    var per = RnU.perniagaan(S(p.idPerniagaan));
-    if (!per) bad('idPerniagaan', 'Perniagaan tidak ditemui (daftar SSU sedia ada dahulu) / Business not found');
+    var kunci = S(p.idPerniagaan).toUpperCase();
+    var per = RnU.perniagaan(kunci) || (kunci ? RnU.perniagaanOwner(Util.normMatric(kunci)) : null);
+    if (!per) bad('idPerniagaan', 'Perniagaan tidak ditemui (masukkan ID Perniagaan atau No. Matrik pemilik; daftar SSU sedia ada dahulu) / Business not found');
     var lot = RnU.lotById(S(p.kodLot));
     if (!lot) bad('kodLot', 'Lot tidak ditemui / Lot not found');
     else if (S(lot.Status_Lot) !== 'Kosong') bad('kodLot', 'Lot mesti berstatus Kosong / The lot must be vacant');

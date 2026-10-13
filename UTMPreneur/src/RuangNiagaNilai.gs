@@ -433,7 +433,7 @@ var RnNilai = (function () {
       var tahap = S(x.tahap) === '' ? '' : parseInt(x.tahap, 10);
       var markahRaw = S(x.markah);
       var ulasan = S(x.ulasan).replace(/\s+/g, ' ').substr(0, 500);
-      if (tahap === '' && markahRaw === '' && !ulasan) return;
+      if (tahap === '' && markahRaw === '') { if (ulasan) baru[kod] = { tahap: '', markah: '', ulasan: ulasan }; return; }
       if (tahap === '' || isNaN(tahap) || tahap < 1 || tahap > 5) { e[kod] = 'Pilih tahap / Choose a level'; return; }
       var markah;
       if (markahRaw === '') markah = auto_(k.maks, tahap);
