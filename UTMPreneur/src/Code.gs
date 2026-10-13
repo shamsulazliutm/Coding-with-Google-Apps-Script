@@ -43,7 +43,22 @@ function rpcTable_() {
     'admin.senarai': { auth: true,  roles: [ROLE.ADMIN_PENUH], fn: function (c) { return AdminApi.listAdmins(c); } },
     'admin.tambah':  { auth: true,  roles: [ROLE.ADMIN_PENUH], fn: function (c, p) { return AdminApi.addAdmin(c, p); } },
     'admin.aktif':   { auth: true,  roles: [ROLE.ADMIN_PENUH], fn: function (c, p) { return AdminApi.setAdminActive(c, p); } },
-    'admin.import':  { auth: true,  roles: [ROLE.ADMIN_PENUH], fn: function (c, p) { return AdminApi.importPelajar(c, p); } }
+    'admin.import':  { auth: true,  roles: [ROLE.ADMIN_PENUH], fn: function (c, p) { return AdminApi.importPelajar(c, p); } },
+
+    'rujukan.senarai': { auth: true, fn: function () { return Ref.all(); } },
+
+    'profil.dapat':  { auth: true, roles: [ROLE.PELAJAR], matrik: true, fn: function (c) { return Profiling.view(c); } },
+    'profil.simpan': { auth: true, roles: [ROLE.PELAJAR], matrik: true, fn: function (c, p) { return Profiling.save(c, p); } },
+
+    'ssu.saya':      { auth: true, roles: [ROLE.PELAJAR], matrik: true, fn: function (c) { return Ssu.saya(c); } },
+    'ssu.dapat':     { auth: true, roles: [ROLE.PELAJAR], matrik: true, fn: function (c, p) { return Ssu.dapat(c, p); } },
+    'ssu.hantar':    { auth: true, roles: [ROLE.PELAJAR], matrik: true, fn: function (c, p) { return Ssu.hantar(c, p); } },
+    'ssu.fail':      { auth: true, roles: [ROLE.PELAJAR, ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL, ROLE.PEMERHATI], fn: function (c, p) { return Ssu.fail(c, p); } },
+    'ssu.admin.senarai':  { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminSenarai(c, p); } },
+    'ssu.admin.butiran':  { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminButiran(c, p); } },
+    'ssu.admin.putus':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminKeputusan(c, p); } },
+    'ssu.admin.sijil':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminJanaSijil(c, p); } },
+    'ssu.admin.sedia':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminDaftarSedia(c, p); } }
   };
 }
 
@@ -61,6 +76,7 @@ function rpc(method, token, payload) {
         Audit.log(ctx, 'TIADA_KEBENARIAN', 'RPC', method, '', '', '');
         throw appError_('TIADA_KEBENARIAN');
       }
+      if (h.matrik && !ctx.noMatrik) throw appError_('MATRIK_TIDAK_DITEMUI');
     }
     var out = h.fn(ctx, payload && typeof payload === 'object' ? payload : {});
     return { ok: true, data: out === undefined ? null : out };

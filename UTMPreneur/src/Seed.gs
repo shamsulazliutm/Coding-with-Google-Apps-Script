@@ -126,6 +126,32 @@ var Seed = (function () {
       ['BSABAH', 'Bumiputera Sabah', 'Bumiputera Sabah'], ['BSARAWAK', 'Bumiputera Sarawak', 'Bumiputera Sarawak'],
       ['BUKANWN', 'Bukan Warganegara', 'Non-Malaysian']
     ]));
+    out = out.concat(ruj('NEGERI', [
+      ['JOHOR', 'Johor', 'Johor'], ['KEDAH', 'Kedah', 'Kedah'], ['KELANTAN', 'Kelantan', 'Kelantan'],
+      ['MELAKA', 'Melaka', 'Melaka'], ['NSEMBILAN', 'Negeri Sembilan', 'Negeri Sembilan'], ['PAHANG', 'Pahang', 'Pahang'],
+      ['PERAK', 'Perak', 'Perak'], ['PERLIS', 'Perlis', 'Perlis'], ['PPINANG', 'Pulau Pinang', 'Penang'],
+      ['SABAH', 'Sabah', 'Sabah'], ['SARAWAK', 'Sarawak', 'Sarawak'], ['SELANGOR', 'Selangor', 'Selangor'],
+      ['TERENGGANU', 'Terengganu', 'Terengganu'], ['KL', 'Wilayah Persekutuan Kuala Lumpur', 'Federal Territory of Kuala Lumpur'],
+      ['LABUAN', 'Wilayah Persekutuan Labuan', 'Federal Territory of Labuan'], ['PUTRAJAYA', 'Wilayah Persekutuan Putrajaya', 'Federal Territory of Putrajaya'],
+      ['LUAR', 'Luar negara', 'Overseas']
+    ]));
+    out = out.concat(ruj('HUBUNGAN', [
+      ['IBU', 'Ibu', 'Mother'], ['BAPA', 'Bapa', 'Father'], ['ADIK_BERADIK', 'Adik-beradik', 'Sibling'],
+      ['DATUK_NENEK', 'Datuk / nenek', 'Grandparent'], ['SAUDARA', 'Saudara-mara', 'Relative'], ['LAIN', 'Lain-lain', 'Other']
+    ]));
+    out = out.concat(ruj('TEMPOH_NIAGA', [
+      ['KURANG1', 'Kurang 1 tahun', 'Less than 1 year'], ['1HINGGA3', '1 hingga 3 tahun', '1 to 3 years'], ['LEBIH3', 'Lebih 3 tahun', 'More than 3 years']
+    ]));
+    out = out.concat(ruj('MOTIVASI', [
+      ['PENDAPATAN', 'Pendapatan tambahan', 'Extra income'], ['MINAT', 'Minat dan kegemaran', 'Interest and passion'],
+      ['PENGALAMAN', 'Mencari pengalaman', 'Gaining experience'], ['BEBAS', 'Ingin bebas dan menjadi majikan sendiri', 'Independence and being my own boss'],
+      ['KELUARGA', 'Menyambung perniagaan keluarga', 'Continuing the family business'], ['MASALAH', 'Menyelesaikan masalah masyarakat', 'Solving a community problem'],
+      ['LAIN', 'Lain-lain', 'Other']
+    ]));
+    out = out.concat(ruj('ALIRAN', [
+      ['SOLE', 'Sole proprietor / enterprise', 'Sole proprietor / enterprise'], ['SOSIAL', 'Keusahawanan sosial', 'Social entrepreneurship'],
+      ['TEKNO', 'Technology startup', 'Technology startup'], ['GIG', 'High Value GiG', 'High Value GiG']
+    ]));
     out = out.concat(ruj('JENIS_LOT', [
       ['FNB', 'Makanan dan Minuman', 'F&B'], ['RETAIL', 'Peruncitan', 'Retail'], ['LAIN', 'Lain-lain', 'Other']
     ]));

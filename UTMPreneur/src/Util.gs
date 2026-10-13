@@ -175,6 +175,63 @@ var Util = {
     return count;
   },
 
+  /** Terima Date atau rentetan tarikh (yyyy-MM-dd atau ISO). Pulang Date atau null. */
+  toDate: function (v) {
+    if (v === null || v === undefined || v === '') return null;
+    if (Object.prototype.toString.call(v) === '[object Date]') return isNaN(v.getTime()) ? null : v;
+    var s = String(v).trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], -8, 0, 0)); // tengah malam Asia/Kuala_Lumpur
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  },
+
+  /** Kunci tarikh yyyy-MM-dd (zon waktu Malaysia). */
+  dateKey: function (v) {
+    var d = Util.toDate(v);
+    return d ? Util.fmtDate(d, 'yyyy-MM-dd') : '';
+  },
+
+  BULAN_BM: ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'],
+
+  /** 13 Oktober 2026 */
+  fmtTarikhBM: function (v) {
+    var k = Util.dateKey(v);
+    if (!k) return '';
+    var p = k.split('-');
+    return parseInt(p[2], 10) + ' ' + Util.BULAN_BM[parseInt(p[1], 10) - 1] + ' ' + p[0];
+  },
+
+  /** Tambah n bulan pada tarikh (hari dihadkan pada hari terakhir bulan sasaran). Pulang Date. */
+  addMonths: function (v, n) {
+    var k = Util.dateKey(v).split('-').map(function (x) { return parseInt(x, 10); });
+    var y = k[0], m = k[1] - 1 + n, d = k[2];
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return Util.toDate(y + '-' + Util.pad(m + 1, 2) + '-' + Util.pad(Math.min(d, last), 2));
+  },
+
+  /** Bilangan hari kalendar dari a ke b (b - a), mengikut tarikh Malaysia. */
+  daysBetween: function (a, b) {
+    var ka = Util.dateKey(a).split('-'), kb = Util.dateKey(b).split('-');
+    var da = Date.UTC(+ka[0], +ka[1] - 1, +ka[2]), db = Date.UTC(+kb[0], +kb[1] - 1, +kb[2]);
+    return Math.round((db - da) / 86400000);
+  },
+
+  /** Nombor sijil: XCITE-2026S00001-01 */
+  noSijil: function (awalan, tahun, seq, kali) {
+    return awalan + '-' + tahun + 'S' + Util.pad(seq, 5) + '-' + Util.pad(kali, 2);
+  },
+
+  /** Nombor RM tepat (maksimum 2 perpuluhan, tidak negatif). Pulang nombor atau null jika tidak sah. */
+  parseRm: function (v) {
+    if (v === null || v === undefined) return null;
+    var s = String(v).trim().replace(/^rm\s*/i, '').replace(/,/g, '');
+    if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
+    var n = parseFloat(s);
+    return n > 100000000 ? null : n;
+  },
+
   /** Normalkan jantina kepada Lelaki / Perempuan; pulangkan '' jika tidak dikenali. */
   normJantina: function (v) {
     var s = String(v == null ? '' : v).trim().toLowerCase();
@@ -213,6 +270,19 @@ var MSG = {
   CSV_TAJUK: ['Tajuk lajur CSV tidak lengkap.', 'CSV headers are incomplete.'],
   ADMIN_DIKUNCI: ['Admin utama tidak boleh diubah atau dinyahaktifkan.', 'The primary admin cannot be changed or deactivated.'],
   ADMIN_PERANAN: ['Peranan admin tidak sah.', 'Invalid admin role.'],
+  PROFIL_LENGKAP_DULU: ['Sila lengkapkan profiling anda dahulu.', 'Please complete your profiling first.'],
+  PROFIL_TIDAK_SAH: ['Maklumat profiling tidak sah. Semak medan yang bertanda.', 'Profiling details are invalid. Check the highlighted fields.'],
+  SSU_TIDAK_SAH: ['Maklumat permohonan SSU tidak sah. Semak medan yang bertanda.', 'The SSU application is invalid. Check the highlighted fields.'],
+  SSU_SUDAH_ADA: ['Anda sudah mempunyai permohonan atau SSU yang aktif.', 'You already have an active application or SSU.'],
+  SSU_TIDAK_DITEMUI: ['Permohonan SSU tidak ditemui.', 'SSU application not found.'],
+  SSU_TIDAK_BOLEH_UBAH: ['Permohonan ini tidak boleh diubah pada status semasa.', 'This application cannot be changed in its current status.'],
+  SSU_TIDAK_BOLEH_PERBAHARUI: ['Pembaharuan belum dibenarkan atau tidak sesuai.', 'Renewal is not yet allowed or not applicable.'],
+  SSU_CATATAN_WAJIB: ['Catatan wajib diisi untuk tindakan ini.', 'A note is required for this action.'],
+  SSU_PERALIHAN_TIDAK_SAH: ['Tindakan ini tidak sah pada status semasa.', 'This action is not valid in the current status.'],
+  SIJIL_TEMPLAT_TIADA: ['Templat sijil belum didaftar atau tidak boleh dibuka. Semak Link_Dokumen (TEMPLAT_SIJIL_SSU) dan kebenaran akaun pelaksana.', 'The certificate template is not registered or cannot be opened. Check Link_Dokumen (TEMPLAT_SIJIL_SSU) and the executing account\'s access.'],
+  SIJIL_TIADA: ['Sijil belum dijana.', 'The certificate has not been generated.'],
+  FAIL_TIDAK_SAH: ['Fail tidak sah. Gunakan jenis fail yang dibenarkan dan saiz yang dibenarkan.', 'Invalid file. Use an allowed file type and size.'],
+  FAIL_TIDAK_DITEMUI: ['Fail tidak ditemui.', 'File not found.'],
   RALAT_DALAMAN: ['Ralat dalaman. Sila cuba lagi atau hubungi UTMXCITE.', 'Internal error. Please try again or contact UTMXCITE.']
 };
 

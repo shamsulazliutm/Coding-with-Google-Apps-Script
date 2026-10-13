@@ -37,6 +37,12 @@ function createEnv(opts) {
       return Array.from(buf).map((b) => (b > 127 ? b - 256 : b));
     },
     getUuid() { return crypto.randomUUID(); },
+    base64Decode(str) {
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(String(str))) throw new Error('Input tidak sah base64');
+      return Array.from(Buffer.from(String(str), 'base64')).map((b) => (b > 127 ? b - 256 : b));
+    },
+    base64Encode(bytes) { return Buffer.from(bytes.map((b) => (b + 256) % 256)).toString('base64'); },
+    newBlob(bytes, mime, name) { return makeBlob(bytes, mime, name); },
     formatDate(date, tz, fmt) {
       const d = new Date(date.getTime() + 8 * 3600 * 1000); // Asia/Kuala_Lumpur = UTC+8
       const p = (n, w) => String(n).padStart(w || 2, '0');
@@ -45,6 +51,15 @@ function createEnv(opts) {
         .replace('dd', p(d.getUTCDate())).replace('HH', p(d.getUTCHours())).replace('mm', p(d.getUTCMinutes()));
     }
   };
+
+  function makeBlob(bytes, type, name) {
+    const b = {
+      bytes, type, name,
+      getBytes() { return b.bytes; }, getContentType() { return b.type; }, getName() { return b.name; },
+      setName(n) { b.name = n; return b; }
+    };
+    return b;
+  }
 
   // ---------- Cache / Properties / Lock / Mail ----------
   const CacheService = {
@@ -170,6 +185,33 @@ function createEnv(opts) {
   };
 
   // ---------- Drive ----------
+  function wrapFile(rec) {
+    const f = {
+      rec,
+      getId() { return rec.id; },
+      getName() { return rec.name || ''; },
+      setName(n) { rec.name = n; return f; },
+      getUrl() { return 'https://drive.google.com/file/d/' + rec.id + '/view'; },
+      getParents() { let i = 0; return { hasNext() { return i < rec.parents.length; }, next() { return rec.parents[i++]; } }; },
+      moveTo(folder) { rec.parents = [folder]; return f; },
+      setTrashed(t) { rec.trashed = !!t; return f; },
+      getBlob() { if (!rec.blob) throw new Error('Fail tiada kandungan'); return rec.blob; },
+      makeCopy(name, folder) {
+        const id = newId('CP');
+        const r2 = { id, name, parents: [folder || rec.parents[0]], blob: rec.blob, slides: rec.slides ? { text: rec.slides.text } : null };
+        state.files[id] = r2;
+        if (folder) folder.children.push({ name, file: r2 });
+        return wrapFile(r2);
+      },
+      getAs(mime) {
+        if (mime !== 'application/pdf') throw new Error('Tukar jenis tidak disokong dalam mock');
+        const txt = rec.slides ? rec.slides.text : '';
+        return makeBlob(Array.from(Buffer.from('%PDF-1.4\n' + txt, 'utf8')).map((b) => (b > 127 ? b - 256 : b)), 'application/pdf', (rec.name || 'fail') + '.pdf');
+      }
+    };
+    return f;
+  }
+
   function makeFolder(name) {
     const id = newId('FD');
     const f = {
@@ -177,11 +219,18 @@ function createEnv(opts) {
       getName() { return name; }, getId() { return id; },
       getUrl() { return 'https://drive.google.com/drive/folders/' + id; },
       getFoldersByName(n) {
-        const m = f.children.filter((c) => c.name === n);
+        const m = f.children.filter((c) => c.name === n && !c.file);
         let i = 0;
         return { hasNext() { return i < m.length; }, next() { return m[i++]; } };
       },
-      createFolder(n) { const c = makeFolder(n); f.children.push(c); return c; }
+      createFolder(n) { const c = makeFolder(n); f.children.push(c); return c; },
+      createFile(blob) {
+        const id2 = newId('FL');
+        const rec = { id: id2, name: blob.getName(), parents: [f], blob };
+        state.files[id2] = rec;
+        f.children.push({ name: rec.name, file: rec });
+        return wrapFile(rec);
+      }
     };
     state.folders[id] = f;
     return f;
@@ -189,18 +238,47 @@ function createEnv(opts) {
   state.folders.root = makeFolder('Drive Saya');
   const DriveApp = {
     getRootFolder() { return state.folders.root; },
+    getFolderById(id) { const f = state.folders[id]; if (!f) throw new Error('Tiada folder: ' + id); return f; },
     getFileById(id) {
       const rec = state.files[id];
-      if (!rec) throw new Error('Tiada fail: ' + id);
-      return {
-        getParents() { let i = 0; return { hasNext() { return i < rec.parents.length; }, next() { return rec.parents[i++]; } }; },
-        moveTo(folder) { rec.parents = [folder]; }
+      if (!rec || rec.denied) throw new Error('Tiada fail: ' + id);
+      return wrapFile(rec);
+    }
+  };
+
+  const SlidesApp = {
+    openById(id) {
+      const rec = state.files[id];
+      if (!rec || !rec.slides) throw new Error('Bukan persembahan: ' + id);
+      const pres = {
+        replaceAllText(find, repl, matchCase) {
+          const parts = rec.slides.text.split(find);
+          rec.slides.text = parts.join(repl);
+          return parts.length - 1;
+        },
+        saveAndClose() {},
+        getSlides() {
+          return [{ getPageElements() { return [{ asShape() { return { getText() { return { asString() { return rec.slides.text; } }; } }; } }]; } }];
+        }
       };
+      return pres;
+    }
+  };
+
+  const triggers = [];
+  state.triggers = triggers;
+  const ScriptApp = {
+    getProjectTriggers() { return triggers.slice(); },
+    deleteTrigger(t) { const i = triggers.indexOf(t); if (i >= 0) triggers.splice(i, 1); },
+    newTrigger(fn) {
+      const t = { fn, getHandlerFunction() { return fn; } };
+      const b = { timeBased() { return b; }, everyDays(n) { t.every = n; return b; }, atHour(h) { t.hour = h; return b; }, inTimezone(z) { t.tz = z; return b; }, create() { triggers.push(t); return t; } };
+      return b;
     }
   };
 
   const sandbox = {
-    Utilities, CacheService, PropertiesService, LockService, MailApp, SpreadsheetApp, DriveApp,
+    Utilities, CacheService, PropertiesService, LockService, MailApp, SpreadsheetApp, DriveApp, SlidesApp, ScriptApp,
     console: { log() {}, error() {}, warn() {} },
     Logger: { log() {} }
   };
@@ -224,6 +302,14 @@ function createEnv(opts) {
       if (!msgs.length) return null;
       const m = msgs[msgs.length - 1].htmlBody.match(/kod pengesahan anda ialah: (\d{6})/i);
       return m ? m[1] : null;
+    },
+    /** Daftar templat sijil (Slides) dalam Drive tiruan dan pautkan dalam Link_Dokumen. */
+    addSijilTemplate(text) {
+      const id = newId('TP');
+      state.files[id] = { id, name: 'Templat sijil', parents: [state.folders.root], slides: { text } };
+      env.run(`(function(){ var r = Db.find('Link_Dokumen', function(x){ return x.Kod==='TEMPLAT_SIJIL_SSU'; })[0];
+        Db.update('Link_Dokumen', r._row, {URL: 'https://docs.google.com/presentation/d/${id}/edit'}); Db.reset(); })()`);
+      return id;
     },
     /** Sediakan Induk kosong dalam folder, tetapkan properties dan jalankan Setup.run(). */
     setup(mode) {

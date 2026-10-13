@@ -116,8 +116,13 @@ var Setup = (function () {
     // Admin utama
     var hasAdmin = Db.rows('Admin').some(function (r) { return Util.normEmail(r.Emel) === ADMIN_UTAMA; });
     if (!hasAdmin) { appendMany_('Admin', Seed.admin()); log.push('Admin utama didaftar: ' + ADMIN_UTAMA); }
+    // Rujukan: tambah kumpulan yang belum wujud (selamat bagi pemasangan sedia ada; kumpulan sedia ada tidak diubah)
+    var haveGrp = {};
+    Db.rows('Rujukan').forEach(function (r) { haveGrp[Util.str(r.Kumpulan)] = true; });
+    var addR = Seed.rujukan().filter(function (r) { return !haveGrp[r.Kumpulan]; });
+    if (addR.length) { appendMany_('Rujukan', addR); log.push('Rujukan: ' + addR.length + ' baris ditambah (kumpulan baharu)'); }
     var plan = [
-      ['Rujukan', Seed.rujukan], ['Lot', Seed.lot], ['Rubrik', Seed.rubrik], ['KADAR', Seed.kadar]
+      ['Lot', Seed.lot], ['Rubrik', Seed.rubrik], ['KADAR', Seed.kadar]
     ];
     plan.forEach(function (p) {
       if (isEmpty_(p[0])) { var rows = p[1](); appendMany_(p[0], rows); log.push(p[0] + ': ' + rows.length + ' baris awal'); }
@@ -129,6 +134,7 @@ var Setup = (function () {
     }
     Cfg.invalidate();
     Admins.invalidate();
+    Ref.invalidate();
   }
 
   /** Semak setiap spreadsheet dan tab mempunyai lajur yang diperlukan. */

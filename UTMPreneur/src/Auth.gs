@@ -145,7 +145,10 @@ var Auth = (function () {
     var s = JSON.parse(raw);
     var pg = penggunaOf_(s.email);
     if (pg && Util.str(pg.Status) === 'Disekat') throw appError_('AKAUN_DISEKAT');
-    return { email: s.email, role: roleFor_(s.email) };
+    var role = roleFor_(s.email);
+    var ctx = { email: s.email, role: role, noMatrik: '', nama: '' };
+    if (pg) { ctx.nama = Util.str(pg.Nama); if (role === ROLE.PELAJAR) ctx.noMatrik = Util.normMatric(pg.No_Matrik); }
+    return ctx;
   }
 
   function logout(token) {
@@ -261,6 +264,7 @@ var Auth = (function () {
     logout: logout,
     claimMatric: claimMatric,
     registerProfile: registerProfile,
+    invalidatePengguna: pgInvalidate_,
     me: me
   };
 })();

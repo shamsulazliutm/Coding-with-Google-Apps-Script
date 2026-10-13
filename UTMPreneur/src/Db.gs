@@ -166,6 +166,15 @@ var Db = (function () {
     });
   }
 
+  /** Seperti nextSeq tetapi MESTI dipanggil apabila kunci sudah dipegang (kunci skrip tidak boleh dipegang dua kali). */
+  function nextSeqLocked_(key) {
+    var p = scriptProps_();
+    var k = 'SEQ_' + key;
+    var n = parseInt(p.getProperty(k) || '0', 10) + 1;
+    p.setProperty(k, String(n));
+    return n;
+  }
+
   function reset_() {
     memo = { induk: null, sheets: {}, hdr: {}, ss: {} };
     cache_().remove('links');
@@ -187,6 +196,7 @@ var Db = (function () {
     find: find_,
     withLock: withLock_,
     nextSeq: nextSeq_,
+    nextSeqLocked: nextSeqLocked_,
     reset: reset_
   };
 })();
