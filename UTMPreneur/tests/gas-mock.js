@@ -67,6 +67,7 @@ function createEnv(opts) {
       return {
         get(k) { const e = state.cache[k]; if (!e) return null; if (e.exp <= state.clock) { delete state.cache[k]; return null; } return e.v; },
         put(k, v, sec) { state.cache[k] = { v: String(v), exp: state.clock + (sec || 600) }; },
+        removeAll(keys) { (keys || []).forEach((k) => delete state.cache[k]); },
         remove(k) { delete state.cache[k]; }
       };
     }

@@ -49,3 +49,22 @@ test('setup() tanpa INDUK_ID mencipta folder dan Induk secara automatik, dan sel
   assert.equal(env.state.props.INDUK_ID, id);
   assert.equal(Object.keys(env.state.spreadsheets).length, nSheets, 'tiada spreadsheet berganda');
 });
+
+test('tetapPengeluaran() menukar ke PRODUKSI dengan Induk baharu tanpa data rekaan', () => {
+  const env = createEnv();
+  env.run('Setup.run()'); // UJI
+  const lama = env.state.props.INDUK_ID;
+  assert.equal(env.plain(env.run("Db.rows('PELAJAR').length")) > 0, true, 'UJI ada pelajar rekaan');
+  env.run('tetapPengeluaran()');
+  assert.equal(env.state.props.MODE, 'PRODUKSI');
+  assert.equal(env.state.props.INDUK_ID, undefined);
+  const r = env.plain(env.run('Setup.run()'));
+  assert.equal(r.selesai, true, JSON.stringify(r));
+  assert.equal(r.mod, 'PRODUKSI');
+  const baru = env.state.props.INDUK_ID;
+  assert.notEqual(baru, lama);
+  assert.equal(env.state.spreadsheets[baru].getName(), 'UTMPreneur - Induk');
+  assert.equal(env.plain(env.run("Db.rows('PELAJAR').length")), 0, 'tiada pelajar rekaan');
+  assert.equal(env.plain(env.run("Admins.find('utmxcite@utm.my').aktif")), true);
+  assert.equal(env.run('Mode.isUji()'), false);
+});

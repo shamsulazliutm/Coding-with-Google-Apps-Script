@@ -2012,6 +2012,18 @@ function validateStructure() {
   return r;
 }
 
+/**
+ * Tukar ke PRODUKSI dengan Induk baharu yang bersih. Jalankan dari editor, kemudian jalankan setup().
+ * Induk UJI lama kekal dalam Drive (tidak dipadam). Selamat dijalankan semula.
+ */
+function tetapPengeluaran() {
+  var p = PropertiesService.getScriptProperties();
+  p.setProperty(PROPS.MODE, MODE.PRODUKSI);
+  p.deleteProperty(PROPS.INDUK_ID);
+  CacheService.getScriptCache().removeAll(['links', 'cfg', 'admins', 'ruj']);
+  Logger.log('MODE = PRODUKSI. INDUK_ID dipadam (Induk lama kekal dalam Drive). Sekarang jalankan setup().');
+}
+
 
 // ===== Sijil.gs =====
 /**
