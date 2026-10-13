@@ -1,8 +1,9 @@
 /**
  * UTMPreneur: skrip persediaan.
  *
- * Tuan hanya perlu mencipta SS_INDUK (spreadsheet kosong) dalam folder pilihan, dan
- * menetapkan Script Properties INDUK_ID (URL atau ID) dan MODE (UJI atau PRODUKSI).
+ * Cara mudah: jalankan setup() terus. Jika Script Property INDUK_ID tiada, folder "UTMPreneur" dan
+ * spreadsheet Induk dicipta automatik dalam Drive akaun pelaksana. Cara manual: cipta SS_INDUK sendiri
+ * dan tetapkan INDUK_ID (URL atau ID). MODE (UJI atau PRODUKSI) lalai UJI jika tidak ditetapkan.
  * Kemudian jalankan setup() dari editor Apps Script. Skrip ini:
  *   1. menyediakan semua tab dan tajuk lajur dalam SS_INDUK,
  *   2. mencipta spreadsheet lain dalam folder yang sama dengan SS_INDUK,
@@ -21,7 +22,15 @@ var Setup = (function () {
 
   function indukSs_() {
     var raw = Db.props().getProperty(PROPS.INDUK_ID);
-    if (!raw) throw appError_('SETUP_INDUK');
+    if (!raw) {
+      // Tiada INDUK_ID: cipta folder dan spreadsheet Induk secara automatik dalam Drive akaun pelaksana.
+      var folder = DriveApp.getRootFolder().createFolder(nama_('UTMPreneur'));
+      var created = SpreadsheetApp.create(nama_('UTMPreneur - Induk'));
+      DriveApp.getFileById(created.getId()).moveTo(folder);
+      Db.props().setProperty(PROPS.INDUK_ID, created.getId());
+      Db.reset();
+      return created;
+    }
     return SpreadsheetApp.openById(Util.idFromUrl(raw) || raw);
   }
 
@@ -168,7 +177,7 @@ var Setup = (function () {
 
     log.push('Mod: ' + Mode.current() + (Db.props().getProperty(PROPS.MODE) ? '' : ' (MODE belum ditetapkan, anggap UJI)'));
     var ind = indukSs_();
-    log.push('Induk: ' + ind.getName());
+    log.push('Induk: ' + ind.getName() + ' (' + ind.getUrl() + ')');
 
     // 1. Induk
     ensureTabs_(ind, SCHEMA.SS_INDUK.tabs, false, log);

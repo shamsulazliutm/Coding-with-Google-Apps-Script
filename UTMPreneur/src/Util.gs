@@ -264,7 +264,7 @@ var MSG = {
   PERANAN_TIDAK_SESUAI: ['Tindakan ini tidak sesuai dengan peranan anda.', 'This action does not match your role.'],
   MAKLUMAT_TIDAK_LENGKAP: ['Sila lengkapkan semua maklumat wajib.', 'Please complete all required fields.'],
   TELEFON_TIDAK_SAH: ['No. telefon tidak sah.', 'Invalid phone number.'],
-  SETUP_INDUK: ['Sistem belum disediakan (INDUK_ID tiada).', 'System is not set up (INDUK_ID missing).'],
+  SETUP_INDUK: ['Sistem belum disediakan. Jalankan fungsi setup() dalam editor Apps Script.', 'System is not set up. Run the setup() function in the Apps Script editor.'],
   SETUP_TIADA_LINK: ['Spreadsheet belum didaftar dalam Link_Dokumen.', 'Spreadsheet is not registered in Link_Dokumen.'],
   CSV_KOSONG: ['Data CSV kosong.', 'CSV data is empty.'],
   CSV_TAJUK: ['Tajuk lajur CSV tidak lengkap.', 'CSV headers are incomplete.'],

@@ -32,3 +32,20 @@ test('Versi dua fail (Code.gs + Index.html) berfungsi sama: persediaan, log masu
   assert.equal(call('profil.dapat', r.data.token).data.status.lengkap, false);
   assert.equal(call('ssu.saya', r.data.token).ok, true);
 });
+
+test('setup() tanpa INDUK_ID mencipta folder dan Induk secara automatik, dan selamat diulang', () => {
+  const env = createEnv();
+  const r1 = env.plain(env.run('Setup.run()'));
+  assert.equal(r1.selesai, true, JSON.stringify(r1));
+  assert.deepEqual(r1.masalah, []);
+  const id = env.state.props.INDUK_ID;
+  assert.ok(id, 'INDUK_ID ditetapkan');
+  assert.equal(env.state.spreadsheets[id].getName(), 'UTMPreneur - Induk (UJI)');
+  const folders = env.state.folders.root.children.filter((c) => !c.file).map((c) => c.name);
+  assert.deepEqual(folders, ['UTMPreneur (UJI)']);
+  const nSheets = Object.keys(env.state.spreadsheets).length;
+  const r2 = env.plain(env.run('Setup.run()'));
+  assert.equal(r2.selesai, true);
+  assert.equal(env.state.props.INDUK_ID, id);
+  assert.equal(Object.keys(env.state.spreadsheets).length, nSheets, 'tiada spreadsheet berganda');
+});
