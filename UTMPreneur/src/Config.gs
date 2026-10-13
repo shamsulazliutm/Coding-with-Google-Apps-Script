@@ -62,13 +62,19 @@ var SCHEMA = {
     nama: 'UTMPreneur - Ruang Niaga',
     modul: 'Ruang Niaga',
     tabs: {
-      Lot: ['Kod_Lot', 'Nama_Paparan', 'Lokasi', 'Blok', 'Saiz_m2', 'Jenis', 'Kadar_Sewa_RM', 'Status_Buka', 'Status_Lot', 'Catatan', 'Didaftar_Oleh', 'Tarikh_Daftar'],
-      Permohonan_Lot: ['ID_Permohonan', 'ID_Perniagaan', 'No_Matrik', 'Kod_Lot', 'Tempoh_Mula', 'Tempoh_Tamat', 'Vaksin_Kepialu', 'Fail_Vaksin', 'Kursus_Makanan', 'Fail_Kursus', 'Sumber_Pembiayaan', 'Pemberi_Dana', 'Jumlah_Dana_RM', 'Jangkaan_Jualan_RM', 'Bil_Pekerja', 'Fail_Cadangan', 'Sebab_Berniaga', 'Lokasi_Dirancang', 'Status', 'Tarikh_Hantar', 'Keputusan', 'Tarikh_Keputusan', 'Catatan_Admin'],
-      Sewaan: ['ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'ID_Permohonan', 'Kadar_RM', 'Tarikh_Mula', 'Tarikh_Tamat', 'Status', 'Didaftar_Oleh'],
-      Bayaran_Sewa: ['ID_Bil', 'ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'Bulan', 'Tahun', 'Jumlah_RM', 'Tarikh_Akhir', 'Status', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Catatan'],
+      Lot: ['Kod_Lot', 'Nama_Paparan', 'Lokasi', 'Blok', 'Saiz_m2', 'Jenis', 'Kadar_Sewa_RM', 'Status_Buka', 'Status_Lot', 'Catatan', 'Didaftar_Oleh', 'Tarikh_Daftar', 'Alamat_Surat'],
+      Permohonan_Lot: ['ID_Permohonan', 'ID_Perniagaan', 'No_Matrik', 'Kod_Lot', 'Tempoh_Mula', 'Tempoh_Tamat', 'Vaksin_Kepialu', 'Fail_Vaksin', 'Kursus_Makanan', 'Fail_Kursus', 'Sumber_Pembiayaan', 'Pemberi_Dana', 'Jumlah_Dana_RM', 'Jangkaan_Jualan_RM', 'Bil_Pekerja', 'Fail_Cadangan', 'Sebab_Berniaga', 'Lokasi_Dirancang', 'Status', 'Tarikh_Hantar', 'Keputusan', 'Tarikh_Keputusan', 'Catatan_Admin', 'Jenis_Permohonan', 'Ulasan_Pemohon', 'Diputuskan_Oleh', 'ID_Sewaan'],
+      Sewaan: ['ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'ID_Permohonan', 'Kadar_RM', 'Tarikh_Mula', 'Tarikh_Tamat', 'Status', 'Didaftar_Oleh', 'Tarikh_Tamat_Sebenar', 'Sebab_Tamat', 'Jenis_Daftar', 'Bil_Pembaharuan', 'Tarikh_Daftar'],
+      Bayaran_Sewa: ['ID_Bil', 'ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'Bulan', 'Tahun', 'Jumlah_RM', 'Tarikh_Akhir', 'Status', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Catatan', 'Sewa_RM', 'Caj_Utiliti_RM', 'Catatan_Utiliti', 'Tarikh_Jana', 'Bulan_Sewa_Ke'],
       Rubrik: ['Jenis', 'Versi', 'Kod_Kriteria', 'Kriteria_BM', 'Kriteria_EN', 'Sub_Perkara', 'Markah_Maks', 'Tertib', 'Tahap5', 'Tahap3', 'Tahap1', 'Aktif'],
-      Sesi_Penilaian: ['ID_Sesi', 'Tarikh', 'Masa', 'Tempat', 'Status', 'Versi_Rubrik', 'Penilai', 'Senarai_Permohonan', 'Dicipta_Oleh'],
-      Skor_Penilaian: ['ID_Sesi', 'ID_Permohonan', 'Emel_Penilai', 'Kod_Kriteria', 'Tahap', 'Markah', 'Ulasan', 'Masa_Hantar', 'Dikunci']
+      Sesi_Penilaian: ['ID_Sesi', 'Tarikh', 'Masa', 'Tempat', 'Status', 'Versi_Rubrik', 'Penilai', 'Senarai_Permohonan', 'Dicipta_Oleh', 'Jemputan_Dihantar'],
+      Skor_Penilaian: ['ID_Sesi', 'ID_Permohonan', 'Emel_Penilai', 'Kod_Kriteria', 'Tahap', 'Markah', 'Ulasan', 'Masa_Hantar', 'Dikunci', 'Masa_Simpan'],
+      Dokumen_Sewaan: ['ID_Dokumen', 'ID_Permohonan', 'ID_Sewaan', 'Jenis', 'Versi', 'Tajuk', 'Fail', 'Nama_Fail', 'Tarikh', 'Dijana_Oleh', 'Status', 'Kelihatan', 'Catatan'],
+      Tawaran_Sewa: ['ID_Permohonan', 'No_Rujukan', 'Tarikh_Surat', 'Jenis_Perniagaan', 'Tarikh_Mula', 'Tarikh_Tamat', 'Bil_Bulan', 'Sewa_Bulanan_RM', 'Utiliti', 'Cagaran_Sewaan_RM', 'Cagaran_Utiliti_RM', 'Waktu_Operasi', 'Penandatangan_Nama', 'Penandatangan_Jawatan', 'Versi_Semasa', 'Status', 'Tarikh_Hantar', 'Tarikh_Luput', 'Respons', 'Tarikh_Respons', 'Emel_Respons', 'Salinan_Fizikal_Tarikh', 'Salinan_Fizikal_Penerima', 'Catatan'],
+      Cagaran: ['ID_Cagaran', 'ID_Permohonan', 'ID_Sewaan', 'ID_Perniagaan', 'Jenis', 'Jumlah_RM', 'Tarikh_Akhir_Bayar', 'No_Resit_Rasmi', 'Tarikh_Resit', 'Fail_Resit', 'Tarikh_Muat_Naik', 'Status', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Tarikh_Akhir_Pulang', 'Jumlah_Pulang_RM', 'Tarikh_Pulang', 'Sebab_Potongan', 'Catatan'],
+      Jadual_Sewa: ['ID_Permohonan', 'ID_Sewaan', 'Dari_Bulan', 'Hingga_Bulan', 'Kadar_RM'],
+      Pekerja_Penyewa: ['ID_Pekerja', 'ID_Permohonan', 'ID_Sewaan', 'ID_Perniagaan', 'Nama', 'Umur', 'Fakulti', 'Tugas', 'Pelajar_UTM', 'No_Matrik', 'Status', 'Ditambah_Oleh', 'Tarikh', 'Catatan_Admin'],
+      Peralatan_Lot: ['ID_Peralatan', 'Kod_Lot', 'Nama_Alat', 'Bilangan', 'Catatan', 'Aktif']
     }
   },
   SS_KEWANGAN: {
@@ -109,6 +115,10 @@ var TEXT_COLS = {
   Tempahan: ['No_Matrik', 'Telefon', 'Masa_Mula', 'Masa_Tamat', 'Token_Hash'],
   PERALATAN: ['Kod_Mesin', 'No_Mesin'],
   Butiran_3DP: ['No_Mesin'],
+  Tawaran_Sewa: ['No_Rujukan'],
+  Cagaran: ['No_Resit_Rasmi'],
+  Bayaran_Sewa: ['No_Rujukan'],
+  Pekerja_Penyewa: ['No_Matrik'],
   Butiran_Ruang: ['No_VOT', 'Tel_Staf_Kewangan']
 };
 
@@ -128,6 +138,9 @@ var FOLDERS = [
 var DOKUMEN = [
   { kod: 'TEMPLAT_SIJIL_SSU', jenis: 'Templat', modul: 'SSU', nama: 'Templat sijil SSU (Google Slides)', catatan: 'Letak fail Google Slides dalam folder FLD_TEMPLAT_SIJIL dan tampal URL di sini' },
   { kod: 'TEMPLAT_LAPORAN_KEWANGAN', jenis: 'Templat', modul: 'Kewangan', nama: 'Templat laporan kewangan', catatan: 'Tampal URL templat laporan kewangan' },
+  { kod: 'TEMPLAT_SURAT_TAWARAN', jenis: 'Templat', modul: 'Ruang Niaga', nama: 'Templat surat tawaran / setuju terima (Google Docs, pilihan)', catatan: 'Pilihan: tampal URL Google Docs. Jika kosong, sistem guna surat lalai. Penanda: lihat docs/MODUL_RUANG_NIAGA.md' },
+  { kod: 'TEMPLAT_PERJANJIAN_SEWA_FNB', jenis: 'Templat', modul: 'Ruang Niaga', nama: 'Templat perjanjian sewa F&B (Google Docs)', catatan: 'Wajib sebelum perjanjian F&B boleh dijana. Penanda: lihat docs/MODUL_RUANG_NIAGA.md' },
+  { kod: 'TEMPLAT_PERJANJIAN_SEWA_BUKAN_FNB', jenis: 'Templat', modul: 'Ruang Niaga', nama: 'Templat perjanjian sewa bukan F&B (Google Docs)', catatan: 'Wajib sebelum perjanjian bukan F&B boleh dijana. Penanda: lihat docs/MODUL_RUANG_NIAGA.md' },
   { kod: 'LOGO_UTMXCITE', jenis: 'Dokumen', modul: 'Sistem', nama: 'Logo UTM + UTMXCITE (PNG)', catatan: 'Pilihan: tampal URL fail PNG Drive untuk menggantikan logo lalai' }
 ];
 
@@ -166,7 +179,7 @@ var TETAPAN_LALAI = [
   ['SLOT_MAKS_JAM', '4', 'Tempoh maksimum satu tempahan mesin (jam)'],
   ['NOTIS_HARI_BEKERJA_RUANG', '3', 'Notis minimum tempahan ruang (hari bekerja)'],
   ['JANA_BIL_SEWA_HARI', '5', 'Hari dalam bulan bil sewa dijana'],
-  ['TARIKH_AKHIR_SEWA_HARI', '10', 'Hari dalam bulan tarikh akhir bayaran sewa'],
+  ['TARIKH_AKHIR_SEWA_HARI', '7', 'Hari dalam bulan tarikh akhir bayaran sewa'],
   ['JANA_LAPORAN_HARI', '1', 'Hari dalam bulan laporan kewangan dijana'],
   ['TARIKH_AKHIR_LAPORAN_HARI', '7', 'Hari dalam bulan tarikh akhir laporan kewangan'],
   ['PERINGATAN_SUSULAN_HARI', '3', 'Selang peringatan susulan (hari)'],

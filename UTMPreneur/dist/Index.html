@@ -331,7 +331,111 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     <div id="bt-hasil"></div>
   </section>
 
-<!-- ViewsRn: skrin modul (diisi oleh modul) -->
+<!-- ViewsRn: skrin modul Ruang Niaga (pelajar, admin, penilai). Kandungan dinamik dibina oleh AppRn.html -->
+<style>
+  .rn-bagi{background:var(--gold-l);color:#6B4A05;border:1px solid #EBD59B;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600}
+  .rn-card-gold{background:var(--gold-l);border:1px solid #EBD59B;border-radius:12px;padding:12px 14px}
+  .rn-lot{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:#fff}
+  .rn-lot b{font-size:14px}
+  .rn-lot .rn-meta{font-size:12px;color:var(--muted)}
+  .rn-tl{display:flex;margin:2px 0 0}
+  .rn-tl div{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+  .rn-tl b{display:flex;margin:0 auto 3px;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;font-size:11px;background:#fff;border:2px solid var(--line);color:var(--muted)}
+  .rn-tl .done b{background:var(--ok);border-color:var(--ok);color:#fff}
+  .rn-tl .now b{background:var(--maroon);border-color:var(--maroon);color:#fff}
+  .rn-doc{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .rn-doc:last-child{border-bottom:0}
+  .rn-doc .rn-ic{width:34px;height:40px;border-radius:6px;background:var(--bad-l);color:var(--bad);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+  .rn-doc .rn-nm{flex:1 1 55%;min-width:0}
+  .rn-doc .rn-lnk{color:var(--maroon);font-weight:700;font-size:13.5px;text-decoration:underline;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;text-align:left}
+  .rn-doc .rn-act{display:flex;gap:6px;flex-wrap:wrap}
+  .rn-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .rn-stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:8px}
+  .rn-stat div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .rn-stat b{display:block;font-size:20px}
+  .rn-stat span{font-size:11.5px;color:var(--muted)}
+  .rn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .rn-row > input,.rn-row > select{flex:1;min-width:120px}
+  .rn-sec{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+  .rn-warn{background:var(--warn-l);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:12.5px;margin-top:8px}
+  /* penilai */
+  .rn-k{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#fff}
+  .rn-k h3{font-size:14px;margin:0 0 2px}
+  .rn-k .rn-sub{font-size:12px;color:var(--muted)}
+  .rn-skala{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+  .rn-skala button{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:8px 2px;font:inherit;font-size:11.5px;cursor:pointer;line-height:1.2}
+  .rn-skala button b{display:block;font-size:14px}
+  .rn-skala button.on{background:var(--maroon);border-color:var(--maroon);color:#fff}
+  .rn-skala button:disabled{opacity:.6;cursor:not-allowed}
+  .rn-mk{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .rn-mk input{width:90px}
+  .rn-chk{display:grid;grid-template-columns:1fr;gap:4px;margin-top:6px;font-size:12.5px}
+  .rn-chk label{display:flex;gap:6px;align-items:flex-start}
+  .rn-chk input{width:auto;margin-top:3px}
+  .rn-total{position:sticky;bottom:0;background:#fff;border-top:3px solid var(--gold);padding:10px 12px;margin:12px -16px -16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:3}
+  .rn-total .rn-jml{font-size:22px;font-weight:700;color:var(--maroon)}
+  .rn-total .btn{margin:0}
+  @media (max-width:560px){.rn-skala button{font-size:10.5px}.rn-doc .rn-act{width:100%}}
+</style>
+
+  <!-- Pelajar: Ruang Niaga (utama) -->
+  <section id="v-rn" class="view" hidden>
+    <div class="msg info rn-bagi" id="rn-bagi" hidden></div>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card"><div class="h1">Ruang niaga</div><div class="e">Business premises (Student Mall and SUB)</div></div>
+    <div id="rn-body"></div>
+  </section>
+
+  <!-- Pelajar: borang permohonan lot -->
+  <section id="v-rn-form" class="view" hidden>
+    <div class="msg info rn-bagi" id="rn-bagi-form" hidden></div>
+    <button class="back" id="btn-rn-form-balik" type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Permohonan lot</div><div class="e">Lot application</div>
+      <div id="rn-form-pemilik" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div id="rn-form"></div>
+      <div id="msg-rn-form" class="msg" hidden></div>
+      <button id="btn-rn-hantar" class="btn" type="button">Hantar permohonan <i>Submit application</i></button>
+    </div>
+  </section>
+
+  <!-- Pelajar: butiran permohonan -->
+  <section id="v-rn-det" class="view" hidden>
+    <div class="msg info rn-bagi" id="rn-bagi-det" hidden></div>
+    <button class="back" id="btn-rn-det-balik" type="button">&larr; Ruang niaga <span class="e">Back</span></button>
+    <div id="rn-det-body"></div>
+  </section>
+
+  <!-- Admin: hab Ruang Niaga -->
+  <section id="v-rn-a" class="view" data-wide hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Ruang niaga (admin)</div><div class="e">Business premises admin</div>
+      <div class="chips" id="rn-a-tabs" style="margin-bottom:0"></div>
+    </div>
+    <div id="rn-a-body"></div>
+  </section>
+
+  <!-- Admin: butiran (permohonan, sesi, sewaan, borang) -->
+  <section id="v-rn-a-det" class="view" data-wide hidden>
+    <button class="back" id="btn-rn-a-det-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div id="rn-a-det-body"></div>
+  </section>
+
+  <!-- Penilai: senarai sesi dan calon -->
+  <section id="v-rn-p" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card"><div class="h1">Penilaian permohonan lot</div><div class="e">Lot application evaluation</div></div>
+    <div id="rn-p-body"></div>
+  </section>
+
+  <!-- Penilai: skrin skor -->
+  <section id="v-rn-p-skor" class="view" data-wide hidden>
+    <button class="back" id="btn-rn-p-balik" type="button">&larr; Senarai calon <span class="e">Candidates</span></button>
+    <div id="rn-p-skor-body"></div>
+  </section>
 
 <style>
 .kew-rep{border-top:1px solid var(--line);padding:12px 0}
@@ -1584,7 +1688,1530 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
 </script>
 
 <script>
-(function () { 'use strict'; var UP = window.UP; /* AppRn: skrip modul; guna UP.Form, UP.api, UP.show, UP.homeHooks, UP.backHooks, UP.initHooks */ })();
+(function () {
+  'use strict';
+  var UP = window.UP;
+  var $ = function (id) { return document.getElementById(id); };
+  var node = UP.node, msg = UP.msg, msgErr = UP.msgErr, clearMsg = UP.clearMsg, busy = UP.busy;
+  var BAGI = null; // {m, nama}: admin bertindak bagi pihak pelajar
+  var ST = { stu: null, det: null, detId: '' };
+  var A = { tab: 'ringkasan', perStatus: 'SEMUA', perQ: '', bilStatus: 'SEMUA', timer: null, back: null };
+  var P = { sesi: '', id: '', d: null, tahap: {}, markah: {}, ulasan: {}, timer: null, dirty: false };
+
+  var PK = {
+    Baharu: 'info', Disemak: 'info', 'Disenarai Pendek': 'info', Dinilai: 'info', Diluluskan: 'ok', Ditolak: 'bad', Ditawarkan: 'warn', Diterima: 'ok', Perjanjian: 'warn',
+    'Sewaan Aktif': 'ok', 'Tawaran Luput': 'bad', 'Ditolak Pemohon': 'bad', Dibatalkan: 'bad', Tamat: '', 'Belum Bayar': 'warn', 'Menunggu Pengesahan': 'info', Dibayar: 'ok',
+    Lewat: 'bad', Dikecualikan: '', Dipulangkan: 'ok', Dirampas: 'bad', 'Menunggu salinan bertandatangan': 'warn', 'Dimuat naik': 'info', Disahkan: 'ok', Dikembalikan: 'bad',
+    Aktif: 'ok', Pratonton: 'warn', Dihantar: 'info', Rekod: 'ok', Digantikan: '', 'Menunggu Kelulusan': 'warn', Dirancang: 'info', Berjalan: 'warn', Ditutup: 'ok',
+    belum: '', draf: 'warn', dihantar: 'ok', Dibuka: 'ok', Kosong: 'ok', Dipohon: 'warn', Disewa: 'info', Penyelenggaraan: 'bad', Ditolak_: 'bad', Dibuang: ''
+  };
+  var SEBAB = {
+    PERLU_SSU: ['Anda perlu mempunyai SSU yang diluluskan untuk memohon lot.', 'You need an approved SSU to apply for a lot.'],
+    HANYA_PEMILIK: ['Anda ahli pasukan perniagaan: anda boleh melihat dan memuat turun dokumen sahaja. Hanya pemilik boleh memohon dan bertindak.', 'You are a team member: view and download only.'],
+    SSU_TAMAT: ['SSU anda telah tamat tempoh. Sila perbaharui SSU sebelum memohon lot baharu.', 'Your SSU has expired. Please renew it first.'],
+    TEMPOH_TUTUP: ['Permohonan lot belum dibuka atau telah ditutup.', 'Lot applications are not open.'],
+    SUDAH_ADA_LOT: ['Anda atau ahli pasukan anda sudah mempunyai permohonan atau sewaan lot yang aktif (satu lot bagi satu pelajar).', 'You or a team member already has an active lot application or tenancy.']
+  };
+
+  // ---------- Pembantu ----------
+  function T(bm, en) { var s = node('span', bm + ' '); if (en) s.appendChild(node('span', en, 'e')); return s; }
+  function pill(t, kind) { return UP.pill(t, kind !== undefined ? kind : PK[t]); }
+  function spin(el) { el.textContent = ''; el.appendChild(node('div', null, 'spinner')); }
+  function card(title, en, cls) {
+    var c = node('div', null, 'card' + (cls ? ' ' + cls : ''));
+    if (title) { var h = node('div', title + ' ', 'h2'); if (en) h.appendChild(node('span', en, 'e')); c.appendChild(h); }
+    return c;
+  }
+  function btn(bm, en, fn, cls) {
+    var b = node('button', bm + ' ', 'btn sm' + (cls ? ' ' + cls : '')); b.type = 'button';
+    if (en) b.appendChild(node('span', en, 'e'));
+    b.style.marginRight = '6px'; b.style.marginTop = '6px';
+    b.addEventListener('click', function () { fn(b); });
+    return b;
+  }
+  /** Butang dua tekan untuk tindakan penting. */
+  function btn2(bm, en, fn, cls) {
+    var armed = false;
+    var b = btn(bm, en, function () {
+      if (!armed) { armed = true; b.firstChild.textContent = 'Tekan sekali lagi untuk sahkan '; return; }
+      armed = false; b.firstChild.textContent = bm + ' ';
+      fn(b);
+    }, cls);
+    return b;
+  }
+  function note(kind, bm, en) { var m = node('div', null, 'msg ' + kind); m.appendChild(document.createTextNode(bm)); if (en) m.appendChild(node('i', en)); return m; }
+  function msgBox() { var m = node('div', null, 'msg'); m.hidden = true; return m; }
+  function rm(v) { var n = parseFloat(v); return isNaN(n) ? '' : 'RM ' + (Math.round(n * 100) % 100 === 0 ? String(Math.round(n)) : n.toFixed(2)); }
+  function tbl(heads, rows, click) {
+    var sc = node('div', null, 'scroll'); var t = node('table'); var th = node('thead'); var trh = node('tr');
+    heads.forEach(function (h) { trh.appendChild(node('th', h)); }); th.appendChild(trh); t.appendChild(th);
+    var tb = node('tbody');
+    rows.forEach(function (r) {
+      var tr = node('tr', null, click ? 'click' : '');
+      r.cells.forEach(function (c) { var td = node('td'); if (c && c.nodeType) td.appendChild(c); else td.textContent = c == null ? '' : String(c); tr.appendChild(td); });
+      if (click) tr.addEventListener('click', function () { click(r); });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); sc.appendChild(t);
+    return sc;
+  }
+  function chips(list, cur, fn) {
+    var c = node('div', null, 'chips');
+    list.forEach(function (x) {
+      var b = node('button', x[1], 'chip' + (cur === x[0] ? ' on' : '')); b.type = 'button'; b.setAttribute('data-v', x[0]);
+      b.addEventListener('click', function () { fn(x[0]); }); c.appendChild(b);
+    });
+    return c;
+  }
+  var METHOD_BP = {};
+  function rn(method, payload) {
+    payload = payload || {};
+    if (!BAGI || method.indexOf('rn.admin.') === 0) return UP.api(method, payload);
+    var q = {}; Object.keys(payload).forEach(function (k) { q[k] = payload[k]; });
+    q.noMatrik = BAGI.m;
+    return UP.api('rn.bp.' + method.substr(3), q);
+  }
+  function paintBagi() {
+    ['rn-bagi', 'rn-bagi-form', 'rn-bagi-det'].forEach(function (id) {
+      var el = $(id); el.hidden = !BAGI;
+      el.textContent = BAGI ? 'Bertindak bagi pihak: ' + BAGI.nama + ' (' + BAGI.m + ') / Acting on behalf of the student' : '';
+    });
+  }
+  function bukaTab(f) {
+    var bin = atob(f.data), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([arr], { type: f.mime || 'application/pdf' }));
+    var w = null;
+    try { w = window.open(url, '_blank'); } catch (e) { w = null; }
+    if (!w) UP.download(f.nama, f.mime, f.data);
+  }
+  /** Ambil fail daripada pelayan: loader() memulangkan Promise<{ok,data}>. mode: 'papar' atau 'muat'. */
+  function ambil(loader, mode, out, b) {
+    if (b) b.disabled = true;
+    loader().then(function (r) {
+      if (b) b.disabled = false;
+      if (!r.ok) { if (out) { out.hidden = false; msgErr(out, r); } return; }
+      if (mode === 'papar') bukaTab(r.data); else UP.download(r.data.nama, r.data.mime, r.data.data);
+    });
+  }
+  function fileBtn(bm, en, loader, out) { return btn(bm, en, function (b) { ambil(loader, 'muat', out, b); }, 'alt'); }
+
+  /** Medan fail ringkas. */
+  function FileField(accept) {
+    var st = { file: null };
+    var wrap = node('div'); var inp = document.createElement('input'); inp.type = 'file'; inp.accept = accept || '.pdf,.jpg,.jpeg,.png';
+    var nt = node('div', null, 'e');
+    inp.addEventListener('change', function () {
+      var fl = inp.files && inp.files[0]; st.file = null;
+      if (!fl) { nt.textContent = ''; return; }
+      if (fl.size > 10 * 1024 * 1024) { nt.textContent = 'Fail melebihi 10 MB / File exceeds 10 MB'; inp.value = ''; return; }
+      var rd = new FileReader();
+      rd.onload = function () { st.file = { nama: fl.name, data: String(rd.result).replace(/^data:[^,]*,/, '') }; nt.textContent = fl.name; };
+      rd.readAsDataURL(fl);
+    });
+    wrap.appendChild(inp); wrap.appendChild(nt);
+    return { el: wrap, get: function () { return st.file; }, input: inp };
+  }
+
+  /** Borang ringkas dalam kad: spec -> Form; onSubmit(values) -> Promise<resp>. */
+  function formBox(spec, bm, en, onSubmit, initial) {
+    var f = UP.Form(spec); var wrap = node('div'); wrap.appendChild(f.el);
+    if (initial) f.set(initial);
+    var m = msgBox();
+    var b = btn(bm, en, function () {
+      clearMsg(m); f.clear(); busy(b, true);
+      onSubmit(f.values()).then(function (r) {
+        busy(b, false);
+        if (r && !r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) f.errors(r.error.extra.medan); }
+      });
+    });
+    b.className += ' rn-submit';
+    wrap.appendChild(m); wrap.appendChild(b);
+    return { el: wrap, form: f };
+  }
+
+  // jenis medan khas: jadual sewa berperingkat
+  UP.formTypes.rnjadual = function (f, wrap, api, h) {
+    var box = h.node('div'); var add = h.node('button', '+ Peringkat / Tier', 'btn link'); add.type = 'button';
+    function addRow(v) {
+      v = v || { dari: '', hingga: '', kadar: '' };
+      var row = h.node('div', null, 'rep-row');
+      [['dari', 'Dari bulan'], ['hingga', 'Hingga (kosong = seterusnya)'], ['kadar', 'Kadar RM']].forEach(function (x) {
+        var i = document.createElement('input'); i.placeholder = x[1]; i.setAttribute('data-j', x[0]); i.value = v[x[0]] == null ? '' : v[x[0]]; row.appendChild(i);
+      });
+      var rmb = h.node('button', '×', 'btn alt sm'); rmb.type = 'button'; rmb.addEventListener('click', function () { box.removeChild(row); });
+      row.appendChild(rmb); box.appendChild(row);
+    }
+    add.addEventListener('click', function () { addRow(null); });
+    wrap.appendChild(box); wrap.appendChild(add);
+    api.get = function () {
+      return Array.prototype.map.call(box.children, function (row) {
+        var o = {}; Array.prototype.forEach.call(row.querySelectorAll('input'), function (i) { o[i.getAttribute('data-j')] = i.value.trim(); }); return o;
+      }).filter(function (o) { return o.dari || o.hingga || o.kadar; });
+    };
+    api.set = function (arr) { box.textContent = ''; (arr && arr.length ? arr : [null]).forEach(addRow); };
+  };
+
+  // ======================================================================
+  // PELAJAR
+  // ======================================================================
+  function openRn(notice) {
+    if (typeof notice !== 'string') notice = '';
+    UP.show('v-rn'); paintBagi();
+    var body = $('rn-body'); spin(body);
+    Promise.all([UP.loadRuj(), rn('rn.saya')]).then(function (res) {
+      var r = res[1]; body.textContent = '';
+      if (!r.ok) { var e = node('div', null, 'msg err'); body.appendChild(e); msgErr(e, r); return; }
+      var d = ST.stu = r.data;
+      if (notice) body.appendChild(note('ok', notice, 'Done'));
+      var c1 = card('Tempoh permohonan', 'Application period');
+      var tp = d.tempoh;
+      var row = node('div', null, 'row');
+      row.appendChild(node('span', tp.buka ? tp.buka + '  →  ' + tp.tutup : 'Belum ditetapkan / Not set'));
+      row.appendChild(node('span', null, 'sp')); row.appendChild(pill(tp.dibuka ? 'Dibuka' : 'Ditutup', tp.dibuka ? 'ok' : 'bad'));
+      c1.appendChild(row);
+      if (d.kelayakan.perniagaan) c1.appendChild(node('div', 'Perniagaan: ' + d.kelayakan.perniagaan.nama + ' (' + d.kelayakan.perniagaan.status + ')', 'e'));
+      if (d.sebab) { var sb = SEBAB[d.sebab] || [d.sebab, '']; var nn = note('info', sb[0], sb[1]); nn.id = 'rn-sebab'; c1.appendChild(nn); }
+      body.appendChild(c1);
+
+      var c2 = card('Lot tersedia', 'Available lots');
+      if (!d.lot.length) c2.appendChild(node('p', 'Tiada lot dibuka untuk permohonan buat masa ini.', 'muted'));
+      d.lot.forEach(function (l) {
+        var el = node('div', null, 'rn-lot'); el.setAttribute('data-lot', l.kod);
+        var inf = node('div'); inf.style.flex = '1';
+        inf.appendChild(node('b', l.nama));
+        inf.appendChild(node('div', [l.lokasi, l.jenisBm, l.saiz ? l.saiz + ' m²' : '', l.kadar ? rm(l.kadar) + ' sebulan' : 'Kadar belum ditetapkan'].filter(Boolean).join(' · '), 'rn-meta'));
+        el.appendChild(inf);
+        if (d.boleh.mohon) el.appendChild(btn('Mohon', 'Apply', function () { openForm(l.kod); }));
+        c2.appendChild(el);
+      });
+      body.appendChild(c2);
+
+      if (d.permohonan.length) {
+        var c3 = card('Permohonan saya', 'My applications');
+        d.permohonan.forEach(function (p) { c3.appendChild(perRow(p, true)); });
+        body.appendChild(c3);
+      }
+      if (d.sertaan.length) {
+        var c4 = card('Perniagaan yang saya sertai (lihat sahaja)', 'Businesses I belong to (view only)');
+        d.sertaan.forEach(function (p) { c4.appendChild(perRow(p, false)); });
+        body.appendChild(c4);
+      }
+    });
+  }
+  function perRow(p, batal) {
+    var el = node('div', null, 'sec'); el.setAttribute('data-id', p.id);
+    var h = node('div', null, 'row'); var b = node('b', p.perniagaan + ' · ' + p.namaLot); h.appendChild(b); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(p.status));
+    el.appendChild(h);
+    el.appendChild(node('div', p.id + ' · dihantar ' + p.tarikhHantar + (p.pemilik ? ' · pemilik: ' + p.pemilik : ''), 'e'));
+    if (p.ulasan) el.appendChild(note('info', 'Catatan: ' + p.ulasan, 'Note'));
+    var open = btn('Buka', 'Open', function () { openDet(p.id); }); open.setAttribute('data-act', 'buka'); el.appendChild(open);
+    if (batal && p.bolehBatal) {
+      var bt = btn2('Batalkan permohonan', 'Withdraw', function () {
+        rn('rn.mohon.batal', { id: p.id }).then(function (r) { if (!r.ok) { var m = msgBox(); el.appendChild(m); msgErr(m, r); return; } openRn('Permohonan dibatalkan.'); });
+      }, 'alt');
+      bt.setAttribute('data-act', 'batal'); el.appendChild(bt);
+    }
+    return el;
+  }
+
+  function formSpec(lots) {
+    var optLot = lots.map(function (l) { return { kod: l.kod, bm: l.nama + (l.jenisBm ? ' · ' + l.jenisBm : '') + (l.kadar ? ' · ' + rm(l.kadar) : ''), en: '' }; });
+    var fnb = function (v) { var l = lots.filter(function (x) { return x.kod === v.kodLot; })[0]; return !!(l && l.fnb); };
+    return [
+      { t: 'sect', k: '_a', bm: 'Lot dipohon', en: 'Lot applied for' },
+      { k: 'kodLot', t: 'select', o: optLot, bm: 'Lot', en: 'Lot', req: 1 },
+      { k: 'tempohMula', t: 'date', bm: 'Tempoh sewa dipohon: dari', en: 'Rental period requested: from', req: 1 },
+      { k: 'tempohTamat', t: 'date', bm: 'Tempoh sewa dipohon: hingga', en: 'to', req: 1, hint: 'Maksimum 36 bulan. / Maximum 36 months.' },
+      { t: 'sect', k: '_b', bm: 'Makanan dan minuman (direkod sahaja, bukan syarat)', en: 'Food and beverage (recorded only, not a condition)', show: fnb },
+      { k: 'vaksin', t: 'radio', o: UP.YT, bm: 'Pekerja telah menerima suntikan vaksin kepialu (tifoid)?', en: 'Typhoid vaccination received?', show: fnb },
+      { k: 'failVaksin', t: 'file', bm: 'Bukti vaksin (pilihan)', en: 'Proof of vaccination (optional)', show: function (v) { return fnb(v) && v.vaksin === 'Ya'; } },
+      { k: 'kursus', t: 'radio', o: UP.YT, bm: 'Telah menghadiri kursus pengendali makanan?', en: 'Food handler course attended?', show: fnb },
+      { k: 'failKursus', t: 'file', bm: 'Sijil kursus (pilihan)', en: 'Course certificate (optional)', show: function (v) { return fnb(v) && v.kursus === 'Ya'; } },
+      { t: 'sect', k: '_c', bm: 'Kewangan', en: 'Finance' },
+      { k: 'sumber', t: 'multi', g: 'SUMBER_PEMBIAYAAN', bm: 'Sumber pembiayaan', en: 'Funding source', req: 1 },
+      { k: 'pemberi', t: 'multi', g: 'PEMBERI_DANA', bm: 'Pemberi dana (jika ada)', en: 'Funder (if any)' },
+      { k: 'jumlahDana', t: 'text', bm: 'Jumlah dana (RM, nilai tepat)', en: 'Total funds (RM, exact)', req: 1, ph: '5000.00' },
+      { k: 'jualan', t: 'text', bm: 'Jangkaan jualan bulanan (RM)', en: 'Expected monthly sales (RM)', req: 1, ph: '8000.00' },
+      { k: 'bilPekerja', t: 'number', bm: 'Bilangan pekerja', en: 'Number of staff', req: 1 },
+      { t: 'sect', k: '_d', bm: 'Cadangan perniagaan', en: 'Business proposal' },
+      { k: 'failCadangan', t: 'file', accept: '.pdf', bm: 'Cadangan perniagaan (PDF, wajib)', en: 'Business proposal (PDF, required)', req: 1 },
+      { k: 'sebab', t: 'textarea', bm: 'Sebab berniaga di lot ini', en: 'Why do you want to run a business here?', req: 1, max: 1000 },
+      { k: 'lokasi', t: 'text', bm: 'Lokasi dirancang (pilihan)', en: 'Planned location (optional)', max: 300 },
+      { t: 'sect', k: '_e', bm: 'Perakuan', en: 'Declaration' },
+      BAGI
+        ? { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan pelajar telah memberi persetujuan dan maklumat ini benar mengikut dokumen yang diserahkan.', en: 'I confirm the student consented and the information is correct.' }
+        : { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan semua maklumat adalah benar dan bersetuju maklumat ini digunakan oleh UTMXCITE untuk penilaian permohonan lot.', en: 'I confirm all information is true and agree UTMXCITE may use it to evaluate my application.' }
+    ];
+  }
+
+  var FORM = null;
+  function openForm(kod) {
+    UP.show('v-rn-form'); paintBagi();
+    var d = ST.stu; if (!d) { openRn(); return; }
+    var box = $('rn-form'); box.textContent = ''; clearMsg($('msg-rn-form'));
+    var pc = $('rn-form-pemilik'); pc.textContent = '';
+    if (d.kelayakan.perniagaan) pc.appendChild(UP.kv([['Perniagaan', d.kelayakan.perniagaan.nama], ['No. pendaftaran SSU', d.kelayakan.perniagaan.noPendaftaran]]));
+    FORM = UP.Form(formSpec(d.lot));
+    box.appendChild(FORM.el);
+    FORM.set({ kodLot: kod || '', perakuan: false });
+  }
+  function hantarForm() {
+    var m = $('msg-rn-form'); clearMsg(m);
+    if (!FORM) return;
+    var btnEl = $('btn-rn-hantar'); busy(btnEl, true); FORM.clear();
+    rn('rn.mohon.hantar', FORM.values()).then(function (r) {
+      busy(btnEl, false);
+      if (!r.ok) { msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) FORM.errors(r.error.extra.medan); return; }
+      openRn('Permohonan dihantar: ' + r.data.id);
+    });
+  }
+
+  // ---------- Butiran permohonan (pelajar) ----------
+  var LANGKAH = ['Diluluskan', 'Ditawarkan', 'Diterima', 'Perjanjian', 'Sewaan Aktif'];
+  function openDet(id, notice) {
+    ST.detId = id;
+    UP.show('v-rn-det'); paintBagi();
+    var body = $('rn-det-body'); spin(body);
+    rn('rn.butiran', { id: id }).then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { var e = node('div', null, 'msg err'); body.appendChild(e); msgErr(e, r); return; }
+      ST.det = r.data;
+      renderDet(r.data, notice);
+    });
+  }
+  function refreshDet(notice) { openDet(ST.detId, typeof notice === 'string' ? notice : ''); }
+
+  function dokRows(list, loaderFor, out) {
+    var c = node('div');
+    if (!list.length) c.appendChild(node('p', 'Tiada dokumen lagi.', 'muted'));
+    list.forEach(function (d, i) {
+      var row = node('div', null, 'rn-doc'); row.setAttribute('data-dok', d.id);
+      row.appendChild(node('div', 'PDF', 'rn-ic'));
+      var nm = node('div', null, 'rn-nm');
+      var lnk = node('button', (i + 1) + '. ' + d.tajuk, 'rn-lnk'); lnk.type = 'button'; lnk.setAttribute('data-act', 'papar');
+      lnk.addEventListener('click', function () { ambil(loaderFor(d), 'papar', out); });
+      nm.appendChild(lnk);
+      var sub = [d.versi > 1 || d.jenis === 'Surat Tawaran' || d.jenis === 'Perjanjian' ? 'v' + d.versi : '', d.masa || d.tarikh, d.status && d.status !== 'Aktif' ? d.status : ''].filter(Boolean).join(' · ');
+      nm.appendChild(node('div', sub, 'e'));
+      if (d.catatan && ['Dikembalikan'].indexOf(d.status) >= 0) nm.appendChild(node('div', 'Catatan: ' + d.catatan, 'e'));
+      row.appendChild(nm);
+      var act = node('div', null, 'rn-act');
+      act.appendChild(btn('Papar', 'View', function (b) { ambil(loaderFor(d), 'papar', out, b); }, 'alt'));
+      var dl = btn('Muat turun', 'Download', function (b) { ambil(loaderFor(d), 'muat', out, b); }, 'alt'); dl.setAttribute('data-act', 'muat');
+      act.appendChild(dl);
+      row.appendChild(act);
+      c.appendChild(row);
+    });
+    return c;
+  }
+
+  function renderDet(d, notice) {
+    var body = $('rn-det-body'); body.textContent = '';
+    var out = msgBox();
+    if (notice) body.appendChild(note('ok', notice, 'Done'));
+    var head = card();
+    var hr = node('div', null, 'row'); hr.appendChild(node('div', (d.lot ? d.lot.nama : d.ringkas.namaLot) + ' · ' + d.ringkas.perniagaan, 'h1')); hr.appendChild(node('span', null, 'sp')); hr.appendChild(pill(d.status));
+    head.appendChild(hr);
+    head.appendChild(node('div', d.id + ' · tempoh dipohon ' + d.ringkas.tempohMula + ' hingga ' + d.ringkas.tempohTamat, 'e'));
+    if (!d.bolehTindak) head.appendChild(note('info', 'Anda ahli pasukan: lihat dan muat turun sahaja. Hanya pemilik boleh bertindak.', 'Team member: view and download only.'));
+    body.appendChild(head);
+
+    var idx = LANGKAH.indexOf(d.status);
+    if (idx >= 0) {
+      var tc = card(); var tl = node('div', null, 'rn-tl');
+      [['Diluluskan', 'Approved'], ['Tawaran', 'Offer'], ['Diterima', 'Accepted'], ['Perjanjian', 'Agreement'], ['Sewaan aktif', 'Active']].forEach(function (x, i) {
+        var s = node('div', null, i < idx ? 'done' : (i === idx ? 'now' : '')); s.appendChild(node('b', i < idx ? '✓' : String(i + 1))); s.appendChild(document.createTextNode(x[0])); tl.appendChild(s);
+      });
+      tc.appendChild(tl); body.appendChild(tc);
+    } else if (['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai'].indexOf(d.status) >= 0) {
+      body.appendChild(note('info', 'Permohonan anda sedang disemak dan dinilai oleh jawatankuasa. Anda akan dimaklumkan melalui emel.', 'Your application is being reviewed and evaluated by the committee.'));
+    }
+    if (d.ringkas.ulasan) body.appendChild(note('info', 'Catatan UTMXCITE: ' + d.ringkas.ulasan, 'Note'));
+
+    // tawaran
+    var t = d.tawaran;
+    if (t) {
+      var ct = card('Surat tawaran', 'Offer letter'); ct.id = 'rn-kad-tawaran';
+      ct.appendChild(UP.kv([
+        ['No. rujukan', t.noRujukan], ['Lokasi', t.alamatLot], ['Jenis perniagaan', t.jenisPerniagaan], ['Tempoh kontrak', t.tarikhMula + ' hingga ' + t.tarikhTamat + ' (' + t.bilBulan + ' bulan)'],
+        ['Sewaan bulanan', t.jadual.map(function (j) { return (j.hingga === '' ? 'Bulan ' + j.dari + ' dan ke atas' : 'Bulan ' + j.dari + '-' + j.hingga) + ': ' + rm(j.kadar); }).join('; ')],
+        ['Utiliti', t.utiliti], ['Cagaran sewaan', t.cagaranSewaan > 0 ? rm(t.cagaranSewaan) : 'Tiada'], ['Cagaran utiliti', t.cagaranUtiliti > 0 ? rm(t.cagaranUtiliti) : 'Tiada'],
+        ['Waktu operasi', t.waktuOperasi], ['Dihantar / luput', t.tarikhHantar + ' / ' + t.tarikhLuput]
+      ]));
+      if (t.bolehJawab) {
+        ct.appendChild(note('info', 'Tawaran luput dalam ' + t.hariBaki + ' hari. Jawapan disahkan dengan kod OTP yang dihantar ke emel pemohon.', 'The offer expires in ' + t.hariBaki + ' days. Your answer is confirmed with an OTP sent to the applicant email.'));
+        var ar = node('div', null, 'row');
+        var a1 = btn('Saya terima', 'I accept', function () { mulaOtp('terima'); }); a1.id = 'rn-btn-terima'; ar.appendChild(a1);
+        var a2 = btn('Saya tolak', 'I decline', function () { mulaOtp('tolak'); }, 'alt'); a2.id = 'rn-btn-tolak'; ar.appendChild(a2);
+        ct.appendChild(ar);
+        var op = node('div', null, 'rn-sec'); op.id = 'rn-otp-panel'; op.hidden = true; ct.appendChild(op);
+      }
+      body.appendChild(ct);
+      if (t.respons) {
+        var cp = node('div', null, 'rn-card-gold'); cp.id = 'rn-kad-penerimaan';
+        cp.appendChild(node('div', 'Penerimaan tawaran ', 'h2')); cp.firstChild.appendChild(node('span', 'Offer response', 'e'));
+        var pt = node('div', null, 'muted'); pt.style.fontSize = '12.5px';
+        pt.appendChild(document.createTextNode('Tawaran telah ' + (t.respons === 'Terima' ? 'diterima' : 'ditolak') + ' pada '));
+        pt.appendChild(node('b', t.tarikhResponsMasa)); cp.appendChild(pt);
+        cp.appendChild(node('div', 'Offer ' + (t.respons === 'Terima' ? 'accepted' : 'declined') + ' on ' + t.tarikhResponsMasa, 'e'));
+        body.appendChild(cp);
+      }
+      if (t.respons === 'Terima') {
+        var cs = card('Salinan fizikal Surat Setuju Terima', 'Signed paper copy');
+        cs.appendChild(node('p', 'Pulangkan dua (2) salinan surat yang ditandatangani, disaksikan dan bercop kepada pejabat UTMXCITE sebelum ' + t.salinan.tarikhAkhir + '. Ini tidak menghalang sewaan aktif.', 'muted'));
+        cs.appendChild(t.salinan.tarikh ? pill('Diterima ' + t.salinan.tarikh, 'ok') : pill(t.salinan.lewat ? 'Lewat' : 'Belum diterima', t.salinan.lewat ? 'bad' : 'warn'));
+        body.appendChild(cs);
+      }
+    }
+
+    // dokumen
+    var cd = node('div', null, 'rn-card-gold'); cd.id = 'rn-kad-dokumen';
+    var dh = node('div', 'Dokumen penyertaan ', 'h2'); dh.appendChild(node('span', 'Supporting documents', 'e')); cd.appendChild(dh);
+    cd.appendChild(node('div', 'Klik nama dokumen untuk melihat PDF dalam tab baharu. Muat turun bila-bila masa. / Tap a document name to open the PDF; download any time.', 'e'));
+    cd.appendChild(dokRows(d.dokumen, function (x) { return function () { return rn('rn.dok.fail', { id: x.id }); }; }, out));
+    cd.appendChild(out);
+    body.appendChild(cd);
+
+    renderCagaran(d, body);
+    renderPerjanjian(d, body);
+    if (d.bolehPekerja || d.pekerja.length) renderPekerja(d, body);
+    if (d.sewaan) renderSewaan(d, body);
+  }
+
+  // ---------- OTP penerimaan ----------
+  function mulaOtp(jawapan) {
+    var op = $('rn-otp-panel'); op.hidden = false; op.textContent = '';
+    var m = msgBox(); op.appendChild(m);
+    var id = ST.detId;
+    rn('rn.tawaran.otp', { id: id }).then(function (r) {
+      if (!r.ok) { msgErr(m, r); return; }
+      op.insertBefore(note('info', 'Kod OTP telah dihantar ke ' + r.data.emelTopeng + '. Masukkan kod untuk ' + (jawapan === 'terima' ? 'MENERIMA' : 'MENOLAK') + ' tawaran.', 'An OTP was sent. Enter it to ' + (jawapan === 'terima' ? 'ACCEPT' : 'DECLINE') + ' the offer.'), m);
+      var inp = document.createElement('input'); inp.id = 'rn-otp-kod'; inp.inputMode = 'numeric'; inp.maxLength = 6; inp.placeholder = '000000'; inp.autocomplete = 'one-time-code';
+      op.appendChild(inp);
+      var sb = btn(jawapan === 'terima' ? 'Sahkan penerimaan' : 'Sahkan penolakan', 'Confirm', function (b) {
+        clearMsg(m); busy(b, true);
+        rn('rn.tawaran.jawab', { id: id, jawapan: jawapan, kod: inp.value.trim() }).then(function (x) {
+          busy(b, false);
+          if (!x.ok) { msgErr(m, x); return; }
+          refreshDet(jawapan === 'terima' ? 'Tawaran diterima. Rekod penerimaan telah dijana.' : 'Tawaran ditolak.');
+        });
+      }); sb.id = 'rn-otp-sahkan';
+      op.appendChild(sb);
+    });
+  }
+
+  // ---------- Cagaran ----------
+  function renderCagaran(d, body) {
+    if (!d.cagaran.length) return;
+    var c = card('Cagaran', 'Deposit'); c.id = 'rn-kad-cagaran';
+    d.cagaran.forEach(function (g) {
+      var s = node('div', null, 'sec'); s.setAttribute('data-cagaran', g.id);
+      var h = node('div', null, 'row'); h.appendChild(node('b', 'Cagaran ' + g.jenis.toLowerCase() + ': ' + rm(g.jumlah))); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(g.status)); s.appendChild(h);
+      s.appendChild(node('div', 'Tarikh akhir bayar: ' + g.tarikhAkhirBayar + (g.lewatBayar ? ' (LEWAT)' : '') + (g.noResit ? ' · Resit: ' + g.noResit : '') + (g.tarikhAkhirPulang ? ' · Pulang sebelum ' + g.tarikhAkhirPulang : ''), 'e'));
+      if (g.catatan) s.appendChild(note('err', 'Catatan: ' + g.catatan, 'Note'));
+      if (g.adaResit) { var o = msgBox(); s.appendChild(fileBtn('Resit', 'Receipt', function () { return rn('rn.cagaran.fail', { id: g.id }); }, o)); s.appendChild(o); }
+      if (d.bolehTindak && ['Belum Bayar', 'Menunggu Pengesahan'].indexOf(g.status) >= 0 && ['Ditawarkan', 'Diterima', 'Perjanjian', 'Sewaan Aktif'].indexOf(d.status) >= 0) {
+        var fb = formBox([
+          { k: 'noResit', t: 'text', bm: 'No. resit rasmi Bendahari', en: 'Official receipt no.', req: 1, max: 60 },
+          { k: 'tarikhResit', t: 'date', bm: 'Tarikh resit', en: 'Receipt date', req: 1 },
+          { k: 'fail', t: 'file', bm: 'Salinan resit rasmi (PDF/JPG/PNG)', en: 'Official receipt copy', req: 1 }
+        ], g.status === 'Menunggu Pengesahan' ? 'Muat naik semula resit' : 'Muat naik resit', 'Upload receipt', function (v) {
+          return rn('rn.cagaran.muatnaik', { id: g.id, noResit: v.noResit, tarikhResit: v.tarikhResit, fail: v.fail }).then(function (r) { if (r.ok) refreshDet('Resit dimuat naik. Menunggu pengesahan admin.'); return r; });
+        });
+        fb.el.setAttribute('data-form', 'cagaran'); s.appendChild(fb.el);
+      }
+      c.appendChild(s);
+    });
+    body.appendChild(c);
+  }
+
+  // ---------- Perjanjian ----------
+  function renderPerjanjian(d, body) {
+    var p = d.perjanjian;
+    if (!p || !p.ada) return;
+    var c = card('Perjanjian sewa', 'Tenancy agreement'); c.id = 'rn-kad-perjanjian';
+    var h = node('div', null, 'row'); h.appendChild(node('span', 'Versi ' + p.versi)); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(p.status)); c.appendChild(h);
+    if (p.status === 'Menunggu salinan bertandatangan' || p.status === 'Dikembalikan') {
+      c.appendChild(node('p', 'Muat turun perjanjian di atas, cetak, tandatangani, kemudian muat naik salinan bertandatangan.', 'muted'));
+      if (p.salinan && p.salinan.catatan) c.appendChild(note('err', 'Catatan admin: ' + p.salinan.catatan, 'Admin note'));
+      if (d.bolehTindak) {
+        var ff = FileField('.pdf,.jpg,.jpeg,.png'); ff.input.id = 'rn-fail-tt'; c.appendChild(ff.el);
+        var m = msgBox(); c.appendChild(m);
+        var ub = btn('Muat naik salinan bertandatangan', 'Upload signed copy', function (b) {
+          clearMsg(m); busy(b, true);
+          rn('rn.perjanjian.muatnaik', { id: d.id, fail: ff.get() }).then(function (r) {
+            busy(b, false);
+            if (!r.ok) { msgErr(m, r); return; }
+            refreshDet('Salinan bertandatangan dimuat naik. Menunggu pengesahan admin.');
+          });
+        }); ub.id = 'rn-btn-muat-tt'; c.appendChild(ub);
+      }
+    } else if (p.status === 'Dimuat naik') c.appendChild(node('p', 'Salinan bertandatangan telah dimuat naik dan menunggu pengesahan admin.', 'muted'));
+    else if (p.status === 'Disahkan') c.appendChild(node('p', 'Perjanjian telah disahkan.', 'muted'));
+    body.appendChild(c);
+  }
+
+  // ---------- Pekerja ----------
+  function renderPekerja(d, body) {
+    var c = card('Senarai pekerja (Lampiran 2)', 'Staff list (Appendix 2)'); c.id = 'rn-kad-pekerja';
+    if (!d.pekerja.length) c.appendChild(node('p', 'Belum ada pekerja didaftarkan.', 'muted'));
+    d.pekerja.forEach(function (p) {
+      var s = node('div', null, 'sec'); s.setAttribute('data-pekerja', p.id);
+      var h = node('div', null, 'row'); h.appendChild(node('b', p.nama + ' (' + p.umur + ')')); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(p.status)); s.appendChild(h);
+      s.appendChild(node('div', [p.tugas, p.fakulti, p.pelajarUtm ? 'Pelajar UTM ' + p.noMatrik : 'Pekerja luar UTM'].filter(Boolean).join(' · '), 'e'));
+      if (p.catatan) s.appendChild(node('div', 'Catatan: ' + p.catatan, 'e'));
+      if (d.bolehTindak) s.appendChild(btn2('Buang', 'Remove', function () { rn('rn.pekerja.buang', { id: p.id }).then(function (r) { if (r.ok) refreshDet(); }); }, 'alt'));
+      c.appendChild(s);
+    });
+    if (d.bolehTindak && d.bolehPekerja) {
+      c.appendChild(node('div', 'Tambah pekerja', 'sech'));
+      var fb = formBox([
+        { k: 'pelajarUtm', t: 'radio', o: [{ kod: 'Ya', bm: 'Pelajar UTM aktif', en: 'Active UTM student' }, { kod: 'Tidak', bm: 'Pekerja luar UTM (perlu kelulusan admin)', en: 'Non-UTM (admin approval needed)' }], bm: 'Jenis pekerja', en: 'Type', req: 1 },
+        { k: 'noMatrik', t: 'text', bm: 'No. Matrik', en: 'Matric no.', show: function (v) { return v.pelajarUtm === 'Ya'; } },
+        { k: 'nama', t: 'text', bm: 'Nama penuh', en: 'Full name', req: 1, max: 120 },
+        { k: 'umur', t: 'number', bm: 'Umur (18 tahun ke atas)', en: 'Age (18 or above)', req: 1 },
+        { k: 'fakulti', t: 'text', bm: 'Fakulti', en: 'Faculty', max: 120 },
+        { k: 'tugas', t: 'text', bm: 'Tugas / jawatan', en: 'Duties / position', req: 1, max: 120 }
+      ], 'Tambah pekerja', 'Add staff', function (v) {
+        v.idPermohonan = d.id;
+        return rn('rn.pekerja.simpan', v).then(function (r) { if (r.ok) refreshDet('Pekerja ditambah.'); return r; });
+      }, { pelajarUtm: 'Ya' });
+      fb.el.setAttribute('data-form', 'pekerja'); c.appendChild(fb.el);
+    }
+    body.appendChild(c);
+  }
+
+  // ---------- Sewaan dan bil ----------
+  function renderSewaan(d, body) {
+    var s = d.sewaan;
+    var c = card('Sewaan aktif', 'Active tenancy'); c.id = 'rn-kad-sewaan';
+    var h = node('div', null, 'row'); h.appendChild(node('b', s.id + ' · ' + s.namaLot)); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(s.status)); c.appendChild(h);
+    c.appendChild(UP.kv([['Tempoh', s.tarikhMula + ' hingga ' + (s.tarikhTamatSebenar || s.tarikhTamat)], ['Jadual sewa', s.jadual.map(function (j) { return (j.hingga === '' ? 'Bulan ' + j.dari + '+' : 'Bulan ' + j.dari + '-' + j.hingga) + ': ' + rm(j.kadar); }).join('; ')],
+      ['Pembaharuan', String(s.bilPembaharuan)]]));
+    if (s.tunggakan && s.tunggakan.bilLewat) c.appendChild(note('err', 'Anda mempunyai ' + s.tunggakan.bilLewat + ' bil lewat (RM ' + s.tunggakan.jumlah.toFixed(2) + '). Sila jelaskan segera.', 'You have overdue bills.'));
+    c.appendChild(node('div', 'Bil sewa', 'sech'));
+    if (!s.bil.length) c.appendChild(node('p', 'Belum ada bil.', 'muted'));
+    s.bil.forEach(function (b) {
+      var el = node('div', null, 'sec'); el.setAttribute('data-bil', b.id);
+      var hh = node('div', null, 'row'); hh.appendChild(node('b', Math.max(1, b.bulan) + '/' + b.tahun + ' · ' + rm(b.jumlah))); hh.appendChild(node('span', null, 'sp')); hh.appendChild(pill(b.status)); el.appendChild(hh);
+      el.appendChild(node('div', b.id + ' · tarikh akhir ' + b.tarikhAkhir + (b.hariLewat ? ' (lewat ' + b.hariLewat + ' hari)' : '') + (b.utiliti ? ' · termasuk utiliti ' + rm(b.utiliti) : '') + (b.noRujukan ? ' · rujukan ' + b.noRujukan : ''), 'e'));
+      if (b.catatan) el.appendChild(note('err', 'Catatan: ' + b.catatan, 'Note'));
+      if (b.adaResit) { var o = msgBox(); el.appendChild(fileBtn('Resit', 'Receipt', function () { return rn('rn.bil.fail', { id: b.id }); }, o)); el.appendChild(o); }
+      if (d.bolehTindak && ['Belum Bayar', 'Lewat', 'Menunggu Pengesahan'].indexOf(b.status) >= 0) {
+        var det = document.createElement('details'); det.appendChild(node('summary', b.status === 'Menunggu Pengesahan' ? 'Rekod semula bayaran' : 'Rekod bayaran'));
+        var fb = formBox([
+          { k: 'kaedah', t: 'select', o: s.kaedah.map(function (k) { return { kod: k, bm: k, en: '' }; }), bm: 'Kaedah bayaran', en: 'Payment method', req: 1 },
+          { k: 'noRujukan', t: 'text', bm: 'No. rujukan / resit rasmi', en: 'Reference / official receipt no.', req: 1, max: 60 },
+          { k: 'tarikhBayar', t: 'date', bm: 'Tarikh bayar', en: 'Payment date', req: 1 },
+          { k: 'fail', t: 'file', bm: 'Resit (PDF/JPG/PNG)', en: 'Receipt', req: 1 }
+        ], 'Hantar bayaran', 'Submit payment', function (v) {
+          return rn('rn.bil.bayar', { id: b.id, kaedah: v.kaedah, noRujukan: v.noRujukan, tarikhBayar: v.tarikhBayar, fail: v.fail }).then(function (r) { if (r.ok) refreshDet('Bayaran direkodkan. Menunggu pengesahan admin.'); return r; });
+        });
+        fb.el.setAttribute('data-form', 'bil'); det.appendChild(fb.el); el.appendChild(det);
+      }
+      c.appendChild(el);
+    });
+    body.appendChild(c);
+  }
+
+  // ======================================================================
+  // ADMIN
+  // ======================================================================
+  var TABS = [['ringkasan', 'Ringkasan'], ['perm', 'Permohonan'], ['sesi', 'Sesi penilaian'], ['lot', 'Lot'], ['sewaan', 'Sewaan'], ['bil', 'Bil sewa']];
+  function openAdmin(tab) {
+    if (tab) A.tab = tab;
+    BAGI = null; paintBagi();
+    UP.show('v-rn-a');
+    var tb = $('rn-a-tabs'); tb.textContent = '';
+    TABS.forEach(function (x) {
+      var b = node('button', x[1], 'chip' + (A.tab === x[0] ? ' on' : '')); b.type = 'button'; b.setAttribute('data-tab', x[0]);
+      b.addEventListener('click', function () { openAdmin(x[0]); }); tb.appendChild(b);
+    });
+    var body = $('rn-a-body'); spin(body);
+    ({ ringkasan: tabRingkasan, perm: tabPerm, sesi: tabSesi, lot: tabLot, sewaan: tabSewaan, bil: tabBil })[A.tab](body);
+  }
+  function showDet(backFn) {
+    UP.show('v-rn-a-det'); A.back = backFn || function () { openAdmin(); };
+    var b = $('rn-a-det-body'); spin(b); return b;
+  }
+  function errBox(body, r) { body.textContent = ''; var e = node('div', null, 'msg err'); body.appendChild(e); msgErr(e, r); }
+
+  // ---------- Ringkasan ----------
+  function tabRingkasan(body) {
+    UP.api('rn.admin.dashboard').then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      var c = card('Ringkasan', 'Overview'); c.id = 'rn-dash';
+      var st = node('div', null, 'rn-stat');
+      [[d.okupansi.peratus + '%', 'Okupansi (' + d.okupansi.disewa + ' disewa / ' + d.okupansi.lot + ' lot)'], [rm(d.kutipan.dikutip), 'Dikutip ' + d.kutipan.bulan + '/' + d.kutipan.tahun + ' (jangka ' + rm(d.kutipan.dijangka) + ')'],
+        [rm(d.tertunggak.jumlah), 'Tertunggak (' + d.tertunggak.bil + ' bil)'], [String(d.tawaran.menunggu), 'Tawaran menunggu jawapan'], [String(d.tawaran.luput), 'Tawaran luput'],
+        [String(d.cagaran.menungguPengesahan), 'Cagaran menunggu pengesahan'], [String(d.cagaran.lewatBayar), 'Cagaran lewat bayar'], [String(d.cagaran.lewatPulang.length), 'Cagaran lewat pulang'],
+        [String(d.bilMenunggu), 'Bayaran sewa menunggu pengesahan'], [String(d.permohonan.baharu + d.permohonan.disemak), 'Permohonan perlu disemak'], [String(d.permohonan.dinilai), 'Dinilai, menunggu keputusan']
+      ].forEach(function (x) { var el = node('div'); el.appendChild(node('b', x[0])); el.appendChild(node('span', x[1])); st.appendChild(el); });
+      c.appendChild(st);
+      if (d.tunggakanDitanda.length) {
+        c.appendChild(node('div', 'Tunggakan melebihi satu bulan', 'sech'));
+        c.appendChild(tbl(['Sewaan', 'Perniagaan', 'Lot', 'Bil lewat', 'Jumlah (RM)', 'Cadangan'], d.tunggakanDitanda.map(function (x) {
+          return { id: x.idSewaan, cells: [x.idSewaan, x.perniagaan, x.kodLot, x.bilLewat, x.jumlah.toFixed(2), x.cadanganNotis ? 'Notis ' + x.cadanganNotis : '-'] };
+        }), function (row) { openSewaanDet(row.id); }));
+      }
+      if (d.salinanFizikalLewat.length) c.appendChild(note('err', 'Salinan fizikal Surat Setuju Terima lewat: ' + d.salinanFizikalLewat.join(', '), 'Signed paper copy overdue'));
+      body.appendChild(c);
+
+      var ct = card('Tempoh permohonan lot', 'Lot application period'); ct.id = 'rn-kad-tempoh';
+      ct.appendChild(node('p', 'Pelajar hanya boleh memohon dalam tempoh ini. Kosongkan kedua-duanya untuk menutup permohonan.', 'muted'));
+      var bolehUbah = true;
+      var fb = formBox([
+        { k: 'buka', t: 'date', bm: 'Tarikh buka', en: 'Open date' },
+        { k: 'tutup', t: 'date', bm: 'Tarikh tutup', en: 'Close date' }
+      ], 'Simpan tempoh', 'Save period', function (v) {
+        return UP.api('rn.admin.tempoh.simpan', v).then(function (x) { if (x.ok) { openAdmin('ringkasan'); } return x; });
+      }, { buka: d.tempoh.buka, tutup: d.tempoh.tutup });
+      ct.appendChild(fb.el);
+      body.appendChild(ct);
+
+      var cb = card('Bagi pihak pelajar', 'On behalf of a student'); cb.id = 'rn-kad-bp';
+      cb.appendChild(node('p', 'Isi permohonan lot atau bertindak untuk pemilik. Semua tindakan direkod dalam audit dengan nama anda.', 'muted'));
+      var inp = document.createElement('input'); inp.id = 'rn-bp-matrik'; inp.placeholder = 'No. Matrik pelajar'; inp.autocapitalize = 'characters'; cb.appendChild(inp);
+      var m = msgBox(); cb.appendChild(m);
+      var go = btn('Cari', 'Find', function (b) {
+        clearMsg(m); busy(b, true);
+        UP.api('rn.bp.cari', { noMatrik: inp.value.trim() }).then(function (x) {
+          busy(b, false);
+          if (!x.ok) { msgErr(m, x); return; }
+          bukaBagi(x.data.pelajar);
+        });
+      }); go.id = 'rn-bp-cari'; cb.appendChild(go);
+      body.appendChild(cb);
+    });
+  }
+  function bukaBagi(p) { BAGI = { m: p.noMatrik, nama: p.nama }; openRn(); }
+
+  // ---------- Permohonan ----------
+  var STATUS_PER = ['SEMUA', 'Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai', 'Diluluskan', 'Ditawarkan', 'Diterima', 'Perjanjian', 'Sewaan Aktif', 'Ditolak', 'Tawaran Luput', 'Ditolak Pemohon', 'Dibatalkan', 'Tamat'];
+  function tabPerm(body) {
+    UP.api('rn.admin.perm.senarai', { status: A.perStatus, q: A.perQ }).then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      var c = card('Permohonan lot', 'Lot applications');
+      c.appendChild(chips(STATUS_PER.map(function (s) {
+        var n = s === 'SEMUA' ? Object.keys(d.kiraan).reduce(function (a, k) { return a + d.kiraan[k]; }, 0) : d.kiraan[s];
+        return [s, (s === 'SEMUA' ? 'Semua' : s) + ' (' + n + ')'];
+      }), A.perStatus, function (s) { A.perStatus = s; openAdmin('perm'); }));
+      var q = document.createElement('input'); q.id = 'rn-per-q'; q.placeholder = 'Cari ID, perniagaan, No. Matrik, lot / Search'; q.value = A.perQ;
+      q.addEventListener('input', function () { clearTimeout(A.timer); A.timer = setTimeout(function () { A.perQ = q.value.trim(); openAdmin('perm'); }, 400); });
+      c.appendChild(q);
+      if (!d.senarai.length) c.appendChild(node('p', 'Tiada permohonan.', 'muted'));
+      else c.appendChild(tbl(['ID', 'Perniagaan', 'Pemilik', 'Lot', 'Status', 'Dihantar'], d.senarai.map(function (p) {
+        return { id: p.id, cells: [p.id, p.perniagaan, p.pemilik + ' (' + p.noMatrik + ')', p.kodLot, pill(p.status), p.tarikhHantar] };
+      }), function (row) { openAdminPer(row.id); }));
+      body.appendChild(c);
+    });
+  }
+
+  function openAdminPer(id, notice) {
+    var body = showDet(function () { openAdmin('perm'); });
+    A.cur = { type: 'per', id: id };
+    var calls = [UP.loadRuj(), UP.api('rn.admin.perm.butiran', { id: id })];
+    Promise.all(calls).then(function (res) {
+      var r = res[1];
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      if (['Diluluskan'].indexOf(d.status) >= 0) {
+        UP.api('rn.admin.tawaran.dapat', { id: id }).then(function (t) { renderAdminPer(body, d, t.ok ? t.data : null, notice); });
+      } else renderAdminPer(body, d, null, notice);
+    });
+  }
+  function refreshAdminPer(notice) { openAdminPer(A.cur.id, typeof notice === 'string' ? notice : ''); }
+
+  function renderAdminPer(body, d, taw, notice) {
+    body.textContent = '';
+    var out = msgBox();
+    if (notice) body.appendChild(note('ok', notice, 'Done'));
+    var head = card();
+    var hr = node('div', null, 'row'); hr.appendChild(node('div', d.perniagaan ? d.perniagaan.nama : d.id, 'h1')); hr.appendChild(node('span', null, 'sp')); hr.appendChild(pill(d.status)); head.appendChild(hr);
+    head.appendChild(node('div', d.id + ' · ' + d.jenisPermohonan + ' · ' + (d.lot ? d.lot.nama : d.borang.kodLot), 'e'));
+    d.amaran.forEach(function (t) { head.appendChild(note('info', t)); });
+    if (d.amaranTindakan) d.amaranTindakan.forEach(function (t) { head.appendChild(note('err', t)); });
+    body.appendChild(head);
+
+    var c1 = card('Pemohon dan perniagaan', 'Applicant and business');
+    var p = d.pemohon;
+    var rows = [['Nama', p.nama], ['No. Matrik', p.noMatrik], ['Emel', p.emel], ['Fakulti', p.fakulti], ['Program', p.program], ['Tahun', p.tahun], ['Telefon', p.telefon]];
+    if (p.noKp !== undefined) rows.push(['No. KP', p.noKp]);
+    if (d.perniagaan) rows = rows.concat([['Perniagaan', d.perniagaan.nama], ['No. pendaftaran SSU', d.perniagaan.noPendaftaran], ['Status SSU', d.perniagaan.statusSsu], ['No. SSM', d.perniagaan.noSsm], ['Status SSM', d.perniagaan.statusSsm],
+      ['Jenis perniagaan', d.perniagaan.jenisPerniagaan], ['Produk', d.perniagaan.produk.join(', ')]]);
+    c1.appendChild(UP.kv(rows));
+    c1.appendChild(node('div', 'Ahli pasukan: ' + d.ahli.map(function (a) { return a.nama + ' (' + a.peranan + ')'; }).join(', '), 'e'));
+    body.appendChild(c1);
+
+    var b = d.borang;
+    var c2 = card('Permohonan', 'Application');
+    c2.appendChild(UP.kv([['Lot', d.lot ? d.lot.nama + ' · ' + (d.lot.jenisBm || '-') + ' · ' + rm(d.lot.kadar) : b.kodLot], ['Tempoh dipohon', b.tempohMula + ' hingga ' + b.tempohTamat],
+      ['Vaksin kepialu', b.vaksin || '-'], ['Kursus pengendali makanan', b.kursus || '-'], ['Sumber pembiayaan', d.label.sumber.join(', ')], ['Pemberi dana', d.label.pemberi.join(', ') || '-'],
+      ['Jumlah dana', rm(b.jumlahDana)], ['Jangkaan jualan bulanan', rm(b.jualan)], ['Bil. pekerja', b.bilPekerja], ['Sebab berniaga', b.sebab], ['Lokasi dirancang', b.lokasi || '-']]));
+    ['cadangan', 'vaksin', 'kursus'].forEach(function (j) {
+      if (d.fail[j]) c2.appendChild(fileBtn({ cadangan: 'Cadangan perniagaan', vaksin: 'Bukti vaksin', kursus: 'Sijil kursus' }[j], 'File', function () { return UP.api('rn.admin.perm.fail', { id: d.id, jenis: j }); }, out));
+    });
+    c2.appendChild(out);
+    body.appendChild(c2);
+
+    if (d.penilaian) {
+      var pn = d.penilaian;
+      var c3 = card('Penilaian jawatankuasa', 'Committee evaluation'); c3.id = 'rn-kad-penilaian';
+      c3.appendChild(UP.kv([['Sesi', pn.sesi + ' (' + pn.statusSesi + ')'], ['Tarikh / slot', pn.tarikh + ' ' + pn.masa], ['Penilai menghantar', pn.bilDihantar + ' / ' + pn.bilPenilai],
+        ['Purata (/100)', pn.purata === null ? '-' : String(pn.purata)], ['Kedudukan', pn.kedudukan === null ? '-' : String(pn.kedudukan)]]));
+      if (pn.bezaJauh) c3.appendChild(note('err', 'Skor penilai berbeza jauh (' + pn.selisih + ' markah). Semak sebelum memutuskan.', 'Evaluator scores differ widely.'));
+      body.appendChild(c3);
+    }
+
+    // tindakan
+    var c4 = card('Tindakan', 'Actions'); c4.id = 'rn-kad-tindakan';
+    if (d.keputusan.catatan || d.keputusan.ulasan) c4.appendChild(node('p', 'Catatan terdahulu: ' + (d.keputusan.catatan || '') + (d.keputusan.ulasan ? ' | Ulasan kepada pemohon: ' + d.keputusan.ulasan : ''), 'e'));
+    if (!d.bolehPutus) c4.appendChild(node('p', 'Anda hanya boleh melihat (tiada kebenaran memutuskan).', 'muted'));
+    else {
+      var cat = document.createElement('textarea'); cat.id = 'rn-catatan'; cat.placeholder = 'Catatan (wajib untuk Tolak/Batal) / Note'; cat.style.minHeight = '60px'; cat.style.fontFamily = 'inherit'; cat.style.fontSize = '14px';
+      var ul = document.createElement('input'); ul.id = 'rn-ulasan'; ul.placeholder = 'Ulasan ringkas kepada pemohon (pilihan) / Short comment to applicant (optional)'; ul.style.marginTop = '8px';
+      var mA = msgBox(); mA.id = 'msg-rn-tindak';
+      var act = function (bm, en, t, cls, confirm) {
+        var fn = function (bt) {
+          clearMsg(mA); bt.disabled = true;
+          UP.api('rn.admin.perm.tindakan', { id: d.id, tindakan: t, catatan: cat.value, ulasan: ul.value }).then(function (x) {
+            if (!x.ok) { bt.disabled = false; msgErr(mA, x); return; }
+            refreshAdminPer('Tindakan direkod: ' + bm + '.' + (x.data.amaranTindakan && x.data.amaranTindakan.length ? ' ' + x.data.amaranTindakan.join(' ') : ''));
+          });
+        };
+        var bb = confirm ? btn2(bm, en, fn, cls) : btn(bm, en, fn, cls); bb.setAttribute('data-act', t); return bb;
+      };
+      if (['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai', 'Diluluskan', 'Ditawarkan', 'Diterima', 'Perjanjian'].indexOf(d.status) >= 0) {
+        c4.appendChild(cat); c4.appendChild(ul);
+        var ar = node('div', null, 'row');
+        if (d.status === 'Baharu') ar.appendChild(act('Tandakan disemak', 'Mark reviewed', 'semak', 'alt'));
+        if (d.status === 'Dinilai') ar.appendChild(act('Luluskan', 'Approve', 'lulus', '', true));
+        if (['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai'].indexOf(d.status) >= 0) ar.appendChild(act('Tolak', 'Reject', 'tolak', 'alt', true));
+        ar.appendChild(act('Batalkan', 'Cancel', 'batal', 'alt', true));
+        c4.appendChild(ar);
+      }
+      c4.appendChild(mA);
+    }
+    var bp = btn('Bertindak bagi pihak pemilik', 'Act on behalf of the owner', function () {
+      if (!d.bolehPutus) return; BAGI = { m: d.pemohon.noMatrik, nama: d.pemohon.nama }; openDet(d.id);
+    }, 'alt');
+    if (d.bolehPutus) c4.appendChild(bp);
+    body.appendChild(c4);
+
+    if (taw) renderTawaranEditor(body, d, taw);
+    else if (d.tawaran) renderTawaranRingkas(body, d);
+    renderAdminDokumen(body, d);
+    renderAdminLanjut(body, d);
+  }
+
+  // ---------- Tawaran (admin) ----------
+  function tawaranSpec() {
+    return [
+      { k: 'noRujukan', t: 'text', bm: 'No. rujukan surat (wajib, ditaip admin)', en: 'Letter reference no.', req: 1, max: 100 },
+      { k: 'tarikhSurat', t: 'date', bm: 'Tarikh surat', en: 'Letter date', req: 1 },
+      { k: 'jenisPerniagaan', t: 'text', bm: 'Jenis perniagaan', en: 'Type of business', req: 1, max: 200 },
+      { k: 'tarikhMula', t: 'date', bm: 'Tempoh kontrak: mula', en: 'Contract start', req: 1 },
+      { k: 'tarikhTamat', t: 'date', bm: 'Tempoh kontrak: tamat', en: 'Contract end', req: 1 },
+      { k: 'jadual', t: 'rnjadual', bm: 'Jadual sewa bulanan (berperingkat)', en: 'Monthly rent schedule (tiered)', req: 1, hint: 'Peringkat pertama bermula bulan 1; peringkat terakhir boleh dibiarkan "hingga" kosong. / First tier starts at month 1.' },
+      { k: 'utiliti', t: 'text', bm: 'Utiliti dan penanggung', en: 'Utilities', req: 1, max: 200 },
+      { k: 'cagaranSewaan', t: 'text', bm: 'Cagaran sewaan (RM, 0 = tiada)', en: 'Rent deposit (RM)', req: 1 },
+      { k: 'cagaranUtiliti', t: 'text', bm: 'Cagaran utiliti (RM, 0 = tiada)', en: 'Utility deposit (RM)' },
+      { k: 'waktuOperasi', t: 'text', bm: 'Waktu operasi', en: 'Operating hours', req: 1, max: 100 },
+      { k: 'penandatanganNama', t: 'text', bm: 'Nama penandatangan (lalai daripada Tetapan)', en: 'Signatory name', max: 120 },
+      { k: 'penandatanganJawatan', t: 'text', bm: 'Jawatan penandatangan', en: 'Signatory position', max: 160 }
+    ];
+  }
+  function renderTawaranEditor(body, d, taw) {
+    var c = card('Surat tawaran', 'Offer letter'); c.id = 'rn-kad-tawaran-admin';
+    var t = taw.tawaran;
+    if (taw.alamatPenyewa) c.appendChild(node('div', 'Alamat penyewa dalam surat: ' + taw.alamatPenyewa + ' · Lot: ' + taw.lot.alamat + ' (status lot: ' + taw.lot.status + ')', 'e'));
+    var mA = msgBox(); mA.id = 'msg-rn-tawaran';
+    if (taw.boleh.ubah) {
+      var fb = formBox(tawaranSpec(), 'Simpan butiran tawaran', 'Save offer details', function (v) {
+        return UP.api('rn.admin.tawaran.simpan', Object.assign({ id: d.id }, v)).then(function (r) { if (r.ok) refreshAdminPer('Butiran tawaran disimpan. Jana pratonton semula.'); return r; });
+      }, t);
+      fb.el.setAttribute('data-form', 'tawaran'); c.appendChild(fb.el);
+    }
+    c.appendChild(node('div', 'Pratonton dan penghantaran', 'sech'));
+    c.appendChild(node('p', 'Versi pratonton semasa: ' + (t.versiSemasa || 'belum dijana') + '. Pemohon hanya melihat surat selepas anda menekan "Hantar surat tawaran".', 'muted'));
+    var out = msgBox();
+    var row = node('div', null, 'row');
+    if (taw.boleh.jana) {
+      var j = btn('Jana pratonton PDF', 'Generate PDF preview', function (b) {
+        clearMsg(mA); b.disabled = true;
+        UP.api('rn.admin.tawaran.jana', { id: d.id }).then(function (r) {
+          if (!r.ok) { b.disabled = false; msgErr(mA, r); return; }
+          refreshAdminPer('Pratonton versi ' + r.data.tawaran.versiSemasa + ' dijana.' + (r.data.amaran && r.data.amaran.length ? ' ' + r.data.amaran.join(' ') : ''));
+        });
+      }); j.id = 'rn-btn-jana'; row.appendChild(j);
+    }
+    if (taw.boleh.hantar) {
+      var h = btn2('Hantar surat tawaran', 'Send offer letter', function (b) {
+        clearMsg(mA); b.disabled = true;
+        UP.api('rn.admin.tawaran.hantar', { id: d.id }).then(function (r) {
+          if (!r.ok) { b.disabled = false; msgErr(mA, r); return; }
+          refreshAdminPer('Surat tawaran dihantar kepada pemohon.');
+        });
+      }); h.id = 'rn-btn-hantar-tawaran'; row.appendChild(h);
+    }
+    c.appendChild(row);
+    c.appendChild(dokRows(taw.dokumen, function (x) { return function () { return UP.api('rn.admin.dok.fail', { id: x.id }); }; }, out));
+    c.appendChild(out); c.appendChild(mA);
+    body.appendChild(c);
+  }
+  function renderTawaranRingkas(body, d) {
+    var t = d.tawaran;
+    var c = card('Surat tawaran', 'Offer letter'); c.id = 'rn-kad-tawaran-admin';
+    var h = node('div', null, 'row'); h.appendChild(node('span', t.noRujukan)); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(t.status)); c.appendChild(h);
+    c.appendChild(UP.kv([['Tempoh kontrak', t.tarikhMula + ' hingga ' + t.tarikhTamat + ' (' + t.bilBulan + ' bulan)'],
+      ['Jadual sewa', t.jadual.map(function (j) { return (j.hingga === '' ? 'Bulan ' + j.dari + '+' : 'Bulan ' + j.dari + '-' + j.hingga) + ': ' + rm(j.kadar); }).join('; ')],
+      ['Cagaran sewaan / utiliti', rm(t.cagaranSewaan) + ' / ' + rm(t.cagaranUtiliti)], ['Dihantar / luput', t.tarikhHantar + ' / ' + t.tarikhLuput],
+      ['Jawapan', t.respons ? t.respons + ' pada ' + t.tarikhResponsMasa + ' (' + t.emelRespons + ')' : '-']]));
+    var mS = msgBox();
+    if (t.respons === 'Terima') {
+      c.appendChild(node('div', 'Salinan fizikal Surat Setuju Terima (2 salinan, ' + t.salinan.tarikhAkhir + ')', 'sech'));
+      if (t.salinan.tarikh) c.appendChild(pill('Diterima ' + t.salinan.tarikh + ' oleh ' + t.salinan.penerima, 'ok'));
+      else if (d.bolehPutus) {
+        c.appendChild(t.salinan.lewat ? note('err', 'Salinan fizikal lewat. Admin memutuskan tindakan (tiada pembatalan automatik).', 'Overdue') : node('span'));
+        var fb = formBox([
+          { k: 'penerima', t: 'text', bm: 'Nama penerima di pejabat', en: 'Received by', req: 1, max: 120 },
+          { k: 'tarikh', t: 'date', bm: 'Tarikh diterima (kosong = hari ini)', en: 'Date received' }
+        ], 'Salinan fizikal diterima', 'Physical copy received', function (v) {
+          return UP.api('rn.admin.salinan', Object.assign({ id: d.id }, v)).then(function (r) { if (r.ok) refreshAdminPer('Salinan fizikal direkod.'); return r; });
+        });
+        fb.el.setAttribute('data-form', 'salinan'); c.appendChild(fb.el);
+      }
+    }
+    if (['Diterima', 'Ditolak'].indexOf(t.status) >= 0 && !d.dokumen.some(function (x) { return x.jenis === 'Penerimaan'; }) && d.bolehPutus) {
+      c.appendChild(btn('Jana semula rekod penerimaan', 'Regenerate acceptance record', function (b) { b.disabled = true; UP.api('rn.admin.tawaran.rekod', { id: d.id }).then(function (r) { if (r.ok) refreshAdminPer(); else { b.disabled = false; msgErr(mS, r); } }); }, 'alt'));
+    }
+    c.appendChild(mS);
+    body.appendChild(c);
+  }
+
+  // ---------- Dokumen (admin) ----------
+  function renderAdminDokumen(body, d) {
+    if (!d.dokumen || (!d.dokumen.length && !d.bolehPutus)) return;
+    var c = card('Dokumen sewaan', 'Tenancy documents'); c.id = 'rn-kad-dokumen-admin';
+    var out = msgBox();
+    c.appendChild(dokRows(d.dokumen, function (x) { return function () { return UP.api('rn.admin.dok.fail', { id: x.id }); }; }, out));
+    c.appendChild(out);
+    if (d.bolehPutus) {
+      var det = document.createElement('details'); det.appendChild(node('summary', 'Muat naik dokumen lain untuk pemilik dan ahli'));
+      var fb = formBox([
+        { k: 'tajuk', t: 'text', bm: 'Tajuk dokumen', en: 'Document title', req: 1, max: 120 },
+        { k: 'fail', t: 'file', bm: 'Fail (PDF/JPG/PNG)', en: 'File', req: 1 }
+      ], 'Muat naik', 'Upload', function (v) {
+        return UP.api('rn.admin.dok.muatnaik', { idPermohonan: d.id, tajuk: v.tajuk, fail: v.fail }).then(function (r) { if (r.ok) refreshAdminPer('Dokumen dimuat naik.'); return r; });
+      });
+      det.appendChild(fb.el); c.appendChild(det);
+    }
+    body.appendChild(c);
+  }
+
+  // ---------- Cagaran, perjanjian, pekerja, peralatan (admin) ----------
+  function renderAdminLanjut(body, d) {
+    var dec = d.bolehPutus;
+    if (d.cagaran && d.cagaran.length) {
+      var c = card('Cagaran', 'Deposit'); c.id = 'rn-kad-cagaran-admin';
+      d.cagaran.forEach(function (g) {
+        var s = node('div', null, 'sec'); s.setAttribute('data-cagaran', g.id);
+        var h = node('div', null, 'row'); h.appendChild(node('b', 'Cagaran ' + g.jenis.toLowerCase() + ': ' + rm(g.jumlah))); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(g.status)); s.appendChild(h);
+        s.appendChild(node('div', 'Akhir bayar ' + g.tarikhAkhirBayar + (g.lewatBayar ? ' (LEWAT)' : '') + (g.noResit ? ' · resit ' + g.noResit + ' (' + g.tarikhResit + ')' : '') + (g.tarikhAkhirPulang ? ' · akhir pulang ' + g.tarikhAkhirPulang + (g.lewatPulang ? ' (LEWAT PULANG)' : '') : '') +
+          (g.status === 'Dipulangkan' ? ' · dipulangkan ' + g.jumlahPulang + ' pada ' + g.tarikhPulang + (g.sebabPotongan ? ' (' + g.sebabPotongan + ')' : '') : ''), 'e'));
+        var o = msgBox(); s.appendChild(o);
+        if (g.adaResit) s.appendChild(fileBtn('Resit', 'Receipt', function () { return UP.api('rn.admin.cagaran.fail', { id: g.id }); }, o));
+        var note1 = document.createElement('input'); note1.placeholder = 'Catatan / sebab / jumlah dipulangkan (RM)'; note1.setAttribute('data-k', 'cat'); note1.style.marginTop = '8px';
+        var run = function (method, extra) {
+          return function (b) {
+            clearMsg(o); b.disabled = true;
+            UP.api(method, Object.assign({ id: g.id }, extra())).then(function (r) {
+              if (!r.ok) { b.disabled = false; msgErr(o, r); if (r.error && r.error.extra && r.error.extra.medan) o.appendChild(node('i', JSON.stringify(r.error.extra.medan))); return; }
+              renderAdminPer(body, r.data, null, 'Cagaran dikemas kini' + (r.data.aktivasi && r.data.aktivasi.aktif ? '. Sewaan kini aktif.' : '.'));
+            });
+          };
+        };
+        if (dec && g.status === 'Menunggu Pengesahan') {
+          s.appendChild(note1);
+          var sb = btn('Sahkan', 'Verify', run('rn.admin.cagaran.sahkan', function () { return {}; })); sb.setAttribute('data-act', 'sahkan'); s.appendChild(sb);
+          s.appendChild(btn('Kembalikan', 'Return', run('rn.admin.cagaran.kembali', function () { return { catatan: note1.value }; }), 'alt'));
+        }
+        if (dec && g.status === 'Diterima') {
+          s.appendChild(note1);
+          s.appendChild(btn2('Pulangkan', 'Return deposit', run('rn.admin.cagaran.pulang', function () { return { jumlah: /^[\d.]+$/.test(note1.value.trim()) ? note1.value.trim() : '', sebab: /^[\d.]+$/.test(note1.value.trim()) ? '' : note1.value }; }), 'alt'));
+          s.appendChild(btn2('Rampas', 'Forfeit', run('rn.admin.cagaran.rampas', function () { return { sebab: note1.value }; }), 'alt'));
+        }
+        c.appendChild(s);
+      });
+      body.appendChild(c);
+    }
+    // perjanjian
+    var st = d.status;
+    if (['Diterima', 'Perjanjian', 'Sewaan Aktif'].indexOf(st) >= 0) {
+      var cp = card('Perjanjian sewa', 'Tenancy agreement'); cp.id = 'rn-kad-perjanjian-admin';
+      var p = d.perjanjian;
+      var m = msgBox(); m.id = 'msg-rn-perj';
+      if (p && p.ada) {
+        var hh = node('div', null, 'row'); hh.appendChild(node('span', 'Versi ' + p.versi)); hh.appendChild(node('span', null, 'sp')); hh.appendChild(pill(p.status)); cp.appendChild(hh);
+        if (p.salinan) cp.appendChild(node('div', 'Salinan bertandatangan: ' + p.salinan.status + (p.salinan.catatan ? ' (' + p.salinan.catatan + ')' : ''), 'e'));
+      } else cp.appendChild(node('p', 'Perjanjian belum dijana. Templat Google Docs (F&B / bukan F&B) mesti didaftarkan dalam Link_Dokumen.', 'muted'));
+      if (dec) {
+        var row = node('div', null, 'row');
+        if (['Diterima', 'Perjanjian'].indexOf(st) >= 0 && !(p && p.status === 'Disahkan')) {
+          var jb = btn(p && p.ada ? 'Jana semula perjanjian' : 'Jana perjanjian', 'Generate agreement', function (b) {
+            clearMsg(m); b.disabled = true;
+            UP.api('rn.admin.perjanjian.jana', { id: d.id }).then(function (r) {
+              if (!r.ok) { b.disabled = false; msgErr(m, r); return; }
+              renderAdminPer(body, r.data, null, 'Perjanjian dijana.' + (r.data.amaranPerjanjian && r.data.amaranPerjanjian.length ? ' Amaran: ' + r.data.amaranPerjanjian.join(' ') : ''));
+            });
+          }); jb.id = 'rn-btn-jana-perjanjian'; row.appendChild(jb);
+        }
+        if (p && p.status === 'Dimuat naik') {
+          var tm = document.createElement('input'); tm.type = 'date'; tm.title = 'Tarikh mula sewaan (pilihan)'; tm.id = 'rn-tm-mula'; tm.style.width = 'auto';
+          var tt = document.createElement('input'); tt.type = 'date'; tt.title = 'Tarikh tamat sewaan (pilihan)'; tt.id = 'rn-tm-tamat'; tt.style.width = 'auto';
+          cp.appendChild(node('div', 'Tarikh mula / tamat sewaan (kosong = ikut surat tawaran):', 'e')); var tr = node('div', null, 'row'); tr.appendChild(tm); tr.appendChild(tt); cp.appendChild(tr);
+          var cn = document.createElement('input'); cn.placeholder = 'Catatan (wajib jika dikembalikan)'; cn.id = 'rn-cat-perj'; cn.style.marginTop = '8px'; cp.appendChild(cn);
+          var sh = btn('Sahkan salinan bertandatangan', 'Confirm signed copy', function (b) {
+            clearMsg(m); b.disabled = true;
+            UP.api('rn.admin.perjanjian.sahkan', { id: d.id, tarikhMula: tm.value, tarikhTamat: tt.value }).then(function (r) {
+              if (!r.ok) { b.disabled = false; msgErr(m, r); if (r.error && r.error.extra && r.error.extra.medan) m.appendChild(node('i', JSON.stringify(r.error.extra.medan))); return; }
+              var a = r.data.aktivasi;
+              renderAdminPer(body, r.data, null, a && a.aktif ? 'Perjanjian disahkan. Sewaan kini aktif (' + a.idSewaan + ').' : 'Perjanjian disahkan. Menunggu: ' + (a ? a.menunggu.join('; ') : ''));
+            });
+          }); sh.id = 'rn-btn-sahkan-perj'; row.appendChild(sh);
+          row.appendChild(btn('Kembalikan', 'Return', function (b) {
+            clearMsg(m); b.disabled = true;
+            UP.api('rn.admin.perjanjian.kembali', { id: d.id, catatan: cn.value }).then(function (r) { if (!r.ok) { b.disabled = false; msgErr(m, r); return; } renderAdminPer(body, r.data, null, 'Salinan dikembalikan.'); });
+          }, 'alt'));
+        }
+        cp.appendChild(row);
+      }
+      cp.appendChild(m);
+      body.appendChild(cp);
+    }
+    // pekerja luar
+    if (d.pekerja && d.pekerja.length) {
+      var cw = card('Pekerja penyewa (Lampiran 2)', 'Tenant staff'); cw.id = 'rn-kad-pekerja-admin';
+      d.pekerja.forEach(function (w) {
+        var s = node('div', null, 'sec'); s.setAttribute('data-pekerja', w.id);
+        var h = node('div', null, 'row'); h.appendChild(node('b', w.nama + ' (' + w.umur + ')')); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(w.status)); s.appendChild(h);
+        s.appendChild(node('div', [w.tugas, w.fakulti, w.pelajarUtm ? 'Pelajar UTM ' + w.noMatrik : 'Pekerja luar UTM'].filter(Boolean).join(' · '), 'e'));
+        if (dec && w.status === 'Menunggu Kelulusan') {
+          var mw = msgBox(); var ci = document.createElement('input'); ci.placeholder = 'Catatan (wajib jika ditolak)'; ci.style.marginTop = '8px'; s.appendChild(ci);
+          var go = function (t) { return function (b) { b.disabled = true; UP.api('rn.admin.pekerja.putus', { id: w.id, tindakan: t, catatan: ci.value }).then(function (r) { if (!r.ok) { b.disabled = false; msgErr(mw, r); return; } renderAdminPer(body, r.data, null, 'Pekerja dikemas kini.'); }); }; };
+          s.appendChild(btn('Luluskan', 'Approve', go('lulus'))); s.appendChild(btn('Tolak', 'Reject', go('tolak'), 'alt')); s.appendChild(mw);
+        }
+        cw.appendChild(s);
+      });
+      body.appendChild(cw);
+    }
+    if (d.idSewaan) {
+      var cs = card('Sewaan', 'Tenancy');
+      cs.appendChild(node('p', 'Sewaan ' + d.idSewaan + ' telah diwujudkan.', 'muted'));
+      cs.appendChild(btn('Buka sewaan dan bil', 'Open tenancy and bills', function () { openSewaanDet(d.idSewaan); }));
+      body.appendChild(cs);
+    }
+  }
+
+  // ---------- Sesi penilaian ----------
+  function tabSesi(body) {
+    UP.api('rn.admin.sesi.senarai').then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      var c = card('Sesi penilaian', 'Evaluation sessions');
+      if (d.bolehUbah) { var nb = btn('Sesi baharu', 'New session', function () { openSesiForm(null); }); nb.id = 'rn-btn-sesi-baharu'; c.appendChild(nb); }
+      if (!d.sesi.length) c.appendChild(node('p', 'Belum ada sesi.', 'muted'));
+      else c.appendChild(tbl(['ID', 'Tarikh', 'Masa', 'Tempat', 'Calon', 'Penilai', 'Status'], d.sesi.map(function (s) {
+        return { id: s.id, cells: [s.id, s.tarikh, s.masa, s.tempat, s.bilCalon, s.penilai.map(function (x) { return x.nama; }).join(', '), pill(s.status)] };
+      }), function (row) { openSesi(row.id); }));
+      body.appendChild(c);
+    });
+  }
+
+  function openSesi(id, notice) {
+    var body = showDet(function () { openAdmin('sesi'); });
+    UP.api('rn.admin.sesi.butiran', { id: id }).then(function (r) {
+      if (!r.ok) { errBox(body, r); return; }
+      renderSesi(body, r.data, notice);
+    });
+  }
+  function renderSesi(body, s, notice) {
+    body.textContent = '';
+    if (notice) body.appendChild(note('ok', notice, 'Done'));
+    var c = card(); var hr = node('div', null, 'row');
+    hr.appendChild(node('div', s.id + ' · ' + s.tarikh + ' ' + s.masa, 'h1')); hr.appendChild(node('span', null, 'sp')); hr.appendChild(pill(s.status)); c.appendChild(hr);
+    c.appendChild(node('div', s.tempat + ' · Penilai: ' + s.penilai.map(function (x) { return x.nama; }).join(', ') + ' · Rubrik versi ' + s.versiRubrik + (s.jemputan ? ' · Jemputan dihantar ' + s.jemputan : ''), 'e'));
+    var m = msgBox(); m.id = 'msg-rn-sesi';
+    if (s.bolehUbah) {
+      var row = node('div', null, 'row');
+      var go = function (method, extra, ok) {
+        return function (b) { clearMsg(m); b.disabled = true; UP.api(method, Object.assign({ id: s.id }, extra || {})).then(function (r) {
+          if (!r.ok) { b.disabled = false; msgErr(m, r); if (r.error && r.error.code === 'RN_SESI_BELUM_LENGKAP') { m.appendChild(node('i', r.error.extra.belum.map(function (x) { return x.perniagaan + ' / ' + x.penilai; }).join('; '))); } return; }
+          renderSesi(body, r.data, ok + (r.data.jemputanDihantar !== undefined ? ' (' + r.data.jemputanDihantar + ' emel)' : ''));
+        }); };
+      };
+      if (s.status !== 'Ditutup') row.appendChild(btn('Sunting sesi', 'Edit', function () { openSesiForm(s); }, 'alt'));
+      if (s.status !== 'Ditutup') { var jb = btn('Hantar jemputan kepada calon', 'Send invitations', go('rn.admin.sesi.jemput', null, 'Jemputan dihantar')); jb.id = 'rn-btn-jemput'; row.appendChild(jb); }
+      if (s.status === 'Dirancang') { var mb = btn('Mula sesi', 'Start session', go('rn.admin.sesi.mula', null, 'Sesi bermula')); mb.id = 'rn-btn-mula'; row.appendChild(mb); }
+      if (s.status === 'Berjalan') {
+        var tb = btn2('Tutup sesi', 'Close session', function (b) {
+          clearMsg(m); b.disabled = true;
+          UP.api('rn.admin.sesi.tutup', { id: s.id, paksa: false }).then(function (r) {
+            if (r.ok) { renderSesi(body, r.data, 'Sesi ditutup. Kedudukan dipaparkan.'); return; }
+            if (r.error && r.error.code === 'RN_SESI_BELUM_LENGKAP') {
+              b.disabled = false; msgErr(m, r);
+              m.appendChild(node('i', r.error.extra.belum.map(function (x) { return x.perniagaan + ' / ' + x.penilai + ' (' + x.status + ')'; }).join('; ')));
+              if (!$('rn-btn-tutup-paksa')) { var pk = btn2('Tutup juga', 'Close anyway', go('rn.admin.sesi.tutup', { paksa: true }, 'Sesi ditutup'), 'alt'); pk.id = 'rn-btn-tutup-paksa'; m.parentNode.insertBefore(pk, m.nextSibling); }
+              return;
+            }
+            b.disabled = false; msgErr(m, r);
+          });
+        }); tb.id = 'rn-btn-tutup'; row.appendChild(tb);
+      }
+      if (s.status === 'Ditutup') row.appendChild(btn2('Buka semula sesi', 'Reopen', go('rn.admin.sesi.bukaSemula', null, 'Sesi dibuka semula'), 'alt'));
+      c.appendChild(row);
+    }
+    c.appendChild(m);
+    body.appendChild(c);
+
+    var c2 = card('Calon dan skor', 'Candidates and scores'); c2.id = 'rn-kad-skor';
+    var rows = s.senarai.map(function (x) {
+      return { id: x.id, cells: [x.masa, x.id, x.perniagaan, x.penilai.map(function (p) { return p.nama + ': ' + (p.status === 'dihantar' ? p.jumlah : p.status === 'draf' ? 'draf ' + p.jumlah : '-'); }).join(' | '),
+        x.purata === null ? '-' : String(x.purata), x.kedudukan === null ? '-' : String(x.kedudukan), x.bezaJauh ? 'BEZA JAUH (' + x.selisih + ')' : '', pill(x.status)] };
+    });
+    c2.appendChild(tbl(['Slot', 'ID', 'Perniagaan', 'Skor penilai (/100)', 'Purata', 'Kedudukan', 'Tanda', 'Status'], rows, function (row) { openAdminPer(row.id); }));
+    // butiran skor dan buka kunci
+    s.senarai.forEach(function (x) {
+      var d = node('details'); d.appendChild(node('summary', 'Skor terperinci: ' + x.perniagaan));
+      var inner = node('div'); d.appendChild(inner);
+      d.addEventListener('toggle', function () {
+        if (!d.open || inner.firstChild) return;
+        UP.api('rn.admin.sesi.skor', { sesi: s.id, permohonan: x.id }).then(function (r) {
+          if (!r.ok) { msgErr(inner.appendChild(msgBox()), r); return; }
+          r.data.penilai.forEach(function (p) {
+            var pr = node('div', null, 'sec'); pr.appendChild(node('b', p.nama + ' · ' + p.status + ' · ' + p.jumlah + '/100'));
+            r.data.kriteria.forEach(function (k) { var sk = p.skor[k.kod]; pr.appendChild(node('div', k.bm + ': ' + (sk ? 'tahap ' + sk.tahap + ', ' + sk.markah + '/' + k.maks + (sk.ulasan ? ' · ' + sk.ulasan : '') : '-'), 'e')); });
+            if (s.bolehUbah && s.status === 'Berjalan' && p.status === 'dihantar') {
+              pr.appendChild(btn2('Buka kunci skor', 'Reopen scores', function (b) { b.disabled = true; UP.api('rn.admin.sesi.skorBuka', { sesi: s.id, permohonan: x.id, emel: p.emel }).then(function (rr) { if (rr.ok) renderSesi(body, rr.data, 'Kunci skor dibuka (direkod dalam audit).'); else b.disabled = false; }); }, 'alt'));
+            }
+            inner.appendChild(pr);
+          });
+        });
+      });
+      c2.appendChild(d);
+    });
+    body.appendChild(c2);
+  }
+
+  function openSesiForm(s) {
+    var body = showDet(s ? function () { openSesi(s.id); } : function () { openAdmin('sesi'); });
+    var load = s ? UP.api('rn.admin.sesi.butiran', { id: s.id }) : UP.api('rn.admin.sesi.senarai').then(function (r) {
+      if (!r.ok) return r;
+      return UP.api('rn.admin.perm.senarai', { status: 'Disemak' }).then(function (pr) {
+        if (!pr.ok) return pr;
+        return { ok: true, data: { id: '', tarikh: '', masa: '', tempat: '', penilai: [], senarai: [], penilaiTersedia: r.data.penilaiTersedia,
+          tersedia: pr.data.senarai.map(function (x) { return { id: x.id, perniagaan: x.perniagaan, kodLot: x.kodLot }; }) } };
+      });
+    });
+    load.then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      var c = card(s ? 'Sunting sesi ' + s.id : 'Sesi penilaian baharu', 'Evaluation session'); c.id = 'rn-sesi-form';
+      var f = UP.Form([
+        { k: 'tarikh', t: 'date', bm: 'Tarikh', en: 'Date', req: 1 },
+        { k: 'masa', t: 'text', bm: 'Masa mula (HH:MM)', en: 'Start time', req: 1, ph: '14:30' },
+        { k: 'tempat', t: 'text', bm: 'Tempat', en: 'Venue', req: 1, max: 200 },
+        { k: 'penilai', t: 'multi', o: d.penilaiTersedia.map(function (x) { return { kod: x.emel, bm: x.nama + ' (' + x.emel + ')', en: '' }; }), bm: 'Penilai', en: 'Evaluators', req: 1 },
+        { k: 'senarai', t: 'rncalon', bm: 'Calon disenarai pendek dan slot pembentangan', en: 'Shortlisted candidates and presentation slots', req: 1 }
+      ]);
+      c.appendChild(f.el);
+      f.fields.senarai.setOpsyen(d.tersedia.concat(d.senarai.map(function (x) { return { id: x.id, perniagaan: x.perniagaan, kodLot: x.kodLot }; })));
+      f.set({ tarikh: d.tarikh, masa: d.masa, tempat: d.tempat, penilai: d.penilai.map(function (x) { return x.emel; }), senarai: d.senarai.map(function (x) { return { id: x.id, masa: x.masa }; }) });
+      var m = msgBox(); m.id = 'msg-rn-sesi-form'; c.appendChild(m);
+      var sb = btn('Simpan sesi', 'Save session', function (b) {
+        clearMsg(m); f.clear(); busy(b, true);
+        var v = f.values();
+        UP.api('rn.admin.sesi.simpan', { id: s ? s.id : '', tarikh: v.tarikh, masa: v.masa, tempat: v.tempat, penilai: v.penilai, senarai: v.senarai }).then(function (x) {
+          busy(b, false);
+          if (!x.ok) { msgErr(m, x); if (x.error && x.error.extra && x.error.extra.medan) f.errors(x.error.extra.medan); return; }
+          A.back = function () { openAdmin('sesi'); }; UP.show('v-rn-a-det'); renderSesi($('rn-a-det-body'), x.data, 'Sesi disimpan.');
+        });
+      }); sb.id = 'rn-btn-sesi-simpan'; c.appendChild(sb);
+      body.appendChild(c);
+    });
+  }
+
+  // medan khas: senarai calon dengan slot
+  UP.formTypes.rncalon = function (f, wrap, api, h) {
+    var box = h.node('div'); var pilihan = [];
+    var sel = document.createElement('select'); sel.id = 'rn-calon-pilih';
+    var add = h.node('button', '+ Tambah calon / Add candidate', 'btn link'); add.type = 'button';
+    function rebuildSel() {
+      sel.textContent = ''; var p0 = h.node('option', '— pilih calon / select —'); p0.value = ''; sel.appendChild(p0);
+      pilihan.forEach(function (x) { var o = h.node('option', x.id + ' · ' + x.perniagaan + ' (' + x.kodLot + ')'); o.value = x.id; sel.appendChild(o); });
+    }
+    function addRow(id, masa) {
+      var x = pilihan.filter(function (y) { return y.id === id; })[0];
+      var row = h.node('div', null, 'rep-row'); row.setAttribute('data-id', id);
+      row.appendChild(h.node('span', id + ' · ' + (x ? x.perniagaan : ''))); row.lastChild.style.flex = '2';
+      var t = document.createElement('input'); t.placeholder = 'HH:MM'; t.value = masa || ''; t.setAttribute('data-masa', '1'); row.appendChild(t);
+      var rmb = h.node('button', '×', 'btn alt sm'); rmb.type = 'button'; rmb.addEventListener('click', function () { box.removeChild(row); }); row.appendChild(rmb);
+      box.appendChild(row);
+    }
+    add.addEventListener('click', function () {
+      if (!sel.value) return;
+      if (Array.prototype.some.call(box.children, function (r) { return r.getAttribute('data-id') === sel.value; })) return;
+      addRow(sel.value, ''); sel.value = '';
+    });
+    wrap.appendChild(box); wrap.appendChild(sel); wrap.appendChild(add);
+    api.setOpsyen = function (list) { var seen = {}; pilihan = list.filter(function (x) { if (seen[x.id]) return false; seen[x.id] = true; return true; }); rebuildSel(); };
+    api.get = function () { return Array.prototype.map.call(box.children, function (r) { return { id: r.getAttribute('data-id'), masa: r.querySelector('input').value.trim() }; }); };
+    api.set = function (arr) { box.textContent = ''; (arr || []).forEach(function (x) { addRow(x.id, x.masa); }); };
+  };
+
+  // ---------- Lot ----------
+  function tabLot(body) {
+    UP.api('rn.admin.lot.senarai').then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      var c = card('Lot', 'Lots');
+      if (d.bolehUbah) { var nb = btn('Tambah lot', 'Add lot', function () { openLotForm(null); }); nb.id = 'rn-btn-lot-baru'; c.appendChild(nb); }
+      c.appendChild(tbl(['Kod', 'Nama', 'Jenis', 'Saiz', 'Kadar (RM)', 'Buka', 'Status lot', 'Penyewa', 'Pemohon'], d.lot.map(function (l) {
+        return { kod: l.kod, cells: [l.kod, l.nama, l.jenisBm || '-', l.saiz || '-', l.kadar || '-', pill(l.statusBuka), pill(l.statusLot), l.penyewa || '-', l.bilPermohonan] };
+      }), function (row) { openLotForm(d.lot.filter(function (x) { return x.kod === row.kod; })[0]); }));
+      body.appendChild(c);
+    });
+  }
+  function openLotForm(l) {
+    var body = showDet(function () { openAdmin('lot'); });
+    UP.loadRuj().then(function () {
+      body.textContent = '';
+      var baru = !l;
+      var c = card(baru ? 'Lot baharu' : 'Sunting lot ' + l.kod, 'Lot'); c.id = 'rn-lot-form';
+      var sistem = l && ['Dipohon', 'Disewa'].indexOf(l.statusLot) >= 0;
+      var spec = [];
+      if (baru) spec.push({ k: 'kod', t: 'text', bm: 'Kod lot', en: 'Lot code', req: 1, max: 20 });
+      spec = spec.concat([
+        { k: 'nama', t: 'text', bm: 'Nama paparan', en: 'Display name', req: 1, max: 120 },
+        { k: 'lokasi', t: 'text', bm: 'Lokasi', en: 'Location', max: 120 },
+        { k: 'blok', t: 'text', bm: 'Blok / aras', en: 'Block / level', max: 60 },
+        { k: 'saiz', t: 'text', bm: 'Saiz (m²)', en: 'Size (sq m)' },
+        { k: 'jenis', t: 'select', g: 'JENIS_LOT', bm: 'Jenis (F&B / Retail / Lain-lain)', en: 'Type' },
+        { k: 'kadar', t: 'text', bm: 'Kadar sewa asas (RM sebulan)', en: 'Base rent (RM / month)' },
+        { k: 'statusBuka', t: 'radio', o: [{ kod: 'Dibuka', bm: 'Dibuka untuk permohonan', en: 'Open' }, { kod: 'Ditutup', bm: 'Ditutup', en: 'Closed' }], bm: 'Status permohonan', en: 'Application status' }
+      ]);
+      if (!sistem) spec.push({ k: 'statusLot', t: 'radio', o: [{ kod: 'Kosong', bm: 'Kosong', en: 'Vacant' }, { kod: 'Penyelenggaraan', bm: 'Penyelenggaraan', en: 'Maintenance' }], bm: 'Status lot', en: 'Lot status' });
+      spec = spec.concat([
+        { k: 'alamatSurat', t: 'text', bm: 'Alamat dalam surat (cth: Lot 3, Aras 1, Bangunan Persatuan Pelajar, UTM)', en: 'Address used in letters', max: 250 },
+        { k: 'catatan', t: 'text', bm: 'Catatan', en: 'Note', max: 300 }
+      ]);
+      var fb = formBox(spec, 'Simpan lot', 'Save lot', function (v) {
+        v.baru = baru; if (!baru) v.kod = l.kod;
+        return UP.api('rn.admin.lot.simpan', v).then(function (r) { if (r.ok) openAdmin('lot'); return r; });
+      }, l ? { nama: l.nama, lokasi: l.lokasi, blok: l.blok, saiz: l.saiz, jenis: l.jenis, kadar: l.kadar, statusBuka: l.statusBuka, statusLot: l.statusLot, alamatSurat: l.alamatSurat, catatan: l.catatan } : { statusBuka: 'Ditutup', statusLot: 'Kosong' });
+      fb.el.setAttribute('data-form', 'lot');
+      c.appendChild(fb.el);
+      if (sistem) c.appendChild(note('info', 'Status lot ' + l.statusLot + ' diurus oleh sistem.', 'Managed by the system.'));
+      body.appendChild(c);
+      if (!baru) renderPeralatan(body, l);
+    });
+  }
+  function renderPeralatan(body, l) {
+    var c = card('Peralatan Universiti (Lampiran 3)', 'University equipment'); c.id = 'rn-kad-peralatan';
+    var list = node('div'); c.appendChild(list);
+    function muat() {
+      UP.api('rn.admin.peralatan.senarai', { kodLot: l.kod }).then(function (r) {
+        list.textContent = '';
+        if (!r.ok) return;
+        if (!r.data.peralatan.length) list.appendChild(node('p', 'Tiada peralatan direkod.', 'muted'));
+        r.data.peralatan.forEach(function (x) {
+          var row = node('div', null, 'row'); row.appendChild(node('span', x.nama + ' × ' + x.bilangan + (x.catatan ? ' (' + x.catatan + ')' : ''))); row.appendChild(node('span', null, 'sp'));
+          row.appendChild(btn('Buang', 'Remove', function () { UP.api('rn.admin.peralatan.buang', { id: x.id }).then(muat); }, 'alt')); list.appendChild(row);
+        });
+      });
+    }
+    muat();
+    var fb = formBox([
+      { k: 'nama', t: 'text', bm: 'Nama alat / perkakas', en: 'Item', req: 1, max: 120 },
+      { k: 'bilangan', t: 'number', bm: 'Bilangan', en: 'Quantity', req: 1 },
+      { k: 'catatan', t: 'text', bm: 'Catatan', en: 'Note', max: 200 }
+    ], 'Tambah peralatan', 'Add item', function (v) {
+      return UP.api('rn.admin.peralatan.simpan', { kodLot: l.kod, nama: v.nama, bilangan: v.bilangan, catatan: v.catatan }).then(function (r) { if (r.ok) { muat(); fb.form.set({ nama: '', bilangan: '', catatan: '' }); } return r; });
+    });
+    c.appendChild(fb.el);
+    body.appendChild(c);
+  }
+
+  // ---------- Sewaan dan bil ----------
+  function tabSewaan(body) {
+    UP.api('rn.admin.sewaan.senarai', {}).then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      var c = card('Sewaan', 'Tenancies');
+      if (d.bolehUbah) { var nb = btn('Daftar sewaan sedia ada', 'Register existing tenancy', openSediaForm, 'alt'); nb.id = 'rn-btn-sedia'; c.appendChild(nb); }
+      if (!d.senarai.length) c.appendChild(node('p', 'Belum ada sewaan.', 'muted'));
+      else c.appendChild(tbl(['ID', 'Lot', 'Perniagaan', 'Mula', 'Tamat', 'Kadar', 'Status', 'Tunggakan'], d.senarai.map(function (s) {
+        return { id: s.id, cells: [s.id, s.kodLot, s.perniagaan, s.tarikhMula, s.tarikhTamatSebenar || s.tarikhTamat, rm(s.kadar), pill(s.status), s.tunggakan.bilLewat ? (s.tunggakan.ditanda ? '! ' : '') + s.tunggakan.bilLewat + ' bil (RM ' + s.tunggakan.jumlah.toFixed(2) + ')' : '-'] };
+      }), function (row) { openSewaanDet(row.id); }));
+      body.appendChild(c);
+    });
+  }
+  function tabBil(body) {
+    UP.api('rn.admin.bil.senarai', { status: A.bilStatus }).then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { errBox(body, r); return; }
+      var d = r.data;
+      var c = card('Bil sewa', 'Rent bills');
+      var ST_B = ['SEMUA', 'Belum Bayar', 'Menunggu Pengesahan', 'Dibayar', 'Lewat', 'Dikecualikan'];
+      c.appendChild(chips(ST_B.map(function (s) { var n = s === 'SEMUA' ? Object.keys(d.kiraan).reduce(function (a, k) { return a + d.kiraan[k]; }, 0) : d.kiraan[s]; return [s, (s === 'SEMUA' ? 'Semua' : s) + ' (' + n + ')']; }), A.bilStatus, function (s) { A.bilStatus = s; openAdmin('bil'); }));
+      if (!d.senarai.length) c.appendChild(node('p', 'Tiada bil.', 'muted'));
+      else c.appendChild(tbl(['Bil', 'Sewaan', 'Lot', 'Perniagaan', 'Bulan', 'Jumlah (RM)', 'Tarikh akhir', 'Status'], d.senarai.map(function (b) {
+        return { id: b.idSewaan, cells: [b.id, b.idSewaan, b.kodLot, b.perniagaan, b.bulan + '/' + b.tahun, b.jumlah.toFixed(2), b.tarikhAkhir, pill(b.status)] };
+      }), function (row) { openSewaanDet(row.id); }));
+      body.appendChild(c);
+    });
+  }
+
+  function openSewaanDet(id, notice) {
+    var body = showDet(function () { openAdmin(A.tab === 'ringkasan' ? 'ringkasan' : (A.tab === 'bil' ? 'bil' : 'sewaan')); });
+    UP.api('rn.admin.sewaan.butiran', { id: id }).then(function (r) {
+      if (!r.ok) { errBox(body, r); return; }
+      renderSewaan_(body, r.data, notice);
+    });
+  }
+  function renderSewaan_(body, s, notice) {
+    body.textContent = '';
+    if (notice) body.appendChild(note('ok', notice, 'Done'));
+    var out = msgBox();
+    var head = card(); var hr = node('div', null, 'row'); hr.appendChild(node('div', s.id + ' · ' + s.namaLot + ' · ' + s.perniagaan, 'h1')); hr.appendChild(node('span', null, 'sp')); hr.appendChild(pill(s.status)); head.appendChild(hr);
+    head.appendChild(UP.kv([['Tempoh', s.tarikhMula + ' hingga ' + (s.tarikhTamatSebenar || s.tarikhTamat)], ['Pendaftaran', s.jenisDaftar], ['Pembaharuan', String(s.bilPembaharuan)],
+      ['Jadual sewa', s.jadual.map(function (j) { return (j.hingga === '' ? 'Bulan ' + j.dari + '+' : 'Bulan ' + j.dari + '-' + j.hingga) + ': ' + rm(j.kadar); }).join('; ')], ['Sebab tamat', s.sebabTamat || '-']]));
+    if (s.idPermohonan) head.appendChild(btn('Buka permohonan', 'Open application', function () { openAdminPer(s.idPermohonan); }, 'alt'));
+    if (s.tunggakan.ditanda) head.appendChild(note('err', 'TUNGGAKAN melebihi satu bulan: ' + s.tunggakan.bilLewat + ' bil lewat, RM ' + s.tunggakan.jumlah.toFixed(2) + ', terlama ' + s.tunggakan.hariTerlama + ' hari. Cadangan: Notis ' + (s.cadanganNotis || '(semua notis telah dikeluarkan)') + '.', 'Arrears over one month'));
+    body.appendChild(head);
+
+    // bil
+    var cb = card('Bil sewa', 'Rent bills'); cb.id = 'rn-kad-bil';
+    var mb = msgBox(); mb.id = 'msg-rn-bil';
+    if (!s.bil.length) cb.appendChild(node('p', 'Belum ada bil.', 'muted'));
+    s.bil.forEach(function (b) {
+      var el = node('div', null, 'sec'); el.setAttribute('data-bil', b.id);
+      var h = node('div', null, 'row'); h.appendChild(node('b', b.bulan + '/' + b.tahun + ' · ' + rm(b.jumlah))); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(b.status)); el.appendChild(h);
+      el.appendChild(node('div', b.id + ' · sewa ' + rm(b.sewa) + (b.utiliti ? ' + utiliti ' + rm(b.utiliti) : '') + ' · akhir ' + b.tarikhAkhir + (b.hariLewat ? ' (lewat ' + b.hariLewat + ' hari)' : '') +
+        (b.kaedah ? ' · ' + b.kaedah + ' ' + b.noRujukan + ' (' + b.tarikhBayar + ')' : ''), 'e'));
+      if (b.catatan) el.appendChild(node('div', 'Catatan: ' + b.catatan, 'e'));
+      if (b.adaResit) el.appendChild(fileBtn('Resit', 'Receipt', function () { return UP.api('rn.admin.bil.fail', { id: b.id }); }, mb));
+      if (s.bolehUbah && ['Belum Bayar', 'Lewat', 'Menunggu Pengesahan'].indexOf(b.status) >= 0) {
+        var ci = document.createElement('input'); ci.placeholder = 'Catatan / jumlah utiliti (RM)'; ci.style.marginTop = '8px'; el.appendChild(ci);
+        var run = function (method, extra) { return function (bt) {
+          clearMsg(mb); bt.disabled = true;
+          UP.api(method, Object.assign({ id: b.id }, extra())).then(function (r) { if (!r.ok) { bt.disabled = false; msgErr(mb, r); return; } renderSewaan_(body, r.data, 'Bil dikemas kini.'); });
+        }; };
+        if (b.status === 'Menunggu Pengesahan') { var sb = btn('Sahkan bayaran', 'Verify', run('rn.admin.bil.sahkan', function () { return {}; })); sb.setAttribute('data-act', 'sahkan-bil'); el.appendChild(sb); el.appendChild(btn('Kembalikan', 'Return', run('rn.admin.bil.kembali', function () { return { catatan: ci.value }; }), 'alt')); }
+        if (b.status !== 'Menunggu Pengesahan') el.appendChild(btn('Tetapkan caj utiliti', 'Set utility charge', run('rn.admin.bil.utiliti', function () { return { jumlah: ci.value, catatan: 'Caj utiliti' }; }), 'alt'));
+        el.appendChild(btn2('Kecualikan', 'Waive', run('rn.admin.bil.kecuali', function () { return { catatan: ci.value }; }), 'alt'));
+      }
+      cb.appendChild(el);
+    });
+    cb.appendChild(mb);
+    body.appendChild(cb);
+
+    // notis
+    var cn = card('Notis tunggakan', 'Arrears notices'); cn.id = 'rn-kad-notis';
+    var mn = msgBox();
+    cn.appendChild(node('p', 'Notis dijana oleh admin sahaja; tiada tindakan automatik. Penamatan sewaan dilakukan secara manual.', 'muted'));
+    s.notis.forEach(function (n) { cn.appendChild(node('div', n.tajuk + ' · ' + n.tarikh, 'e')); });
+    if (s.bolehUbah && s.tunggakan.bilLewat) ['Peringatan 1', 'Peringatan 2', 'Penamatan'].forEach(function (j) {
+      var bb = btn2('Jana Notis ' + j, 'Generate', function (bt) { bt.disabled = true; UP.api('rn.admin.notis.jana', { id: s.id, jenis: j }).then(function (r) { if (!r.ok) { bt.disabled = false; msgErr(mn, r); return; } renderSewaan_(body, r.data, 'Notis dijana dan dihantar kepada pemilik.'); }); }, j === s.cadanganNotis ? '' : 'alt');
+      bb.setAttribute('data-notis', j); cn.appendChild(bb);
+    });
+    cn.appendChild(mn); body.appendChild(cn);
+
+    // cagaran ringkas
+    if (s.cagaran.length) {
+      var cc = card('Cagaran', 'Deposit');
+      s.cagaran.forEach(function (g) { cc.appendChild(node('div', g.jenis + ' ' + rm(g.jumlah) + ' · ' + g.status + (g.tarikhAkhirPulang ? ' · akhir pulang ' + g.tarikhAkhirPulang + (g.lewatPulang ? ' (LEWAT PULANG)' : '') : ''), 'e')); });
+      cc.appendChild(btn('Urus cagaran dalam permohonan', 'Manage', function () { openAdminPer(s.idPermohonan); }, 'alt'));
+      body.appendChild(cc);
+    }
+
+    // tindakan sewaan
+    if (s.bolehUbah && s.status === 'Aktif') {
+      var ca = card('Tindakan sewaan', 'Tenancy actions'); ca.id = 'rn-kad-tindakan-sewaan';
+      var fp = formBox([{ k: 'kadarBaharu', t: 'text', bm: 'Kadar sewa baharu bagi tahun lanjutan (RM, pilihan)', en: 'New rent for the extension (optional)' }],
+        'Sambung satu tahun', 'Renew for one year', function (v) {
+          return UP.api('rn.admin.sewaan.perbaharui', { id: s.id, kadarBaharu: v.kadarBaharu }).then(function (r) { if (r.ok) renderSewaan_(body, r.data, 'Sewaan disambung satu tahun.' + (r.data.amaranPembaharuan.length ? ' Amaran: ' + r.data.amaranPembaharuan.join(' ') : '')); return r; });
+        });
+      ca.appendChild(fp.el);
+      ca.appendChild(node('div', 'Tamatkan sewaan', 'sech'));
+      var ft = formBox([{ k: 'sebab', t: 'text', bm: 'Sebab penamatan (wajib)', en: 'Reason', req: 1, max: 300 }, { k: 'tarikh', t: 'date', bm: 'Tarikh tamat (kosong = hari ini)', en: 'End date' }],
+        'Tamatkan sewaan', 'End tenancy', function (v) {
+          return UP.api('rn.admin.sewaan.tamat', { id: s.id, sebab: v.sebab, tarikh: v.tarikh }).then(function (r) { if (r.ok) renderSewaan_(body, r.data, 'Sewaan ditamatkan.'); return r; });
+        });
+      ft.el.setAttribute('data-form', 'tamat'); ca.appendChild(ft.el);
+      body.appendChild(ca);
+    }
+  }
+
+  function openSediaForm() {
+    var body = showDet(function () { openAdmin('sewaan'); });
+    UP.loadRuj().then(function () {
+      body.textContent = '';
+      var c = card('Daftar sewaan sedia ada', 'Register an existing tenancy'); c.id = 'rn-sedia-form';
+      c.appendChild(node('p', 'Sewaan terus aktif tanpa aliran tawaran. Perniagaan mesti sudah didaftar sebagai SSU (guna "Daftar SSU sedia ada" jika belum).', 'muted'));
+      var fb = formBox([
+        { k: 'idPerniagaan', t: 'text', bm: 'ID Perniagaan (PRN-0001) atau No. Matrik pemilik', en: 'Business ID or owner matric no.', req: 1 },
+        { k: 'kodLot', t: 'text', bm: 'Kod lot', en: 'Lot code', req: 1, ph: 'SM-01' },
+        { k: 'tarikhMula', t: 'date', bm: 'Tarikh mula sewaan', en: 'Start date', req: 1 },
+        { k: 'tarikhTamat', t: 'date', bm: 'Tarikh tamat sewaan', en: 'End date', req: 1 },
+        { k: 'jadual', t: 'rnjadual', bm: 'Jadual sewa (atau satu kadar tetap)', en: 'Rent schedule', req: 1 },
+        { k: 'cagaranSewaan', t: 'text', bm: 'Cagaran sewaan telah dibayar (RM, pilihan)', en: 'Rent deposit already paid' },
+        { k: 'cagaranUtiliti', t: 'text', bm: 'Cagaran utiliti telah dibayar (RM, pilihan)', en: 'Utility deposit already paid' },
+        { k: 'catatan', t: 'text', bm: 'Catatan', en: 'Note', max: 300 }
+      ], 'Daftar sewaan', 'Register', function (v) {
+        return UP.api('rn.admin.sewaan.sedia', v).then(function (r) {
+          if (r.ok) { A.back = function () { openAdmin('sewaan'); }; UP.show('v-rn-a-det'); renderSewaan_($('rn-a-det-body'), r.data, 'Sewaan sedia ada didaftarkan.'); }
+          return r;
+        });
+      });
+      fb.el.setAttribute('data-form', 'sedia'); c.appendChild(fb.el);
+      body.appendChild(c);
+    });
+  }
+
+  // ======================================================================
+  // PENILAI
+  // ======================================================================
+  function openPenilai() {
+    UP.show('v-rn-p');
+    var body = $('rn-p-body'); spin(body);
+    UP.api('rn.nilai.sesi').then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { var e = node('div', null, 'msg err'); body.appendChild(e); msgErr(e, r); return; }
+      if (!r.data.sesi.length) { body.appendChild(card('Tiada sesi', 'No sessions')).appendChild(node('p', 'Tiada sesi penilaian yang sedang berjalan untuk anda.', 'muted')); return; }
+      r.data.sesi.forEach(function (s) {
+        var c = card(s.id + ' · ' + s.tarikh + ' ' + s.masa, s.tempat); c.setAttribute('data-sesi', s.id);
+        var h = node('div', null, 'row'); h.appendChild(node('span', s.tempat + ' · ' + s.bilPenilai + ' penilai', 'e')); h.appendChild(node('span', null, 'sp')); h.appendChild(pill(s.status)); c.appendChild(h);
+        s.calon.forEach(function (x) {
+          var el = node('div', null, 'rn-lot'); el.setAttribute('data-calon', x.id);
+          var inf = node('div'); inf.style.flex = '1'; inf.appendChild(node('b', x.perniagaan));
+          inf.appendChild(node('div', 'Slot ' + x.masa + ' · ' + x.id + (x.purata !== undefined && x.purata !== null ? ' · purata ' + x.purata + ' · kedudukan ' + x.kedudukan : ''), 'rn-meta')); el.appendChild(inf);
+          el.appendChild(pill(x.status === 'dihantar' ? 'Dihantar ' + x.jumlah : (x.status === 'draf' ? 'Draf ' + x.jumlah : 'Belum dinilai'), PK[x.status]));
+          el.appendChild(btn(s.status === 'Berjalan' ? 'Nilai' : 'Lihat', s.status === 'Berjalan' ? 'Evaluate' : 'View', function () { openSkor(s.id, x.id); }));
+          c.appendChild(el);
+        });
+        body.appendChild(c);
+      });
+    });
+  }
+
+  var CHECK_KANDUNGAN = ['Penerangan perniagaan', 'Misi dan visi', 'Objektif', 'Analisis persaingan dan tinjauan pasaran', 'Pelan operasi', 'Pelan pemasaran', 'Perancangan kewangan'];
+  function tahapDariBilangan(n) { return n >= 7 ? 5 : (n === 6 ? 4 : (n >= 4 ? 3 : (n === 3 ? 2 : 1))); }
+  function julat(maks, tahap) { var pct = [0, 20, 40, 60, 80, 100][tahap]; return [tahap === 1 ? 0 : maks * (pct - 20) / 100, maks * pct / 100]; }
+
+  function openSkor(sesi, id) {
+    clearTimeout(P.timer);
+    UP.show('v-rn-p-skor');
+    var body = $('rn-p-skor-body'); spin(body);
+    UP.api('rn.nilai.buka', { sesi: sesi, permohonan: id }).then(function (r) {
+      if (!r.ok) { errBox(body, r); return; }
+      P.sesi = sesi; P.id = id; P.d = r.data; P.tahap = {}; P.markah = {}; P.ulasan = {}; P.dirty = false;
+      r.data.kriteria.forEach(function (k) {
+        var s = r.data.skor[k.kod];
+        if (s) { if (s.tahap !== '') P.tahap[k.kod] = s.tahap; if (s.markah !== '') P.markah[k.kod] = s.markah; P.ulasan[k.kod] = s.ulasan || ''; }
+      });
+      renderSkor(body);
+    });
+  }
+  function jumlahSkor() {
+    var t = 0; P.d.kriteria.forEach(function (k) { if (P.tahap[k.kod] && typeof P.markah[k.kod] === 'number') t += P.markah[k.kod]; });
+    return Math.round(t * 100) / 100;
+  }
+  function renderSkor(body) {
+    var d = P.d; body.textContent = '';
+    var boleh = d.boleh;
+    var head = card(); var hr = node('div', null, 'row');
+    hr.appendChild(node('div', d.calon.namaSyarikat, 'h1')); hr.appendChild(node('span', null, 'sp')); hr.appendChild(pill(boleh ? 'Boleh dinilai' : (d.dikunci ? 'Dihantar (dikunci)' : 'Sesi ditutup'), boleh ? 'warn' : 'ok')); head.appendChild(hr);
+    head.appendChild(node('div', 'Slot pembentangan ' + d.masa + ' · ' + d.sesi.id + ' · ' + d.sesi.tempat, 'e'));
+    var c = d.calon;
+    head.appendChild(UP.kv([['Nama pelajar', c.namaPelajar], ['No. Matrik', c.noMatrik], ['No. KP', c.noKp], ['Tahun', c.tahun], ['Fakulti', c.fakulti], ['Kursus', c.kursus],
+      ['Syarikat / No. SSM', c.namaSyarikat + ' / ' + (c.noSsm || '-')], ['Jenis perniagaan', c.jenisPerniagaan + (c.produk.length ? ' (' + c.produk.join(', ') + ')' : '')], ['Lot dipohon', c.lot + ' (' + c.tempohMula + ' hingga ' + c.tempohTamat + ')'],
+      ['Dana / jualan bulanan', rm(c.jumlahDana) + ' / ' + rm(c.jualan)], ['Bil. pekerja', c.bilPekerja], ['Sebab berniaga', c.sebab]]));
+    var om = msgBox();
+    if (c.adaCadangan) { var cb = fileBtn('Cadangan perniagaan (PDF)', 'Business proposal', function () { return UP.api('rn.nilai.fail', { sesi: P.sesi, permohonan: P.id }); }, om); cb.id = 'rn-btn-cadangan'; head.appendChild(cb); head.appendChild(om); }
+    if (d.ranking) head.appendChild(note('ok', 'Sesi ditutup. Purata: ' + d.ranking.purata + '/100 · Kedudukan: ' + d.ranking.kedudukan + ' (' + d.ranking.bilDihantar + ' penilai).', 'Session closed'));
+    body.appendChild(head);
+
+    var wrap = card(); wrap.id = 'rn-skor-kad';
+    d.kriteria.forEach(function (k) {
+      var kd = node('div', null, 'rn-k'); kd.setAttribute('data-kod', k.kod);
+      kd.appendChild(node('h3', k.bm + ' (' + k.maks + ' markah)'));
+      kd.appendChild(node('div', k.en + ' · ' + k.sub, 'rn-sub'));
+      kd.appendChild(node('div', 'Tahap 5: ' + k.tahap5 + ' · Tahap 3: ' + k.tahap3 + ' · Tahap 1: ' + k.tahap1, 'rn-sub'));
+      if (k.kod === 'KANDUNGAN' && boleh) {
+        var ck = node('div', null, 'rn-chk');
+        CHECK_KANDUNGAN.forEach(function (t, i) {
+          var lb = node('label'); var cbx = document.createElement('input'); cbx.type = 'checkbox'; cbx.setAttribute('data-ck', String(i));
+          cbx.addEventListener('change', function () {
+            var n = ck.querySelectorAll('input:checked').length;
+            if (n) pilihTahap(k, tahapDariBilangan(n), kd);
+          });
+          lb.appendChild(cbx); lb.appendChild(node('span', t)); ck.appendChild(lb);
+        });
+        kd.appendChild(node('div', 'Semak elemen (mencadangkan tahap):', 'rn-sub')); kd.appendChild(ck);
+      }
+      var sk = node('div', null, 'rn-skala');
+      d.skala.forEach(function (s) {
+        var b = node('button'); b.type = 'button'; b.setAttribute('data-tahap', String(s.tahap)); b.disabled = !boleh;
+        b.appendChild(node('b', s.pct + '%')); b.appendChild(document.createTextNode(s.bm));
+        if (P.tahap[k.kod] === s.tahap) b.className = 'on';
+        b.addEventListener('click', function () { pilihTahap(k, s.tahap, kd); });
+        sk.appendChild(b);
+      });
+      kd.appendChild(sk);
+      var mk = node('div', null, 'rn-mk'); mk.appendChild(node('span', 'Markah', 'l'));
+      var inp = document.createElement('input'); inp.type = 'number'; inp.step = '0.5'; inp.min = '0'; inp.max = String(k.maks); inp.setAttribute('data-mk', k.kod); inp.disabled = !boleh;
+      if (typeof P.markah[k.kod] === 'number') inp.value = P.markah[k.kod];
+      inp.addEventListener('input', function () {
+        var v = parseFloat(inp.value);
+        if (isNaN(v)) { delete P.markah[k.kod]; } else {
+          var t = P.tahap[k.kod];
+          if (t) { var j = julat(k.maks, t); if (v < j[0]) v = j[0]; if (v > j[1]) v = j[1]; }
+          P.markah[k.kod] = v;
+        }
+        tandaKotor(); kemasJumlah();
+      });
+      inp.addEventListener('change', function () { if (typeof P.markah[k.kod] === 'number') inp.value = P.markah[k.kod]; });
+      mk.appendChild(inp); mk.appendChild(node('span', '/ ' + k.maks, 'e'));
+      var rg = node('span', null, 'e'); rg.setAttribute('data-julat', k.kod); mk.appendChild(rg);
+      if (P.tahap[k.kod]) { var jj = julat(k.maks, P.tahap[k.kod]); rg.textContent = '(julat ' + jj[0] + ' - ' + jj[1] + ')'; }
+      kd.appendChild(mk);
+      var ul = document.createElement('textarea'); ul.placeholder = 'Ulasan / Comments'; ul.style.minHeight = '50px'; ul.style.fontFamily = 'inherit'; ul.style.fontSize = '13px'; ul.style.marginTop = '8px'; ul.disabled = !boleh;
+      ul.value = P.ulasan[k.kod] || ''; ul.setAttribute('data-ul', k.kod);
+      ul.addEventListener('input', function () { P.ulasan[k.kod] = ul.value; tandaKotor(); });
+      kd.appendChild(ul);
+      wrap.appendChild(kd);
+    });
+    var bar = node('div', null, 'rn-total');
+    var jml = node('span', '0', 'rn-jml'); jml.id = 'rn-jumlah'; bar.appendChild(jml); bar.appendChild(node('span', ' / 100', 'e'));
+    var sp = node('span', null, 'sp'); bar.appendChild(sp);
+    var ms = node('span', null, 'e'); ms.id = 'rn-simpan-status'; bar.appendChild(ms);
+    var m = msgBox(); m.id = 'msg-rn-skor';
+    if (boleh) {
+      var draf = btn('Simpan draf', 'Save draft', function (b) { simpanSkor(false, b, m); }, 'alt'); draf.id = 'rn-btn-draf'; bar.appendChild(draf);
+      var hantar = btn2('Hantar (kunci skor)', 'Submit (locks scores)', function (b) { simpanSkor(true, b, m); }); hantar.id = 'rn-btn-hantar-skor'; bar.appendChild(hantar);
+    }
+    wrap.appendChild(m);
+    wrap.appendChild(bar);
+    body.appendChild(wrap);
+    kemasJumlah();
+  }
+  function kemasJulat(k) {
+    var el = document.querySelector('#rn-p-skor-body [data-julat="' + k.kod + '"]'); if (!el) return;
+    var t = P.tahap[k.kod]; if (!t) { el.textContent = ''; return; }
+    var j = julat(k.maks, t); el.textContent = '(julat ' + j[0] + ' - ' + j[1] + ')';
+  }
+  function pilihTahap(k, tahap, kd) {
+    P.tahap[k.kod] = tahap;
+    var j = julat(k.maks, tahap);
+    P.markah[k.kod] = j[1];
+    Array.prototype.forEach.call(kd.querySelectorAll('.rn-skala button'), function (b) { b.className = b.getAttribute('data-tahap') === String(tahap) ? 'on' : ''; });
+    var inp = kd.querySelector('[data-mk]'); inp.value = j[1];
+    kemasJulat(k); tandaKotor(); kemasJumlah();
+  }
+  function kemasJumlah() { var el = $('rn-jumlah'); if (el) el.textContent = String(jumlahSkor()); }
+  function tandaKotor() {
+    if (!P.d || !P.d.boleh) return;
+    P.dirty = true; var s = $('rn-simpan-status'); if (s) s.textContent = 'Belum disimpan…';
+    clearTimeout(P.timer); P.timer = setTimeout(function () { if (P.dirty) simpanSkor(false, null, null, true); }, 2500);
+  }
+  function muatSkor() {
+    return P.d.kriteria.map(function (k) { return { kod: k.kod, tahap: P.tahap[k.kod] || '', markah: typeof P.markah[k.kod] === 'number' ? P.markah[k.kod] : '', ulasan: P.ulasan[k.kod] || '' }; })
+      .filter(function (x) { return x.tahap !== '' || x.ulasan; });
+  }
+  function simpanSkor(hantar, b, m, senyap) {
+    if (m) clearMsg(m);
+    if (b) b.disabled = true;
+    clearTimeout(P.timer);
+    UP.api('rn.nilai.simpan', { sesi: P.sesi, permohonan: P.id, skor: muatSkor(), hantar: !!hantar }).then(function (r) {
+      if (b) b.disabled = false;
+      if (!r.ok) {
+        if (m) { msgErr(m, r); var med = r.error && r.error.extra && r.error.extra.medan; if (med) m.appendChild(node('i', Object.keys(med).map(function (k) { return k + ': ' + med[k]; }).join(' | '))); }
+        else { var s = $('rn-simpan-status'); if (s) s.textContent = 'Simpan automatik gagal'; }
+        return;
+      }
+      P.dirty = false;
+      if (hantar) { P.d = r.data; renderSkor($('rn-p-skor-body')); var mm = $('msg-rn-skor'); if (mm) msg(mm, 'ok', 'Skor dihantar dan dikunci.', 'Scores submitted and locked.'); return; }
+      var st = $('rn-simpan-status'); if (st) st.textContent = 'Draf disimpan ' + new Date().toLocaleTimeString();
+      if (m) msg(m, 'ok', 'Draf disimpan.', 'Draft saved.');
+    });
+  }
+
+  // ======================================================================
+  // Menu utama dan navigasi
+  // ======================================================================
+  function setItem(btnEl, pillEl, on, text, kind) {
+    btnEl.disabled = !on; btnEl.classList.toggle('off', !on);
+    pillEl.textContent = text; pillEl.className = 'pill ' + (kind || '');
+  }
+  UP.homeHooks.push(function (s) {
+    var pel = s.role === 'Pelajar';
+    BAGI = null;
+    setItem($('go-rn'), $('pill-rn'), pel, pel ? '…' : 'Pelajar sahaja / Students only');
+    if (pel) {
+      UP.api('rn.saya').then(function (r) {
+        if (!r.ok) { $('pill-rn').textContent = ''; return; }
+        var d = r.data, p = d.permohonan[0];
+        var t = p ? p.status : (d.boleh.mohon ? 'Boleh memohon / Open' : (d.sebab === 'TEMPOH_TUTUP' ? 'Ditutup / Closed' : (d.sebab === 'PERLU_SSU' ? 'Perlu SSU / SSU needed' : 'Lihat / View')));
+        $('pill-rn').textContent = t; $('pill-rn').className = 'pill ' + (p ? (PK[p.status] || '') : (d.boleh.mohon ? 'ok' : ''));
+      });
+    }
+    var adm = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati'].indexOf(s.role) >= 0, pen = s.role === 'Penilai';
+    $('go-rn-admin').hidden = !(adm || pen);
+    var lab = $('go-rn-admin').querySelector('.l'); if (lab) lab.textContent = pen ? 'Penilaian ruang niaga' : 'Ruang niaga (admin)';
+    if (adm) {
+      UP.api('rn.admin.dashboard').then(function (r) {
+        if (!r.ok) return;
+        var n = r.data.permohonan.baharu + r.data.permohonan.disemak + r.data.cagaran.menungguPengesahan + r.data.bilMenunggu;
+        $('pill-rn-admin').textContent = n + ' perlu tindakan / to do'; $('pill-rn-admin').className = 'pill ' + (n ? 'warn' : '');
+      });
+    } else if (pen) {
+      UP.api('rn.nilai.sesi').then(function (r) {
+        if (!r.ok) return;
+        var n = r.data.sesi.filter(function (x) { return x.status === 'Berjalan'; }).length;
+        $('pill-rn-admin').textContent = n + ' sesi berjalan / active'; $('pill-rn-admin').className = 'pill ' + (n ? 'warn' : '');
+      });
+    }
+  });
+
+  UP.backHooks.push(function () {
+    if (BAGI && !$('v-rn').hidden) { BAGI = null; paintBagi(); openAdmin(); return true; }
+    return false;
+  });
+
+  function init() {
+    $('go-rn').addEventListener('click', function () { if (!$('go-rn').disabled) openRn(); });
+    $('go-rn-admin').addEventListener('click', function () {
+      var role = UP.S.session && UP.S.session.role;
+      if (role === 'Penilai') openPenilai(); else { A.tab = 'ringkasan'; openAdmin(); }
+    });
+    $('btn-rn-form-balik').addEventListener('click', function () { openRn(); });
+    $('btn-rn-hantar').addEventListener('click', hantarForm);
+    $('btn-rn-det-balik').addEventListener('click', function () { openRn(); });
+    $('btn-rn-a-det-balik').addEventListener('click', function () { (A.back || function () { openAdmin(); })(); });
+    $('btn-rn-p-balik').addEventListener('click', function () { clearTimeout(P.timer); openPenilai(); });
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
 </script>
 
 <script>

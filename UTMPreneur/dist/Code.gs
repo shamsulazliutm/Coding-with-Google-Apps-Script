@@ -570,13 +570,19 @@ var SCHEMA = {
     nama: 'UTMPreneur - Ruang Niaga',
     modul: 'Ruang Niaga',
     tabs: {
-      Lot: ['Kod_Lot', 'Nama_Paparan', 'Lokasi', 'Blok', 'Saiz_m2', 'Jenis', 'Kadar_Sewa_RM', 'Status_Buka', 'Status_Lot', 'Catatan', 'Didaftar_Oleh', 'Tarikh_Daftar'],
-      Permohonan_Lot: ['ID_Permohonan', 'ID_Perniagaan', 'No_Matrik', 'Kod_Lot', 'Tempoh_Mula', 'Tempoh_Tamat', 'Vaksin_Kepialu', 'Fail_Vaksin', 'Kursus_Makanan', 'Fail_Kursus', 'Sumber_Pembiayaan', 'Pemberi_Dana', 'Jumlah_Dana_RM', 'Jangkaan_Jualan_RM', 'Bil_Pekerja', 'Fail_Cadangan', 'Sebab_Berniaga', 'Lokasi_Dirancang', 'Status', 'Tarikh_Hantar', 'Keputusan', 'Tarikh_Keputusan', 'Catatan_Admin'],
-      Sewaan: ['ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'ID_Permohonan', 'Kadar_RM', 'Tarikh_Mula', 'Tarikh_Tamat', 'Status', 'Didaftar_Oleh'],
-      Bayaran_Sewa: ['ID_Bil', 'ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'Bulan', 'Tahun', 'Jumlah_RM', 'Tarikh_Akhir', 'Status', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Catatan'],
+      Lot: ['Kod_Lot', 'Nama_Paparan', 'Lokasi', 'Blok', 'Saiz_m2', 'Jenis', 'Kadar_Sewa_RM', 'Status_Buka', 'Status_Lot', 'Catatan', 'Didaftar_Oleh', 'Tarikh_Daftar', 'Alamat_Surat'],
+      Permohonan_Lot: ['ID_Permohonan', 'ID_Perniagaan', 'No_Matrik', 'Kod_Lot', 'Tempoh_Mula', 'Tempoh_Tamat', 'Vaksin_Kepialu', 'Fail_Vaksin', 'Kursus_Makanan', 'Fail_Kursus', 'Sumber_Pembiayaan', 'Pemberi_Dana', 'Jumlah_Dana_RM', 'Jangkaan_Jualan_RM', 'Bil_Pekerja', 'Fail_Cadangan', 'Sebab_Berniaga', 'Lokasi_Dirancang', 'Status', 'Tarikh_Hantar', 'Keputusan', 'Tarikh_Keputusan', 'Catatan_Admin', 'Jenis_Permohonan', 'Ulasan_Pemohon', 'Diputuskan_Oleh', 'ID_Sewaan'],
+      Sewaan: ['ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'ID_Permohonan', 'Kadar_RM', 'Tarikh_Mula', 'Tarikh_Tamat', 'Status', 'Didaftar_Oleh', 'Tarikh_Tamat_Sebenar', 'Sebab_Tamat', 'Jenis_Daftar', 'Bil_Pembaharuan', 'Tarikh_Daftar'],
+      Bayaran_Sewa: ['ID_Bil', 'ID_Sewaan', 'Kod_Lot', 'ID_Perniagaan', 'Bulan', 'Tahun', 'Jumlah_RM', 'Tarikh_Akhir', 'Status', 'Tarikh_Bayar', 'Kaedah', 'No_Rujukan', 'Fail_Resit', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Catatan', 'Sewa_RM', 'Caj_Utiliti_RM', 'Catatan_Utiliti', 'Tarikh_Jana', 'Bulan_Sewa_Ke'],
       Rubrik: ['Jenis', 'Versi', 'Kod_Kriteria', 'Kriteria_BM', 'Kriteria_EN', 'Sub_Perkara', 'Markah_Maks', 'Tertib', 'Tahap5', 'Tahap3', 'Tahap1', 'Aktif'],
-      Sesi_Penilaian: ['ID_Sesi', 'Tarikh', 'Masa', 'Tempat', 'Status', 'Versi_Rubrik', 'Penilai', 'Senarai_Permohonan', 'Dicipta_Oleh'],
-      Skor_Penilaian: ['ID_Sesi', 'ID_Permohonan', 'Emel_Penilai', 'Kod_Kriteria', 'Tahap', 'Markah', 'Ulasan', 'Masa_Hantar', 'Dikunci']
+      Sesi_Penilaian: ['ID_Sesi', 'Tarikh', 'Masa', 'Tempat', 'Status', 'Versi_Rubrik', 'Penilai', 'Senarai_Permohonan', 'Dicipta_Oleh', 'Jemputan_Dihantar'],
+      Skor_Penilaian: ['ID_Sesi', 'ID_Permohonan', 'Emel_Penilai', 'Kod_Kriteria', 'Tahap', 'Markah', 'Ulasan', 'Masa_Hantar', 'Dikunci', 'Masa_Simpan'],
+      Dokumen_Sewaan: ['ID_Dokumen', 'ID_Permohonan', 'ID_Sewaan', 'Jenis', 'Versi', 'Tajuk', 'Fail', 'Nama_Fail', 'Tarikh', 'Dijana_Oleh', 'Status', 'Kelihatan', 'Catatan'],
+      Tawaran_Sewa: ['ID_Permohonan', 'No_Rujukan', 'Tarikh_Surat', 'Jenis_Perniagaan', 'Tarikh_Mula', 'Tarikh_Tamat', 'Bil_Bulan', 'Sewa_Bulanan_RM', 'Utiliti', 'Cagaran_Sewaan_RM', 'Cagaran_Utiliti_RM', 'Waktu_Operasi', 'Penandatangan_Nama', 'Penandatangan_Jawatan', 'Versi_Semasa', 'Status', 'Tarikh_Hantar', 'Tarikh_Luput', 'Respons', 'Tarikh_Respons', 'Emel_Respons', 'Salinan_Fizikal_Tarikh', 'Salinan_Fizikal_Penerima', 'Catatan'],
+      Cagaran: ['ID_Cagaran', 'ID_Permohonan', 'ID_Sewaan', 'ID_Perniagaan', 'Jenis', 'Jumlah_RM', 'Tarikh_Akhir_Bayar', 'No_Resit_Rasmi', 'Tarikh_Resit', 'Fail_Resit', 'Tarikh_Muat_Naik', 'Status', 'Disahkan_Oleh', 'Tarikh_Pengesahan', 'Tarikh_Akhir_Pulang', 'Jumlah_Pulang_RM', 'Tarikh_Pulang', 'Sebab_Potongan', 'Catatan'],
+      Jadual_Sewa: ['ID_Permohonan', 'ID_Sewaan', 'Dari_Bulan', 'Hingga_Bulan', 'Kadar_RM'],
+      Pekerja_Penyewa: ['ID_Pekerja', 'ID_Permohonan', 'ID_Sewaan', 'ID_Perniagaan', 'Nama', 'Umur', 'Fakulti', 'Tugas', 'Pelajar_UTM', 'No_Matrik', 'Status', 'Ditambah_Oleh', 'Tarikh', 'Catatan_Admin'],
+      Peralatan_Lot: ['ID_Peralatan', 'Kod_Lot', 'Nama_Alat', 'Bilangan', 'Catatan', 'Aktif']
     }
   },
   SS_KEWANGAN: {
@@ -617,6 +623,10 @@ var TEXT_COLS = {
   Tempahan: ['No_Matrik', 'Telefon', 'Masa_Mula', 'Masa_Tamat', 'Token_Hash'],
   PERALATAN: ['Kod_Mesin', 'No_Mesin'],
   Butiran_3DP: ['No_Mesin'],
+  Tawaran_Sewa: ['No_Rujukan'],
+  Cagaran: ['No_Resit_Rasmi'],
+  Bayaran_Sewa: ['No_Rujukan'],
+  Pekerja_Penyewa: ['No_Matrik'],
   Butiran_Ruang: ['No_VOT', 'Tel_Staf_Kewangan']
 };
 
@@ -636,6 +646,9 @@ var FOLDERS = [
 var DOKUMEN = [
   { kod: 'TEMPLAT_SIJIL_SSU', jenis: 'Templat', modul: 'SSU', nama: 'Templat sijil SSU (Google Slides)', catatan: 'Letak fail Google Slides dalam folder FLD_TEMPLAT_SIJIL dan tampal URL di sini' },
   { kod: 'TEMPLAT_LAPORAN_KEWANGAN', jenis: 'Templat', modul: 'Kewangan', nama: 'Templat laporan kewangan', catatan: 'Tampal URL templat laporan kewangan' },
+  { kod: 'TEMPLAT_SURAT_TAWARAN', jenis: 'Templat', modul: 'Ruang Niaga', nama: 'Templat surat tawaran / setuju terima (Google Docs, pilihan)', catatan: 'Pilihan: tampal URL Google Docs. Jika kosong, sistem guna surat lalai. Penanda: lihat docs/MODUL_RUANG_NIAGA.md' },
+  { kod: 'TEMPLAT_PERJANJIAN_SEWA_FNB', jenis: 'Templat', modul: 'Ruang Niaga', nama: 'Templat perjanjian sewa F&B (Google Docs)', catatan: 'Wajib sebelum perjanjian F&B boleh dijana. Penanda: lihat docs/MODUL_RUANG_NIAGA.md' },
+  { kod: 'TEMPLAT_PERJANJIAN_SEWA_BUKAN_FNB', jenis: 'Templat', modul: 'Ruang Niaga', nama: 'Templat perjanjian sewa bukan F&B (Google Docs)', catatan: 'Wajib sebelum perjanjian bukan F&B boleh dijana. Penanda: lihat docs/MODUL_RUANG_NIAGA.md' },
   { kod: 'LOGO_UTMXCITE', jenis: 'Dokumen', modul: 'Sistem', nama: 'Logo UTM + UTMXCITE (PNG)', catatan: 'Pilihan: tampal URL fail PNG Drive untuk menggantikan logo lalai' }
 ];
 
@@ -674,7 +687,7 @@ var TETAPAN_LALAI = [
   ['SLOT_MAKS_JAM', '4', 'Tempoh maksimum satu tempahan mesin (jam)'],
   ['NOTIS_HARI_BEKERJA_RUANG', '3', 'Notis minimum tempahan ruang (hari bekerja)'],
   ['JANA_BIL_SEWA_HARI', '5', 'Hari dalam bulan bil sewa dijana'],
-  ['TARIKH_AKHIR_SEWA_HARI', '10', 'Hari dalam bulan tarikh akhir bayaran sewa'],
+  ['TARIKH_AKHIR_SEWA_HARI', '7', 'Hari dalam bulan tarikh akhir bayaran sewa'],
   ['JANA_LAPORAN_HARI', '1', 'Hari dalam bulan laporan kewangan dijana'],
   ['TARIKH_AKHIR_LAPORAN_HARI', '7', 'Hari dalam bulan tarikh akhir laporan kewangan'],
   ['PERINGATAN_SUSULAN_HARI', '3', 'Selang peringatan susulan (hari)'],
@@ -4529,6 +4542,3366 @@ var Ref = {
   },
   invalidate: function () { Db.cache().remove('ruj'); }
 };
+
+
+// ===== RuangNiaga.gs =====
+/**
+ * UTMPreneur: modul Ruang Niaga (titik masuk). Objek global tunggal RuangNiaga mendedahkan:
+ *   routes()      laluan RPC rn.* (digabungkan oleh rpcTable_ dalam Code.gs)
+ *   jobHarian()   kerja harian (dipanggil oleh Jobs.harian)
+ *   seed()        data awal modul (tiada keperluan buat masa ini)
+ * Fail modul: RuangNiagaPermohonan (lot, permohonan), RuangNiagaNilai (penilaian), RuangNiagaTawaran, RuangNiagaDokumen,
+ * RuangNiagaCagaran, RuangNiagaPerjanjian, RuangNiagaSewa (sewaan, bil), RuangNiagaLanjut (butiran, laluan tambahan). Pembantu: RnU.
+ * Laluan tindakan pelajar juga disediakan sebagai rn.bp.* (admin bagi pihak pelajar, melalui Bantu.ctx).
+ */
+
+var RuangNiaga = (function () {
+  function viewer_() { return ADMIN_ROLES.filter(function (r) { return r !== ROLE.PENILAI; }); }
+  function decider_() { return [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL]; }
+
+  /** Tindakan pelajar: nama -> fn(ctx, payload). Setiap satu didedahkan sebagai rn.<nama> dan rn.bp.<nama>. */
+  function pelajar_() {
+    var t = {
+      'saya': function (c) { return RnPer.saya(c); },
+      'mohon.hantar': function (c, p) { return RnPer.hantar(c, p); },
+      'mohon.batal': function (c, p) { return RnPer.batal(c, p); },
+      'fail': function (c, p) { return RnPer.fail(c, p); }
+    };
+    if (typeof RnLanjut !== 'undefined') RnLanjut.laluanPelajar(t);
+    return t;
+  }
+
+  /** Tindakan admin: nama -> [fungsi peranan, fn]. */
+  function admin_() {
+    var t = {
+      'admin.lot.senarai': [viewer_, function (c) { return RnPer.lotSenarai(c); }],
+      'admin.lot.simpan': [decider_, function (c, p) { return RnPer.lotSimpan(c, p); }],
+      'admin.tempoh.simpan': [decider_, function (c, p) { return RnPer.tempohSimpan(c, p); }],
+      'admin.perm.senarai': [viewer_, function (c, p) { return RnPer.adminSenarai(c, p); }],
+      'admin.perm.butiran': [viewer_, function (c, p) { return RnPer.adminButiran(c, p); }],
+      'admin.perm.tindakan': [decider_, function (c, p) { return RnPer.adminTindakan(c, p); }],
+      'admin.perm.fail': [viewer_, function (c, p) { return RnPer.adminFail(c, p); }]
+    };
+    if (typeof RnLanjut !== 'undefined') RnLanjut.laluanAdmin(t, viewer_, decider_);
+    return t;
+  }
+
+  function routes_() {
+    var out = {};
+    var stu = pelajar_();
+    Object.keys(stu).forEach(function (k) {
+      out['rn.' + k] = { auth: true, roles: [ROLE.PELAJAR], matrik: true, fn: stu[k] };
+      out['rn.bp.' + k] = { auth: true, roles: decider_(), fn: function (c, p) { return stu[k](Bantu.ctx(c, p.noMatrik, 'ruang niaga'), p); } };
+    });
+    out['rn.bp.cari'] = {
+      auth: true, roles: decider_(), fn: function (c, p) {
+        var bc = Bantu.ctx(c, p.noMatrik, 'ruang niaga');
+        var pel = RnU.pelajar(bc.noMatrik);
+        return {
+          pelajar: { noMatrik: bc.noMatrik, nama: bc.nama, emel: Util.str(pel.Emel), fakulti: Util.str(pel.Fakulti), program: Util.str(pel.Program) },
+          rn: RnPer.saya(bc)
+        };
+      }
+    };
+    var adm = admin_();
+    Object.keys(adm).forEach(function (k) {
+      out['rn.' + k] = { auth: true, roles: adm[k][0](), fn: adm[k][1] };
+    });
+    if (typeof RnLanjut !== 'undefined') RnLanjut.laluanLain(out);
+    return out;
+  }
+
+  function jobHarian_() {
+    return typeof RnLanjut !== 'undefined' ? RnLanjut.jobHarian() : {};
+  }
+
+  return { routes: routes_, jobHarian: jobHarian_, seed: function () {} };
+})();
+
+
+// ===== RuangNiagaCagaran.gs =====
+/**
+ * UTMPreneur: Ruang Niaga fasa 4. Cagaran (sewaan dan utiliti): pemilik memuat naik resit rasmi, admin mengesahkan,
+ * pemulangan dalam CAGARAN_PULANG_HARI (90) selepas tamat kontrak (peringatan admin hari ke-60 dan ke-80, tanda Lewat Pulang)
+ * dan rampasan. Status: Belum Bayar, Menunggu Pengesahan, Diterima, Dipulangkan, Dirampas (Dibatalkan jika tawaran gugur).
+ */
+
+var RnCagaran = (function () {
+  function S(v) { return Util.str(v); }
+
+  function byId_(id) {
+    var l = Db.find('Cagaran', function (r) { return S(r.ID_Cagaran) === id; });
+    return l.length ? l[0] : null;
+  }
+  function semua_(idPer) { return Db.find('Cagaran', function (r) { return S(r.ID_Permohonan) === idPer; }); }
+
+  function view_(c) {
+    var st = S(c.Status);
+    var akhirBayar = Util.toDate(c.Tarikh_Akhir_Bayar), akhirPulang = Util.toDate(c.Tarikh_Akhir_Pulang);
+    return {
+      id: S(c.ID_Cagaran), idPermohonan: S(c.ID_Permohonan), jenis: S(c.Jenis), jumlah: Number(c.Jumlah_RM) || 0, tarikhAkhirBayar: akhirBayar ? RnU.dk(akhirBayar) : '',
+      noResit: S(c.No_Resit_Rasmi), tarikhResit: RnU.dk(c.Tarikh_Resit), adaResit: !!S(c.Fail_Resit), status: st, tarikhMuatNaik: RnU.dk(c.Tarikh_Muat_Naik),
+      disahkanOleh: S(c.Disahkan_Oleh), tarikhPengesahan: RnU.dk(c.Tarikh_Pengesahan), tarikhAkhirPulang: akhirPulang ? RnU.dk(akhirPulang) : '',
+      jumlahPulang: S(c.Jumlah_Pulang_RM), tarikhPulang: RnU.dk(c.Tarikh_Pulang), sebabPotongan: S(c.Sebab_Potongan), catatan: S(c.Catatan),
+      lewatBayar: st === 'Belum Bayar' && !!akhirBayar && Util.daysBetween(new Date(), akhirBayar) < 0,
+      lewatPulang: st === 'Diterima' && !!akhirPulang && Util.daysBetween(new Date(), akhirPulang) < 0
+    };
+  }
+
+  function senarai_(idPer) { return semua_(idPer).map(view_); }
+
+  function munasabah_(r) { return ['Ditawarkan', 'Diterima', 'Perjanjian', 'Sewaan Aktif'].indexOf(S(r.Status)) >= 0; }
+
+  function muatNaik_(ctx, p) {
+    var c = byId_(S(p.id));
+    if (!c) throw appError_('RN_TIDAK_DITEMUI');
+    var r = RnU.perById(S(c.ID_Permohonan));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r);
+    if (!munasabah_(r) || ['Belum Bayar', 'Menunggu Pengesahan'].indexOf(S(c.Status)) < 0) throw appError_('RN_CAGARAN_STATUS');
+    var e = {};
+    var noResit = S(p.noResit).replace(/\s+/g, ' ');
+    if (!/^[A-Za-z0-9\-\/. ()]{3,60}$/.test(noResit)) e.noResit = 'No. resit rasmi 3 hingga 60 aksara / Official receipt no. 3 to 60 characters';
+    var tarikh = S(p.tarikhResit);
+    if (!RnU.isDate(tarikh) || Util.daysBetween(new Date(), Util.toDate(tarikh)) > 0) e.tarikhResit = 'Tarikh tidak sah atau akan datang / Invalid or future date';
+    var v = null;
+    try { v = Files.validate(p.fail, ['pdf', 'jpg', 'jpeg', 'png']); } catch (err) { e.fail = 'Muat naik resit (PDF/JPG/PNG) / Upload the receipt'; }
+    if (Object.keys(e).length) throw appError_('RN_CAGARAN_TIDAK_SAH', { medan: e });
+    var url = Files.save('FLD_RESIT_SEWA', 'RESIT_CAGARAN_' + S(c.ID_Cagaran) + '_' + Util.fmtDate(new Date(), 'yyyyMMddHHmm'), v);
+    Db.withLock(function () {
+      var cur = byId_(S(c.ID_Cagaran));
+      if (['Belum Bayar', 'Menunggu Pengesahan'].indexOf(S(cur.Status)) < 0) throw appError_('RN_CAGARAN_STATUS');
+      Db.update('Cagaran', cur._row, {
+        No_Resit_Rasmi: noResit, Tarikh_Resit: Util.toDate(tarikh), Fail_Resit: url, Tarikh_Muat_Naik: new Date(), Status: 'Menunggu Pengesahan', Catatan: ''
+      });
+      Audit.log(ctx, 'MUAT_NAIK_RESIT_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), S(cur.Status), 'Menunggu Pengesahan', noResit);
+    });
+    RnU.melAdmin('Resit cagaran menunggu pengesahan', 'Deposit receipt awaiting verification',
+      ['Pemohon ' + S(r.ID_Permohonan) + ' memuat naik resit cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ', resit ' + noResit + '). Sila sahkan dalam UTMPreneur.'],
+      ['Applicant ' + S(r.ID_Permohonan) + ' uploaded a deposit receipt. Please verify it in UTMPreneur.']);
+    return { id: S(r.ID_Permohonan), cagaran: senarai_(S(r.ID_Permohonan)) };
+  }
+
+  /** Muat turun resit: pemilik/ahli (pelajar) atau admin (diaudit). */
+  function failResit_(ctx, p) {
+    var c = byId_(S(p.id));
+    if (!c || !S(c.Fail_Resit)) throw appError_('RN_DOK_TIDAK_DITEMUI');
+    var r = RnU.perById(S(c.ID_Permohonan));
+    if (!r || !RnU.akses(ctx, r)) throw appError_('RN_DOK_TIDAK_DITEMUI');
+    return Files.read(S(c.Fail_Resit));
+  }
+  function adminFailResit_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var c = byId_(S(p.id));
+    if (!c || !S(c.Fail_Resit)) throw appError_('RN_DOK_TIDAK_DITEMUI');
+    Audit.log(ctx, 'PAPAR_RESIT_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), '', S(c.No_Resit_Rasmi), '');
+    return Files.read(S(c.Fail_Resit));
+  }
+
+  function sahkan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var idPer = '';
+    Db.withLock(function () {
+      var c = byId_(S(p.id));
+      if (!c) throw appError_('RN_TIDAK_DITEMUI');
+      if (S(c.Status) !== 'Menunggu Pengesahan') throw appError_('RN_CAGARAN_STATUS');
+      idPer = S(c.ID_Permohonan);
+      Db.update('Cagaran', c._row, { Status: 'Diterima', Disahkan_Oleh: ctx.email, Tarikh_Pengesahan: new Date() });
+      Audit.log(ctx, 'SAHKAN_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), 'Menunggu Pengesahan', 'Diterima', S(c.Jenis) + ' RM ' + S(c.Jumlah_RM) + ' | resit ' + S(c.No_Resit_Rasmi));
+    });
+    var r = RnU.perById(idPer);
+    RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Cagaran disahkan', 'Deposit verified',
+      ['Cagaran anda bagi ' + idPer + ' telah disahkan oleh UTMXCITE.'], ['Your deposit for ' + idPer + ' has been verified by UTMXCITE.']);
+    var akt = RnPerjanjian.cubaAktif(ctx, idPer);
+    var out = RnPer.adminButiran(ctx, { id: idPer });
+    out.aktivasi = akt;
+    return out;
+  }
+
+  function kembalikan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var cat = S(p.catatan).substr(0, 300);
+    if (!cat) throw appError_('RN_CATATAN_WAJIB');
+    var idPer = '';
+    Db.withLock(function () {
+      var c = byId_(S(p.id));
+      if (!c) throw appError_('RN_TIDAK_DITEMUI');
+      if (S(c.Status) !== 'Menunggu Pengesahan') throw appError_('RN_CAGARAN_STATUS');
+      idPer = S(c.ID_Permohonan);
+      Db.update('Cagaran', c._row, { Status: 'Belum Bayar', Catatan: cat });
+      Audit.log(ctx, 'KEMBALIKAN_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), 'Menunggu Pengesahan', 'Belum Bayar', cat);
+    });
+    var r = RnU.perById(idPer);
+    RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Resit cagaran dikembalikan', 'Deposit receipt returned',
+      ['Resit cagaran anda bagi ' + idPer + ' dikembalikan. Catatan: ' + cat + '. Sila muat naik resit yang betul.'], ['Your deposit receipt for ' + idPer + ' was returned. Note: ' + cat]);
+    return RnPer.adminButiran(ctx, { id: idPer });
+  }
+
+  /** Tarikh tamat kontrak berkesan bagi permohonan (sewaan atau tawaran). */
+  function tamatKontrak_(idPer) {
+    var r = RnU.perById(idPer);
+    var sew = r && S(r.ID_Sewaan) ? RnU.sewaanById(S(r.ID_Sewaan)) : null;
+    if (sew) return Util.toDate(sew.Tarikh_Tamat_Sebenar) || Util.toDate(sew.Tarikh_Tamat);
+    var t = RnU.tawaranById(idPer);
+    return t ? Util.toDate(t.Tarikh_Tamat) : null;
+  }
+
+  function pulang_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var idPer = '';
+    var e = {};
+    Db.withLock(function () {
+      var c = byId_(S(p.id));
+      if (!c) throw appError_('RN_TIDAK_DITEMUI');
+      if (S(c.Status) !== 'Diterima') throw appError_('RN_CAGARAN_STATUS');
+      idPer = S(c.ID_Permohonan);
+      var r = RnU.perById(idPer);
+      var sew = S(r.ID_Sewaan) ? RnU.sewaanById(S(r.ID_Sewaan)) : null;
+      var tamat = tamatKontrak_(idPer);
+      var gugur = ['Dibatalkan', 'Tawaran Luput', 'Ditolak Pemohon', 'Tamat'].indexOf(S(r.Status)) >= 0;
+      if (!(gugur || (sew && S(sew.Status) === 'Tamat') || (tamat && Util.daysBetween(new Date(), tamat) <= 0))) throw appError_('RN_CAGARAN_BELUM_TAMAT');
+      var jumlah = S(p.jumlah) === '' ? Number(c.Jumlah_RM) : Util.parseRm(p.jumlah);
+      if (jumlah === null || jumlah > Number(c.Jumlah_RM)) e.jumlah = 'Jumlah tidak sah (tidak melebihi RM ' + S(c.Jumlah_RM) + ') / Invalid amount';
+      var tarikh = S(p.tarikh) || RnU.dk(new Date());
+      if (!RnU.isDate(tarikh) || Util.daysBetween(new Date(), Util.toDate(tarikh)) > 0) e.tarikh = 'Tarikh tidak sah atau akan datang / Invalid or future date';
+      var sebab = S(p.sebab).substr(0, 300);
+      if (!e.jumlah && jumlah < Number(c.Jumlah_RM) && !sebab) e.sebab = 'Sebab potongan wajib / Reason for deduction required';
+      if (Object.keys(e).length) throw appError_('RN_CAGARAN_TIDAK_SAH', { medan: e });
+      Db.update('Cagaran', c._row, { Status: 'Dipulangkan', Jumlah_Pulang_RM: jumlah, Tarikh_Pulang: Util.toDate(tarikh), Sebab_Potongan: sebab });
+      Audit.log(ctx, 'PULANG_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), 'Diterima', 'Dipulangkan', 'RM ' + jumlah + (sebab ? ' | ' + sebab : ''));
+    });
+    var r2 = RnU.perById(idPer);
+    RnU.mel(RnU.emelOf(Util.normMatric(r2.No_Matrik)), 'Cagaran dipulangkan', 'Deposit returned',
+      ['Cagaran anda bagi ' + idPer + ' telah direkodkan sebagai dipulangkan.'], ['Your deposit for ' + idPer + ' has been recorded as returned.']);
+    return RnPer.adminButiran(ctx, { id: idPer });
+  }
+
+  function rampas_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var sebab = S(p.sebab).substr(0, 300);
+    if (!sebab) throw appError_('RN_CATATAN_WAJIB');
+    var idPer = '';
+    Db.withLock(function () {
+      var c = byId_(S(p.id));
+      if (!c) throw appError_('RN_TIDAK_DITEMUI');
+      if (S(c.Status) !== 'Diterima') throw appError_('RN_CAGARAN_STATUS');
+      idPer = S(c.ID_Permohonan);
+      Db.update('Cagaran', c._row, { Status: 'Dirampas', Jumlah_Pulang_RM: 0, Tarikh_Pulang: RnU.today(), Sebab_Potongan: sebab });
+      Audit.log(ctx, 'RAMPAS_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), 'Diterima', 'Dirampas', sebab);
+    });
+    return RnPer.adminButiran(ctx, { id: idPer });
+  }
+
+  /** Tetapkan tarikh akhir pulang (tamat kontrak + CAGARAN_PULANG_HARI) bagi cagaran yang diterima. Dipanggil dalam kunci. */
+  function tetapAkhirPulang_(idPer, tamat) {
+    var akhir = RnU.tambahHari(tamat, Cfg.num('CAGARAN_PULANG_HARI', 90));
+    semua_(idPer).forEach(function (c) {
+      if (['Diterima', 'Menunggu Pengesahan', 'Belum Bayar'].indexOf(S(c.Status)) >= 0) Db.update('Cagaran', c._row, { Tarikh_Akhir_Pulang: akhir });
+    });
+  }
+
+  function jobHarian_() {
+    var hasil = { peringatanBayar: 0, lewatBayar: 0, peringatanPulang: 0, lewatPulang: 0 };
+    var log = RnU.peringatan();
+    var sebelum = Cfg.num('CAGARAN_PERINGATAN_SEBELUM_HARI', 3);
+    var ambangPulang = RnTawaran.ambang('CAGARAN_PERINGATAN_HARI');
+    Db.rows('Cagaran').forEach(function (c) {
+      var idC = S(c.ID_Cagaran), idPer = S(c.ID_Permohonan);
+      var r = RnU.perById(idPer);
+      if (!r) return;
+      var st = S(c.Status);
+      if (st === 'Belum Bayar' && munasabah_(r) && c.Tarikh_Akhir_Bayar) {
+        var baki = Util.daysBetween(new Date(), c.Tarikh_Akhir_Bayar);
+        if (baki >= 0 && baki <= sebelum && !log.ada('RN_CAGARAN_SEBELUM_' + idC)) {
+          log.tambah('RN_CAGARAN_SEBELUM_' + idC, RnU.emelOf(Util.normMatric(r.No_Matrik)), idPer, baki + ' hari');
+          RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Peringatan: bayar cagaran', 'Reminder: pay your deposit',
+            ['Cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ') bagi ' + idPer + ' perlu dibayar selewat-lewatnya ' + Util.fmtTarikhBM(c.Tarikh_Akhir_Bayar) + '. Muat naik resit rasmi dalam UTMPreneur.'],
+            ['Your deposit (RM ' + S(c.Jumlah_RM) + ') for ' + idPer + ' is due by ' + RnU.dk(c.Tarikh_Akhir_Bayar) + '. Upload the official receipt in UTMPreneur.']);
+          hasil.peringatanBayar++;
+        } else if (baki < 0 && !log.ada('RN_CAGARAN_LEWAT_' + idC)) {
+          log.tambah('RN_CAGARAN_LEWAT_' + idC, '-', idPer, 'lewat');
+          RnU.melAdmin('Cagaran lewat dibayar', 'Deposit overdue',
+            ['Cagaran ' + S(c.Jenis) + ' bagi ' + idPer + ' belum dibayar selepas ' + Util.fmtTarikhBM(c.Tarikh_Akhir_Bayar) + '. Sila putuskan tindakan (tiada pembatalan automatik).'],
+            ['The deposit for ' + idPer + ' is overdue. Please decide on action (no automatic cancellation).']);
+          hasil.lewatBayar++;
+        }
+      }
+      if (st === 'Diterima' && c.Tarikh_Akhir_Pulang) {
+        var tamat = tamatKontrak_(idPer);
+        if (!tamat) return;
+        var hari = Util.daysBetween(tamat, new Date());
+        var maksPulang = Cfg.num('CAGARAN_PULANG_HARI', 90);
+        if (hari >= 0 && hari <= maksPulang) {
+          hasil.peringatanPulang += RnTawaran.peringatanBertingkat(log, 'RN_CAGARAN_PULANG_H', idC, hari, ambangPulang, function (a) {
+            RnU.melAdmin('Peringatan: pulangkan cagaran', 'Reminder: return the deposit',
+              ['Cagaran ' + S(c.Jenis) + ' bagi ' + idPer + ' (RM ' + S(c.Jumlah_RM) + ') perlu dipulangkan sebelum ' + Util.fmtTarikhBM(c.Tarikh_Akhir_Pulang) + ' (hari ke-' + a + ' selepas tamat kontrak).'],
+              ['The deposit for ' + idPer + ' must be returned before ' + RnU.dk(c.Tarikh_Akhir_Pulang) + '.']);
+          });
+        } else if (hari > maksPulang && !log.ada('RN_CAGARAN_LEWATPULANG_' + idC)) {
+          log.tambah('RN_CAGARAN_LEWATPULANG_' + idC, '-', idPer, 'lewat pulang');
+          RnU.melAdmin('Cagaran lewat dipulangkan', 'Deposit return overdue',
+            ['Cagaran ' + S(c.Jenis) + ' bagi ' + idPer + ' melepasi tarikh akhir pulang (' + Util.fmtTarikhBM(c.Tarikh_Akhir_Pulang) + ').'], ['The deposit for ' + idPer + ' is past its return deadline.']);
+          hasil.lewatPulang++;
+        }
+      }
+    });
+    return hasil;
+  }
+
+  return {
+    byId: byId_, semua: semua_, view: view_, senarai: senarai_, muatNaik: muatNaik_, failResit: failResit_, adminFailResit: adminFailResit_, sahkan: sahkan_,
+    kembalikan: kembalikan_, pulang: pulang_, rampas: rampas_, tetapAkhirPulang: tetapAkhirPulang_, tamatKontrak: tamatKontrak_, jobHarian: jobHarian_
+  };
+})();
+
+
+// ===== RuangNiagaDokumen.gs =====
+/**
+ * UTMPreneur: Ruang Niaga. Dokumen sewaan (tab Dokumen_Sewaan): surat tawaran (versi), rekod penerimaan, perjanjian,
+ * salinan bertandatangan, notis dan dokumen lain. Pemilik dan semua ahli pasukan SSU boleh melihat dan memuat turun
+ * bila-bila masa melalui pelayan (akses disemak pada setiap panggilan; tiada pautan Drive didedahkan).
+ */
+
+var RnDok = (function () {
+  function S(v) { return Util.str(v); }
+
+  function byId_(id) {
+    var l = Db.find('Dokumen_Sewaan', function (r) { return S(r.ID_Dokumen) === id; });
+    return l.length ? l[0] : null;
+  }
+  function semua_(idPer) {
+    return Db.find('Dokumen_Sewaan', function (r) { return S(r.ID_Permohonan) === idPer; });
+  }
+  /** Versi seterusnya bagi jenis dokumen. */
+  function versiSeterusnya_(idPer, jenis) {
+    var v = 0;
+    semua_(idPer).forEach(function (r) { if (S(r.Jenis) === jenis) v = Math.max(v, Number(r.Versi) || 0); });
+    return v + 1;
+  }
+  /** Tambah baris dokumen. MESTI dalam kunci. Pulang ID. */
+  function tambahLocked_(rec) {
+    var id = Util.formatId('DOK', null, Db.nextSeqLocked('DOK'), 4);
+    rec.ID_Dokumen = id;
+    rec.Tarikh = rec.Tarikh || new Date();
+    Db.append('Dokumen_Sewaan', rec);
+    return id;
+  }
+  function kemas_(id, patch) {
+    var d = byId_(id);
+    if (d) Db.update('Dokumen_Sewaan', d._row, patch);
+  }
+
+  function view_(d) {
+    var st = S(d.Status);
+    return {
+      id: S(d.ID_Dokumen), idPermohonan: S(d.ID_Permohonan), jenis: S(d.Jenis), versi: Number(d.Versi) || 1, tajuk: S(d.Tajuk),
+      tarikh: RnU.dk(d.Tarikh), masa: d.Tarikh ? Util.fmtDate(Util.toDate(d.Tarikh), 'dd/MM/yyyy HH:mm') : '', status: st, kelihatan: Util.truthy(d.Kelihatan),
+      catatan: S(d.Catatan), versiLama: st === 'Digantikan', dijanaOleh: S(d.Dijana_Oleh)
+    };
+  }
+
+  /** Lampiran 1 (sijil SSM daripada lampiran SSU), dilampirkan secara automatik sebaik perjanjian dijana (status Perjanjian ke atas). */
+  function lampiran1_(r) {
+    if (['Perjanjian', 'Sewaan Aktif'].indexOf(S(r.Status)) < 0) return null;
+    var ssu = RnU.ssuLulus(S(r.ID_Perniagaan));
+    if (!ssu || !S(ssu.Fail_SSM)) return null;
+    return {
+      id: 'LAMP1:' + S(r.ID_Permohonan), idPermohonan: S(r.ID_Permohonan), jenis: 'Lampiran', versi: 1, tajuk: 'Lampiran 1: Perakuan Pendaftaran SSM',
+      tarikh: '', masa: '', status: 'Lampiran', kelihatan: true, catatan: '', versiLama: false, dijanaOleh: ''
+    };
+  }
+
+  /** Senarai dokumen bagi permohonan. admin=true termasuk pratonton. */
+  function senarai_(r, admin) {
+    var l = semua_(S(r.ID_Permohonan)).filter(function (d) { return admin || Util.truthy(d.Kelihatan); }).map(view_);
+    l.sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+    var l1 = lampiran1_(r);
+    if (l1) l.push(l1);
+    return l;
+  }
+
+  function bacaDoc_(d) {
+    var f = Files.read(S(d.Fail));
+    f.nama = S(d.Nama_Fail) || f.nama;
+    return f;
+  }
+
+  /** Muat turun bagi pelajar (pemilik/ahli): akses disemak pada setiap panggilan. */
+  function fail_(ctx, p) {
+    var id = S(p.id);
+    if (id.indexOf('LAMP1:') === 0) {
+      var r1 = RnU.perById(id.substr(6));
+      if (!r1 || !RnU.akses(ctx, r1) || !lampiran1_(r1)) throw appError_('RN_DOK_TIDAK_DITEMUI');
+      var f = Files.read(S(RnU.ssuLulus(S(r1.ID_Perniagaan)).Fail_SSM));
+      f.nama = 'Lampiran 1 - Perakuan Pendaftaran SSM ' + S(r1.ID_Permohonan) + '.' + (S(f.nama).split('.').pop() || 'pdf');
+      return f;
+    }
+    var d = byId_(id);
+    if (!d) throw appError_('RN_DOK_TIDAK_DITEMUI');
+    var r = RnU.perById(S(d.ID_Permohonan));
+    if (!r || !RnU.akses(ctx, r) || !Util.truthy(d.Kelihatan)) throw appError_('RN_DOK_TIDAK_DITEMUI');
+    return bacaDoc_(d);
+  }
+
+  function adminFail_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var id = S(p.id);
+    if (id.indexOf('LAMP1:') === 0) {
+      var r1 = RnU.perById(id.substr(6));
+      var ssu = r1 ? RnU.ssuLulus(S(r1.ID_Perniagaan)) : null;
+      if (!ssu || !S(ssu.Fail_SSM)) throw appError_('RN_DOK_TIDAK_DITEMUI');
+      Audit.log(ctx, 'PAPAR_DOKUMEN_SEWAAN', 'Ruang Niaga', S(r1.ID_Permohonan), '', 'Lampiran 1', '');
+      return Files.read(S(ssu.Fail_SSM));
+    }
+    var d = byId_(id);
+    if (!d) throw appError_('RN_DOK_TIDAK_DITEMUI');
+    Audit.log(ctx, 'PAPAR_DOKUMEN_SEWAAN', 'Ruang Niaga', S(d.ID_Permohonan), '', S(d.Jenis) + ' v' + S(d.Versi), S(d.ID_Dokumen));
+    return bacaDoc_(d);
+  }
+
+  /** Admin memuat naik dokumen lain (PDF/JPG/PNG) yang kelihatan kepada pemilik dan ahli. */
+  function muatNaikAdmin_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var r = RnU.perById(S(p.idPermohonan));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var tajuk = S(p.tajuk).replace(/\s+/g, ' ').substr(0, 120);
+    var e = {};
+    if (!tajuk) e.tajuk = 'Wajib diisi / Required';
+    var v = null;
+    try { v = Files.validate(p.fail, ['pdf', 'jpg', 'jpeg', 'png']); } catch (err) { e.fail = 'Fail tidak sah (PDF/JPG/PNG) / Invalid file'; }
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    var stamp = Util.fmtDate(new Date(), 'yyyyMMddHHmm');
+    var url = Files.save('FLD_LAMPIRAN_LOT', 'DOK_' + S(r.ID_Permohonan) + '_' + stamp, v);
+    var id = Db.withLock(function () {
+      var nid = tambahLocked_({
+        ID_Permohonan: S(r.ID_Permohonan), ID_Sewaan: S(r.ID_Sewaan), Jenis: 'Lain', Versi: versiSeterusnya_(S(r.ID_Permohonan), 'Lain'), Tajuk: tajuk, Fail: url,
+        Nama_Fail: tajuk + '.' + v.ext, Dijana_Oleh: ctx.email, Status: 'Aktif', Kelihatan: 'Ya'
+      });
+      Audit.log(ctx, 'MUAT_NAIK_DOKUMEN_SEWAAN', 'Ruang Niaga', S(r.ID_Permohonan), '', tajuk, nid);
+      return nid;
+    });
+    RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Dokumen baharu dalam Ruang Niaga', 'New document in Business Premises',
+      ['UTMXCITE telah menambah dokumen "' + tajuk + '" bagi permohonan ' + S(r.ID_Permohonan) + '. Sila lihat dalam UTMPreneur.'],
+      ['UTMXCITE added the document "' + tajuk + '" for application ' + S(r.ID_Permohonan) + '. Please view it in UTMPreneur.']);
+    return { id: id };
+  }
+
+  return {
+    byId: byId_, semua: semua_, versiSeterusnya: versiSeterusnya_, tambahLocked: tambahLocked_, kemas: kemas_, view: view_, senarai: senarai_,
+    fail: fail_, adminFail: adminFail_, muatNaikAdmin: muatNaikAdmin_
+  };
+})();
+
+
+// ===== RuangNiagaLanjut.gs =====
+/**
+ * UTMPreneur: Ruang Niaga. Penghubung antara sub-modul: pendaftaran laluan RPC fasa 2 ke atas, butiran admin
+ * yang menggabungkan data sub-modul, dan kerja harian. Rujukan sub-modul dibuat di dalam fungsi sahaja.
+ */
+
+var RnLanjut = (function () {
+  function S(v) { return Util.str(v); }
+
+  /** Laluan tindakan pelajar (juga tersedia sebagai rn.bp.* bagi admin). */
+  function laluanPelajar(t) {
+    t['butiran'] = function (c, p) { return butiranPelajar_(c, p); };
+    t['dok.fail'] = function (c, p) { return RnDok.fail(c, p); };
+    t['tawaran.otp'] = function (c, p) { return RnTawaran.otpMinta(c, p); };
+    t['tawaran.jawab'] = function (c, p) { return RnTawaran.jawab(c, p); };
+    t['cagaran.muatnaik'] = function (c, p) { return RnCagaran.muatNaik(c, p); };
+    t['cagaran.fail'] = function (c, p) { return RnCagaran.failResit(c, p); };
+    t['perjanjian.muatnaik'] = function (c, p) { return RnPerjanjian.muatNaik(c, p); };
+    t['pekerja.simpan'] = function (c, p) { return RnPerjanjian.pekerjaSimpan(c, p); };
+    t['pekerja.buang'] = function (c, p) { return RnPerjanjian.pekerjaBuang(c, p); };
+    t['bil.bayar'] = function (c, p) { return RnSewa.bilBayar(c, p); };
+    t['bil.fail'] = function (c, p) { return RnSewa.bilFail(c, p); };
+  }
+
+  /** Butiran permohonan bagi pemilik/ahli (ahli: baca sahaja). */
+  function butiranPelajar_(ctx, p) {
+    var r = RnU.perById(S(p.id));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var akses = RnU.akses(ctx, r);
+    if (!akses) throw appError_('RN_TIDAK_DITEMUI');
+    if (typeof RnTawaran !== 'undefined') RnTawaran.semakLuput(S(r.ID_Permohonan));
+    r = RnU.perById(S(r.ID_Permohonan));
+    var lot = RnU.lotById(S(r.Kod_Lot));
+    var out = {
+      id: S(r.ID_Permohonan), akses: akses, bolehTindak: akses === 'pemilik', status: S(r.Status), ringkas: RnPer.ringkas(r),
+      lot: lot ? RnPer.lotView(lot) : null, borang: RnPer.borangOf(r),
+      tawaran: RnTawaran.untukPemohon(ctx, r), dokumen: RnDok.senarai(r, false),
+      cagaran: RnCagaran.senarai(S(r.ID_Permohonan)), perjanjian: RnPerjanjian.ringkas(S(r.ID_Permohonan)), pekerja: RnPerjanjian.senaraiPekerja(S(r.ID_Permohonan)),
+      bolehPekerja: ['Diterima', 'Perjanjian', 'Sewaan Aktif'].indexOf(S(r.Status)) >= 0, sewaan: RnSewa.untukPemohon(ctx, r)
+    };
+    return out;
+  }
+
+  /** Laluan admin: t[nama] = [fungsi peranan, fn]. */
+  function laluanAdmin(t, viewer, decider) {
+    t['admin.sesi.senarai'] = [viewer, function (c) { return RnNilai.sesiSenarai(c); }];
+    t['admin.sesi.butiran'] = [viewer, function (c, p) { return RnNilai.sesiButiran(c, p); }];
+    t['admin.sesi.simpan'] = [decider, function (c, p) { return RnNilai.sesiSimpan(c, p); }];
+    t['admin.sesi.mula'] = [decider, function (c, p) { return RnNilai.sesiMula(c, p); }];
+    t['admin.sesi.tutup'] = [decider, function (c, p) { return RnNilai.sesiTutup(c, p); }];
+    t['admin.sesi.bukaSemula'] = [decider, function (c, p) { return RnNilai.sesiBukaSemula(c, p); }];
+    t['admin.sesi.jemput'] = [decider, function (c, p) { return RnNilai.sesiJemput(c, p); }];
+    t['admin.sesi.skor'] = [viewer, function (c, p) { return RnNilai.skorButiran(c, p); }];
+    t['admin.sesi.skorBuka'] = [decider, function (c, p) { return RnNilai.skorBuka(c, p); }];
+    t['admin.tawaran.dapat'] = [viewer, function (c, p) { return RnTawaran.dapat(c, p); }];
+    t['admin.tawaran.simpan'] = [decider, function (c, p) { return RnTawaran.simpan(c, p); }];
+    t['admin.tawaran.jana'] = [decider, function (c, p) { return RnTawaran.jana(c, p); }];
+    t['admin.tawaran.hantar'] = [decider, function (c, p) { return RnTawaran.hantar(c, p); }];
+    t['admin.tawaran.rekod'] = [decider, function (c, p) { return RnTawaran.rekodSemula(c, p); }];
+    t['admin.salinan'] = [decider, function (c, p) { return RnTawaran.salinanFizikal(c, p); }];
+    t['admin.dok.fail'] = [viewer, function (c, p) { return RnDok.adminFail(c, p); }];
+    t['admin.dok.muatnaik'] = [decider, function (c, p) { return RnDok.muatNaikAdmin(c, p); }];
+    t['admin.cagaran.sahkan'] = [decider, function (c, p) { return RnCagaran.sahkan(c, p); }];
+    t['admin.cagaran.kembali'] = [decider, function (c, p) { return RnCagaran.kembalikan(c, p); }];
+    t['admin.cagaran.pulang'] = [decider, function (c, p) { return RnCagaran.pulang(c, p); }];
+    t['admin.cagaran.rampas'] = [decider, function (c, p) { return RnCagaran.rampas(c, p); }];
+    t['admin.cagaran.fail'] = [viewer, function (c, p) { return RnCagaran.adminFailResit(c, p); }];
+    t['admin.perjanjian.jana'] = [decider, function (c, p) { return RnPerjanjian.jana(c, p); }];
+    t['admin.perjanjian.sahkan'] = [decider, function (c, p) { return RnPerjanjian.sahkan(c, p); }];
+    t['admin.perjanjian.kembali'] = [decider, function (c, p) { return RnPerjanjian.kembalikan(c, p); }];
+    t['admin.perjanjian.tarikh'] = [decider, function (c, p) { return RnPerjanjian.tetapTarikh(c, p); }];
+    t['admin.pekerja.putus'] = [decider, function (c, p) { return RnPerjanjian.pekerjaPutus(c, p); }];
+    t['admin.peralatan.senarai'] = [viewer, function (c, p) { return RnPerjanjian.peralatanSenarai(c, p); }];
+    t['admin.peralatan.simpan'] = [decider, function (c, p) { return RnPerjanjian.peralatanSimpan(c, p); }];
+    t['admin.peralatan.buang'] = [decider, function (c, p) { return RnPerjanjian.peralatanBuang(c, p); }];
+    t['admin.sewaan.senarai'] = [viewer, function (c, p) { return RnSewa.adminSenarai(c, p); }];
+    t['admin.sewaan.butiran'] = [viewer, function (c, p) { return RnSewa.adminButiran(c, p); }];
+    t['admin.sewaan.tamat'] = [decider, function (c, p) { return RnSewa.tamat(c, p); }];
+    t['admin.sewaan.perbaharui'] = [decider, function (c, p) { return RnSewa.perbaharui(c, p); }];
+    t['admin.sewaan.sedia'] = [decider, function (c, p) { return RnSewa.daftarSedia(c, p); }];
+    t['admin.bil.senarai'] = [viewer, function (c, p) { return RnSewa.bilSenarai(c, p); }];
+    t['admin.bil.sahkan'] = [decider, function (c, p) { return RnSewa.bilSahkan(c, p); }];
+    t['admin.bil.kembali'] = [decider, function (c, p) { return RnSewa.bilKembalikan(c, p); }];
+    t['admin.bil.kecuali'] = [decider, function (c, p) { return RnSewa.bilKecuali(c, p); }];
+    t['admin.bil.utiliti'] = [decider, function (c, p) { return RnSewa.bilUtiliti(c, p); }];
+    t['admin.bil.fail'] = [viewer, function (c, p) { return RnSewa.adminBilFail(c, p); }];
+    t['admin.notis.jana'] = [decider, function (c, p) { return RnSewa.notisJana(c, p); }];
+    t['admin.dashboard'] = [viewer, function (c) { return RnSewa.dashboard(c); }];
+  }
+
+  /** Laluan lain: out[nama] = {auth, roles, matrik, fn}. Penilai: semakan keahlian sesi dibuat di pelayan. */
+  function laluanLain(out) {
+    out['rn.nilai.sesi'] = { auth: true, roles: ADMIN_ROLES, fn: function (c) { return RnNilai.nilaiSesi(c); } };
+    out['rn.nilai.buka'] = { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return RnNilai.nilaiBuka(c, p); } };
+    out['rn.nilai.simpan'] = { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return RnNilai.nilaiSimpan(c, p); } };
+    out['rn.nilai.fail'] = { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return RnNilai.nilaiFail(c, p); } };
+  }
+
+  /** Tambah bahagian sub-modul pada butiran permohonan (admin). */
+  function tambahButiran(ctx, r, out) {
+    var id = S(r.ID_Permohonan);
+    out.penilaian = RnNilai.ringkasPermohonan(id);
+    var t = RnU.tawaranById(id);
+    out.tawaran = t ? RnTawaran.view(t, RnTawaran.jadualOf(id)) : null;
+    out.dokumen = RnDok.senarai(r, true);
+    out.cagaran = RnCagaran.senarai(id);
+    out.perjanjian = RnPerjanjian.ringkas(id);
+    out.pekerja = RnPerjanjian.senaraiPekerja(id);
+    out.peralatan = RnPerjanjian.peralatanLot(S(r.Kod_Lot));
+  }
+
+  function jobHarian() {
+    var out = {};
+    [['tawaran', function () { return RnTawaran.jobHarian(); }], ['cagaran', function () { return RnCagaran.jobHarian(); }],
+      ['sewa', function () { return RnSewa.jobHarian(); }]].forEach(function (x) {
+      try { out[x[0]] = x[1](); } catch (e) { console.error('Kerja RN ' + x[0] + ' gagal: ' + e); out[x[0]] = { ralat: String(e) }; }
+    });
+    return out;
+  }
+
+  return { laluanPelajar: laluanPelajar, laluanAdmin: laluanAdmin, laluanLain: laluanLain, tambahButiran: tambahButiran, jobHarian: jobHarian };
+})();
+
+
+// ===== RuangNiagaMsg.gs =====
+/**
+ * UTMPreneur: mesej pengguna dwibahasa modul Ruang Niaga. Kunci = kod ralat (dikenali oleh appError_ dalam Util.gs).
+ */
+var MSG_RN = {
+  RN_BORANG_TIDAK_SAH: ['Maklumat tidak sah. Semak medan yang bertanda.', 'The details are invalid. Check the highlighted fields.'],
+  RN_TIDAK_DITEMUI: ['Rekod tidak ditemui.', 'Record not found.'],
+  RN_PERALIHAN_TIDAK_SAH: ['Tindakan ini tidak sah pada status semasa.', 'This action is not valid in the current status.'],
+  RN_CATATAN_WAJIB: ['Catatan wajib diisi untuk tindakan ini.', 'A note is required for this action.'],
+  RN_TEMPOH_TUTUP: ['Permohonan lot belum dibuka atau telah ditutup. Semak tempoh permohonan.', 'Lot applications are not open (or have closed). Check the application period.'],
+  RN_PERLU_SSU: ['Anda perlu mempunyai SSU yang diluluskan untuk memohon lot.', 'You need an approved SSU to apply for a lot.'],
+  RN_HANYA_PEMILIK: ['Hanya pemilik perniagaan boleh memohon atau bertindak. Ahli pasukan hanya boleh melihat dan memuat turun.', 'Only the business owner can apply or act. Team members can only view and download.'],
+  RN_SSU_TAMAT: ['SSU anda telah tamat tempoh. Sila perbaharui SSU sebelum memohon lot baharu.', 'Your SSU has expired. Please renew it before applying for a new lot.'],
+  RN_SUDAH_ADA_LOT: ['Anda atau ahli pasukan perniagaan anda sudah mempunyai permohonan atau sewaan lot yang aktif. Satu lot bagi satu pelajar.', 'You or a member of your business already has an active lot application or tenancy. One lot per student.'],
+  RN_LOT_TIDAK_TERSEDIA: ['Lot ini tidak lagi dibuka atau tidak kosong.', 'This lot is no longer open or is not vacant.'],
+  RN_LOT_TIDAK_KOSONG: ['Lot ini tidak kosong (sedang ditawarkan, disewa atau dalam penyelenggaraan).', 'This lot is not vacant (offered, rented or under maintenance).'],
+  RN_LOT_STATUS_SISTEM: ['Status lot Dipohon dan Disewa diurus oleh sistem dan tidak boleh diubah secara manual.', 'The Reserved and Rented lot statuses are managed by the system.'],
+  RN_SESI_TIDAK_DITEMUI: ['Sesi penilaian tidak ditemui.', 'Evaluation session not found.'],
+  RN_SESI_TIDAK_BERJALAN: ['Sesi penilaian tidak sedang berjalan.', 'The evaluation session is not in progress.'],
+  RN_SESI_DITUTUP: ['Sesi penilaian telah ditutup.', 'The evaluation session is closed.'],
+  RN_SESI_BELUM_LENGKAP: ['Sesi belum lengkap: ada penilai yang belum menghantar skor. Sahkan untuk menutup juga.', 'The session is incomplete: some evaluators have not submitted. Confirm to close anyway.'],
+  RN_BUKAN_PENILAI: ['Anda bukan penilai bagi sesi ini.', 'You are not an evaluator for this session.'],
+  RN_SKOR_TIDAK_SAH: ['Skor tidak sah. Semak tahap dan markah.', 'Invalid score. Check the levels and marks.'],
+  RN_SKOR_DIKUNCI: ['Skor anda telah dihantar dan dikunci. Minta admin membukanya semula jika perlu.', 'Your scores are submitted and locked. Ask an admin to reopen them if needed.'],
+  RN_TAWARAN_TIDAK_SAH: ['Maklumat tawaran tidak sah. Semak medan yang bertanda.', 'The offer details are invalid. Check the highlighted fields.'],
+  RN_TAWARAN_BELUM_JANA: ['Jana pratonton surat tawaran terkini dahulu sebelum menghantar.', 'Generate the latest offer letter preview before sending.'],
+  RN_TAWARAN_TIDAK_BOLEH: ['Tawaran tidak boleh diubah atau dijawab pada status semasa.', 'The offer cannot be changed or answered in its current status.'],
+  RN_TAWARAN_LUPUT: ['Tawaran ini telah luput.', 'This offer has expired.'],
+  RN_DOK_TIDAK_DITEMUI: ['Dokumen tidak ditemui.', 'Document not found.'],
+  RN_CAGARAN_TIDAK_SAH: ['Maklumat cagaran tidak sah. Semak medan yang bertanda.', 'The deposit details are invalid. Check the highlighted fields.'],
+  RN_CAGARAN_STATUS: ['Tindakan ini tidak sah pada status cagaran semasa.', 'This action is not valid for the current deposit status.'],
+  RN_CAGARAN_BELUM_TAMAT: ['Cagaran hanya boleh dipulangkan selepas sewaan ditamatkan atau kontrak tamat.', 'The deposit can only be returned after the tenancy has ended.'],
+  RN_PERJANJIAN_STATUS: ['Tindakan ini tidak sah pada status perjanjian semasa.', 'This action is not valid for the current agreement status.'],
+  RN_PERJANJIAN_SUDAH_SAH: ['Perjanjian telah disahkan dan tidak boleh dijana semula.', 'The agreement is already confirmed and cannot be regenerated.'],
+  RN_SEWAAN_TIDAK_DITEMUI: ['Sewaan tidak ditemui.', 'Tenancy not found.'],
+  RN_SEWAAN_STATUS: ['Tindakan ini tidak sah pada status sewaan semasa.', 'This action is not valid for the current tenancy status.'],
+  RN_BIL_TIDAK_DITEMUI: ['Bil sewa tidak ditemui.', 'Rent bill not found.'],
+  RN_BIL_STATUS: ['Tindakan ini tidak sah pada status bil semasa.', 'This action is not valid for the current bill status.'],
+  RN_PEKERJA_TIDAK_SAH: ['Maklumat pekerja tidak sah. Semak medan yang bertanda.', 'The staff details are invalid. Check the highlighted fields.'],
+  RN_SEDIA_TIDAK_SAH: ['Maklumat sewaan sedia ada tidak sah. Semak medan yang bertanda.', 'The existing tenancy details are invalid. Check the highlighted fields.'],
+  RN_OTP_PERLU: ['Masukkan kod OTP yang dihantar ke emel pemohon.', 'Enter the OTP sent to the applicant\'s email.']
+};
+
+
+// ===== RuangNiagaNilai.gs =====
+/**
+ * UTMPreneur: Ruang Niaga fasa 2. Penilaian jawatankuasa.
+ * Sesi penilaian (tarikh, masa, tempat, penilai, senarai disenarai pendek dengan slot pembentangan), skrin penilai
+ * (rubrik 6 kriteria, skala 5 tahap yang mengisi markah automatik dan boleh dilaras dalam julat tahap, simpan draf,
+ * hantar mengunci), kerahsiaan skor antara penilai sehingga sesi ditutup, purata dan kedudukan.
+ * Admin memutuskan selepas melihat kedudukan: tiada skor minimum dan tiada kelulusan automatik.
+ */
+
+var RnNilai = (function () {
+  var SKALA = [
+    { tahap: 5, pct: 100, bm: 'Cemerlang', en: 'Excellent' },
+    { tahap: 4, pct: 80, bm: 'Baik', en: 'Good' },
+    { tahap: 3, pct: 60, bm: 'Memuaskan', en: 'Satisfactory' },
+    { tahap: 2, pct: 40, bm: 'Kurang', en: 'Fair' },
+    { tahap: 1, pct: 20, bm: 'Lemah', en: 'Poor' }
+  ];
+  function S(v) { return Util.str(v); }
+
+  /** Julat markah bagi satu tahap: [bawah, atas]. Tahap 5: 80%-100%, ..., tahap 1: 0%-20% daripada maksimum. */
+  function julat_(maks, tahap) {
+    var pct = SKALA.filter(function (x) { return x.tahap === tahap; })[0].pct;
+    return [tahap === 1 ? 0 : maks * (pct - 20) / 100, maks * pct / 100];
+  }
+  function auto_(maks, tahap) { return julat_(maks, tahap)[1]; }
+  function r2_(n) { return Math.round(n * 100) / 100; }
+
+  function sesiRow_(id) {
+    var l = Db.find('Sesi_Penilaian', function (r) { return S(r.ID_Sesi) === id; });
+    return l.length ? l[0] : null;
+  }
+  function penilaiOf_(s) { return RnU.split(s.Penilai).map(Util.normEmail); }
+  function senaraiOf_(s) {
+    try { var a = JSON.parse(S(s.Senarai_Permohonan) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function namaAdmin_(emel) { var a = Admins.find(emel); return a ? a.nama : emel; }
+
+  /** Kriteria rubrik bagi versi. */
+  function rubrik_(versi) {
+    return Db.find('Rubrik', function (r) { return S(r.Jenis) === 'LOT' && Number(r.Versi) === Number(versi) && Util.truthy(r.Aktif); })
+      .sort(function (a, b) { return (Number(a.Tertib) || 0) - (Number(b.Tertib) || 0); })
+      .map(function (r) {
+        return { kod: S(r.Kod_Kriteria), bm: S(r.Kriteria_BM), en: S(r.Kriteria_EN), sub: S(r.Sub_Perkara), maks: Number(r.Markah_Maks) || 0,
+          tahap5: S(r.Tahap5), tahap3: S(r.Tahap3), tahap1: S(r.Tahap1) };
+      });
+  }
+  function versiTerkini_() {
+    var v = 0;
+    Db.rows('Rubrik').forEach(function (r) { if (S(r.Jenis) === 'LOT' && Util.truthy(r.Aktif)) v = Math.max(v, Number(r.Versi) || 0); });
+    return v || 1;
+  }
+
+  function skorRows_(idSesi, idPer, emel) {
+    return Db.find('Skor_Penilaian', function (r) {
+      return S(r.ID_Sesi) === idSesi && (!idPer || S(r.ID_Permohonan) === idPer) && (!emel || Util.normEmail(r.Emel_Penilai) === emel);
+    });
+  }
+
+  /** Keadaan seorang penilai bagi satu permohonan: {status: belum|draf|dihantar, jumlah, skor{kod:{tahap,markah,ulasan}}}. */
+  function keadaan_(rows, kriteria) {
+    var skor = {}, jumlah = 0, kunci = 0, ada = 0;
+    rows.forEach(function (r) {
+      var kod = S(r.Kod_Kriteria);
+      skor[kod] = { tahap: S(r.Tahap) === '' ? '' : Number(r.Tahap), markah: S(r.Markah) === '' ? '' : Number(r.Markah), ulasan: S(r.Ulasan) };
+      if (S(r.Markah) !== '') jumlah += Number(r.Markah) || 0;
+      if (Util.truthy(r.Dikunci)) kunci++;
+      ada++;
+    });
+    var lengkap = kriteria.length > 0 && kriteria.every(function (k) { return skor[k.kod] && skor[k.kod].tahap !== '' && skor[k.kod].markah !== ''; });
+    var status = !ada ? 'belum' : (kunci >= kriteria.length && lengkap ? 'dihantar' : 'draf');
+    return { status: status, jumlah: r2_(jumlah), skor: skor, lengkap: lengkap };
+  }
+
+  /** Ringkasan sesi: bagi setiap permohonan: penilai, purata dan kedudukan. */
+  function ringkasan_(s) {
+    var id = S(s.ID_Sesi);
+    var kriteria = rubrik_(s.Versi_Rubrik);
+    var penilai = penilaiOf_(s);
+    var all = Db.find('Skor_Penilaian', function (r) { return S(r.ID_Sesi) === id; });
+    var beza = Cfg.num('PENILAIAN_BEZA_JAUH', 20);
+    var list = senaraiOf_(s).map(function (it) {
+      var r = RnU.perById(S(it.id)) || {};
+      var per = RnU.perniagaan(S(r.ID_Perniagaan)) || {};
+      var pel = RnU.pelajar(Util.normMatric(r.No_Matrik)) || {};
+      var pn = penilai.map(function (e) {
+        var rows = all.filter(function (x) { return S(x.ID_Permohonan) === S(it.id) && Util.normEmail(x.Emel_Penilai) === e; });
+        var k = keadaan_(rows, kriteria);
+        return { emel: e, nama: namaAdmin_(e), status: k.status, jumlah: k.jumlah };
+      });
+      var hantar = pn.filter(function (x) { return x.status === 'dihantar'; });
+      var purata = hantar.length ? r2_(hantar.reduce(function (a, x) { return a + x.jumlah; }, 0) / hantar.length) : null;
+      var tot = hantar.map(function (x) { return x.jumlah; });
+      var selisih = tot.length >= 2 ? r2_(Math.max.apply(null, tot) - Math.min.apply(null, tot)) : 0;
+      return {
+        id: S(it.id), masa: S(it.masa), status: S(r.Status), perniagaan: S(per.Nama_Perniagaan), pemohon: S(pel.Nama_Penuh), kodLot: S(r.Kod_Lot),
+        penilai: pn, bilDihantar: hantar.length, purata: purata, kedudukan: null, selisih: selisih, bezaJauh: selisih >= beza
+      };
+    });
+    var ranked = list.filter(function (x) { return x.purata !== null; }).sort(function (a, b) { return b.purata - a.purata; });
+    ranked.forEach(function (x, i) {
+      x.kedudukan = (i > 0 && ranked[i - 1].purata === x.purata) ? ranked[i - 1].kedudukan : i + 1;
+    });
+    return { kriteria: kriteria, senarai: list };
+  }
+
+  function sesiView_(s) {
+    return {
+      id: S(s.ID_Sesi), tarikh: RnU.dk(s.Tarikh), masa: S(s.Masa), tempat: S(s.Tempat), status: S(s.Status), versiRubrik: Number(s.Versi_Rubrik) || 0,
+      penilai: penilaiOf_(s).map(function (e) { return { emel: e, nama: namaAdmin_(e) }; }), bilCalon: senaraiOf_(s).length,
+      jemputan: RnU.dk(s.Jemputan_Dihantar)
+    };
+  }
+
+  // ---------- Admin ----------
+  function sesiSenarai_(ctx) {
+    RnU.requireViewer(ctx);
+    var l = Db.rows('Sesi_Penilaian').map(sesiView_).sort(function (a, b) { return a.tarikh < b.tarikh ? 1 : -1; });
+    return { sesi: l, bolehUbah: RnU.isDecider(ctx), penilaiTersedia: penilaiTersedia_() };
+  }
+  function penilaiTersedia_() {
+    return Admins.list().filter(function (a) { return a.aktif; }).map(function (a) { return { emel: a.emel, nama: a.nama, peranan: a.peranan }; });
+  }
+
+  function sesiButiran_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var s = sesiRow_(S(p.id));
+    if (!s) throw appError_('RN_SESI_TIDAK_DITEMUI');
+    var rg = ringkasan_(s);
+    var dalam = {};
+    rg.senarai.forEach(function (x) { dalam[x.id] = true; });
+    var lain = {};
+    Db.rows('Sesi_Penilaian').forEach(function (x) {
+      if (S(x.ID_Sesi) !== S(s.ID_Sesi) && S(x.Status) !== 'Ditutup') senaraiOf_(x).forEach(function (it) { lain[S(it.id)] = true; });
+    });
+    var tersedia = Db.find('Permohonan_Lot', function (r) { return S(r.Status) === 'Disemak' && !dalam[S(r.ID_Permohonan)] && !lain[S(r.ID_Permohonan)]; }).map(function (r) {
+      var per = RnU.perniagaan(S(r.ID_Perniagaan)) || {};
+      return { id: S(r.ID_Permohonan), perniagaan: S(per.Nama_Perniagaan), kodLot: S(r.Kod_Lot) };
+    });
+    var v = sesiView_(s);
+    v.senarai = rg.senarai;
+    v.kriteria = rg.kriteria;
+    v.tersedia = tersedia;
+    v.penilaiTersedia = penilaiTersedia_();
+    v.bolehUbah = RnU.isDecider(ctx);
+    return v;
+  }
+
+  function sesiSimpan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    p = p || {};
+    var e = {};
+    var cur = null;
+    if (S(p.id)) { cur = sesiRow_(S(p.id)); if (!cur) throw appError_('RN_SESI_TIDAK_DITEMUI'); if (S(cur.Status) === 'Ditutup') throw appError_('RN_SESI_DITUTUP'); }
+    var tarikh = S(p.tarikh), masa = S(p.masa), tempat = S(p.tempat).substr(0, 200);
+    if (!RnU.isDate(tarikh)) e.tarikh = 'Tarikh tidak sah / Invalid date';
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(masa)) e.masa = 'Masa HH:MM / Time HH:MM';
+    if (!tempat) e.tempat = 'Wajib diisi / Required';
+    var penilai = (Array.isArray(p.penilai) ? p.penilai : []).map(Util.normEmail).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+    penilai.forEach(function (em) {
+      var a = Admins.find(em);
+      if (!a || !a.aktif) e.penilai = 'Penilai mesti akaun admin aktif: ' + em + ' / Evaluators must be active admin accounts';
+    });
+    var senarai = (Array.isArray(p.senarai) ? p.senarai : []).filter(function (x) { return x && S(x.id); });
+    var ids = {};
+    var sedia = cur ? senaraiOf_(cur) : [];
+    var lain = {};
+    Db.rows('Sesi_Penilaian').forEach(function (x) {
+      if ((!cur || S(x.ID_Sesi) !== S(cur.ID_Sesi)) && S(x.Status) !== 'Ditutup') senaraiOf_(x).forEach(function (it) { lain[S(it.id)] = true; });
+    });
+    var baru = senarai.map(function (x) {
+      var id = S(x.id), sl = S(x.masa);
+      var r = RnU.perById(id);
+      if (!r) { e.senarai = 'Permohonan tidak ditemui: ' + id + ' / Application not found'; return null; }
+      if (ids[id]) { e.senarai = 'Permohonan pendua: ' + id + ' / Duplicate'; return null; }
+      ids[id] = true;
+      var dalamSesiIni = sedia.some(function (y) { return S(y.id) === id; });
+      if (!dalamSesiIni && S(r.Status) !== 'Disemak') e.senarai = id + ' mesti berstatus Disemak / must be Disemak';
+      if (lain[id]) e.senarai = id + ' sudah dalam sesi lain / already in another session';
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(sl)) e.senarai = 'Slot masa HH:MM diperlukan untuk ' + id + ' / Time slot required';
+      return { id: id, masa: sl };
+    }).filter(Boolean);
+    // pembuangan: tidak boleh jika sudah ada skor
+    sedia.forEach(function (y) {
+      if (ids[S(y.id)]) return;
+      if (cur && skorRows_(S(cur.ID_Sesi), S(y.id)).length) e.senarai = S(y.id) + ' sudah ada skor dan tidak boleh dibuang / already has scores and cannot be removed';
+    });
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    var id = Db.withLock(function () {
+      var sid = cur ? S(cur.ID_Sesi) : Util.formatId('SES', parseInt(Util.fmtDate(new Date(), 'yyyy'), 10), Db.nextSeqLocked('SES_' + Util.fmtDate(new Date(), 'yyyy')), 4);
+      var rec = {
+        ID_Sesi: sid, Tarikh: Util.toDate(tarikh), Masa: masa, Tempat: tempat, Penilai: penilai.join(','), Senarai_Permohonan: JSON.stringify(baru)
+      };
+      if (cur) Db.update('Sesi_Penilaian', cur._row, rec);
+      else { rec.Status = 'Dirancang'; rec.Versi_Rubrik = versiTerkini_(); rec.Dicipta_Oleh = ctx.email; Db.append('Sesi_Penilaian', rec); }
+      // status permohonan: ditambah -> Disenarai Pendek; dibuang -> Disemak
+      baru.forEach(function (it) {
+        var r = RnU.perById(it.id);
+        if (S(r.Status) === 'Disemak') Db.update('Permohonan_Lot', r._row, { Status: 'Disenarai Pendek' });
+      });
+      sedia.forEach(function (y) {
+        if (ids[S(y.id)]) return;
+        var r = RnU.perById(S(y.id));
+        if (r && S(r.Status) === 'Disenarai Pendek') Db.update('Permohonan_Lot', r._row, { Status: 'Disemak' });
+      });
+      Audit.log(ctx, cur ? 'KEMAS_KINI_SESI_PENILAIAN' : 'CIPTA_SESI_PENILAIAN', 'Ruang Niaga', sid, '', baru.length + ' calon, ' + penilai.length + ' penilai', tarikh + ' ' + masa);
+      return sid;
+    });
+    return sesiButiran_(ctx, { id: id });
+  }
+
+  function sesiMula_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = Db.withLock(function () {
+      var s = sesiRow_(S(p.id));
+      if (!s) throw appError_('RN_SESI_TIDAK_DITEMUI');
+      if (S(s.Status) !== 'Dirancang') throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      if (!penilaiOf_(s).length || !senaraiOf_(s).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { penilai: 'Perlu sekurang-kurangnya seorang penilai dan seorang calon / At least one evaluator and one candidate' } });
+      Db.update('Sesi_Penilaian', s._row, { Status: 'Berjalan' });
+      Audit.log(ctx, 'MULA_SESI_PENILAIAN', 'Ruang Niaga', S(s.ID_Sesi), 'Dirancang', 'Berjalan', '');
+      return S(s.ID_Sesi);
+    });
+    var s2 = sesiRow_(id);
+    penilaiOf_(s2).forEach(function (e) {
+      RnU.mel(e, 'Sesi penilaian permohonan lot bermula', 'Lot evaluation session started',
+        ['Sesi penilaian ' + id + ' (' + Util.fmtTarikhBM(s2.Tarikh) + ', ' + S(s2.Masa) + ', ' + S(s2.Tempat) + ') telah bermula. Sila log masuk UTMPreneur untuk menilai.'],
+        ['Evaluation session ' + id + ' has started. Please sign in to UTMPreneur to evaluate.']);
+    });
+    return sesiButiran_(ctx, { id: id });
+  }
+
+  function belumHantar_(s) {
+    var rg = ringkasan_(s), out = [];
+    rg.senarai.forEach(function (x) {
+      x.penilai.forEach(function (pn) { if (pn.status !== 'dihantar') out.push({ id: x.id, perniagaan: x.perniagaan, penilai: pn.nama, status: pn.status }); });
+    });
+    return out;
+  }
+
+  function sesiTutup_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var s0 = sesiRow_(S(p.id));
+    if (!s0) throw appError_('RN_SESI_TIDAK_DITEMUI');
+    if (S(s0.Status) !== 'Berjalan') throw appError_('RN_SESI_TIDAK_BERJALAN');
+    var belum = belumHantar_(s0);
+    if (belum.length && p.paksa !== true) throw appError_('RN_SESI_BELUM_LENGKAP', { belum: belum });
+    Db.withLock(function () {
+      var s = sesiRow_(S(p.id));
+      if (S(s.Status) !== 'Berjalan') throw appError_('RN_SESI_TIDAK_BERJALAN');
+      var rg = ringkasan_(s);
+      Db.update('Sesi_Penilaian', s._row, { Status: 'Ditutup' });
+      rg.senarai.forEach(function (x) {
+        var r = RnU.perById(x.id);
+        if (r && S(r.Status) === 'Disenarai Pendek' && x.bilDihantar > 0) Db.update('Permohonan_Lot', r._row, { Status: 'Dinilai' });
+      });
+      Audit.log(ctx, 'TUTUP_SESI_PENILAIAN', 'Ruang Niaga', S(s.ID_Sesi), 'Berjalan', 'Ditutup', belum.length ? 'Ditutup dengan ' + belum.length + ' penilaian belum hantar' : '');
+    });
+    return sesiButiran_(ctx, { id: S(p.id) });
+  }
+
+  function sesiBukaSemula_(ctx, p) {
+    RnU.requireDecider(ctx);
+    Db.withLock(function () {
+      var s = sesiRow_(S(p.id));
+      if (!s) throw appError_('RN_SESI_TIDAK_DITEMUI');
+      if (S(s.Status) !== 'Ditutup') throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      var senarai = senaraiOf_(s);
+      var lewat = senarai.some(function (it) { var r = RnU.perById(S(it.id)); return r && ['Dinilai', 'Disenarai Pendek', 'Ditolak', 'Dibatalkan'].indexOf(S(r.Status)) < 0; });
+      if (lewat) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      senarai.forEach(function (it) {
+        var r = RnU.perById(S(it.id));
+        if (r && S(r.Status) === 'Dinilai') Db.update('Permohonan_Lot', r._row, { Status: 'Disenarai Pendek' });
+      });
+      Db.update('Sesi_Penilaian', s._row, { Status: 'Berjalan' });
+      Audit.log(ctx, 'BUKA_SEMULA_SESI_PENILAIAN', 'Ruang Niaga', S(s.ID_Sesi), 'Ditutup', 'Berjalan', S(p.catatan).substr(0, 300));
+    });
+    return sesiButiran_(ctx, { id: S(p.id) });
+  }
+
+  function sesiJemput_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var s = sesiRow_(S(p.id));
+    if (!s) throw appError_('RN_SESI_TIDAK_DITEMUI');
+    if (S(s.Status) === 'Ditutup') throw appError_('RN_SESI_DITUTUP');
+    var n = 0;
+    senaraiOf_(s).forEach(function (it) {
+      var r = RnU.perById(S(it.id));
+      if (!r || ['Disenarai Pendek', 'Dinilai'].indexOf(S(r.Status)) < 0) return;
+      var ok = RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Jemputan pembentangan permohonan lot', 'Invitation to present your lot application',
+        ['Permohonan lot anda (' + S(r.ID_Permohonan) + ') telah disenarai pendek. Anda dijemput hadir membentang pada ' + Util.fmtTarikhBM(s.Tarikh) + ', pukul ' + S(it.masa) + ', di ' + S(s.Tempat) + '.'],
+        ['Your lot application (' + S(r.ID_Permohonan) + ') has been shortlisted. You are invited to present on ' + RnU.dk(s.Tarikh) + ' at ' + S(it.masa) + ', ' + S(s.Tempat) + '.']);
+      if (ok) n++;
+    });
+    Db.withLock(function () {
+      var s2 = sesiRow_(S(p.id));
+      Db.update('Sesi_Penilaian', s2._row, { Jemputan_Dihantar: new Date() });
+      Audit.log(ctx, 'HANTAR_JEMPUTAN_PENILAIAN', 'Ruang Niaga', S(s.ID_Sesi), '', String(n), '');
+    });
+    var out = sesiButiran_(ctx, { id: S(p.id) });
+    out.jemputanDihantar = n;
+    return out;
+  }
+
+  /** Admin buka semula kunci seorang penilai bagi satu permohonan (sesi mesti Berjalan). */
+  function skorBuka_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var emel = Util.normEmail(p.emel);
+    Db.withLock(function () {
+      var s = sesiRow_(S(p.sesi));
+      if (!s) throw appError_('RN_SESI_TIDAK_DITEMUI');
+      if (S(s.Status) !== 'Berjalan') throw appError_('RN_SESI_TIDAK_BERJALAN');
+      var rows = skorRows_(S(s.ID_Sesi), S(p.permohonan), emel);
+      if (!rows.length) throw appError_('RN_TIDAK_DITEMUI');
+      rows.forEach(function (r) { Db.update('Skor_Penilaian', r._row, { Dikunci: '', Masa_Hantar: '' }); });
+      Audit.log(ctx, 'BUKA_SEMULA_SKOR', 'Ruang Niaga', S(p.permohonan), 'Dikunci', 'Dibuka', S(s.ID_Sesi) + ' | ' + emel);
+    });
+    RnU.mel(emel, 'Skor anda dibuka semula', 'Your scores were reopened',
+      ['Skor penilaian anda bagi ' + S(p.permohonan) + ' telah dibuka semula oleh admin. Sila semak dan hantar semula.'],
+      ['Your evaluation of ' + S(p.permohonan) + ' was reopened by an admin. Please review and submit again.']);
+    return sesiButiran_(ctx, { id: S(p.sesi) });
+  }
+
+  /** Skor terperinci semua penilai bagi satu permohonan (admin sahaja). */
+  function skorButiran_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var s = sesiRow_(S(p.sesi));
+    if (!s) throw appError_('RN_SESI_TIDAK_DITEMUI');
+    var kriteria = rubrik_(s.Versi_Rubrik);
+    var penilai = penilaiOf_(s).map(function (e) {
+      var k = keadaan_(skorRows_(S(s.ID_Sesi), S(p.permohonan), e), kriteria);
+      return { emel: e, nama: namaAdmin_(e), status: k.status, jumlah: k.jumlah, skor: k.skor };
+    });
+    return { sesi: S(s.ID_Sesi), permohonan: S(p.permohonan), kriteria: kriteria, penilai: penilai };
+  }
+
+  // ---------- Penilai ----------
+  function pastikanPenilai_(ctx, s) {
+    if (penilaiOf_(s).indexOf(Util.normEmail(ctx.email)) < 0) throw appError_('RN_BUKAN_PENILAI');
+  }
+  function sesiPenilai_(ctx, id) {
+    var s = sesiRow_(id);
+    if (!s) throw appError_('RN_SESI_TIDAK_DITEMUI');
+    pastikanPenilai_(ctx, s);
+    if (['Berjalan', 'Ditutup'].indexOf(S(s.Status)) < 0) throw appError_('RN_SESI_TIDAK_BERJALAN');
+    return s;
+  }
+  function dalamSenarai_(s, idPer) {
+    var it = senaraiOf_(s).filter(function (x) { return S(x.id) === idPer; })[0];
+    if (!it) throw appError_('RN_TIDAK_DITEMUI');
+    return it;
+  }
+
+  function maskKp_(kp) { var x = S(kp); return x.length <= 4 ? x : x.substr(0, 2) + '****' + x.substr(-3); }
+
+  function calon_(ctx, r) {
+    var m = Util.normMatric(r.No_Matrik);
+    var pel = RnU.pelajar(m) || {};
+    var per = RnU.perniagaan(S(r.ID_Perniagaan)) || {};
+    var ssu = RnU.ssuLulus(S(per.ID_Perniagaan)) || {};
+    var lot = RnU.lotById(S(r.Kod_Lot));
+    return {
+      id: S(r.ID_Permohonan), namaPelajar: S(pel.Nama_Penuh), noMatrik: m, noKp: ctx.role === ROLE.ADMIN_PENUH ? S(pel.No_KP_Pasport) : maskKp_(pel.No_KP_Pasport),
+      tahun: S(pel.Tahun_Pengajian), fakulti: S(pel.Fakulti), kursus: S(pel.Program), namaSyarikat: S(per.Nama_Perniagaan), noSsm: S(ssu.No_SSM),
+      jenisPerniagaan: S(ssu.Jenis_Perniagaan) ? Ref.bm('JENIS_PERNIAGAAN', S(ssu.Jenis_Perniagaan)) : '',
+      produk: RnU.split(ssu.Produk).map(function (k) { return Ref.bm('PRODUK', k); }),
+      lot: RnU.namaLot(lot), tempohMula: RnU.dk(r.Tempoh_Mula), tempohTamat: RnU.dk(r.Tempoh_Tamat), jumlahDana: S(r.Jumlah_Dana_RM), jualan: S(r.Jangkaan_Jualan_RM),
+      bilPekerja: S(r.Bil_Pekerja), sebab: S(r.Sebab_Berniaga), lokasi: S(r.Lokasi_Dirancang), adaCadangan: !!S(r.Fail_Cadangan)
+    };
+  }
+
+  /** Paparan sesi untuk penilai: tanpa senarai penilai lain. */
+  function sesiViewPenilai_(s) {
+    var v = sesiView_(s);
+    v.bilPenilai = v.penilai.length;
+    delete v.penilai;
+    return v;
+  }
+
+  function nilaiSesi_(ctx) {
+    var email = Util.normEmail(ctx.email);
+    var out = [];
+    Db.rows('Sesi_Penilaian').forEach(function (s) {
+      if (penilaiOf_(s).indexOf(email) < 0 || ['Berjalan', 'Ditutup'].indexOf(S(s.Status)) < 0) return;
+      var kriteria = rubrik_(s.Versi_Rubrik);
+      var tutup = S(s.Status) === 'Ditutup';
+      var rg = tutup ? ringkasan_(s) : null;
+      var calon = senaraiOf_(s).map(function (it) {
+        var r = RnU.perById(S(it.id)) || {};
+        var per = RnU.perniagaan(S(r.ID_Perniagaan)) || {};
+        var k = keadaan_(skorRows_(S(s.ID_Sesi), S(it.id), email), kriteria);
+        var o = { id: S(it.id), masa: S(it.masa), perniagaan: S(per.Nama_Perniagaan), status: k.status, jumlah: k.jumlah };
+        if (tutup) {
+          var x = rg.senarai.filter(function (y) { return y.id === S(it.id); })[0];
+          if (x) { o.purata = x.purata; o.kedudukan = x.kedudukan; }
+        }
+        return o;
+      });
+      var v = sesiViewPenilai_(s);
+      v.calon = calon;
+      out.push(v);
+    });
+    return { sesi: out };
+  }
+
+  function nilaiBuka_(ctx, p) {
+    var s = sesiPenilai_(ctx, S(p.sesi));
+    var it = dalamSenarai_(s, S(p.permohonan));
+    var r = RnU.perById(S(it.id));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var kriteria = rubrik_(s.Versi_Rubrik);
+    var k = keadaan_(skorRows_(S(s.ID_Sesi), S(it.id), Util.normEmail(ctx.email)), kriteria);
+    var out = {
+      sesi: sesiViewPenilai_(s), masa: S(it.masa), calon: calon_(ctx, r), kriteria: kriteria, skala: SKALA, skor: k.skor, jumlah: k.jumlah, status: k.status,
+      dikunci: k.status === 'dihantar', boleh: S(s.Status) === 'Berjalan' && k.status !== 'dihantar'
+    };
+    if (S(s.Status) === 'Ditutup') {
+      var x = ringkasan_(s).senarai.filter(function (y) { return y.id === S(it.id); })[0];
+      if (x) out.ranking = { purata: x.purata, kedudukan: x.kedudukan, bilDihantar: x.bilDihantar };
+    }
+    return out;
+  }
+
+  function nilaiSimpan_(ctx, p) {
+    var s = sesiPenilai_(ctx, S(p.sesi));
+    if (S(s.Status) !== 'Berjalan') throw appError_('RN_SESI_DITUTUP');
+    var it = dalamSenarai_(s, S(p.permohonan));
+    var email = Util.normEmail(ctx.email);
+    var kriteria = rubrik_(s.Versi_Rubrik);
+    var byKod = {};
+    kriteria.forEach(function (k) { byKod[k.kod] = k; });
+    var e = {}, baru = {};
+    (Array.isArray(p.skor) ? p.skor : []).forEach(function (x) {
+      var kod = S(x && x.kod), k = byKod[kod];
+      if (!k) { e._ = 'Kriteria tidak dikenali / Unknown criterion'; return; }
+      var tahap = S(x.tahap) === '' ? '' : parseInt(x.tahap, 10);
+      var markahRaw = S(x.markah);
+      var ulasan = S(x.ulasan).replace(/\s+/g, ' ').substr(0, 500);
+      if (tahap === '' && markahRaw === '') { if (ulasan) baru[kod] = { tahap: '', markah: '', ulasan: ulasan }; return; }
+      if (tahap === '' || isNaN(tahap) || tahap < 1 || tahap > 5) { e[kod] = 'Pilih tahap / Choose a level'; return; }
+      var markah;
+      if (markahRaw === '') markah = auto_(k.maks, tahap);
+      else if (!/^\d+(\.\d{1,2})?$/.test(markahRaw)) { e[kod] = 'Markah tidak sah / Invalid mark'; return; }
+      else markah = parseFloat(markahRaw);
+      var j = julat_(k.maks, tahap);
+      if (markah < j[0] - 1e-9 || markah > j[1] + 1e-9 || markah > k.maks) { e[kod] = 'Markah mesti antara ' + j[0] + ' dan ' + j[1] + ' bagi tahap ini / Mark must be between ' + j[0] + ' and ' + j[1]; return; }
+      baru[kod] = { tahap: tahap, markah: r2_(markah), ulasan: ulasan };
+    });
+    var hantar = p.hantar === true;
+    return Db.withLock(function () {
+      var rows = skorRows_(S(s.ID_Sesi), S(it.id), email);
+      var k0 = keadaan_(rows, kriteria);
+      if (k0.status === 'dihantar') throw appError_('RN_SKOR_DIKUNCI');
+      if (S(sesiRow_(S(s.ID_Sesi)).Status) !== 'Berjalan') throw appError_('RN_SESI_DITUTUP');
+      // gabung dengan draf sedia ada untuk semakan kelengkapan
+      var gab = {};
+      Object.keys(k0.skor).forEach(function (kod) { gab[kod] = k0.skor[kod]; });
+      Object.keys(baru).forEach(function (kod) { gab[kod] = baru[kod]; });
+      if (hantar) {
+        kriteria.forEach(function (k) { if (!gab[k.kod] || gab[k.kod].tahap === '' || gab[k.kod].markah === '') e[k.kod] = e[k.kod] || 'Lengkapkan kriteria ini / Complete this criterion'; });
+      }
+      if (Object.keys(e).length) throw appError_('RN_SKOR_TIDAK_SAH', { medan: e });
+      var now = new Date();
+      Object.keys(baru).forEach(function (kod) {
+        var ex = rows.filter(function (r) { return S(r.Kod_Kriteria) === kod; })[0];
+        var rec = { Tahap: baru[kod].tahap, Markah: baru[kod].markah, Ulasan: baru[kod].ulasan, Masa_Simpan: now };
+        if (ex) Db.update('Skor_Penilaian', ex._row, rec);
+        else {
+          rec.ID_Sesi = S(s.ID_Sesi); rec.ID_Permohonan = S(it.id); rec.Emel_Penilai = email; rec.Kod_Kriteria = kod; rec.Dikunci = '';
+          Db.append('Skor_Penilaian', rec);
+        }
+      });
+      if (hantar) {
+        skorRows_(S(s.ID_Sesi), S(it.id), email).forEach(function (r) { Db.update('Skor_Penilaian', r._row, { Dikunci: 'Ya', Masa_Hantar: now }); });
+        var tot = 0;
+        kriteria.forEach(function (k) { tot += gab[k.kod].markah; });
+        Audit.log(ctx, 'HANTAR_SKOR_PENILAIAN', 'Ruang Niaga', S(it.id), '', String(r2_(tot)), S(s.ID_Sesi));
+      }
+      return nilaiBuka_(ctx, { sesi: S(s.ID_Sesi), permohonan: S(it.id) });
+    });
+  }
+
+  function nilaiFail_(ctx, p) {
+    var s = sesiPenilai_(ctx, S(p.sesi));
+    var it = dalamSenarai_(s, S(p.permohonan));
+    var r = RnU.perById(S(it.id));
+    if (!r || !S(r.Fail_Cadangan)) throw appError_('FAIL_TIDAK_DITEMUI');
+    Audit.log(ctx, 'PAPAR_CADANGAN_PENILAI', 'Ruang Niaga', S(it.id), '', S(s.ID_Sesi), '');
+    return Files.read(S(r.Fail_Cadangan));
+  }
+
+  /** Ringkasan penilaian bagi satu permohonan (untuk butiran admin). */
+  function ringkasPermohonan_(idPer) {
+    var out = null;
+    Db.rows('Sesi_Penilaian').forEach(function (s) {
+      if (!senaraiOf_(s).some(function (it) { return S(it.id) === idPer; })) return;
+      var x = ringkasan_(s).senarai.filter(function (y) { return y.id === idPer; })[0];
+      out = { sesi: S(s.ID_Sesi), statusSesi: S(s.Status), tarikh: RnU.dk(s.Tarikh), masa: x.masa, purata: x.purata, kedudukan: x.kedudukan, bilDihantar: x.bilDihantar,
+        bilPenilai: x.penilai.length, selisih: x.selisih, bezaJauh: x.bezaJauh };
+    });
+    return out;
+  }
+
+  return {
+    SKALA: SKALA, julat: julat_, sesiSenarai: sesiSenarai_, sesiButiran: sesiButiran_, sesiSimpan: sesiSimpan_, sesiMula: sesiMula_, sesiTutup: sesiTutup_,
+    sesiBukaSemula: sesiBukaSemula_, sesiJemput: sesiJemput_, skorBuka: skorBuka_, skorButiran: skorButiran_, nilaiSesi: nilaiSesi_, nilaiBuka: nilaiBuka_,
+    nilaiSimpan: nilaiSimpan_, nilaiFail: nilaiFail_, ringkasPermohonan: ringkasPermohonan_
+  };
+})();
+
+
+// ===== RuangNiagaPerjanjian.gs =====
+/**
+ * UTMPreneur: Ruang Niaga fasa 4. Perjanjian penyewaan (templat Google Docs F&B / bukan F&B), salinan bertandatangan,
+ * senarai pekerja penyewa (Lampiran 2), peralatan universiti per lot (Lampiran 3) dan pengaktifan sewaan.
+ * Perjanjian dicetak, ditandatangani, salinan bertandatangan dimuat naik pemilik dan disahkan admin.
+ * Sewaan aktif hanya selepas perjanjian disahkan DAN cagaran sewaan disahkan (atau tiada cagaran sewaan).
+ */
+
+var RnPerjanjian = (function () {
+  function S(v) { return Util.str(v); }
+
+  // ---------- Dokumen perjanjian ----------
+  /** Dokumen perjanjian semasa (bukan Digantikan) atau null. */
+  function semasa_(idPer) {
+    var l = RnDok.semua(idPer).filter(function (d) { return S(d.Jenis) === 'Perjanjian' && S(d.Status) !== 'Digantikan'; });
+    return l.length ? l[l.length - 1] : null;
+  }
+  function salinanTerkini_(idPer) {
+    var l = RnDok.semua(idPer).filter(function (d) { return S(d.Jenis) === 'Perjanjian Bertandatangan' && S(d.Status) !== 'Digantikan'; });
+    return l.length ? l[l.length - 1] : null;
+  }
+
+  function teksPekerja_(idPer) {
+    var l = pekerjaDiluluskan_(idPer);
+    return l.length ? l.map(function (x, i) { return (i + 1) + '. ' + x.nama + ', umur ' + x.umur + ', ' + (x.fakulti || '-') + ', ' + x.tugas; }).join('\n') : '(tiada pekerja didaftarkan)';
+  }
+  function teksPeralatan_(kodLot) {
+    var l = peralatanLot_(kodLot);
+    return l.length ? l.map(function (x, i) { return (i + 1) + '. ' + x.nama + ' - ' + x.bilangan; }).join('\n') : '(tiada peralatan Universiti)';
+  }
+
+  function dataPerjanjian_(r, t, tarikhPerjanjian, jadualOpt) {
+    var k = RnTawaran.konteks(r);
+    var id = S(r.ID_Permohonan);
+    var jadual = jadualOpt || RnTawaran.jadualOf(id);
+    var d = {
+      no_rujukan: S(t.No_Rujukan), tarikh_perjanjian: Util.fmtTarikhBM(tarikhPerjanjian), tarikh_surat_setuju_terima: Util.fmtTarikhBM(t.Tarikh_Surat),
+      id_permohonan: id, nama_syarikat: S(k.per.Nama_Perniagaan), no_ssm: S(k.ssu.No_SSM),
+      no_pendaftaran_syarikat: S(k.ssu.No_SSM) || ('Dalam proses (' + S(k.per.No_Pendaftaran) + ')'),
+      alamat_syarikat: RnTawaran.alamatPenyewa(k), nama_wakil: S(k.pel.Nama_Penuh), jawatan_wakil: 'Pemilik', no_matrik: k.m,
+      no_telefon_syarikat: S(k.pel.No_Telefon), emel_syarikat: RnU.emelOf(k.m),
+      kod_lot: S(k.lot.Kod_Lot), nama_lot: RnU.namaLot(k.lot), alamat_lot: RnU.alamatLot(k.lot), jenis_perniagaan: S(t.Jenis_Perniagaan),
+      tarikh_mula: Util.fmtTarikhBM(t.Tarikh_Mula), tarikh_tamat: Util.fmtTarikhBM(t.Tarikh_Tamat), bil_bulan: String(Number(t.Bil_Bulan) || ''),
+      tempoh_kontrak: Util.fmtTarikhBM(t.Tarikh_Mula) + ' hingga ' + Util.fmtTarikhBM(t.Tarikh_Tamat) + ' (' + (Number(t.Bil_Bulan) || '') + ' bulan)',
+      jadual_sewa: RnTawaran.teksJadual(jadual), sewa_bulanan: RnU.rm(Number(t.Sewa_Bulanan_RM) || 0), hari_akhir_bayar: String(Cfg.num('TARIKH_AKHIR_SEWA_HARI', 7)),
+      utiliti: S(t.Utiliti), cagaran_sewaan: Number(t.Cagaran_Sewaan_RM) > 0 ? RnU.rm(Number(t.Cagaran_Sewaan_RM)) : 'Tiada',
+      cagaran_utiliti: Number(t.Cagaran_Utiliti_RM) > 0 ? RnU.rm(Number(t.Cagaran_Utiliti_RM)) : 'Tiada', waktu_operasi: S(t.Waktu_Operasi),
+      akaun_bank: Cfg.get('AKAUN_BANK_UTM', ''), alamat_utmxcite: Cfg.get('ALAMAT_UTMXCITE', ''),
+      penandatangan_utm_nama: Cfg.get('PERJANJIAN_PENANDATANGAN_NAMA', ''), penandatangan_utm_jawatan: Cfg.get('PERJANJIAN_PENANDATANGAN_JAWATAN', ''),
+      saksi_utm_nama: Cfg.get('PERJANJIAN_SAKSI_UTM_NAMA', ''), saksi_utm_jawatan: Cfg.get('PERJANJIAN_SAKSI_UTM_JAWATAN', ''),
+      wakil_syarikat_nama: S(k.pel.Nama_Penuh), wakil_syarikat_jawatan: 'Pemilik ' + S(k.per.Nama_Perniagaan),
+      saksi_syarikat_nama: Cfg.get('PERJANJIAN_SAKSI_SYARIKAT_NAMA', ''), saksi_syarikat_jawatan: Cfg.get('PERJANJIAN_SAKSI_SYARIKAT_JAWATAN', ''),
+      senarai_pekerja: teksPekerja_(id), senarai_peralatan: teksPeralatan_(S(r.Kod_Lot)),
+      bil_pekerja: String(pekerjaDiluluskan_(id).length), bil_peralatan: String(peralatanLot_(S(r.Kod_Lot)).length)
+    };
+    return d;
+  }
+
+  function jana_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id);
+    var r = RnU.perById(id);
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var t = RnU.tawaranById(id);
+    if (['Diterima', 'Perjanjian'].indexOf(S(r.Status)) < 0 || !t || S(t.Status) !== 'Diterima') throw appError_('RN_PERJANJIAN_STATUS');
+    var cur = semasa_(id);
+    if (cur && S(cur.Status) === 'Disahkan') throw appError_('RN_PERJANJIAN_SUDAH_SAH');
+    var lot = RnU.lotById(S(r.Kod_Lot));
+    var kodTpl = RnU.isFnb(lot) ? 'TEMPLAT_PERJANJIAN_SEWA_FNB' : 'TEMPLAT_PERJANJIAN_SEWA_BUKAN_FNB';
+    var tarikhP = S(p.tarikhPerjanjian) || RnU.dk(t.Tarikh_Surat);
+    if (!RnU.isDate(tarikhP)) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { tarikhPerjanjian: 'Tarikh tidak sah / Invalid date' } });
+    var data = dataPerjanjian_(r, t, Util.toDate(tarikhP));
+    var versi = RnDok.versiSeterusnya(id, 'Perjanjian');
+    var nama = 'Perjanjian Sewa ' + id + ' v' + versi;
+    var res = DocTpl.jana(kodTpl, data, 'FLD_LAMPIRAN_LOT', nama); // lempar TEMPLAT_TIADA jika templat tiada
+    var amaran = (res.amaran || []).slice();
+    var ssu = RnU.ssuLulus(S(r.ID_Perniagaan));
+    if (ssu && S(ssu.Status_SSM) !== 'YA') amaran.push('Pendaftaran SSM: ' + Ref.bm('STATUS_SSM', S(ssu.Status_SSM)) + '. Pastikan SSM disempurnakan (perjanjian memerlukan pendaftaran syarikat).');
+    Db.withLock(function () {
+      var cur2 = semasa_(id);
+      if (cur2 && S(cur2.Status) === 'Disahkan') throw appError_('RN_PERJANJIAN_SUDAH_SAH');
+      RnDok.semua(id).forEach(function (d) {
+        if (['Perjanjian', 'Perjanjian Bertandatangan'].indexOf(S(d.Jenis)) >= 0 && S(d.Status) !== 'Digantikan') Db.update('Dokumen_Sewaan', d._row, { Status: 'Digantikan' });
+      });
+      RnDok.tambahLocked({
+        ID_Permohonan: id, Jenis: 'Perjanjian', Versi: versi, Tajuk: 'Perjanjian Sewa', Fail: res.url, Nama_Fail: nama + '.pdf', Dijana_Oleh: ctx.email,
+        Status: 'Menunggu salinan bertandatangan', Kelihatan: 'Ya', Catatan: amaran.join('; ')
+      });
+      Db.update('Permohonan_Lot', RnU.perById(id)._row, { Status: 'Perjanjian' });
+      Audit.log(ctx, 'JANA_PERJANJIAN_SEWA', 'Ruang Niaga', id, S(r.Status), 'Perjanjian', 'v' + versi + ' | ' + kodTpl + (amaran.length ? ' | ' + amaran.join('; ') : ''));
+    });
+    RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Perjanjian sewa sedia untuk ditandatangani', 'Tenancy agreement ready for signing',
+      ['Perjanjian sewa bagi ' + id + ' telah disediakan. Sila muat turun, cetak, tandatangani dan muat naik salinan bertandatangan dalam UTMPreneur.'],
+      ['The tenancy agreement for ' + id + ' is ready. Please download, print, sign and upload the signed copy in UTMPreneur.']);
+    var out = RnPer.adminButiran(ctx, { id: id });
+    out.amaranPerjanjian = amaran;
+    return out;
+  }
+
+  function muatNaik_(ctx, p) {
+    var id = S(p.id);
+    var r = RnU.perById(id);
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r);
+    var cur = semasa_(id);
+    if (S(r.Status) !== 'Perjanjian' || !cur || ['Menunggu salinan bertandatangan', 'Dikembalikan'].indexOf(S(cur.Status)) < 0) throw appError_('RN_PERJANJIAN_STATUS');
+    var v;
+    try { v = Files.validate(p.fail, ['pdf', 'jpg', 'jpeg', 'png']); } catch (err) { throw appError_('RN_BORANG_TIDAK_SAH', { medan: { fail: 'Fail tidak sah (PDF/JPG/PNG) / Invalid file' } }); }
+    var url = Files.save('FLD_LAMPIRAN_LOT', 'PERJANJIAN_TT_' + id + '_' + Util.fmtDate(new Date(), 'yyyyMMddHHmm'), v);
+    Db.withLock(function () {
+      var c2 = semasa_(id);
+      if (!c2 || ['Menunggu salinan bertandatangan', 'Dikembalikan'].indexOf(S(c2.Status)) < 0) throw appError_('RN_PERJANJIAN_STATUS');
+      var versi = RnDok.versiSeterusnya(id, 'Perjanjian Bertandatangan');
+      RnDok.tambahLocked({
+        ID_Permohonan: id, Jenis: 'Perjanjian Bertandatangan', Versi: versi, Tajuk: 'Perjanjian Sewa (bertandatangan)', Fail: url,
+        Nama_Fail: 'Perjanjian Sewa bertandatangan ' + id + ' v' + versi + '.' + v.ext, Dijana_Oleh: ctx.email, Status: 'Dimuat naik', Kelihatan: 'Ya'
+      });
+      Db.update('Dokumen_Sewaan', c2._row, { Status: 'Dimuat naik', Catatan: '' });
+      Audit.log(ctx, 'MUAT_NAIK_PERJANJIAN_BERTANDATANGAN', 'Ruang Niaga', id, S(c2.Status), 'Dimuat naik', 'v' + versi);
+    });
+    RnU.melAdmin('Salinan perjanjian bertandatangan dimuat naik', 'Signed agreement uploaded',
+      ['Pemohon ' + id + ' memuat naik salinan perjanjian bertandatangan. Sila sahkan dalam UTMPreneur.'], ['Applicant ' + id + ' uploaded the signed agreement. Please verify it in UTMPreneur.']);
+    return { id: id };
+  }
+
+  function sahkan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id);
+    var e = {};
+    var tm = S(p.tarikhMula), tt = S(p.tarikhTamat);
+    if (tm && !RnU.isDate(tm)) e.tarikhMula = 'Tarikh tidak sah / Invalid date';
+    if (tt && !RnU.isDate(tt)) e.tarikhTamat = 'Tarikh tidak sah / Invalid date';
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    Db.withLock(function () {
+      var r = RnU.perById(id);
+      if (!r) throw appError_('RN_TIDAK_DITEMUI');
+      var cur = semasa_(id), sal = salinanTerkini_(id);
+      if (S(r.Status) !== 'Perjanjian' || !cur || S(cur.Status) !== 'Dimuat naik' || !sal || S(sal.Status) !== 'Dimuat naik') throw appError_('RN_PERJANJIAN_STATUS');
+      var t = RnU.tawaranById(id);
+      var mula = tm || RnU.dk(t.Tarikh_Mula), tamat = tt || RnU.dk(t.Tarikh_Tamat);
+      if (Util.daysBetween(Util.toDate(mula), Util.toDate(tamat)) <= 0) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { tarikhTamat: 'Tarikh tamat mesti selepas tarikh mula / End date must be after start date' } });
+      if (tm || tt) Db.update('Tawaran_Sewa', t._row, { Tarikh_Mula: Util.toDate(mula), Tarikh_Tamat: Util.toDate(tamat), Bil_Bulan: RnTawaran.bilBulan(mula, tamat) });
+      Db.update('Dokumen_Sewaan', cur._row, { Status: 'Disahkan' });
+      Db.update('Dokumen_Sewaan', sal._row, { Status: 'Disahkan' });
+      Audit.log(ctx, 'SAHKAN_PERJANJIAN_SEWA', 'Ruang Niaga', id, 'Dimuat naik', 'Disahkan', mula + ' hingga ' + tamat);
+    });
+    var akt = cubaAktif_(ctx, id);
+    var out = RnPer.adminButiran(ctx, { id: id });
+    out.aktivasi = akt;
+    return out;
+  }
+
+  function kembalikan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id), cat = S(p.catatan).substr(0, 300);
+    if (!cat) throw appError_('RN_CATATAN_WAJIB');
+    Db.withLock(function () {
+      var cur = semasa_(id), sal = salinanTerkini_(id);
+      if (!cur || S(cur.Status) !== 'Dimuat naik' || !sal) throw appError_('RN_PERJANJIAN_STATUS');
+      Db.update('Dokumen_Sewaan', cur._row, { Status: 'Dikembalikan', Catatan: cat });
+      Db.update('Dokumen_Sewaan', sal._row, { Status: 'Dikembalikan', Catatan: cat });
+      Audit.log(ctx, 'KEMBALIKAN_PERJANJIAN_SEWA', 'Ruang Niaga', id, 'Dimuat naik', 'Dikembalikan', cat);
+    });
+    var r = RnU.perById(id);
+    RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Salinan perjanjian dikembalikan', 'Signed agreement returned',
+      ['Salinan perjanjian bertandatangan bagi ' + id + ' dikembalikan. Catatan: ' + cat + '. Sila muat naik semula.'], ['The signed agreement for ' + id + ' was returned. Note: ' + cat]);
+    return RnPer.adminButiran(ctx, { id: id });
+  }
+
+  /** Aktifkan sewaan jika kedua-dua syarat dipenuhi. Pulang {aktif, idSewaan, menunggu[]}. */
+  function cubaAktif_(ctx, id) {
+    var r = RnU.perById(id);
+    var menunggu = [];
+    if (!r) return { aktif: false, menunggu: ['Permohonan tidak ditemui'] };
+    if (S(r.Status) === 'Sewaan Aktif') return { aktif: true, idSewaan: S(r.ID_Sewaan), menunggu: [] };
+    var cur = semasa_(id);
+    if (!cur || S(cur.Status) !== 'Disahkan') menunggu.push('Perjanjian bertandatangan belum disahkan');
+    RnCagaran.semua(id).forEach(function (c) {
+      if (S(c.Jenis) === 'Sewaan' && S(c.Status) !== 'Diterima') menunggu.push('Cagaran sewaan belum disahkan');
+    });
+    if (!menunggu.length && S(r.Status) !== 'Perjanjian') menunggu.push('Status permohonan bukan Perjanjian');
+    if (menunggu.length) return { aktif: false, menunggu: menunggu };
+    var idSewaan = RnSewa.aktifkan(ctx, id);
+    return { aktif: true, idSewaan: idSewaan, menunggu: [] };
+  }
+
+  /** Admin menetapkan tarikh mula/tamat sebelum sewaan aktif. */
+  function tetapTarikh_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id), mula = S(p.tarikhMula), tamat = S(p.tarikhTamat), e = {};
+    if (!RnU.isDate(mula)) e.tarikhMula = 'Tarikh tidak sah / Invalid date';
+    if (!RnU.isDate(tamat)) e.tarikhTamat = 'Tarikh tidak sah / Invalid date';
+    else if (!e.tarikhMula && Util.daysBetween(Util.toDate(mula), Util.toDate(tamat)) <= 0) e.tarikhTamat = 'Tarikh tamat mesti selepas tarikh mula / End date must be after start date';
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    Db.withLock(function () {
+      var r = RnU.perById(id), t = RnU.tawaranById(id);
+      if (!r || !t) throw appError_('RN_TIDAK_DITEMUI');
+      if (['Diterima', 'Perjanjian'].indexOf(S(r.Status)) < 0) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      Db.update('Tawaran_Sewa', t._row, { Tarikh_Mula: Util.toDate(mula), Tarikh_Tamat: Util.toDate(tamat), Bil_Bulan: RnTawaran.bilBulan(mula, tamat) });
+      Audit.log(ctx, 'TETAP_TARIKH_SEWAAN', 'Ruang Niaga', id, RnU.dk(t.Tarikh_Mula) + ' - ' + RnU.dk(t.Tarikh_Tamat), mula + ' - ' + tamat, '');
+    });
+    var out = RnPer.adminButiran(ctx, { id: id });
+    return out;
+  }
+
+  // ---------- Pekerja penyewa (Lampiran 2) ----------
+  function pekerjaView_(x) {
+    return { id: S(x.ID_Pekerja), nama: S(x.Nama), umur: Number(x.Umur) || 0, fakulti: S(x.Fakulti), tugas: S(x.Tugas), pelajarUtm: Util.truthy(x.Pelajar_UTM), noMatrik: S(x.No_Matrik),
+      status: S(x.Status), catatan: S(x.Catatan_Admin) };
+  }
+  function pekerjaSemua_(idPer) {
+    return Db.find('Pekerja_Penyewa', function (x) { return S(x.ID_Permohonan) === idPer && S(x.Status) !== 'Dibuang'; });
+  }
+  function pekerjaDiluluskan_(idPer) { return pekerjaSemua_(idPer).filter(function (x) { return S(x.Status) === 'Diluluskan'; }).map(pekerjaView_); }
+  function senaraiPekerja_(idPer) { return pekerjaSemua_(idPer).map(pekerjaView_); }
+
+  function pekerjaSimpan_(ctx, p) {
+    var id = S(p.idPermohonan);
+    var r = RnU.perById(id);
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r);
+    if (['Diterima', 'Perjanjian', 'Sewaan Aktif'].indexOf(S(r.Status)) < 0) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+    var e = {}, bad = function (k, m) { e[k] = m || 'Wajib diisi / Required'; };
+    var utm = S(p.pelajarUtm) === 'Ya';
+    var m = Util.normMatric(p.noMatrik);
+    var pel = null;
+    if (utm) {
+      pel = Util.isMatric(m) ? RnU.pelajar(m) : null;
+      if (!pel) bad('noMatrik', 'No. Matrik pelajar UTM tidak ditemui / UTM student not found');
+      else if (S(pel.Status_Pelajar) && S(pel.Status_Pelajar).toLowerCase() !== 'aktif') bad('noMatrik', 'Pelajar tidak aktif / Student is not active');
+    }
+    var nama = S(p.nama).replace(/\s+/g, ' ').toUpperCase().substr(0, 120);
+    if (!nama && pel) nama = S(pel.Nama_Penuh).toUpperCase();
+    if (nama.length < 3) bad('nama');
+    var umur = S(p.umur);
+    if (!/^\d{1,2}$/.test(umur) || parseInt(umur, 10) < 18 || parseInt(umur, 10) > 80) bad('umur', 'Umur 18 hingga 80 (pekerja bawah 18 tahun tidak dibenarkan) / Age 18 to 80');
+    var tugas = S(p.tugas).substr(0, 120); if (!tugas) bad('tugas');
+    var fakulti = S(p.fakulti).substr(0, 120) || (pel ? S(pel.Fakulti) : '');
+    if (pekerjaSemua_(id).length >= 30) bad('nama', 'Maksimum 30 pekerja / Maximum 30 staff');
+    if (Object.keys(e).length) throw appError_('RN_PEKERJA_TIDAK_SAH', { medan: e });
+    var pid = Db.withLock(function () {
+      var nid = Util.formatId('PKJ', null, Db.nextSeqLocked('PKJ'), 4);
+      Db.append('Pekerja_Penyewa', {
+        ID_Pekerja: nid, ID_Permohonan: id, ID_Sewaan: S(r.ID_Sewaan), ID_Perniagaan: S(r.ID_Perniagaan), Nama: nama, Umur: parseInt(umur, 10), Fakulti: fakulti, Tugas: tugas,
+        Pelajar_UTM: utm ? 'Ya' : 'Tidak', No_Matrik: utm ? m : '', Status: utm ? 'Diluluskan' : 'Menunggu Kelulusan', Ditambah_Oleh: ctx.email, Tarikh: new Date()
+      });
+      Audit.log(ctx, 'TAMBAH_PEKERJA_PENYEWA', 'Ruang Niaga', nid, '', nama, id + (utm ? ' | pelajar UTM' : ' | pekerja luar UTM'));
+      return nid;
+    });
+    if (!utm) {
+      RnU.melAdmin('Pekerja luar UTM menunggu kelulusan', 'Non-UTM staff awaiting approval',
+        ['Pemohon ' + id + ' mendaftar pekerja luar UTM (' + nama + '). Kelulusan admin diperlukan.'], ['Applicant ' + id + ' registered a non-UTM worker (' + nama + '). Admin approval required.']);
+    }
+    return { id: pid, pekerja: senaraiPekerja_(id) };
+  }
+
+  function pekerjaBuang_(ctx, p) {
+    var x = Db.find('Pekerja_Penyewa', function (y) { return S(y.ID_Pekerja) === S(p.id); })[0];
+    if (!x) throw appError_('RN_TIDAK_DITEMUI');
+    var r = RnU.perById(S(x.ID_Permohonan));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r);
+    Db.withLock(function () {
+      var cur = Db.find('Pekerja_Penyewa', function (y) { return S(y.ID_Pekerja) === S(p.id); })[0];
+      Db.update('Pekerja_Penyewa', cur._row, { Status: 'Dibuang' });
+      Audit.log(ctx, 'BUANG_PEKERJA_PENYEWA', 'Ruang Niaga', S(p.id), S(cur.Status), 'Dibuang', S(cur.Nama));
+    });
+    return { pekerja: senaraiPekerja_(S(x.ID_Permohonan)) };
+  }
+
+  function pekerjaPutus_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var t = S(p.tindakan), cat = S(p.catatan).substr(0, 300);
+    if (['lulus', 'tolak'].indexOf(t) < 0) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+    if (t === 'tolak' && !cat) throw appError_('RN_CATATAN_WAJIB');
+    var idPer = '';
+    Db.withLock(function () {
+      var x = Db.find('Pekerja_Penyewa', function (y) { return S(y.ID_Pekerja) === S(p.id); })[0];
+      if (!x) throw appError_('RN_TIDAK_DITEMUI');
+      if (S(x.Status) !== 'Menunggu Kelulusan') throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      idPer = S(x.ID_Permohonan);
+      Db.update('Pekerja_Penyewa', x._row, { Status: t === 'lulus' ? 'Diluluskan' : 'Ditolak', Catatan_Admin: cat });
+      Audit.log(ctx, t === 'lulus' ? 'LULUS_PEKERJA_LUAR' : 'TOLAK_PEKERJA_LUAR', 'Ruang Niaga', S(x.ID_Pekerja), 'Menunggu Kelulusan', t === 'lulus' ? 'Diluluskan' : 'Ditolak', cat);
+    });
+    return RnPer.adminButiran(ctx, { id: idPer });
+  }
+
+  // ---------- Peralatan universiti per lot (Lampiran 3) ----------
+  function peralatanLot_(kod) {
+    return Db.find('Peralatan_Lot', function (x) { return S(x.Kod_Lot) === kod && Util.truthy(x.Aktif); })
+      .map(function (x) { return { id: S(x.ID_Peralatan), kodLot: S(x.Kod_Lot), nama: S(x.Nama_Alat), bilangan: Number(x.Bilangan) || 0, catatan: S(x.Catatan) }; });
+  }
+
+  function peralatanSenarai_(ctx, p) {
+    RnU.requireViewer(ctx);
+    return { peralatan: peralatanLot_(S(p.kodLot)), bolehUbah: RnU.isDecider(ctx) };
+  }
+
+  function peralatanSimpan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var e = {};
+    var kod = S(p.kodLot);
+    if (!RnU.lotById(kod)) e.kodLot = 'Lot tidak ditemui / Lot not found';
+    var nama = S(p.nama).replace(/\s+/g, ' ').substr(0, 120); if (!nama) e.nama = 'Wajib diisi / Required';
+    var bil = S(p.bilangan);
+    if (!/^\d{1,4}$/.test(bil) || parseInt(bil, 10) < 1) e.bilangan = 'Nombor bulat 1 atau lebih / Whole number 1 or more';
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    Db.withLock(function () {
+      var cur = S(p.id) ? Db.find('Peralatan_Lot', function (x) { return S(x.ID_Peralatan) === S(p.id); })[0] : null;
+      if (S(p.id) && !cur) throw appError_('RN_TIDAK_DITEMUI');
+      var rec = { Kod_Lot: kod, Nama_Alat: nama, Bilangan: parseInt(bil, 10), Catatan: S(p.catatan).substr(0, 200), Aktif: 'Ya' };
+      if (cur) Db.update('Peralatan_Lot', cur._row, rec);
+      else { rec.ID_Peralatan = Util.formatId('PRL', null, Db.nextSeqLocked('PRL'), 4); Db.append('Peralatan_Lot', rec); }
+      Audit.log(ctx, cur ? 'KEMAS_KINI_PERALATAN_LOT' : 'TAMBAH_PERALATAN_LOT', 'Ruang Niaga', kod, '', nama + ' x' + bil, '');
+    });
+    return { peralatan: peralatanLot_(kod) };
+  }
+
+  function peralatanBuang_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var kod = '';
+    Db.withLock(function () {
+      var cur = Db.find('Peralatan_Lot', function (x) { return S(x.ID_Peralatan) === S(p.id); })[0];
+      if (!cur) throw appError_('RN_TIDAK_DITEMUI');
+      kod = S(cur.Kod_Lot);
+      Db.update('Peralatan_Lot', cur._row, { Aktif: 'Tidak' });
+      Audit.log(ctx, 'BUANG_PERALATAN_LOT', 'Ruang Niaga', kod, S(cur.Nama_Alat), '', '');
+    });
+    return { peralatan: peralatanLot_(kod) };
+  }
+
+  /** Dokumen perjanjian pembaharuan (templat Docs) apabila admin menyambung sewaan satu tahun. Dokumen jenis Lain, tanpa aliran tandatangan dalam sistem. */
+  function janaPembaharuan_(ctx, idPer, lamaTamat, baruTamat) {
+    var r = RnU.perById(idPer);
+    var sew = r && S(r.ID_Sewaan) ? RnU.sewaanById(S(r.ID_Sewaan)) : null;
+    if (!r || !sew) throw appError_('RN_SEWAAN_TIDAK_DITEMUI');
+    var t = RnU.tawaranById(idPer);
+    var cag = RnCagaran.semua(idPer);
+    var jml = function (jenis) { var x = cag.filter(function (c) { return S(c.Jenis) === jenis && ['Diterima', 'Dipulangkan'].indexOf(S(c.Status)) >= 0; })[0]; return x ? Number(x.Jumlah_RM) : 0; };
+    var asas = t ? Object.assign({}, t) : {
+      No_Rujukan: S(sew.ID_Sewaan), Tarikh_Surat: sew.Tarikh_Mula, Jenis_Perniagaan: '', Sewa_Bulanan_RM: sew.Kadar_RM, Utiliti: '', Cagaran_Sewaan_RM: jml('Sewaan'),
+      Cagaran_Utiliti_RM: jml('Utiliti'), Waktu_Operasi: ''
+    };
+    asas.Tarikh_Mula = RnU.tambahHari(lamaTamat, 1);
+    asas.Tarikh_Tamat = baruTamat;
+    asas.Bil_Bulan = 12;
+    var lot = RnU.lotById(S(r.Kod_Lot));
+    var kodTpl = RnU.isFnb(lot) ? 'TEMPLAT_PERJANJIAN_SEWA_FNB' : 'TEMPLAT_PERJANJIAN_SEWA_BUKAN_FNB';
+    var data = dataPerjanjian_(r, asas, RnU.today(), RnTawaran.jadualOf(idPer, S(sew.ID_Sewaan)));
+    var versi = RnDok.versiSeterusnya(idPer, 'Lain');
+    var nama = 'Perjanjian Sewa (pembaharuan) ' + idPer + ' v' + versi;
+    var res = DocTpl.jana(kodTpl, data, 'FLD_LAMPIRAN_LOT', nama);
+    Db.withLock(function () {
+      RnDok.tambahLocked({
+        ID_Permohonan: idPer, ID_Sewaan: S(sew.ID_Sewaan), Jenis: 'Lain', Versi: versi, Tajuk: 'Perjanjian Sewa (pembaharuan)', Fail: res.url, Nama_Fail: nama + '.pdf',
+        Dijana_Oleh: ctx.email, Status: 'Aktif', Kelihatan: 'Ya', Catatan: (res.amaran || []).join('; ')
+      });
+      Audit.log(ctx, 'JANA_PERJANJIAN_PEMBAHARUAN', 'Ruang Niaga', S(sew.ID_Sewaan), '', 'v' + versi, kodTpl);
+    });
+    return res;
+  }
+
+  /** Ringkasan perjanjian untuk paparan. */
+  function ringkas_(idPer) {
+    var cur = semasa_(idPer), sal = salinanTerkini_(idPer);
+    return {
+      ada: !!cur, status: cur ? S(cur.Status) : '', versi: cur ? Number(cur.Versi) : 0, idDokumen: cur ? S(cur.ID_Dokumen) : '', catatan: cur ? S(cur.Catatan) : '',
+      salinan: sal ? { id: S(sal.ID_Dokumen), status: S(sal.Status), catatan: S(sal.Catatan) } : null
+    };
+  }
+
+  return {
+    semasa: semasa_, jana: jana_, muatNaik: muatNaik_, sahkan: sahkan_, kembalikan: kembalikan_, cubaAktif: cubaAktif_, tetapTarikh: tetapTarikh_,
+    pekerjaSimpan: pekerjaSimpan_, pekerjaBuang: pekerjaBuang_, pekerjaPutus: pekerjaPutus_, senaraiPekerja: senaraiPekerja_,
+    peralatanSenarai: peralatanSenarai_, peralatanSimpan: peralatanSimpan_, peralatanBuang: peralatanBuang_, peralatanLot: peralatanLot_, ringkas: ringkas_, dataPerjanjian: dataPerjanjian_, janaPembaharuan: janaPembaharuan_
+  };
+})();
+
+
+// ===== RuangNiagaPermohonan.gs =====
+/**
+ * UTMPreneur: Ruang Niaga fasa 1. Pengurusan lot (admin), tempoh permohonan, permohonan lot oleh pemilik SSU,
+ * senarai dan butiran permohonan untuk admin, dan peralihan status awal (semak, tolak, batal, putus).
+ * Peraturan: pemilik perniagaan SSU Diluluskan + Aktif sahaja boleh memohon; ahli pasukan hanya melihat;
+ * satu lot bagi satu pelajar/perniagaan; permohonan dibuat dalam tempoh global sahaja.
+ */
+
+var RnPer = (function () {
+  var JENIS_LOT = ['FNB', 'RETAIL', 'LAIN'];
+  var AWAL_BATAL = ['Baharu', 'Disemak', 'Disenarai Pendek'];
+  var PILIHAN_STATUS_LOT = ['Kosong', 'Penyelenggaraan'];
+
+  function S(v) { return Util.str(v); }
+
+  // ---------- Tempoh permohonan ----------
+  function tempohLot_() {
+    var b = Cfg.get('TEMPOH_PERMOHONAN_LOT_BUKA', ''), t = Cfg.get('TEMPOH_PERMOHONAN_LOT_TUTUP', '');
+    var bd = RnU.isDate(b) ? Util.toDate(b) : null, td = RnU.isDate(t) ? Util.toDate(t) : null;
+    var now = RnU.today();
+    var dibuka = !!(bd && td && Util.daysBetween(bd, now) >= 0 && Util.daysBetween(now, td) >= 0);
+    return { buka: bd ? b : '', tutup: td ? t : '', dibuka: dibuka };
+  }
+
+  function tempohSimpan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    p = p || {};
+    var b = S(p.buka), t = S(p.tutup), e = {};
+    if (b || t) {
+      if (!RnU.isDate(b)) e.buka = 'Tarikh tidak sah / Invalid date';
+      if (!RnU.isDate(t)) e.tutup = 'Tarikh tidak sah / Invalid date';
+      if (!e.buka && !e.tutup && Util.daysBetween(Util.toDate(b), Util.toDate(t)) < 0) e.tutup = 'Tarikh tutup mesti selepas tarikh buka / Close date must be after open date';
+    }
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    Db.withLock(function () {
+      [['TEMPOH_PERMOHONAN_LOT_BUKA', b, 'Tarikh buka permohonan lot (YYYY-MM-DD)'], ['TEMPOH_PERMOHONAN_LOT_TUTUP', t, 'Tarikh tutup permohonan lot (YYYY-MM-DD)']].forEach(function (x) {
+        var row = Db.find('Tetapan', function (r) { return S(r.Kunci) === x[0]; })[0];
+        if (row) Db.update('Tetapan', row._row, { Nilai: x[1] });
+        else Db.append('Tetapan', { Kunci: x[0], Nilai: x[1], Penerangan: x[2] });
+      });
+      Cfg.invalidate();
+      Audit.log(ctx, 'TETAP_TEMPOH_PERMOHONAN_LOT', 'Ruang Niaga', '', '', b + ' hingga ' + t, '');
+    });
+    return tempohLot_();
+  }
+
+  // ---------- Lot ----------
+  function lotView_(l) {
+    var jenis = S(l.Jenis);
+    return {
+      kod: S(l.Kod_Lot), nama: S(l.Nama_Paparan) || S(l.Kod_Lot), lokasi: S(l.Lokasi), blok: S(l.Blok), saiz: S(l.Saiz_m2), jenis: jenis,
+      jenisBm: jenis ? Ref.bm('JENIS_LOT', jenis) : '', kadar: S(l.Kadar_Sewa_RM), statusBuka: S(l.Status_Buka), statusLot: S(l.Status_Lot),
+      catatan: S(l.Catatan), alamatSurat: S(l.Alamat_Surat), fnb: jenis === 'FNB'
+    };
+  }
+
+  function lotTerbuka_() {
+    return Db.find('Lot', function (l) { return S(l.Status_Buka) === 'Dibuka' && S(l.Status_Lot) === 'Kosong'; }).map(function (l) {
+      var v = lotView_(l);
+      return { kod: v.kod, nama: v.nama, lokasi: v.lokasi, saiz: v.saiz, jenis: v.jenis, jenisBm: v.jenisBm, kadar: v.kadar, fnb: v.fnb };
+    });
+  }
+
+  function lotSenarai_(ctx) {
+    RnU.requireViewer(ctx);
+    var per = Db.rows('Permohonan_Lot');
+    var lots = Db.rows('Lot').map(function (l) {
+      var v = lotView_(l);
+      var pemohon = per.filter(function (r) { return S(r.Kod_Lot) === v.kod && RnU.AKTIF.indexOf(S(r.Status)) >= 0; });
+      v.bilPermohonan = pemohon.length;
+      var aktif = pemohon.filter(function (r) { return ['Ditawarkan', 'Diterima', 'Perjanjian', 'Sewaan Aktif'].indexOf(S(r.Status)) >= 0; })[0];
+      v.penyewa = aktif ? S((RnU.perniagaan(S(aktif.ID_Perniagaan)) || {}).Nama_Perniagaan) : '';
+      return v;
+    });
+    return { lot: lots, tempoh: tempohLot_(), bolehUbah: RnU.isDecider(ctx) };
+  }
+
+  function lotSimpan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    p = p || {};
+    var e = {};
+    var kod = S(p.kod).toUpperCase().replace(/\s+/g, '');
+    var baru = p.baru === true;
+    if (!/^[A-Z0-9][A-Z0-9\-]{1,19}$/.test(kod)) e.kod = 'Kod 2 hingga 20 aksara (huruf besar, nombor, sengkang) / 2 to 20 characters';
+    var cur = RnU.lotById(kod);
+    if (baru && cur) e.kod = 'Kod lot sudah wujud / Lot code already exists';
+    if (!baru && !cur && !e.kod) throw appError_('RN_TIDAK_DITEMUI');
+    var jenis = S(p.jenis);
+    if (jenis && JENIS_LOT.indexOf(jenis) < 0) e.jenis = 'Pilihan tidak sah / Invalid choice';
+    var kadar = S(p.kadar) === '' ? '' : Util.parseRm(p.kadar);
+    if (kadar === null) e.kadar = 'Masukkan nilai RM yang tepat / Enter an exact RM value';
+    var saiz = S(p.saiz) === '' ? '' : parseFloat(p.saiz);
+    if (saiz !== '' && (isNaN(saiz) || saiz <= 0 || saiz > 100000)) e.saiz = 'Nombor tidak sah / Invalid number';
+    var statusBuka = S(p.statusBuka) || (cur ? S(cur.Status_Buka) : 'Ditutup');
+    if (['Dibuka', 'Ditutup'].indexOf(statusBuka) < 0) e.statusBuka = 'Pilihan tidak sah / Invalid choice';
+    var nama = S(p.nama).substr(0, 120);
+    if (!nama) e.nama = 'Wajib diisi / Required';
+    var statusLot = S(p.statusLot) || (cur ? S(cur.Status_Lot) : 'Kosong');
+    if (cur && statusLot !== S(cur.Status_Lot)) {
+      if (['Dipohon', 'Disewa'].indexOf(S(cur.Status_Lot)) >= 0 || PILIHAN_STATUS_LOT.indexOf(statusLot) < 0) throw appError_('RN_LOT_STATUS_SISTEM');
+    } else if (!cur && PILIHAN_STATUS_LOT.indexOf(statusLot) < 0) throw appError_('RN_LOT_STATUS_SISTEM');
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    var rec = {
+      Kod_Lot: kod, Nama_Paparan: nama, Lokasi: S(p.lokasi).substr(0, 120), Blok: S(p.blok).substr(0, 60), Saiz_m2: saiz, Jenis: jenis,
+      Kadar_Sewa_RM: kadar, Status_Buka: statusBuka, Status_Lot: statusLot, Catatan: S(p.catatan).substr(0, 300),
+      Alamat_Surat: S(p.alamatSurat).substr(0, 250)
+    };
+    Db.withLock(function () {
+      var now = RnU.lotById(kod);
+      if (baru) {
+        if (now) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { kod: 'Kod lot sudah wujud / Lot code already exists' } });
+        rec.Didaftar_Oleh = ctx.email; rec.Tarikh_Daftar = new Date();
+        Db.append('Lot', rec);
+      } else {
+        Db.update('Lot', now._row, rec);
+      }
+      Audit.log(ctx, baru ? 'TAMBAH_LOT' : 'KEMAS_KINI_LOT', 'Ruang Niaga', kod, cur ? S(cur.Kadar_Sewa_RM) + '|' + S(cur.Status_Buka) + '|' + S(cur.Status_Lot) : '',
+        kadar + '|' + statusBuka + '|' + statusLot, '');
+    });
+    return lotSenarai_(ctx);
+  }
+
+  // ---------- Kelayakan dan senarai pelajar ----------
+  function kelayakan_(m) {
+    var per = RnU.perniagaanOwner(m);
+    if (!per) {
+      var sbg = RnU.perniagaanAhli(m);
+      return { boleh: false, sebab: sbg.length ? 'HANYA_PEMILIK' : 'PERLU_SSU', perniagaan: null, pemilik: false };
+    }
+    var st = RnU.statusPer(per);
+    return {
+      boleh: st === 'Aktif', sebab: st === 'Aktif' ? '' : 'SSU_TAMAT', pemilik: true,
+      perniagaan: { id: S(per.ID_Perniagaan), nama: S(per.Nama_Perniagaan), noPendaftaran: S(per.No_Pendaftaran), status: st }
+    };
+  }
+
+  function ringkas_(r) {
+    var lot = RnU.lotById(S(r.Kod_Lot));
+    var per = RnU.perniagaan(S(r.ID_Perniagaan));
+    var st = S(r.Status);
+    return {
+      id: S(r.ID_Permohonan), kodLot: S(r.Kod_Lot), namaLot: RnU.namaLot(lot), perniagaan: per ? S(per.Nama_Perniagaan) : '',
+      status: st, tarikhHantar: RnU.dk(r.Tarikh_Hantar), tempohMula: RnU.dk(r.Tempoh_Mula), tempohTamat: RnU.dk(r.Tempoh_Tamat),
+      jenisPermohonan: S(r.Jenis_Permohonan) || 'Baharu', ulasan: S(r.Ulasan_Pemohon), bolehBatal: AWAL_BATAL.indexOf(st) >= 0
+    };
+  }
+
+  function saya_(ctx) {
+    var m = ctx.noMatrik;
+    if (!m) throw appError_('MATRIK_TIDAK_DITEMUI');
+    var k = kelayakan_(m);
+    var byDate = function (a, b) { return (Util.toDate(b.Tarikh_Hantar) || 0) - (Util.toDate(a.Tarikh_Hantar) || 0); };
+    var milik = Db.find('Permohonan_Lot', function (r) { return Util.normMatric(r.No_Matrik) === m; }).sort(byDate);
+    var ids = RnU.perniagaanAhli(m);
+    var sertaan = Db.find('Permohonan_Lot', function (r) { return ids.indexOf(S(r.ID_Perniagaan)) >= 0 && Util.normMatric(r.No_Matrik) !== m; }).sort(byDate).map(function (r) {
+      var o = ringkas_(r); o.bolehBatal = false;
+      var pel = RnU.pelajar(Util.normMatric(r.No_Matrik));
+      o.pemilik = pel ? S(pel.Nama_Penuh) : '';
+      return o;
+    });
+    var tempoh = tempohLot_();
+    var sebab = k.sebab;
+    if (!sebab && !tempoh.dibuka) sebab = 'TEMPOH_TUTUP';
+    if (!sebab && k.perniagaan && RnU.bercanggah(k.perniagaan.id)) sebab = 'SUDAH_ADA_LOT';
+    return {
+      kelayakan: k, tempoh: tempoh, permohonan: milik.map(ringkas_), sertaan: sertaan, lot: lotTerbuka_(),
+      boleh: { mohon: !sebab }, sebab: sebab,
+      senarai: { kaedah: ['Interbank transfer', 'Deposit tunai', 'PayHub UTM'] }
+    };
+  }
+
+  // ---------- Permohonan ----------
+  function check_(d, lot) {
+    var e = {}, v = {};
+    var bad = function (k, msg) { e[k] = msg || 'Wajib diisi / Required'; };
+    var fnb = RnU.isFnb(lot);
+    v.mula = S(d.tempohMula); v.tamat = S(d.tempohTamat);
+    if (!RnU.isDate(v.mula)) bad('tempohMula', 'Tarikh tidak sah / Invalid date');
+    else if (Util.daysBetween(new Date(), Util.toDate(v.mula)) < 0) bad('tempohMula', 'Tarikh mula tidak boleh lampau / Start date cannot be in the past');
+    if (!RnU.isDate(v.tamat)) bad('tempohTamat', 'Tarikh tidak sah / Invalid date');
+    else if (!e.tempohMula && Util.daysBetween(Util.toDate(v.mula), Util.toDate(v.tamat)) <= 0) bad('tempohTamat', 'Tarikh tamat mesti selepas tarikh mula / End date must be after start date');
+    else if (!e.tempohMula && Util.daysBetween(Util.addMonths(v.mula, 36), Util.toDate(v.tamat)) > 0) bad('tempohTamat', 'Tempoh maksimum 36 bulan / Maximum 36 months');
+    if (fnb) {
+      v.vaksin = S(d.vaksin); v.kursus = S(d.kursus);
+      if (['Ya', 'Tidak'].indexOf(v.vaksin) < 0) bad('vaksin');
+      if (['Ya', 'Tidak'].indexOf(v.kursus) < 0) bad('kursus');
+    } else { v.vaksin = ''; v.kursus = ''; }
+    var many = function (k, arr, group, min) {
+      arr = Array.isArray(arr) ? arr.map(String) : [];
+      var u = arr.filter(function (x, i) { return arr.indexOf(x) === i; });
+      if (u.length < min) bad(k);
+      u.forEach(function (x) { if (!Ref.has(group, x)) bad(k, 'Pilihan tidak sah / Invalid choice'); });
+      return u;
+    };
+    v.sumber = many('sumber', d.sumber, 'SUMBER_PEMBIAYAAN', 1);
+    v.pemberi = many('pemberi', d.pemberi, 'PEMBERI_DANA', 0);
+    v.dana = Util.parseRm(d.jumlahDana);
+    if (v.dana === null) bad('jumlahDana', 'Masukkan nilai RM yang tepat / Enter an exact RM value');
+    v.jualan = Util.parseRm(d.jualan);
+    if (v.jualan === null) bad('jualan', 'Masukkan nilai RM yang tepat / Enter an exact RM value');
+    var bp = S(d.bilPekerja);
+    if (!/^\d{1,3}$/.test(bp)) bad('bilPekerja', 'Nombor bulat 0 hingga 999 / Whole number 0 to 999'); else v.bilPekerja = parseInt(bp, 10);
+    v.sebab = S(d.sebab).replace(/\s+/g, ' ');
+    if (v.sebab.length < 10 || v.sebab.length > 1000) bad('sebab', '10 hingga 1000 aksara / 10 to 1000 characters');
+    v.lokasi = S(d.lokasi).substr(0, 300);
+    if (d.perakuan !== true) bad('perakuan', 'Perakuan wajib / The declaration is required');
+    return { nilai: v, ralat: e };
+  }
+
+  function validateFiles_(d, fnb) {
+    var out = {}, e = {};
+    var chk = function (key, errKey, f, allow, required) {
+      if (f && f.data) {
+        try { out[key] = Files.validate(f, allow); } catch (err) { e[errKey] = 'Fail tidak sah / Invalid file'; }
+      } else if (required) e[errKey] = 'Muat naik fail / Upload a file';
+    };
+    chk('cadangan', 'failCadangan', d.failCadangan, ['pdf'], true);
+    if (fnb) {
+      chk('vaksin', 'failVaksin', d.failVaksin, ['pdf', 'jpg', 'jpeg', 'png'], false);
+      chk('kursus', 'failKursus', d.failKursus, ['pdf', 'jpg', 'jpeg', 'png'], false);
+    }
+    return { fail: out, ralat: e };
+  }
+
+  function hantar_(ctx, d) {
+    var m = ctx.noMatrik;
+    if (!m) throw appError_('MATRIK_TIDAK_DITEMUI');
+    d = d || {};
+    var k = kelayakan_(m);
+    if (!k.pemilik) throw appError_(k.sebab === 'HANYA_PEMILIK' ? 'RN_HANYA_PEMILIK' : 'RN_PERLU_SSU');
+    if (!k.boleh) throw appError_('RN_SSU_TAMAT');
+    if (!tempohLot_().dibuka) throw appError_('RN_TEMPOH_TUTUP');
+    var perId = k.perniagaan.id;
+    if (RnU.bercanggah(perId)) throw appError_('RN_SUDAH_ADA_LOT');
+    var kodLot = S(d.kodLot);
+    var lot = RnU.lotById(kodLot);
+    if (!lot || S(lot.Status_Buka) !== 'Dibuka' || S(lot.Status_Lot) !== 'Kosong') {
+      throw appError_('RN_LOT_TIDAK_TERSEDIA');
+    }
+    var chk = check_(d, lot);
+    var fv = validateFiles_(d, RnU.isFnb(lot));
+    var ralat = chk.ralat;
+    Object.keys(fv.ralat).forEach(function (x) { ralat[x] = fv.ralat[x]; });
+    if (Object.keys(ralat).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: ralat });
+    var v = chk.nilai;
+    var now = new Date();
+    var tahun = parseInt(Util.fmtDate(now, 'yyyy'), 10);
+    var stamp = Util.fmtDate(now, 'yyyyMMddHHmm');
+    var url = function (key, pre) { return fv.fail[key] ? Files.save('FLD_LAMPIRAN_LOT', pre + '_' + m + '_' + stamp, fv.fail[key]) : ''; };
+    var fCad = url('cadangan', 'CADANGAN'), fVak = url('vaksin', 'VAKSIN'), fKur = url('kursus', 'KURSUS');
+    return Db.withLock(function () {
+      var lot2 = RnU.lotById(kodLot);
+      if (!lot2 || S(lot2.Status_Buka) !== 'Dibuka' || S(lot2.Status_Lot) !== 'Kosong') throw appError_('RN_LOT_TIDAK_TERSEDIA');
+      if (RnU.bercanggah(perId)) throw appError_('RN_SUDAH_ADA_LOT');
+      var id = Util.formatId('PLT', tahun, Db.nextSeqLocked('PLT_' + tahun), 4);
+      Db.append('Permohonan_Lot', {
+        ID_Permohonan: id, ID_Perniagaan: perId, No_Matrik: m, Kod_Lot: kodLot, Tempoh_Mula: Util.toDate(v.mula), Tempoh_Tamat: Util.toDate(v.tamat),
+        Vaksin_Kepialu: v.vaksin, Fail_Vaksin: fVak, Kursus_Makanan: v.kursus, Fail_Kursus: fKur, Sumber_Pembiayaan: RnU.csv(v.sumber),
+        Pemberi_Dana: RnU.csv(v.pemberi), Jumlah_Dana_RM: v.dana, Jangkaan_Jualan_RM: v.jualan, Bil_Pekerja: v.bilPekerja, Fail_Cadangan: fCad,
+        Sebab_Berniaga: v.sebab, Lokasi_Dirancang: v.lokasi, Status: 'Baharu', Tarikh_Hantar: now, Jenis_Permohonan: 'Baharu'
+      });
+      Audit.log(ctx, 'MOHON_LOT', 'Ruang Niaga', id, '', 'Baharu', kodLot + (ctx.bagiPihak ? ' | perakuan diakui admin bagi pihak pemohon' : ' | perakuan pemohon diterima'));
+      RnU.mel(RnU.emelOf(m), 'Permohonan lot diterima', 'Lot application received',
+        ['Permohonan lot anda (' + id + ', ' + RnU.namaLot(lot2) + ') telah diterima dan akan disemak oleh UTMXCITE.'],
+        ['Your lot application (' + id + ', ' + RnU.namaLot(lot2) + ') has been received and will be reviewed by UTMXCITE.']);
+      return { id: id, ringkasan: saya_(ctx) };
+    });
+  }
+
+  function batal_(ctx, p) {
+    var id = S(p.id);
+    var r = RnU.perById(id);
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r);
+    return Db.withLock(function () {
+      var cur = RnU.perById(id);
+      if (AWAL_BATAL.indexOf(S(cur.Status)) < 0) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      Db.update('Permohonan_Lot', cur._row, { Status: 'Dibatalkan', Tarikh_Keputusan: new Date(), Catatan_Admin: 'Dibatalkan oleh pemohon' });
+      Audit.log(ctx, 'BATAL_PERMOHONAN_LOT', 'Ruang Niaga', id, S(cur.Status), 'Dibatalkan', '');
+      return { id: id, ringkasan: saya_(ctx) };
+    });
+  }
+
+  function fail_(ctx, p) {
+    var r = RnU.perById(S(p.id));
+    if (!r || !RnU.akses(ctx, r)) throw appError_('RN_TIDAK_DITEMUI');
+    if (S(p.jenis) !== 'cadangan') throw appError_('FAIL_TIDAK_DITEMUI');
+    var url = S(r.Fail_Cadangan);
+    if (!url) throw appError_('FAIL_TIDAK_DITEMUI');
+    return Files.read(url);
+  }
+
+  // ---------- Admin: senarai dan butiran ----------
+  function adminSenarai_(ctx, p) {
+    RnU.requireViewer(ctx);
+    p = p || {};
+    var status = S(p.status), q = S(p.q).toLowerCase();
+    var all = Db.rows('Permohonan_Lot');
+    var kiraan = {};
+    RnU.STATUS_PER.forEach(function (s) { kiraan[s] = 0; });
+    all.forEach(function (r) { var s = S(r.Status); if (kiraan[s] !== undefined) kiraan[s]++; });
+    var pelCache = {}, perCache = {};
+    var rows = all.filter(function (r) {
+      if (status && status !== 'SEMUA' && S(r.Status) !== status) return false;
+      if (q) {
+        var per = perCache[S(r.ID_Perniagaan)] || (perCache[S(r.ID_Perniagaan)] = RnU.perniagaan(S(r.ID_Perniagaan)) || {});
+        var h = (S(r.ID_Permohonan) + ' ' + S(per.Nama_Perniagaan) + ' ' + S(r.No_Matrik) + ' ' + S(r.Kod_Lot)).toLowerCase();
+        if (h.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    rows.sort(function (a, b) { return (Util.toDate(b.Tarikh_Hantar) || 0) - (Util.toDate(a.Tarikh_Hantar) || 0); });
+    var senarai = rows.slice(0, 300).map(function (r) {
+      var o = ringkas_(r);
+      var m = Util.normMatric(r.No_Matrik);
+      var pel = pelCache[m] || (pelCache[m] = RnU.pelajar(m) || {});
+      o.pemilik = S(pel.Nama_Penuh); o.noMatrik = m;
+      return o;
+    });
+    return { kiraan: kiraan, jumlah: rows.length, senarai: senarai, bolehPutus: RnU.isDecider(ctx), tempoh: tempohLot_() };
+  }
+
+  function borangOf_(r) {
+    return {
+      kodLot: S(r.Kod_Lot), tempohMula: RnU.dk(r.Tempoh_Mula), tempohTamat: RnU.dk(r.Tempoh_Tamat), vaksin: S(r.Vaksin_Kepialu), kursus: S(r.Kursus_Makanan),
+      sumber: RnU.split(r.Sumber_Pembiayaan), pemberi: RnU.split(r.Pemberi_Dana), jumlahDana: S(r.Jumlah_Dana_RM), jualan: S(r.Jangkaan_Jualan_RM),
+      bilPekerja: S(r.Bil_Pekerja), sebab: S(r.Sebab_Berniaga), lokasi: S(r.Lokasi_Dirancang)
+    };
+  }
+
+  function adminButiran_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var r = RnU.perById(S(p.id));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var id = S(r.ID_Permohonan);
+    var m = Util.normMatric(r.No_Matrik);
+    var pel = RnU.pelajar(m) || {};
+    var per = RnU.perniagaan(S(r.ID_Perniagaan));
+    var ssu = per ? RnU.ssuLulus(S(per.ID_Perniagaan)) : null;
+    var lot = RnU.lotById(S(r.Kod_Lot));
+    var pemohon = {
+      noMatrik: m, nama: S(pel.Nama_Penuh), emel: S(pel.Emel), fakulti: S(pel.Fakulti), program: S(pel.Program), tahun: S(pel.Tahun_Pengajian),
+      telefon: S(pel.No_Telefon), statusPelajar: S(pel.Status_Pelajar)
+    };
+    if (ctx.role === ROLE.ADMIN_PENUH) pemohon.noKp = S(pel.No_KP_Pasport);
+    var ahli = per ? RnU.ahliMatrik(S(per.ID_Perniagaan)).map(function (am) {
+      var a = RnU.pelajar(am) || {};
+      return { noMatrik: am, nama: S(a.Nama_Penuh), fakulti: S(a.Fakulti), peranan: am === m ? 'Pemilik' : 'Ahli' };
+    }) : [];
+    var amaran = [];
+    if (ssu && S(ssu.Status_SSM) !== 'YA') amaran.push('Pendaftaran SSM: ' + Ref.bm('STATUS_SSM', S(ssu.Status_SSM)) + ' (bukan "Ya"). Perjanjian memerlukan pendaftaran syarikat.');
+    if (per && RnU.statusPer(per) !== 'Aktif') amaran.push('SSU perniagaan berstatus ' + RnU.statusPer(per) + '.');
+    var bersaing = Db.find('Permohonan_Lot', function (x) { return S(x.Kod_Lot) === S(r.Kod_Lot) && S(x.ID_Permohonan) !== id && RnU.AKTIF.indexOf(S(x.Status)) >= 0; });
+    if (bersaing.length) amaran.push('Lot ini juga dipohon oleh ' + bersaing.length + ' permohonan aktif lain: ' + bersaing.map(function (x) { return S(x.ID_Permohonan); }).join(', ') + '.');
+    if (lot && ['Dipohon', 'Disewa', 'Penyelenggaraan'].indexOf(S(lot.Status_Lot)) >= 0 && ['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai', 'Diluluskan'].indexOf(S(r.Status)) >= 0) {
+      amaran.push('Status lot semasa: ' + S(lot.Status_Lot) + ' (tawaran tidak boleh dihantar sehingga lot Kosong).');
+    }
+    var out = {
+      id: id, status: S(r.Status), jenisPermohonan: S(r.Jenis_Permohonan) || 'Baharu', ringkas: ringkas_(r), borang: borangOf_(r),
+      label: {
+        sumber: RnU.split(r.Sumber_Pembiayaan).map(function (k) { return Ref.bm('SUMBER_PEMBIAYAAN', k); }),
+        pemberi: RnU.split(r.Pemberi_Dana).map(function (k) { return Ref.bm('PEMBERI_DANA', k); })
+      },
+      pemohon: pemohon, ahli: ahli,
+      perniagaan: per ? {
+        id: S(per.ID_Perniagaan), nama: S(per.Nama_Perniagaan), noPendaftaran: S(per.No_Pendaftaran), statusSsu: RnU.statusPer(per), alamat: S(per.Alamat),
+        noSsm: ssu ? S(ssu.No_SSM) : '', statusSsm: ssu ? Ref.bm('STATUS_SSM', S(ssu.Status_SSM)) : '',
+        jenisPerniagaan: ssu ? Ref.bm('JENIS_PERNIAGAAN', S(ssu.Jenis_Perniagaan)) : '', produk: ssu ? RnU.split(ssu.Produk).map(function (k) { return Ref.bm('PRODUK', k); }) : [],
+        idSsu: ssu ? S(ssu.ID_Permohonan) : ''
+      } : null,
+      lot: lot ? lotView_(lot) : null,
+      fail: { cadangan: !!S(r.Fail_Cadangan), vaksin: !!S(r.Fail_Vaksin), kursus: !!S(r.Fail_Kursus) },
+      keputusan: { keputusan: S(r.Keputusan), tarikh: RnU.dk(r.Tarikh_Keputusan), oleh: S(r.Diputuskan_Oleh), catatan: S(r.Catatan_Admin), ulasan: S(r.Ulasan_Pemohon) },
+      amaran: amaran, bolehPutus: RnU.isDecider(ctx), idSewaan: S(r.ID_Sewaan)
+    };
+    if (typeof RnLanjut !== 'undefined') RnLanjut.tambahButiran(ctx, r, out);
+    return out;
+  }
+
+  function adminFail_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var r = RnU.perById(S(p.id));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var jenis = S(p.jenis);
+    var col = { cadangan: 'Fail_Cadangan', vaksin: 'Fail_Vaksin', kursus: 'Fail_Kursus' }[jenis];
+    if (!col || !S(r[col])) throw appError_('FAIL_TIDAK_DITEMUI');
+    Audit.log(ctx, 'PAPAR_FAIL_LOT', 'Ruang Niaga', S(r.ID_Permohonan), '', jenis, '');
+    return Files.read(S(r[col]));
+  }
+
+  /** Lepaskan lot dan batalkan sisa tawaran apabila permohonan ditarik/ditolak/luput/dibatalkan. Dalam kunci. */
+  function lepas_(r, statusBaharu, catatan, ctx) {
+    var id = S(r.ID_Permohonan), lama = S(r.Status), amaran = [];
+    var lot = RnU.lotById(S(r.Kod_Lot));
+    if (lot && S(lot.Status_Lot) === 'Dipohon' && ['Ditawarkan', 'Diterima', 'Perjanjian'].indexOf(lama) >= 0) RnU.setLot(S(r.Kod_Lot), 'Kosong');
+    var taw = RnU.tawaranById(id);
+    if (taw && ['Dihantar', 'Diterima', 'Draf'].indexOf(S(taw.Status)) >= 0) {
+      var tst = { 'Tawaran Luput': 'Luput', 'Ditolak Pemohon': 'Ditolak', Dibatalkan: 'Dibatalkan' }[statusBaharu] || 'Dibatalkan';
+      Db.update('Tawaran_Sewa', taw._row, { Status: tst });
+    }
+    Db.find('Cagaran', function (c) { return S(c.ID_Permohonan) === id; }).forEach(function (c) {
+      if (['Belum Bayar', 'Menunggu Pengesahan'].indexOf(S(c.Status)) >= 0) Db.update('Cagaran', c._row, { Status: 'Dibatalkan' });
+      else if (S(c.Status) === 'Diterima') amaran.push('Cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ') telah diterima: pulangkan atau rampas secara manual.');
+    });
+    Db.update('Permohonan_Lot', r._row, { Status: statusBaharu, Tarikh_Keputusan: new Date(), Catatan_Admin: catatan || S(r.Catatan_Admin) });
+    return amaran;
+  }
+
+  var TINDAKAN = {
+    semak: { dari: ['Baharu'], ke: 'Disemak' },
+    tolak: { dari: ['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai'], ke: 'Ditolak', catatan: true },
+    lulus: { dari: ['Dinilai'], ke: 'Diluluskan' },
+    batal: { dari: ['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai', 'Diluluskan', 'Ditawarkan', 'Diterima', 'Perjanjian'], ke: 'Dibatalkan', catatan: true }
+  };
+
+  function adminTindakan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id), t = S(p.tindakan), cat = S(p.catatan).substr(0, 500), ulasan = S(p.ulasan).substr(0, 500);
+    var rule = TINDAKAN[t];
+    if (!rule) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+    if (rule.catatan && !cat) throw appError_('RN_CATATAN_WAJIB');
+    var info = Db.withLock(function () {
+      var r = RnU.perById(id);
+      if (!r) throw appError_('RN_TIDAK_DITEMUI');
+      var lama = S(r.Status);
+      if (rule.dari.indexOf(lama) < 0) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      var amaran = [];
+      if (t === 'tolak' || t === 'batal') {
+        amaran = lepas_(r, rule.ke, cat, ctx);
+        Db.update('Permohonan_Lot', r._row, { Keputusan: t === 'tolak' ? 'Ditolak' : S(r.Keputusan), Diputuskan_Oleh: ctx.email, Ulasan_Pemohon: ulasan || (t === 'tolak' ? '' : S(r.Ulasan_Pemohon)) });
+      } else {
+        var patch = { Status: rule.ke };
+        if (t === 'lulus') { patch.Keputusan = 'Diluluskan'; patch.Tarikh_Keputusan = new Date(); patch.Diputuskan_Oleh = ctx.email; patch.Ulasan_Pemohon = ulasan; if (cat) patch.Catatan_Admin = cat; }
+        Db.update('Permohonan_Lot', r._row, patch);
+      }
+      Audit.log(ctx, 'LOT_' + t.toUpperCase(), 'Ruang Niaga', id, lama, rule.ke, cat);
+      return { m: Util.normMatric(r.No_Matrik), amaran: amaran, nama: RnU.namaLot(RnU.lotById(S(r.Kod_Lot))) };
+    });
+    var emel = RnU.emelOf(info.m);
+    if (t === 'lulus') {
+      RnU.mel(emel, 'Permohonan lot diluluskan', 'Lot application approved',
+        ['Tahniah. Permohonan lot anda (' + id + ', ' + info.nama + ') telah diluluskan oleh jawatankuasa. Surat tawaran akan dihantar tidak lama lagi.' + (ulasan ? ' Catatan: ' + ulasan : '')],
+        ['Congratulations. Your lot application (' + id + ', ' + info.nama + ') has been approved. The offer letter will be sent shortly.']);
+    } else if (t === 'tolak') {
+      RnU.mel(emel, 'Permohonan lot tidak berjaya', 'Lot application unsuccessful',
+        ['Permohonan lot anda (' + id + ', ' + info.nama + ') tidak berjaya.' + (ulasan ? ' Catatan: ' + ulasan : '')],
+        ['Your lot application (' + id + ', ' + info.nama + ') was unsuccessful.']);
+    } else if (t === 'batal') {
+      RnU.mel(emel, 'Permohonan lot dibatalkan', 'Lot application cancelled',
+        ['Permohonan lot anda (' + id + ') telah dibatalkan oleh UTMXCITE. Catatan: ' + cat], ['Your lot application (' + id + ') has been cancelled by UTMXCITE. Note: ' + cat]);
+    }
+    var out = adminButiran_(ctx, { id: id });
+    out.amaranTindakan = info.amaran;
+    return out;
+  }
+
+  return {
+    tempohLot: tempohLot_, tempohSimpan: tempohSimpan_, lotSenarai: lotSenarai_, lotSimpan: lotSimpan_, lotTerbuka: lotTerbuka_, lotView: lotView_,
+    kelayakan: kelayakan_, saya: saya_, hantar: hantar_, batal: batal_, fail: fail_, ringkas: ringkas_,
+    adminSenarai: adminSenarai_, adminButiran: adminButiran_, adminFail: adminFail_, adminTindakan: adminTindakan_, lepas: lepas_, borangOf: borangOf_
+  };
+})();
+
+
+// ===== RuangNiagaSewa.gs =====
+/**
+ * UTMPreneur: Ruang Niaga fasa 4-5. Sewaan aktif, jadual sewa berperingkat, bil sewa bulanan, bayaran, tunggakan dan notis,
+ * tamat/pembaharuan sewaan, daftar sewaan sedia ada, dashboard admin dan kerja harian.
+ * Bil dijana pada hari JANA_BIL_SEWA_HARI (5) bagi bulan itu, tarikh akhir hari TARIKH_AKHIR_SEWA_HARI (7).
+ */
+
+var RnSewa = (function () {
+  var KAEDAH = ['Interbank transfer', 'Deposit tunai', 'PayHub UTM'];
+  var NOTIS = ['Peringatan 1', 'Peringatan 2', 'Penamatan'];
+  function S(v) { return Util.str(v); }
+  function y_(d) { return parseInt(Util.fmtDate(d, 'yyyy'), 10); }
+  function m_(d) { return parseInt(Util.fmtDate(d, 'MM'), 10); }
+  function bil_(r) { return RnU.dk(r); }
+
+  // ---------- Pembantu sewaan dan jadual ----------
+  function tamatEfektif_(sew) { return Util.toDate(sew.Tarikh_Tamat_Sebenar) || Util.toDate(sew.Tarikh_Tamat); }
+  function jadualSewaan_(sew) { return RnTawaran.jadualOf(S(sew.ID_Permohonan), S(sew.ID_Sewaan)); }
+  /** Bulan sewa ke-n bagi (tahun, bulan); 1 = bulan tarikh mula. */
+  function bulanKe_(sew, tahun, bulan) {
+    var mula = Util.toDate(sew.Tarikh_Mula);
+    return (tahun * 12 + bulan) - (y_(mula) * 12 + m_(mula)) + 1;
+  }
+  function kadarBulan_(jadual, n, lalai) {
+    for (var i = 0; i < jadual.length; i++) {
+      var j = jadual[i];
+      if (n >= j.dari && (j.hingga === '' || n <= j.hingga)) return j.kadar;
+    }
+    return jadual.length ? jadual[jadual.length - 1].kadar : lalai;
+  }
+  function tarikhAkhirBil_(tahun, bulan) {
+    var hari = Cfg.num('TARIKH_AKHIR_SEWA_HARI', 7);
+    var last = new Date(Date.UTC(tahun, bulan, 0)).getUTCDate();
+    return Util.toDate(tahun + '-' + Util.pad(bulan, 2) + '-' + Util.pad(Math.min(hari, last), 2));
+  }
+  function bilByKey_(idSewaan, tahun, bulan) {
+    var l = Db.find('Bayaran_Sewa', function (b) { return S(b.ID_Sewaan) === idSewaan && Number(b.Tahun) === tahun && Number(b.Bulan) === bulan; });
+    return l.length ? l[0] : null;
+  }
+
+  /** Jana bil bagi satu bulan (MESTI dalam kunci). Pulang baris bil baharu atau null jika sudah ada / di luar tempoh. */
+  function janaBil_(sew, tahun, bulan, opts) {
+    opts = opts || {};
+    var n = bulanKe_(sew, tahun, bulan);
+    var tamat = tamatEfektif_(sew);
+    if (n < 1 || (tahun * 12 + bulan) > (y_(tamat) * 12 + m_(tamat))) return null;
+    if (bilByKey_(S(sew.ID_Sewaan), tahun, bulan)) return null;
+    var kadar = kadarBulan_(jadualSewaan_(sew), n, Number(sew.Kadar_RM) || 0);
+    var akhir = tarikhAkhirBil_(tahun, bulan);
+    // bil bulan semasa dijana selepas tarikh akhir biasa (sewaan baharu/pendaftaran lewat): tempoh bayar dikira dari hari dijana
+    var sekarang = new Date();
+    if (tahun === y_(sekarang) && bulan === m_(sekarang) && Util.daysBetween(sekarang, akhir) < 0) akhir = RnU.tambahHari(new Date(), Cfg.num('TARIKH_AKHIR_SEWA_HARI', 7));
+    var rec = {
+      ID_Bil: Util.formatId('BSW', tahun, Db.nextSeqLocked('BSW_' + tahun), 4), ID_Sewaan: S(sew.ID_Sewaan), Kod_Lot: S(sew.Kod_Lot), ID_Perniagaan: S(sew.ID_Perniagaan),
+      Bulan: bulan, Tahun: tahun, Jumlah_RM: kadar, Tarikh_Akhir: akhir, Status: 'Belum Bayar', Sewa_RM: kadar, Caj_Utiliti_RM: 0, Tarikh_Jana: new Date(), Bulan_Sewa_Ke: n
+    };
+    Db.append('Bayaran_Sewa', rec);
+    return rec;
+  }
+
+  // ---------- Pengaktifan ----------
+  function aktifkan_(ctx, idPer) {
+    var hasil = Db.withLock(function () {
+      var r = RnU.perById(idPer);
+      if (!r) throw appError_('RN_TIDAK_DITEMUI');
+      if (S(r.Status) !== 'Perjanjian') return { id: S(r.ID_Sewaan), baru: false };
+      var t = RnU.tawaranById(idPer);
+      var jadual = RnTawaran.jadualOf(idPer);
+      var id = Util.formatId('SWA', null, Db.nextSeqLocked('SWA'), 4);
+      var now = new Date();
+      Db.append('Sewaan', {
+        ID_Sewaan: id, Kod_Lot: S(r.Kod_Lot), ID_Perniagaan: S(r.ID_Perniagaan), ID_Permohonan: idPer, Kadar_RM: jadual.length ? jadual[0].kadar : Number(t.Sewa_Bulanan_RM) || 0,
+        Tarikh_Mula: Util.toDate(t.Tarikh_Mula), Tarikh_Tamat: Util.toDate(t.Tarikh_Tamat), Status: 'Aktif', Didaftar_Oleh: ctx.email, Jenis_Daftar: 'Aliran tawaran',
+        Bil_Pembaharuan: 0, Tarikh_Daftar: now
+      });
+      jadual.forEach(function (j) { Db.append('Jadual_Sewa', { ID_Permohonan: idPer, ID_Sewaan: id, Dari_Bulan: j.dari, Hingga_Bulan: j.hingga, Kadar_RM: j.kadar }); });
+      Db.update('Permohonan_Lot', r._row, { Status: 'Sewaan Aktif', ID_Sewaan: id });
+      RnU.setLot(S(r.Kod_Lot), 'Disewa');
+      Db.find('Cagaran', function (c) { return S(c.ID_Permohonan) === idPer; }).forEach(function (c) { Db.update('Cagaran', c._row, { ID_Sewaan: id }); });
+      Db.find('Pekerja_Penyewa', function (c) { return S(c.ID_Permohonan) === idPer; }).forEach(function (c) { Db.update('Pekerja_Penyewa', c._row, { ID_Sewaan: id }); });
+      Db.find('Dokumen_Sewaan', function (c) { return S(c.ID_Permohonan) === idPer; }).forEach(function (c) { Db.update('Dokumen_Sewaan', c._row, { ID_Sewaan: id }); });
+      RnCagaran.tetapAkhirPulang(idPer, Util.toDate(t.Tarikh_Tamat));
+      var sew = RnU.sewaanById(id);
+      // bil pertama: bulan semasa jika dalam tempoh sewaan
+      var bilPertama = janaBil_(sew, y_(now), m_(now), { awal: true });
+      Audit.log(ctx, 'AKTIFKAN_SEWAAN', 'Ruang Niaga', idPer, 'Perjanjian', 'Sewaan Aktif', id + ' | ' + RnU.dk(t.Tarikh_Mula) + ' hingga ' + RnU.dk(t.Tarikh_Tamat) + (bilPertama ? ' | bil ' + S(bilPertama.ID_Bil) : ''));
+      return { id: id, baru: true, nama: RnU.namaLot(RnU.lotById(S(r.Kod_Lot))), m: Util.normMatric(r.No_Matrik), mula: RnU.dk(t.Tarikh_Mula), tamat: RnU.dk(t.Tarikh_Tamat) };
+    });
+    if (hasil.baru) {
+      RnU.mel(RnU.emelOf(hasil.m), 'Sewaan lot anda kini aktif', 'Your tenancy is now active',
+        ['Sewaan ' + hasil.nama + ' (' + hasil.id + ') kini aktif dari ' + Util.fmtTarikhBM(hasil.mula) + ' hingga ' + Util.fmtTarikhBM(hasil.tamat) + '. Bil sewa dijana pada hari ke-' + Cfg.num('JANA_BIL_SEWA_HARI', 5) + ' setiap bulan dan perlu dibayar sebelum hari ke-' + Cfg.num('TARIKH_AKHIR_SEWA_HARI', 7) + '.'],
+        ['Your tenancy of ' + hasil.nama + ' (' + hasil.id + ') is now active from ' + hasil.mula + ' to ' + hasil.tamat + '.']);
+    }
+    return hasil.id;
+  }
+
+  // ---------- Paparan ----------
+  function billView_(b) {
+    var st = S(b.Status);
+    var akhir = Util.toDate(b.Tarikh_Akhir);
+    var hariLewat = akhir && ['Belum Bayar', 'Lewat'].indexOf(st) >= 0 ? Math.max(0, Util.daysBetween(akhir, new Date())) : 0;
+    return {
+      id: S(b.ID_Bil), idSewaan: S(b.ID_Sewaan), kodLot: S(b.Kod_Lot), bulan: Number(b.Bulan), tahun: Number(b.Tahun), bulanSewaKe: Number(b.Bulan_Sewa_Ke) || 0,
+      jumlah: Number(b.Jumlah_RM) || 0, sewa: Number(b.Sewa_RM) || 0, utiliti: Number(b.Caj_Utiliti_RM) || 0, catatanUtiliti: S(b.Catatan_Utiliti),
+      tarikhAkhir: akhir ? RnU.dk(akhir) : '', status: st, tarikhBayar: RnU.dk(b.Tarikh_Bayar), kaedah: S(b.Kaedah), noRujukan: S(b.No_Rujukan), adaResit: !!S(b.Fail_Resit),
+      disahkanOleh: S(b.Disahkan_Oleh), tarikhPengesahan: RnU.dk(b.Tarikh_Pengesahan), catatan: S(b.Catatan), hariLewat: hariLewat
+    };
+  }
+  function bilSewaan_(idSewaan) {
+    return Db.find('Bayaran_Sewa', function (b) { return S(b.ID_Sewaan) === idSewaan; }).sort(function (a, b) {
+      return (Number(b.Tahun) * 12 + Number(b.Bulan)) - (Number(a.Tahun) * 12 + Number(a.Bulan));
+    });
+  }
+
+  /** Tunggakan: bil Lewat. Ditanda jika >= 2 bil Lewat atau bil terlama lewat melebihi TUNGGAKAN_HARI. */
+  function tunggakan_(idSewaan) {
+    var lewat = bilSewaan_(idSewaan).filter(function (b) { return S(b.Status) === 'Lewat'; });
+    var terlama = 0, jumlah = 0;
+    lewat.forEach(function (b) {
+      jumlah += Number(b.Jumlah_RM) || 0;
+      terlama = Math.max(terlama, Util.daysBetween(b.Tarikh_Akhir, new Date()));
+    });
+    return { bilLewat: lewat.length, jumlah: Math.round(jumlah * 100) / 100, hariTerlama: terlama, ditanda: lewat.length >= 2 || terlama > Cfg.num('TUNGGAKAN_HARI', 30) };
+  }
+
+  function notisSewaan_(idSewaan) {
+    return Db.find('Dokumen_Sewaan', function (d) { return S(d.Jenis) === 'Notis' && S(d.ID_Sewaan) === idSewaan; });
+  }
+  function cadangNotis_(idSewaan) {
+    if (!tunggakan_(idSewaan).ditanda) return '';
+    var ada = notisSewaan_(idSewaan).map(function (d) { return S(d.Tajuk); });
+    for (var i = 0; i < NOTIS.length; i++) if (ada.indexOf('Notis ' + NOTIS[i]) < 0) return NOTIS[i];
+    return '';
+  }
+
+  function sewaanView_(s) {
+    var mula = Util.toDate(s.Tarikh_Mula), tamat = Util.toDate(s.Tarikh_Tamat);
+    var lot = RnU.lotById(S(s.Kod_Lot));
+    var per = RnU.perniagaan(S(s.ID_Perniagaan)) || {};
+    var tg = tunggakan_(S(s.ID_Sewaan));
+    return {
+      id: S(s.ID_Sewaan), idPermohonan: S(s.ID_Permohonan), kodLot: S(s.Kod_Lot), namaLot: RnU.namaLot(lot), perniagaan: S(per.Nama_Perniagaan), idPerniagaan: S(s.ID_Perniagaan),
+      kadar: Number(s.Kadar_RM) || 0, tarikhMula: mula ? RnU.dk(mula) : '', tarikhTamat: tamat ? RnU.dk(tamat) : '', tarikhTamatSebenar: RnU.dk(s.Tarikh_Tamat_Sebenar),
+      status: S(s.Status), sebabTamat: S(s.Sebab_Tamat), jenisDaftar: S(s.Jenis_Daftar), bilPembaharuan: Number(s.Bil_Pembaharuan) || 0, tunggakan: tg, cadanganNotis: cadangNotis_(S(s.ID_Sewaan))
+    };
+  }
+
+  /** Bahagian sewaan bagi pemilik/ahli: sewaan, jadual dan bil. */
+  function untukPemohon_(ctx, r) {
+    if (!S(r.ID_Sewaan)) return null;
+    var s = RnU.sewaanById(S(r.ID_Sewaan));
+    if (!s) return null;
+    var v = sewaanView_(s);
+    delete v.cadanganNotis;
+    v.jadual = jadualSewaan_(s);
+    v.bil = bilSewaan_(S(s.ID_Sewaan)).map(billView_);
+    v.kaedah = KAEDAH;
+    v.notis = notisSewaan_(S(s.ID_Sewaan)).filter(function (d) { return Util.truthy(d.Kelihatan); }).map(RnDok.view);
+    return v;
+  }
+
+  // ---------- Bil: pemilik ----------
+  function bilByID_(id) {
+    var l = Db.find('Bayaran_Sewa', function (b) { return S(b.ID_Bil) === id; });
+    return l.length ? l[0] : null;
+  }
+  function perDariBil_(b) {
+    var s = RnU.sewaanById(S(b.ID_Sewaan));
+    return s ? RnU.perById(S(s.ID_Permohonan)) : null;
+  }
+
+  function bilBayar_(ctx, p) {
+    var b = bilByID_(S(p.id));
+    if (!b) throw appError_('RN_BIL_TIDAK_DITEMUI');
+    var r = perDariBil_(b);
+    if (!r) throw appError_('RN_BIL_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r);
+    if (['Belum Bayar', 'Lewat', 'Menunggu Pengesahan'].indexOf(S(b.Status)) < 0) throw appError_('RN_BIL_STATUS');
+    var e = {};
+    var kaedah = S(p.kaedah);
+    if (KAEDAH.indexOf(kaedah) < 0) e.kaedah = 'Pilih kaedah / Choose a method';
+    var no = S(p.noRujukan).replace(/\s+/g, ' ');
+    if (!/^[A-Za-z0-9\-\/. ()]{3,60}$/.test(no)) e.noRujukan = 'No. rujukan 3 hingga 60 aksara / Reference 3 to 60 characters';
+    var tarikh = S(p.tarikhBayar);
+    if (!RnU.isDate(tarikh) || Util.daysBetween(new Date(), Util.toDate(tarikh)) > 0) e.tarikhBayar = 'Tarikh tidak sah atau akan datang / Invalid or future date';
+    var v = null;
+    try { v = Files.validate(p.fail, ['pdf', 'jpg', 'jpeg', 'png']); } catch (err) { e.fail = 'Muat naik resit (PDF/JPG/PNG) / Upload the receipt'; }
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    var url = Files.save('FLD_RESIT_SEWA', 'RESIT_' + S(b.ID_Bil) + '_' + Util.fmtDate(new Date(), 'yyyyMMddHHmm'), v);
+    Db.withLock(function () {
+      var cur = bilByID_(S(b.ID_Bil));
+      if (['Belum Bayar', 'Lewat', 'Menunggu Pengesahan'].indexOf(S(cur.Status)) < 0) throw appError_('RN_BIL_STATUS');
+      Db.update('Bayaran_Sewa', cur._row, { Status: 'Menunggu Pengesahan', Tarikh_Bayar: Util.toDate(tarikh), Kaedah: kaedah, No_Rujukan: no, Fail_Resit: url, Catatan: '' });
+      Audit.log(ctx, 'REKOD_BAYARAN_SEWA', 'Ruang Niaga', S(b.ID_Bil), S(cur.Status), 'Menunggu Pengesahan', kaedah + ' | ' + no);
+    });
+    RnU.melAdmin('Bayaran sewa menunggu pengesahan', 'Rent payment awaiting verification',
+      ['Bayaran bil ' + S(b.ID_Bil) + ' (' + S(b.Kod_Lot) + ', ' + S(b.Bulan) + '/' + S(b.Tahun) + ') direkodkan oleh pemilik. Sila sahkan dalam UTMPreneur.'],
+      ['A payment for bill ' + S(b.ID_Bil) + ' was recorded by the tenant. Please verify it in UTMPreneur.']);
+    return { id: S(b.ID_Bil), sewaan: untukPemohon_(ctx, RnU.perById(S(r.ID_Permohonan))) };
+  }
+
+  function bilFail_(ctx, p) {
+    var b = bilByID_(S(p.id));
+    if (!b || !S(b.Fail_Resit)) throw appError_('RN_BIL_TIDAK_DITEMUI');
+    var r = perDariBil_(b);
+    if (!r || !RnU.akses(ctx, r)) throw appError_('RN_BIL_TIDAK_DITEMUI');
+    return Files.read(S(b.Fail_Resit));
+  }
+  function adminBilFail_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var b = bilByID_(S(p.id));
+    if (!b || !S(b.Fail_Resit)) throw appError_('RN_BIL_TIDAK_DITEMUI');
+    Audit.log(ctx, 'PAPAR_RESIT_SEWA', 'Ruang Niaga', S(b.ID_Bil), '', S(b.No_Rujukan), '');
+    return Files.read(S(b.Fail_Resit));
+  }
+
+  // ---------- Bil: admin ----------
+  function emelBil_(b) {
+    var r = perDariBil_(b);
+    return r ? RnU.emelOf(Util.normMatric(r.No_Matrik)) : '';
+  }
+  function statusKembali_(b) {
+    return Util.daysBetween(b.Tarikh_Akhir, new Date()) > 0 ? 'Lewat' : 'Belum Bayar';
+  }
+
+  function bilSenarai_(ctx, p) {
+    RnU.requireViewer(ctx);
+    p = p || {};
+    var status = S(p.status), q = S(p.q).toLowerCase();
+    var all = Db.rows('Bayaran_Sewa');
+    var kiraan = {};
+    ['Belum Bayar', 'Menunggu Pengesahan', 'Dibayar', 'Lewat', 'Dikecualikan'].forEach(function (s) { kiraan[s] = 0; });
+    all.forEach(function (b) { if (kiraan[S(b.Status)] !== undefined) kiraan[S(b.Status)]++; });
+    var perCache = {};
+    var rows = all.filter(function (b) {
+      if (status && status !== 'SEMUA' && S(b.Status) !== status) return false;
+      if (q) {
+        var per = perCache[S(b.ID_Perniagaan)] || (perCache[S(b.ID_Perniagaan)] = RnU.perniagaan(S(b.ID_Perniagaan)) || {});
+        if ((S(b.ID_Bil) + ' ' + S(b.Kod_Lot) + ' ' + S(per.Nama_Perniagaan)).toLowerCase().indexOf(q) < 0) return false;
+      }
+      return true;
+    }).sort(function (a, b) { return (Number(b.Tahun) * 12 + Number(b.Bulan)) - (Number(a.Tahun) * 12 + Number(a.Bulan)); });
+    return {
+      kiraan: kiraan, jumlah: rows.length, bolehUbah: RnU.isDecider(ctx),
+      senarai: rows.slice(0, 300).map(function (b) {
+        var v = billView_(b);
+        v.perniagaan = S((perCache[S(b.ID_Perniagaan)] || RnU.perniagaan(S(b.ID_Perniagaan)) || {}).Nama_Perniagaan);
+        return v;
+      })
+    };
+  }
+
+  function bilTindakan_(ctx, id, fn) {
+    RnU.requireDecider(ctx);
+    var idSewaan = Db.withLock(function () {
+      var b = bilByID_(id);
+      if (!b) throw appError_('RN_BIL_TIDAK_DITEMUI');
+      fn(b);
+      return S(b.ID_Sewaan);
+    });
+    return adminButiran_(ctx, { id: idSewaan });
+  }
+
+  function bilSahkan_(ctx, p) {
+    var emel = '';
+    var out = bilTindakan_(ctx, S(p.id), function (b) {
+      if (S(b.Status) !== 'Menunggu Pengesahan') throw appError_('RN_BIL_STATUS');
+      Db.update('Bayaran_Sewa', b._row, { Status: 'Dibayar', Disahkan_Oleh: ctx.email, Tarikh_Pengesahan: new Date() });
+      Audit.log(ctx, 'SAHKAN_BAYARAN_SEWA', 'Ruang Niaga', S(b.ID_Bil), 'Menunggu Pengesahan', 'Dibayar', S(b.No_Rujukan));
+      emel = emelBil_(b);
+    });
+    RnU.mel(emel, 'Bayaran sewa disahkan', 'Rent payment verified', ['Bayaran sewa anda (bil ' + S(p.id) + ') telah disahkan. Terima kasih.'], ['Your rent payment (bill ' + S(p.id) + ') has been verified. Thank you.']);
+    return out;
+  }
+  function bilKembalikan_(ctx, p) {
+    var cat = S(p.catatan).substr(0, 300);
+    if (!cat) throw appError_('RN_CATATAN_WAJIB');
+    var emel = '';
+    var out = bilTindakan_(ctx, S(p.id), function (b) {
+      if (S(b.Status) !== 'Menunggu Pengesahan') throw appError_('RN_BIL_STATUS');
+      Db.update('Bayaran_Sewa', b._row, { Status: statusKembali_(b), Tarikh_Bayar: '', Kaedah: '', No_Rujukan: '', Fail_Resit: '', Catatan: cat });
+      Audit.log(ctx, 'KEMBALIKAN_BAYARAN_SEWA', 'Ruang Niaga', S(b.ID_Bil), 'Menunggu Pengesahan', statusKembali_(b), cat);
+      emel = emelBil_(b);
+    });
+    RnU.mel(emel, 'Bayaran sewa dikembalikan', 'Rent payment returned', ['Rekod bayaran bil ' + S(p.id) + ' dikembalikan. Catatan: ' + cat + '. Sila rekod semula bayaran.'], ['The payment record for bill ' + S(p.id) + ' was returned. Note: ' + cat]);
+    return out;
+  }
+  function bilKecuali_(ctx, p) {
+    var cat = S(p.catatan).substr(0, 300);
+    if (!cat) throw appError_('RN_CATATAN_WAJIB');
+    return bilTindakan_(ctx, S(p.id), function (b) {
+      if (['Belum Bayar', 'Lewat', 'Menunggu Pengesahan'].indexOf(S(b.Status)) < 0) throw appError_('RN_BIL_STATUS');
+      Db.update('Bayaran_Sewa', b._row, { Status: 'Dikecualikan', Disahkan_Oleh: ctx.email, Tarikh_Pengesahan: new Date(), Catatan: cat });
+      Audit.log(ctx, 'KECUALI_BIL_SEWA', 'Ruang Niaga', S(b.ID_Bil), S(b.Status), 'Dikecualikan', cat);
+    });
+  }
+  function bilUtiliti_(ctx, p) {
+    var jumlah = S(p.jumlah) === '' ? 0 : Util.parseRm(p.jumlah);
+    if (jumlah === null) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { jumlah: 'Masukkan nilai RM yang tepat / Enter an exact RM value' } });
+    var cat = S(p.catatan).substr(0, 200);
+    var emel = '';
+    var out = bilTindakan_(ctx, S(p.id), function (b) {
+      if (['Belum Bayar', 'Lewat'].indexOf(S(b.Status)) < 0) throw appError_('RN_BIL_STATUS');
+      var sewa = Number(b.Sewa_RM) || 0;
+      Db.update('Bayaran_Sewa', b._row, { Caj_Utiliti_RM: jumlah, Catatan_Utiliti: cat, Jumlah_RM: Math.round((sewa + jumlah) * 100) / 100 });
+      Audit.log(ctx, 'CAJ_UTILITI_BIL', 'Ruang Niaga', S(b.ID_Bil), S(b.Caj_Utiliti_RM), String(jumlah), cat);
+      emel = emelBil_(b);
+    });
+    if (jumlah > 0) RnU.mel(emel, 'Caj utiliti ditambah pada bil sewa', 'Utility charge added to your rent bill',
+      ['Caj utiliti RM ' + jumlah + ' telah ditambah pada bil ' + S(p.id) + (cat ? ' (' + cat + ')' : '') + '. Sila semak jumlah terkini dalam UTMPreneur.'], ['A utility charge of RM ' + jumlah + ' was added to bill ' + S(p.id) + '.']);
+    return out;
+  }
+
+  // ---------- Notis tunggakan ----------
+  function notisJana_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var s = RnU.sewaanById(S(p.id));
+    if (!s) throw appError_('RN_SEWAAN_TIDAK_DITEMUI');
+    var jenis = S(p.jenis);
+    if (NOTIS.indexOf(jenis) < 0) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+    var idPer = S(s.ID_Permohonan);
+    var r = RnU.perById(idPer);
+    var tg = tunggakan_(S(s.ID_Sewaan));
+    if (!tg.bilLewat) throw appError_('RN_BIL_STATUS');
+    var per = RnU.perniagaan(S(s.ID_Perniagaan)) || {};
+    var lot = RnU.lotById(S(s.Kod_Lot));
+    var e = Pdf.esc;
+    var tajuk = 'Notis ' + jenis;
+    var lewat = bilSewaan_(S(s.ID_Sewaan)).filter(function (b) { return S(b.Status) === 'Lewat'; }).reverse();
+    var pel = RnU.pelajar(Util.normMatric(r.No_Matrik)) || {};
+    var hari = Cfg.num('NOTIS_PENAMATAN_HARI', 7);
+    var h = '<table class="nb"><tr><td>Ruj.: ' + e(S(s.ID_Sewaan) + '/' + jenis.replace(/\s+/g, '')) + '</td><td class="r">Tarikh: ' + e(Util.fmtTarikhBM(new Date())) + '</td></tr></table>' +
+      '<h1>' + e(tajuk.toUpperCase()) + '</h1>' +
+      '<p><b>' + e(S(per.Nama_Perniagaan)) + '</b><br>u.p: ' + e(S(pel.Nama_Penuh)) + '<br>' + e(S(per.Alamat)) + '</p>' +
+      '<p><b>SEWAAN ' + e(RnU.alamatLot(lot).toUpperCase()) + ' (' + e(S(s.ID_Sewaan)) + ')</b></p>';
+    if (jenis === 'Peringatan 1') h += '<p>Pihak Universiti merujuk kepada perjanjian penyewaan di atas. Rekod kami menunjukkan terdapat tunggakan sewa seperti berikut. Sila jelaskan segera dan kemukakan salinan resit rasmi kepada UTMXCITE.</p>';
+    else if (jenis === 'Peringatan 2') h += '<p>Ini ialah peringatan kedua. Tunggakan sewa berikut masih belum dijelaskan walaupun peringatan terdahulu telah dikeluarkan. Kegagalan menjelaskan tunggakan boleh menyebabkan penyewaan ditamatkan.</p>';
+    else h += '<p>Walaupun peringatan telah dikeluarkan, tunggakan sewa berikut masih belum dijelaskan. Dengan ini Universiti memberi notis penamatan penyewaan. Pihak tuan dikehendaki <b>mengosongkan premis dalam tempoh ' + hari + ' hari</b> dari tarikh notis ini dan menjelaskan semua tunggakan. Wang cagaran tertakluk kepada syarat perjanjian.</p>';
+    h += '<table><tr><th>Bulan</th><th>Jumlah (RM)</th><th>Tarikh akhir</th><th>Hari lewat</th></tr>' + lewat.map(function (b) {
+      return '<tr><td>' + e(Util.BULAN_BM[Number(b.Bulan) - 1] + ' ' + b.Tahun) + '</td><td class="r">' + e(Number(b.Jumlah_RM).toFixed(2)) + '</td><td>' + e(Util.fmtTarikhBM(b.Tarikh_Akhir)) +
+        '</td><td class="r">' + e(String(Util.daysBetween(b.Tarikh_Akhir, new Date()))) + '</td></tr>';
+    }).join('') + '<tr><td><b>Jumlah tertunggak</b></td><td class="r"><b>' + e(tg.jumlah.toFixed(2)) + '</b></td><td></td><td></td></tr></table>' +
+      '<p class="sig">Pengarah<br>UTMXCITE, Universiti Teknologi Malaysia<br><span class="sm">Notis ini dijana oleh sistem UTMPreneur.</span></p>';
+    var nama = tajuk + ' ' + S(s.ID_Sewaan);
+    var res = Pdf.dariHtml(Pdf.wrap(h, nama), nama, 'FLD_LAMPIRAN_LOT');
+    Db.withLock(function () {
+      var versi = RnDok.versiSeterusnya(idPer, 'Notis');
+      RnDok.tambahLocked({
+        ID_Permohonan: idPer, ID_Sewaan: S(s.ID_Sewaan), Jenis: 'Notis', Versi: versi, Tajuk: tajuk, Fail: res.url, Nama_Fail: nama + '.pdf', Dijana_Oleh: ctx.email,
+        Status: 'Dihantar', Kelihatan: 'Ya', Catatan: 'Tunggakan RM ' + tg.jumlah.toFixed(2)
+      });
+      Audit.log(ctx, 'JANA_NOTIS_SEWA', 'Ruang Niaga', S(s.ID_Sewaan), '', tajuk, 'Tunggakan RM ' + tg.jumlah.toFixed(2));
+    });
+    RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), tajuk + ' sewaan lot', tajuk + ' for your tenancy',
+      ['UTMXCITE telah mengeluarkan ' + tajuk + ' bagi sewaan ' + S(s.ID_Sewaan) + ' (tunggakan RM ' + tg.jumlah.toFixed(2) + '). Sila lihat dokumen dalam UTMPreneur.'],
+      ['UTMXCITE issued a ' + tajuk + ' for tenancy ' + S(s.ID_Sewaan) + ' (arrears RM ' + tg.jumlah.toFixed(2) + ').']);
+    return adminButiran_(ctx, { id: S(s.ID_Sewaan) });
+  }
+
+  // ---------- Admin: sewaan ----------
+  function adminSenarai_(ctx, p) {
+    RnU.requireViewer(ctx);
+    p = p || {};
+    var status = S(p.status), q = S(p.q).toLowerCase();
+    var all = Db.rows('Sewaan');
+    var rows = all.filter(function (s) {
+      if (status && status !== 'SEMUA' && S(s.Status) !== status) return false;
+      if (q) {
+        var per = RnU.perniagaan(S(s.ID_Perniagaan)) || {};
+        if ((S(s.ID_Sewaan) + ' ' + S(s.Kod_Lot) + ' ' + S(per.Nama_Perniagaan)).toLowerCase().indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    return {
+      jumlah: rows.length, senarai: rows.map(sewaanView_), bolehUbah: RnU.isDecider(ctx),
+      kiraan: { Aktif: all.filter(function (s) { return S(s.Status) === 'Aktif'; }).length, Tamat: all.filter(function (s) { return S(s.Status) === 'Tamat'; }).length }
+    };
+  }
+
+  function adminButiran_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var s = RnU.sewaanById(S(p.id));
+    if (!s) throw appError_('RN_SEWAAN_TIDAK_DITEMUI');
+    var idPer = S(s.ID_Permohonan);
+    var r = RnU.perById(idPer);
+    var v = sewaanView_(s);
+    v.jadual = jadualSewaan_(s);
+    v.bil = bilSewaan_(S(s.ID_Sewaan)).map(billView_);
+    v.cagaran = RnCagaran.senarai(idPer);
+    v.pekerja = RnPerjanjian.senaraiPekerja(idPer);
+    v.peralatan = RnPerjanjian.peralatanLot(S(s.Kod_Lot));
+    v.notis = notisSewaan_(S(s.ID_Sewaan)).map(RnDok.view);
+    v.dokumen = r ? RnDok.senarai(r, true) : [];
+    v.kaedah = KAEDAH;
+    v.bolehUbah = RnU.isDecider(ctx);
+    return v;
+  }
+
+  function tamat_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var sebab = S(p.sebab).substr(0, 300);
+    if (!sebab) throw appError_('RN_CATATAN_WAJIB');
+    var tarikh = S(p.tarikh) || RnU.dk(new Date());
+    if (!RnU.isDate(tarikh) || Util.daysBetween(new Date(), Util.toDate(tarikh)) > 0) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { tarikh: 'Tarikh tidak sah atau akan datang / Invalid or future date' } });
+    var info = Db.withLock(function () {
+      var s = RnU.sewaanById(S(p.id));
+      if (!s) throw appError_('RN_SEWAAN_TIDAK_DITEMUI');
+      if (S(s.Status) !== 'Aktif') throw appError_('RN_SEWAAN_STATUS');
+      if (Util.daysBetween(Util.toDate(s.Tarikh_Mula), Util.toDate(tarikh)) < 0) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { tarikh: 'Tarikh sebelum tarikh mula sewaan / Before the start date' } });
+      Db.update('Sewaan', s._row, { Status: 'Tamat', Tarikh_Tamat_Sebenar: Util.toDate(tarikh), Sebab_Tamat: sebab });
+      var r = RnU.perById(S(s.ID_Permohonan));
+      if (r) Db.update('Permohonan_Lot', r._row, { Status: 'Tamat', Tarikh_Keputusan: new Date() });
+      RnU.setLot(S(s.Kod_Lot), 'Kosong');
+      RnCagaran.tetapAkhirPulang(S(s.ID_Permohonan), Util.toDate(tarikh));
+      Audit.log(ctx, 'TAMAT_SEWAAN', 'Ruang Niaga', S(s.ID_Sewaan), 'Aktif', 'Tamat', tarikh + ' | ' + sebab);
+      return { m: r ? Util.normMatric(r.No_Matrik) : '', id: S(s.ID_Sewaan) };
+    });
+    RnU.mel(RnU.emelOf(info.m), 'Sewaan lot ditamatkan', 'Your tenancy has ended',
+      ['Sewaan ' + info.id + ' telah ditamatkan pada ' + Util.fmtTarikhBM(tarikh) + '. Sebab: ' + sebab + '. Cagaran akan diproses dalam ' + Cfg.num('CAGARAN_PULANG_HARI', 90) + ' hari.'],
+      ['Tenancy ' + info.id + ' ended on ' + tarikh + '.']);
+    return adminButiran_(ctx, { id: info.id });
+  }
+
+  function perbaharui_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var kadarBaharu = S(p.kadarBaharu) === '' ? null : Util.parseRm(p.kadarBaharu);
+    if (S(p.kadarBaharu) !== '' && kadarBaharu === null) throw appError_('RN_BORANG_TIDAK_SAH', { medan: { kadarBaharu: 'Masukkan nilai RM yang tepat / Enter an exact RM value' } });
+    var info = Db.withLock(function () {
+      var s = RnU.sewaanById(S(p.id));
+      if (!s) throw appError_('RN_SEWAAN_TIDAK_DITEMUI');
+      if (S(s.Status) !== 'Aktif') throw appError_('RN_SEWAAN_STATUS');
+      var lama = Util.toDate(s.Tarikh_Tamat);
+      var baharu = Util.addMonths(lama, 12);
+      var bulanTermLama = RnTawaran.bilBulan(RnU.dk(s.Tarikh_Mula), RnU.dk(lama));
+      if (kadarBaharu !== null) {
+        var jadual = jadualSewaan_(s);
+        var akhir = jadual.length ? jadual[jadual.length - 1] : null;
+        var rowsJ = Db.find('Jadual_Sewa', function (j) { return S(j.ID_Sewaan) === S(s.ID_Sewaan); });
+        if (akhir && akhir.hingga === '') {
+          var rj = rowsJ.filter(function (j) { return Number(j.Dari_Bulan) === akhir.dari; })[0];
+          if (rj) Db.update('Jadual_Sewa', rj._row, { Hingga_Bulan: bulanTermLama });
+          Db.append('Jadual_Sewa', { ID_Permohonan: S(s.ID_Permohonan), ID_Sewaan: S(s.ID_Sewaan), Dari_Bulan: bulanTermLama + 1, Hingga_Bulan: '', Kadar_RM: kadarBaharu });
+        } else {
+          Db.append('Jadual_Sewa', { ID_Permohonan: S(s.ID_Permohonan), ID_Sewaan: S(s.ID_Sewaan), Dari_Bulan: (akhir ? akhir.hingga : bulanTermLama) + 1, Hingga_Bulan: '', Kadar_RM: kadarBaharu });
+        }
+      }
+      Db.update('Sewaan', s._row, { Tarikh_Tamat: baharu, Bil_Pembaharuan: (Number(s.Bil_Pembaharuan) || 0) + 1 });
+      RnCagaran.tetapAkhirPulang(S(s.ID_Permohonan), baharu);
+      Audit.log(ctx, 'PERBAHARUI_SEWAAN', 'Ruang Niaga', S(s.ID_Sewaan), RnU.dk(lama), RnU.dk(baharu), kadarBaharu !== null ? 'kadar baharu RM ' + kadarBaharu : '');
+      return { id: S(s.ID_Sewaan), idPer: S(s.ID_Permohonan), lama: lama, baharu: baharu };
+    });
+    var amaran = [];
+    try { RnPerjanjian.janaPembaharuan(ctx, info.idPer, info.lama, info.baharu); } catch (err) {
+      amaran.push(err && err.name === 'AppError' ? err.bm : 'Dokumen pembaharuan gagal dijana.');
+      Audit.log(ctx, 'DOKUMEN_PEMBAHARUAN_GAGAL', 'Ruang Niaga', info.id, '', '', String(err && err.message ? err.message : err).substr(0, 300));
+    }
+    var out = adminButiran_(ctx, { id: info.id });
+    out.amaranPembaharuan = amaran;
+    return out;
+  }
+
+  /** Daftar sewaan sedia ada: terus Sewaan Aktif tanpa aliran tawaran. */
+  function daftarSedia_(ctx, p) {
+    RnU.requireDecider(ctx);
+    p = p || {};
+    var e = {}, bad = function (k, msg) { e[k] = msg || 'Wajib diisi / Required'; };
+    var kunci = S(p.idPerniagaan).toUpperCase();
+    var per = RnU.perniagaan(kunci) || (kunci ? RnU.perniagaanOwner(Util.normMatric(kunci)) : null);
+    if (!per) bad('idPerniagaan', 'Perniagaan tidak ditemui (masukkan ID Perniagaan atau No. Matrik pemilik; daftar SSU sedia ada dahulu) / Business not found');
+    var lot = RnU.lotById(S(p.kodLot));
+    if (!lot) bad('kodLot', 'Lot tidak ditemui / Lot not found');
+    else if (S(lot.Status_Lot) !== 'Kosong') bad('kodLot', 'Lot mesti berstatus Kosong / The lot must be vacant');
+    var mula = S(p.tarikhMula), tamat = S(p.tarikhTamat);
+    if (!RnU.isDate(mula)) bad('tarikhMula', 'Tarikh tidak sah / Invalid date');
+    if (!RnU.isDate(tamat)) bad('tarikhTamat', 'Tarikh tidak sah / Invalid date');
+    else if (!e.tarikhMula && Util.daysBetween(Util.toDate(mula), Util.toDate(tamat)) <= 0) bad('tarikhTamat', 'Tarikh tamat mesti selepas tarikh mula / End date must be after start date');
+    else if (!e.tarikhMula && Util.daysBetween(new Date(), Util.toDate(tamat)) < 0) bad('tarikhTamat', 'Tarikh tamat sudah lepas / End date has passed');
+    var jadualIn = Array.isArray(p.jadual) && p.jadual.length ? p.jadual : (S(p.kadar) !== '' ? [{ dari: 1, hingga: '', kadar: p.kadar }] : []);
+    var jadual = RnTawaran.semakJadual(jadualIn, e);
+    var cs = S(p.cagaranSewaan) === '' ? 0 : Util.parseRm(p.cagaranSewaan), cu = S(p.cagaranUtiliti) === '' ? 0 : Util.parseRm(p.cagaranUtiliti);
+    if (cs === null) bad('cagaranSewaan', 'Masukkan nilai RM yang tepat / Enter an exact RM value');
+    if (cu === null) bad('cagaranUtiliti', 'Masukkan nilai RM yang tepat / Enter an exact RM value');
+    if (per && !e.idPerniagaan && RnU.bercanggah(S(per.ID_Perniagaan))) bad('idPerniagaan', 'Perniagaan/pelajar ini sudah mempunyai permohonan atau sewaan lot yang aktif / Already has an active lot');
+    if (Object.keys(e).length) throw appError_('RN_SEDIA_TIDAK_SAH', { medan: e });
+    var cat = S(p.catatan).substr(0, 300) || 'Didaftar admin (sewaan sedia ada)';
+    var id = Db.withLock(function () {
+      var lot2 = RnU.lotById(S(p.kodLot));
+      if (S(lot2.Status_Lot) !== 'Kosong') throw appError_('RN_LOT_TIDAK_KOSONG');
+      var now = new Date();
+      var tahun = y_(now);
+      var idPer = Util.formatId('PLT', tahun, Db.nextSeqLocked('PLT_' + tahun), 4);
+      var idS = Util.formatId('SWA', null, Db.nextSeqLocked('SWA'), 4);
+      Db.append('Permohonan_Lot', {
+        ID_Permohonan: idPer, ID_Perniagaan: S(per.ID_Perniagaan), No_Matrik: Util.normMatric(per.No_Matrik_Pemilik), Kod_Lot: S(p.kodLot), Tempoh_Mula: Util.toDate(mula), Tempoh_Tamat: Util.toDate(tamat),
+        Status: 'Sewaan Aktif', Tarikh_Hantar: now, Keputusan: 'Diluluskan', Tarikh_Keputusan: now, Catatan_Admin: cat, Jenis_Permohonan: 'Sedia ada', Diputuskan_Oleh: ctx.email, ID_Sewaan: idS
+      });
+      Db.append('Sewaan', {
+        ID_Sewaan: idS, Kod_Lot: S(p.kodLot), ID_Perniagaan: S(per.ID_Perniagaan), ID_Permohonan: idPer, Kadar_RM: jadual[0].kadar, Tarikh_Mula: Util.toDate(mula), Tarikh_Tamat: Util.toDate(tamat),
+        Status: 'Aktif', Didaftar_Oleh: ctx.email, Jenis_Daftar: 'Sedia ada', Bil_Pembaharuan: 0, Tarikh_Daftar: now
+      });
+      jadual.forEach(function (j) { Db.append('Jadual_Sewa', { ID_Permohonan: idPer, ID_Sewaan: idS, Dari_Bulan: j.dari, Hingga_Bulan: j.hingga, Kadar_RM: j.kadar }); });
+      RnU.setLot(S(p.kodLot), 'Disewa');
+      [['Sewaan', cs], ['Utiliti', cu]].forEach(function (c) {
+        if (!c[1]) return;
+        Db.append('Cagaran', {
+          ID_Cagaran: Util.formatId('CGR', null, Db.nextSeqLocked('CGR'), 4), ID_Permohonan: idPer, ID_Sewaan: idS, ID_Perniagaan: S(per.ID_Perniagaan), Jenis: c[0], Jumlah_RM: c[1],
+          Status: 'Diterima', Disahkan_Oleh: ctx.email, Tarikh_Pengesahan: now, Catatan: 'Didaftar admin (sedia ada)'
+        });
+      });
+      RnCagaran.tetapAkhirPulang(idPer, Util.toDate(tamat));
+      Audit.log(ctx, 'DAFTAR_SEWAAN_SEDIA_ADA', 'Ruang Niaga', idS, '', S(p.kodLot) + ' | ' + S(per.Nama_Perniagaan), mula + ' hingga ' + tamat);
+      return idS;
+    });
+    return adminButiran_(ctx, { id: id });
+  }
+
+  // ---------- Dashboard ----------
+  function dashboard_(ctx) {
+    RnU.requireViewer(ctx);
+    var lots = Db.rows('Lot');
+    var kiraLot = { Kosong: 0, Dipohon: 0, Disewa: 0, Penyelenggaraan: 0 };
+    lots.forEach(function (l) { if (kiraLot[S(l.Status_Lot)] !== undefined) kiraLot[S(l.Status_Lot)]++; });
+    var boleh = lots.length - kiraLot.Penyelenggaraan;
+    var now = new Date(), tahun = y_(now), bulan = m_(now);
+    var bil = Db.rows('Bayaran_Sewa');
+    var bulanIni = bil.filter(function (b) { return Number(b.Tahun) === tahun && Number(b.Bulan) === bulan && S(b.Status) !== 'Dikecualikan'; });
+    var kutipan = 0, dijangka = 0;
+    bulanIni.forEach(function (b) { dijangka += Number(b.Jumlah_RM) || 0; if (S(b.Status) === 'Dibayar') kutipan += Number(b.Jumlah_RM) || 0; });
+    var lewat = bil.filter(function (b) { return S(b.Status) === 'Lewat'; });
+    var tertunggak = lewat.reduce(function (a, b) { return a + (Number(b.Jumlah_RM) || 0); }, 0);
+    var per = Db.rows('Permohonan_Lot');
+    var cnt = function (st) { return per.filter(function (r) { return S(r.Status) === st; }).length; };
+    var cagaran = Db.rows('Cagaran').map(RnCagaran.view);
+    var sewaanAktif = Db.rows('Sewaan').filter(function (s) { return S(s.Status) === 'Aktif'; });
+    var tg = sewaanAktif.map(function (s) { var v = sewaanView_(s); return v; }).filter(function (v) { return v.tunggakan.ditanda; })
+      .map(function (v) { return { idSewaan: v.id, perniagaan: v.perniagaan, kodLot: v.kodLot, bilLewat: v.tunggakan.bilLewat, jumlah: v.tunggakan.jumlah, cadanganNotis: v.cadanganNotis }; });
+    var salinanLewat = Db.rows('Tawaran_Sewa').filter(function (t) { return RnTawaran.view(t, []).salinan.lewat; }).map(function (t) { return S(t.ID_Permohonan); });
+    return {
+      okupansi: { lot: lots.length, disewa: kiraLot.Disewa, dipohon: kiraLot.Dipohon, kosong: kiraLot.Kosong, penyelenggaraan: kiraLot.Penyelenggaraan, peratus: boleh > 0 ? Math.round(kiraLot.Disewa * 1000 / boleh) / 10 : 0 },
+      kutipan: { bulan: bulan, tahun: tahun, dikutip: Math.round(kutipan * 100) / 100, dijangka: Math.round(dijangka * 100) / 100 },
+      tertunggak: { bil: lewat.length, jumlah: Math.round(tertunggak * 100) / 100 },
+      tunggakanDitanda: tg,
+      tawaran: { menunggu: cnt('Ditawarkan'), luput: cnt('Tawaran Luput'), diterima: cnt('Diterima'), perjanjian: cnt('Perjanjian') },
+      permohonan: { baharu: cnt('Baharu'), disemak: cnt('Disemak'), disenaraiPendek: cnt('Disenarai Pendek'), dinilai: cnt('Dinilai'), diluluskan: cnt('Diluluskan') },
+      cagaran: {
+        lewatBayar: cagaran.filter(function (c) { return c.lewatBayar; }).length, menungguPengesahan: cagaran.filter(function (c) { return c.status === 'Menunggu Pengesahan'; }).length,
+        lewatPulang: cagaran.filter(function (c) { return c.lewatPulang; }).map(function (c) { return { id: c.id, idPermohonan: c.idPermohonan, jenis: c.jenis, jumlah: c.jumlah, tarikhAkhirPulang: c.tarikhAkhirPulang }; })
+      },
+      salinanFizikalLewat: salinanLewat,
+      bilMenunggu: bil.filter(function (b) { return S(b.Status) === 'Menunggu Pengesahan'; }).length,
+      tempoh: RnPer.tempohLot()
+    };
+  }
+
+  // ---------- Kerja harian ----------
+  function jobHarian_() {
+    var hasil = { bilDijana: 0, lewat: 0, peringatan: 0, tunggakan: 0 };
+    var now = new Date();
+    var tahun = y_(now), bulan = m_(now), hari = parseInt(Util.fmtDate(now, 'dd'), 10);
+    var janaHari = Cfg.num('JANA_BIL_SEWA_HARI', 5);
+    var log = RnU.peringatan();
+    // 1. jana bil bulan semasa
+    if (hari >= janaHari) {
+      Db.rows('Sewaan').forEach(function (s) {
+        if (S(s.Status) !== 'Aktif') return;
+        var baru = Db.withLock(function () { return janaBil_(RnU.sewaanById(S(s.ID_Sewaan)), tahun, bulan, {}); });
+        if (baru) { hasil.bilDijana++; Audit.log(RnU.sys(), 'JANA_BIL_SEWA', 'Ruang Niaga', S(baru.ID_Bil), '', S(s.ID_Sewaan), bulan + '/' + tahun); }
+      });
+    }
+    // 2. Belum Bayar -> Lewat dan peringatan
+    var sebelum = Cfg.num('SEWA_PERINGATAN_SEBELUM_HARI', 2), selang = Math.max(1, Cfg.num('PERINGATAN_SUSULAN_HARI', 3));
+    Db.rows('Bayaran_Sewa').forEach(function (b) {
+      var st = S(b.Status);
+      if (['Belum Bayar', 'Lewat'].indexOf(st) < 0) return;
+      var id = S(b.ID_Bil);
+      var baki = Util.daysBetween(now, b.Tarikh_Akhir);
+      if (st === 'Belum Bayar' && baki < 0) {
+        Db.withLock(function () { var cur = bilByID_(id); if (cur && S(cur.Status) === 'Belum Bayar') Db.update('Bayaran_Sewa', cur._row, { Status: 'Lewat' }); });
+        st = 'Lewat'; hasil.lewat++;
+      }
+      var emel = emelBil_(b);
+      var ringkas = 'Bil ' + id + ' (' + S(b.Kod_Lot) + ', ' + Util.BULAN_BM[Number(b.Bulan) - 1] + ' ' + b.Tahun + ') RM ' + (Number(b.Jumlah_RM) || 0).toFixed(2);
+      if (!log.ada('RN_BIL_JANA_' + id)) {
+        RnU.mel(emel, 'Bil sewa bulan ' + b.Bulan + '/' + b.Tahun, 'Rent bill for ' + b.Bulan + '/' + b.Tahun,
+          [ringkas + ' telah dijana. Sila bayar sebelum ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + ' dan rekod bayaran dalam UTMPreneur.'], [ringkas + ' has been issued. Please pay by ' + RnU.dk(b.Tarikh_Akhir) + '.']);
+        log.tambah('RN_BIL_JANA_' + id, emel, id, 'bil dijana');
+        if (baki <= sebelum) log.tambah('RN_BIL_SEBELUM_' + id, emel, id, 'digabung dengan emel bil');
+        hasil.peringatan++;
+      } else if (st === 'Belum Bayar' && baki >= 0 && baki <= sebelum && !log.ada('RN_BIL_SEBELUM_' + id)) {
+        RnU.mel(emel, 'Peringatan: bil sewa hampir tarikh akhir', 'Reminder: rent bill due soon',
+          [ringkas + ' perlu dibayar sebelum ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '.'], [ringkas + ' is due by ' + RnU.dk(b.Tarikh_Akhir) + '.']);
+        log.tambah('RN_BIL_SEBELUM_' + id, emel, id, baki + ' hari');
+        hasil.peringatan++;
+      }
+      if (st === 'Lewat') {
+        var lateDays = -baki;
+        var k = Math.floor((lateDays - 1) / selang);
+        var key = 'RN_BIL_SUSUL_' + id + '_' + k;
+        if (lateDays >= 1 && !log.ada(key)) {
+          RnU.mel(emel, 'Bil sewa lewat dibayar', 'Overdue rent bill',
+            [ringkas + ' telah lewat ' + lateDays + ' hari (tarikh akhir ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '). Sila jelaskan segera.'], [ringkas + ' is ' + lateDays + ' days overdue.']);
+          log.tambah(key, emel, id, lateDays + ' hari lewat');
+          hasil.peringatan++;
+        }
+      }
+    });
+    // 3. tunggakan lebih satu bulan: tanda dan maklumkan admin (cadangan notis; tiada tindakan automatik)
+    Db.rows('Sewaan').forEach(function (s) {
+      if (S(s.Status) !== 'Aktif') return;
+      var cadang = cadangNotis_(S(s.ID_Sewaan));
+      if (!cadang) return;
+      var key = 'RN_TUNGGAKAN_' + S(s.ID_Sewaan) + '_' + cadang;
+      if (log.ada(key)) return;
+      var tg = tunggakan_(S(s.ID_Sewaan));
+      log.tambah(key, '-', S(s.ID_Sewaan), 'cadangan notis ' + cadang);
+      RnU.melAdmin('Tunggakan sewa melebihi satu bulan', 'Rent arrears over one month',
+        ['Sewaan ' + S(s.ID_Sewaan) + ' (' + S(s.Kod_Lot) + ') mempunyai tunggakan RM ' + tg.jumlah.toFixed(2) + ' (' + tg.bilLewat + ' bil). Dicadangkan menjana Notis ' + cadang + ' (tiada tindakan automatik).'],
+        ['Tenancy ' + S(s.ID_Sewaan) + ' has arrears of RM ' + tg.jumlah.toFixed(2) + '. A ' + cadang + ' notice is suggested.']);
+      hasil.tunggakan++;
+    });
+    return hasil;
+  }
+
+  return {
+    KAEDAH: KAEDAH, aktifkan: aktifkan_, janaBil: janaBil_, billView: billView_, bilSewaan: bilSewaan_, tunggakan: tunggakan_, untukPemohon: untukPemohon_,
+    bilBayar: bilBayar_, bilFail: bilFail_, adminBilFail: adminBilFail_, bilSenarai: bilSenarai_, bilSahkan: bilSahkan_, bilKembalikan: bilKembalikan_,
+    bilKecuali: bilKecuali_, bilUtiliti: bilUtiliti_, notisJana: notisJana_, adminSenarai: adminSenarai_, adminButiran: adminButiran_, tamat: tamat_,
+    perbaharui: perbaharui_, daftarSedia: daftarSedia_, dashboard: dashboard_, jobHarian: jobHarian_, kadarBulan: kadarBulan_, sewaanView: sewaanView_
+  };
+})();
+
+
+// ===== RuangNiagaTawaran.gs =====
+/**
+ * UTMPreneur: Ruang Niaga fasa 3. Surat tawaran (Surat Setuju Terima), pratonton PDF, hantar, penerimaan dengan OTP,
+ * rekod penerimaan, tawaran luput, peringatan dan salinan fizikal.
+ *
+ * Aliran: Diluluskan -> admin isi Tawaran_Sewa (+ Jadual_Sewa) -> jana pratonton (versi) -> hantar (Ditawarkan, lot Dipohon,
+ * Cagaran dicipta) -> pemilik "Saya terima"/"Saya tolak" disahkan OTP (Diterima / Ditolak Pemohon) -> rekod penerimaan PDF.
+ * Tiada jawapan dalam TAWARAN_TEMPOH_HARI (7) -> Tawaran Luput, lot kembali Kosong.
+ */
+
+var RnTawaran = (function () {
+  function S(v) { return Util.str(v); }
+  function wd_(d) { return RnU.dk(d); }
+
+  function jadualOf_(id, idSewaan) {
+    return Db.find('Jadual_Sewa', function (r) { return S(r.ID_Permohonan) === id && S(r.ID_Sewaan) === (idSewaan || ''); })
+      .map(function (r) { return { dari: Number(r.Dari_Bulan) || 1, hingga: S(r.Hingga_Bulan) === '' ? '' : Number(r.Hingga_Bulan), kadar: Number(r.Kadar_RM) || 0 }; })
+      .sort(function (a, b) { return a.dari - b.dari; });
+  }
+
+  /** Bil. bulan kontrak: bilangan bulan penuh terkecil yang meliputi mula hingga tamat. */
+  function bilBulan_(mula, tamat) {
+    var m = 0;
+    while (m < 120 && Util.daysBetween(Util.addMonths(mula, m), tamat) >= 0) m++;
+    return m;
+  }
+
+  function teksJadual_(jadual) {
+    if (!jadual.length) return '';
+    if (jadual.length === 1) return RnU.rm(jadual[0].kadar) + ' sebulan';
+    return jadual.map(function (j) {
+      var julat = j.hingga === '' ? ('Bulan ke-' + j.dari + ' dan ke atas') : (j.dari === j.hingga ? 'Bulan ke-' + j.dari : 'Bulan ke-' + j.dari + ' hingga ke-' + j.hingga);
+      return julat + ': ' + RnU.rm(j.kadar);
+    }).join('; ');
+  }
+
+  function konteks_(r) {
+    var per = RnU.perniagaan(S(r.ID_Perniagaan)) || {};
+    var ssu = RnU.ssuLulus(S(per.ID_Perniagaan)) || {};
+    var lot = RnU.lotById(S(r.Kod_Lot)) || {};
+    var m = Util.normMatric(r.No_Matrik);
+    var pel = RnU.pelajar(m) || {};
+    return { r: r, per: per, ssu: ssu, lot: lot, pel: pel, m: m };
+  }
+
+  function alamatPenyewa_(k) {
+    return S(k.ssu.Alamat_Perniagaan) || S(k.per.Alamat) || S(k.pel.Alamat_Rumah);
+  }
+
+  /** Nilai lalai tawaran daripada permohonan, lot dan Tetapan. */
+  function lalai_(k) {
+    var lot = k.lot;
+    var produk = RnU.split(k.ssu.Produk).map(function (c) { return Ref.bm('PRODUK', c); }).join(', ');
+    var mula = RnU.dk(k.r.Tempoh_Mula), tamat = RnU.dk(k.r.Tempoh_Tamat);
+    var kadar = S(lot.Kadar_Sewa_RM) === '' ? 0 : Number(lot.Kadar_Sewa_RM);
+    return {
+      noRujukan: '', tarikhSurat: wd_(new Date()), jenisPerniagaan: produk, tarikhMula: mula, tarikhTamat: tamat,
+      utiliti: 'Tanggungjawab syarikat (Air & Elektrik)', cagaranSewaan: kadar, cagaranUtiliti: 0, waktuOperasi: '',
+      penandatanganNama: Cfg.get('SURAT_PENANDATANGAN_NAMA', ''), penandatanganJawatan: Cfg.get('SURAT_PENANDATANGAN_JAWATAN', ''),
+      jadual: [{ dari: 1, hingga: '', kadar: kadar }]
+    };
+  }
+
+  function view_(t, jadual) {
+    var luput = Util.toDate(t.Tarikh_Luput);
+    var tarikhAkhirSalinan = '';
+    if (t.Tarikh_Hantar) tarikhAkhirSalinan = RnU.dk(RnU.tambahHari(t.Tarikh_Hantar, Cfg.num('SALINAN_FIZIKAL_HARI', 14)));
+    return {
+      noRujukan: S(t.No_Rujukan), tarikhSurat: wd_(t.Tarikh_Surat), jenisPerniagaan: S(t.Jenis_Perniagaan), tarikhMula: wd_(t.Tarikh_Mula), tarikhTamat: wd_(t.Tarikh_Tamat),
+      bilBulan: Number(t.Bil_Bulan) || 0, sewaBulanan: Number(t.Sewa_Bulanan_RM) || 0, utiliti: S(t.Utiliti), cagaranSewaan: Number(t.Cagaran_Sewaan_RM) || 0,
+      cagaranUtiliti: Number(t.Cagaran_Utiliti_RM) || 0, waktuOperasi: S(t.Waktu_Operasi), penandatanganNama: S(t.Penandatangan_Nama),
+      penandatanganJawatan: S(t.Penandatangan_Jawatan), versiSemasa: Number(t.Versi_Semasa) || 0, status: S(t.Status), tarikhHantar: wd_(t.Tarikh_Hantar),
+      tarikhLuput: luput ? wd_(luput) : '', respons: S(t.Respons), tarikhResponsMasa: t.Tarikh_Respons ? Util.fmtDate(Util.toDate(t.Tarikh_Respons), 'dd/MM/yyyy HH:mm') : '',
+      emelRespons: S(t.Emel_Respons), jadual: jadual,
+      salinan: {
+        tarikh: wd_(t.Salinan_Fizikal_Tarikh), penerima: S(t.Salinan_Fizikal_Penerima), tarikhAkhir: tarikhAkhirSalinan,
+        lewat: !!(t.Tarikh_Hantar && !S(t.Salinan_Fizikal_Tarikh) && ['Diterima'].indexOf(S(t.Status)) >= 0 && tarikhAkhirSalinan && Util.daysBetween(new Date(), tarikhAkhirSalinan) < 0)
+      }
+    };
+  }
+
+  // ---------- Admin: isi tawaran ----------
+  function dapat_(ctx, p) {
+    RnU.requireViewer(ctx);
+    var r = RnU.perById(S(p.id));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var id = S(r.ID_Permohonan);
+    var k = konteks_(r);
+    var t = RnU.tawaranById(id);
+    var out = {
+      id: id, statusPermohonan: S(r.Status), ada: !!t,
+      tawaran: t ? view_(t, jadualOf_(id)) : Object.assign({ status: '', versiSemasa: 0, bilBulan: 0 }, lalai_(k)),
+      dokumen: RnDok.senarai(r, true).filter(function (d) { return d.jenis === 'Surat Tawaran'; }),
+      boleh: {
+        ubah: S(r.Status) === 'Diluluskan' && (!t || S(t.Status) === 'Draf') && RnU.isDecider(ctx),
+        jana: S(r.Status) === 'Diluluskan' && !!t && S(t.Status) === 'Draf' && RnU.isDecider(ctx),
+        hantar: S(r.Status) === 'Diluluskan' && !!t && S(t.Status) === 'Draf' && !!Number(t.Versi_Semasa) && RnU.isDecider(ctx)
+      },
+      alamatPenyewa: alamatPenyewa_(k), lot: { kod: S(k.lot.Kod_Lot), nama: RnU.namaLot(k.lot), alamat: RnU.alamatLot(k.lot), status: S(k.lot.Status_Lot) }
+    };
+    if (!out.tawaran.bilBulan && out.tawaran.tarikhMula && out.tawaran.tarikhTamat) out.tawaran.bilBulan = bilBulan_(out.tawaran.tarikhMula, out.tawaran.tarikhTamat);
+    return out;
+  }
+
+  function semakJadual_(arr, e) {
+    var out = [];
+    arr = Array.isArray(arr) ? arr : [];
+    if (!arr.length) { e.jadual = 'Sekurang-kurangnya satu peringkat sewa / At least one rent tier'; return out; }
+    var prevHingga = 0;
+    arr.forEach(function (x, i) {
+      var dari = parseInt(x.dari, 10), hingga = S(x.hingga) === '' ? '' : parseInt(x.hingga, 10), kadar = Util.parseRm(x.kadar);
+      if (isNaN(dari) || dari < 1 || kadar === null || (hingga !== '' && (isNaN(hingga) || hingga < dari))) { e.jadual = 'Jadual sewa tidak sah (bulan dan kadar RM) / Invalid rent schedule'; return; }
+      if (dari !== prevHingga + 1) { e.jadual = 'Peringkat mesti bersambung tanpa jurang: bermula bulan 1 / Tiers must be contiguous starting at month 1'; return; }
+      if (hingga === '' && i < arr.length - 1) { e.jadual = 'Hanya peringkat terakhir boleh terbuka (tiada "hingga") / Only the last tier may be open-ended'; return; }
+      prevHingga = hingga === '' ? dari : hingga;
+      out.push({ dari: dari, hingga: hingga, kadar: kadar });
+    });
+    return out;
+  }
+
+  function simpan_(ctx, p) {
+    RnU.requireDecider(ctx);
+    p = p || {};
+    var r = RnU.perById(S(p.id));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var id = S(r.ID_Permohonan);
+    var cur = RnU.tawaranById(id);
+    if (S(r.Status) !== 'Diluluskan' || (cur && S(cur.Status) !== 'Draf')) throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+    var e = {}, bad = function (k, msg) { e[k] = msg || 'Wajib diisi / Required'; };
+    var noRujukan = S(p.noRujukan).replace(/\s+/g, ' ').substr(0, 100);
+    if (!noRujukan) bad('noRujukan');
+    var tarikhSurat = S(p.tarikhSurat); if (!RnU.isDate(tarikhSurat)) bad('tarikhSurat', 'Tarikh tidak sah / Invalid date');
+    var jenis = S(p.jenisPerniagaan).substr(0, 200); if (!jenis) bad('jenisPerniagaan');
+    var mula = S(p.tarikhMula), tamat = S(p.tarikhTamat);
+    if (!RnU.isDate(mula)) bad('tarikhMula', 'Tarikh tidak sah / Invalid date');
+    if (!RnU.isDate(tamat)) bad('tarikhTamat', 'Tarikh tidak sah / Invalid date');
+    else if (!e.tarikhMula && Util.daysBetween(Util.toDate(mula), Util.toDate(tamat)) <= 0) bad('tarikhTamat', 'Tarikh tamat mesti selepas tarikh mula / End date must be after start date');
+    var utiliti = S(p.utiliti).substr(0, 200); if (!utiliti) bad('utiliti');
+    var cs = S(p.cagaranSewaan) === '' ? 0 : Util.parseRm(p.cagaranSewaan);
+    var cu = S(p.cagaranUtiliti) === '' ? 0 : Util.parseRm(p.cagaranUtiliti);
+    if (cs === null) bad('cagaranSewaan', 'Masukkan nilai RM yang tepat / Enter an exact RM value');
+    if (cu === null) bad('cagaranUtiliti', 'Masukkan nilai RM yang tepat / Enter an exact RM value');
+    var waktu = S(p.waktuOperasi).substr(0, 100); if (!waktu) bad('waktuOperasi');
+    var jadual = semakJadual_(p.jadual, e);
+    var nama = S(p.penandatanganNama) || Cfg.get('SURAT_PENANDATANGAN_NAMA', '');
+    var jawatan = S(p.penandatanganJawatan) || Cfg.get('SURAT_PENANDATANGAN_JAWATAN', '');
+    if (!nama || !jawatan) bad('penandatanganNama', 'Isi nama dan jawatan penandatangan (atau tetapkan dalam Tetapan) / Signatory required');
+    if (Object.keys(e).length) throw appError_('RN_TAWARAN_TIDAK_SAH', { medan: e });
+    var rec = {
+      ID_Permohonan: id, No_Rujukan: noRujukan, Tarikh_Surat: Util.toDate(tarikhSurat), Jenis_Perniagaan: jenis, Tarikh_Mula: Util.toDate(mula), Tarikh_Tamat: Util.toDate(tamat),
+      Bil_Bulan: bilBulan_(mula, tamat), Sewa_Bulanan_RM: jadual[0].kadar, Utiliti: utiliti, Cagaran_Sewaan_RM: cs, Cagaran_Utiliti_RM: cu, Waktu_Operasi: waktu,
+      Penandatangan_Nama: nama, Penandatangan_Jawatan: jawatan, Versi_Semasa: '', Status: 'Draf'
+    };
+    Db.withLock(function () {
+      var c2 = RnU.tawaranById(id);
+      if (c2) Db.update('Tawaran_Sewa', c2._row, rec); else Db.append('Tawaran_Sewa', rec);
+      RnU.gantiBaris('Jadual_Sewa', function (x) { return S(x.ID_Permohonan) === id && S(x.ID_Sewaan) === ''; }, jadual.map(function (j) {
+        return { ID_Permohonan: id, ID_Sewaan: '', Dari_Bulan: j.dari, Hingga_Bulan: j.hingga, Kadar_RM: j.kadar };
+      }));
+      Audit.log(ctx, 'SIMPAN_TAWARAN_SEWA', 'Ruang Niaga', id, c2 ? S(c2.No_Rujukan) : '', noRujukan, 'Pratonton perlu dijana semula');
+    });
+    return dapat_(ctx, { id: id });
+  }
+
+  // ---------- Kandungan surat ----------
+  function dataSurat_(k, t, jadual) {
+    var tempohHari = Cfg.num('TAWARAN_TEMPOH_HARI', 7);
+    var hantar = t.Tarikh_Hantar ? RnU.tambahHari(t.Tarikh_Hantar, 0) : RnU.today();
+    var luput = t.Tarikh_Luput ? Util.toDate(t.Tarikh_Luput) : RnU.tambahHari(hantar, tempohHari);
+    var cs = Number(t.Cagaran_Sewaan_RM) || 0, cu = Number(t.Cagaran_Utiliti_RM) || 0;
+    var bayarHari = Cfg.num('CAGARAN_BAYAR_HARI', 14);
+    var salinanHari = Cfg.num('SALINAN_FIZIKAL_HARI', 14);
+    var mula = RnU.dk(t.Tarikh_Mula), tamat = RnU.dk(t.Tarikh_Tamat);
+    return {
+      no_rujukan: S(t.No_Rujukan), tarikh_surat: Util.fmtTarikhBM(t.Tarikh_Surat), id_permohonan: S(k.r.ID_Permohonan),
+      nama_perniagaan: S(k.per.Nama_Perniagaan), nama_wakil: S(k.pel.Nama_Penuh), no_matrik: k.m, no_telefon: S(k.pel.No_Telefon), alamat_penyewa: alamatPenyewa_(k),
+      no_ssm: S(k.ssu.No_SSM), nama_lot: RnU.namaLot(k.lot), kod_lot: S(k.lot.Kod_Lot), alamat_lot: RnU.alamatLot(k.lot), jenis_perniagaan: S(t.Jenis_Perniagaan),
+      tarikh_mula: Util.fmtTarikhBM(mula), tarikh_tamat: Util.fmtTarikhBM(tamat), bil_bulan: String(Number(t.Bil_Bulan) || ''),
+      tempoh_kontrak: Util.fmtTarikhBM(mula) + ' hingga ' + Util.fmtTarikhBM(tamat) + ' (' + (Number(t.Bil_Bulan) || '') + ' bulan)',
+      sewa_bulanan: RnU.rm(Number(t.Sewa_Bulanan_RM) || 0), jadual_sewa: teksJadual_(jadual), utiliti: S(t.Utiliti),
+      cagaran_sewaan: cs > 0 ? RnU.rm(cs) : 'Tiada', cagaran_utiliti: cu > 0 ? RnU.rm(cu) : 'Tiada', waktu_operasi: S(t.Waktu_Operasi),
+      tarikh_luput: Util.fmtTarikhBM(luput), tempoh_terima_hari: String(tempohHari), hari_bayar_cagaran: String(bayarHari),
+      tarikh_akhir_cagaran: Util.fmtTarikhBM(RnU.tambahHari(hantar, bayarHari)), hari_salinan_fizikal: String(salinanHari),
+      akaun_bank: Cfg.get('AKAUN_BANK_UTM', ''), penandatangan_nama: S(t.Penandatangan_Nama), penandatangan_jawatan: S(t.Penandatangan_Jawatan),
+      alamat_utmxcite: Cfg.get('ALAMAT_UTMXCITE', ''), hari_tahun: ''
+    };
+  }
+
+  /** Surat tawaran lalai (HTML, BM) berdasarkan Surat Setuju Terima UTMXCITE. */
+  function htmlSurat_(d, tajuk) {
+    var e = Pdf.esc;
+    var p = function (t) { return '<p>' + t + '</p>'; };
+    var row = function (a, b, c) { return '<tr><td style="width:6%">' + a + '</td><td style="width:28%">' + e(b) + '</td><td>' + e(c) + '</td></tr>'; };
+    var cagUtil = d.cagaran_utiliti;
+    var h = '';
+    h += '<table class="nb"><tr><td>Ruj. Kami : ' + e(d.no_rujukan) + '</td><td class="r">Tarikh : ' + e(d.tarikh_surat) + '</td></tr></table>';
+    h += '<h1>SURAT SETUJU TERIMA</h1>';
+    h += '<p><b>' + e(d.nama_perniagaan) + '</b><br>' + e(d.alamat_penyewa) + '<br>(u.p: ' + e(d.nama_wakil) + (d.no_telefon ? ', Tel: ' + e(d.no_telefon) : '') + ')</p>';
+    h += p('Saudara,');
+    h += '<p><b>PENYEWAAN ' + e(d.alamat_lot).toUpperCase() + '</b></p>';
+    h += p('Dengan hormatnya dimaklumkan bahawa pihak pengurusan Student Mall (UTMXCITE) bersetuju melantik pihak Saudara bagi tujuan Penyewaan ' + e(d.alamat_lot) + '.');
+    h += p('2. Dengan penerimaan tawaran ini, pihak Saudara adalah dinasihatkan bahawa suatu ikatan kontrak terwujud antara pihak UTM dengan pihak Saudara. Surat Setuju Terima ini dan satu Dokumen Perjanjian yang akan ditandatangani selepas ini akan menjadi dokumen yang akan mengikat di antara pihak Saudara dan UTM dengan sah. Sebarang urusan ataupun tuntutan perlu berpandukan dokumen ini.');
+    h += p('3. Butiran dan syarat yang ditawarkan adalah seperti berikut:');
+    h += '<table class="nb">' +
+      row('a.', 'Lokasi', ': ' + d.alamat_lot) + row('b.', 'Jenis Perniagaan', ': ' + d.jenis_perniagaan) + row('c.', 'Tempoh Kontrak', ': ' + d.tempoh_kontrak) +
+      row('d.', 'Sewaan Bulanan', ': ' + d.jadual_sewa) + row('e.', 'Utiliti', ': ' + d.utiliti) + row('f.', 'Cagaran Sewaan', ': ' + d.cagaran_sewaan) +
+      row('g.', 'Cagaran Utiliti', ': ' + cagUtil) + row('h.', 'Waktu Operasi', ': ' + d.waktu_operasi) + '</table>';
+    h += p('4. Wang cagaran sewaan' + (cagUtil !== 'Tiada' ? ' dan cagaran utiliti' : '') + ' boleh dibayar secara deposit tunai atau kredit ke bank (&ldquo;interbank transfer&rdquo;) ke akaun bank rasmi Universiti iaitu ' + e(d.akaun_bank) + ' atau PayHub. Salinan ASAL resit akan dikeluarkan oleh Jabatan Bendahari UTM dan hendaklah dikemukakan sebagai bukti dan untuk simpanan pejabat ini. Kegagalan pihak Saudara untuk menjelaskan kesemua bayaran tersebut dalam masa ' + e(d.hari_bayar_cagaran) + ' hari dari tarikh surat ini dihantar (selewat-lewatnya ' + e(d.tarikh_akhir_cagaran) + ') akan menyebabkan pelantikan pihak Saudara dibatalkan.');
+    h += p('5. UTM berhak merampas kesemua atau sebahagian wang cagaran sebagai ganti rugi kepada UTM oleh sebab kemungkiran atau pelanggaran mana-mana syarat dan peraturan yang ditetapkan UTM oleh pihak Saudara. Wang cagaran akan dikembalikan kepada pihak Saudara dalam masa sembilan puluh (90) hari selepas tamat tempoh kontrak tertakluk kepada penyempurnaan syarat dan peraturan kontrak oleh pihak Saudara.');
+    h += p('6. Bagi tujuan pembayaran sewa bulanan, pihak Saudara dikehendaki membuat pembayaran melalui deposit tunai atau kredit ke bank (&ldquo;interbank transfer&rdquo;) ke akaun bank rasmi Universiti iaitu ' + e(d.akaun_bank) + '; atau PayHub UTM.');
+    h += p('7. Kesemua transaksi pembayaran adalah dianggap sempurna dan selesai setelah Resit Rasmi dikeluarkan oleh Jabatan Bendahari UTM. Salinan resit hendaklah dimajukan kepada UTMXCITE, Jabatan Timbalan Naib Canselor (Hal Ehwal Pelajar dan Alumni) bagi tujuan bukti dan perekodan.');
+    h += p('8. Tiada apa-apa urusniaga boleh dimulakan kecuali dan sehingga Saudara telah mengemukakan wang cagaran sewaan.');
+    h += p('9. Pihak UTM juga berhak menamatkan penyewaan Saudara pada bila-bila masa sekiranya prestasi tidak memuaskan atau melanggar mana-mana syarat yang ditetapkan oleh Universiti dan juga pihak berkuasa.');
+    h += p('10. Lain-lain syarat adalah sebagaimana yang akan dipersetujui seperti di dalam Syarat / Prosedur UTMXCITE dan akan dimuktamadkan melalui Dokumen Perjanjian yang akan disempurnakan.');
+    h += p('11. Tawaran ini hendaklah diterima atau ditolak dalam sistem UTMPreneur (disahkan dengan kod OTP) selewat-lewatnya pada ' + e(d.tarikh_luput) + ' (' + e(d.tempoh_terima_hari) + ' hari dari tarikh surat ini dihantar). Kegagalan berbuat demikian akan menyebabkan tawaran ini terbatal secara automatik. Di samping itu, sila kembalikan dua (2) salinan surat ini, termasuk satu yang ASAL, yang telah ditandatangani oleh Saudara dan disaksikan dengan sempurnanya ke pejabat ini dalam masa ' + e(d.hari_salinan_fizikal) + ' hari dari tarikh surat ini dihantar, dan satu (1) salinan untuk simpanan Saudara.');
+    h += p('Kerjasama yang diberikan amatlah kami hargai.');
+    h += p('Sekian, terima kasih.');
+    h += p('&ldquo;Malaysia Madani&rdquo;<br>&quot;Berkhidmat untuk Negara kerana Allah&quot;');
+    h += '<p class="sig">Saya yang menjalankan amanah,</p><p><b>(' + e(d.penandatangan_nama) + ')</b><br>' + e(d.penandatangan_jawatan) + '<br>Universiti Teknologi Malaysia<br>b.p. Naib Canselor</p>';
+    h += '<hr><p class="sm">Dengan ini yang bertandatangan di bawah ini mengaku penerimaan surat di atas dan salinannya telah disimpan serta memahami dan bersetuju untuk mematuhi syarat-syarat penyewaan sebagaimana dalam Surat Setuju Terima di atas.</p>';
+    h += '<table class="nb sig"><tr><td>.......................................<br>Tandatangan Penyewa<br>Nama Penuh: ' + e(d.nama_wakil.toUpperCase()) + '<br>Tarikh:</td><td>.......................................<br>Tandatangan Saksi<br>Nama Penuh:<br>Tarikh:</td><td>.......................................<br>Cop Rasmi Syarikat</td></tr></table>';
+    return Pdf.wrap(h, tajuk);
+  }
+
+  /** Jana PDF surat (templat Google Docs jika didaftar dan boleh dibuka; jika tidak, surat lalai). Pulang {url, amaran[]}. */
+  function janaPdf_(data, nama) {
+    var amaran = [];
+    var tpl = Db.links().TEMPLAT_SURAT_TAWARAN;
+    if (tpl && tpl.id) {
+      try {
+        var g = DocTpl.jana('TEMPLAT_SURAT_TAWARAN', data, 'FLD_LAMPIRAN_LOT', nama);
+        return { url: g.url, amaran: g.amaran || [] };
+      } catch (err) {
+        amaran.push('Templat surat tawaran (Google Docs) tidak boleh dibuka; surat lalai digunakan.');
+        console.error('Templat surat tawaran gagal: ' + err);
+      }
+    }
+    var res = Pdf.dariHtml(htmlSurat_(data, nama), nama, 'FLD_LAMPIRAN_LOT');
+    return { url: res.url, amaran: amaran };
+  }
+
+  function jana_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var r = RnU.perById(S(p.id));
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    var id = S(r.ID_Permohonan);
+    var t = RnU.tawaranById(id);
+    if (S(r.Status) !== 'Diluluskan' || !t || S(t.Status) !== 'Draf') throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+    var k = konteks_(r);
+    var data = dataSurat_(k, t, jadualOf_(id));
+    var versi = RnDok.versiSeterusnya(id, 'Surat Tawaran');
+    var nama = 'Surat Tawaran ' + id + ' v' + versi;
+    var res = janaPdf_(data, nama);
+    Db.withLock(function () {
+      var cur = RnU.tawaranById(id);
+      if (!cur || S(cur.Status) !== 'Draf') throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+      RnDok.semua(id).forEach(function (d) {
+        if (S(d.Jenis) === 'Surat Tawaran' && S(d.Status) === 'Pratonton') Db.update('Dokumen_Sewaan', d._row, { Status: 'Digantikan' });
+      });
+      RnDok.tambahLocked({
+        ID_Permohonan: id, Jenis: 'Surat Tawaran', Versi: versi, Tajuk: 'Surat Tawaran', Fail: res.url, Nama_Fail: nama + '.pdf', Dijana_Oleh: ctx.email,
+        Status: 'Pratonton', Kelihatan: 'Tidak', Catatan: res.amaran.join('; ')
+      });
+      Db.update('Tawaran_Sewa', cur._row, { Versi_Semasa: versi });
+      Audit.log(ctx, 'JANA_PRATONTON_TAWARAN', 'Ruang Niaga', id, '', 'v' + versi, res.amaran.join('; '));
+    });
+    var out = dapat_(ctx, { id: id });
+    out.amaran = res.amaran;
+    return out;
+  }
+
+  function hantar_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id);
+    var lot = null;
+    var info = Db.withLock(function () {
+      var r = RnU.perById(id);
+      if (!r) throw appError_('RN_TIDAK_DITEMUI');
+      var t = RnU.tawaranById(id);
+      if (S(r.Status) !== 'Diluluskan' || !t || S(t.Status) !== 'Draf') throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+      if (!Number(t.Versi_Semasa)) throw appError_('RN_TAWARAN_BELUM_JANA');
+      lot = RnU.lotById(S(r.Kod_Lot));
+      if (!lot || S(lot.Status_Lot) !== 'Kosong') throw appError_('RN_LOT_TIDAK_KOSONG');
+      var now = new Date();
+      var hariTerima = Cfg.num('TAWARAN_TEMPOH_HARI', 7);
+      var luput = RnU.tambahHari(now, hariTerima);
+      var akhirBayar = RnU.tambahHari(now, Cfg.num('CAGARAN_BAYAR_HARI', 14));
+      Db.update('Tawaran_Sewa', t._row, { Status: 'Dihantar', Tarikh_Hantar: now, Tarikh_Luput: luput });
+      RnDok.semua(id).forEach(function (d) {
+        if (S(d.Jenis) === 'Surat Tawaran' && Number(d.Versi) === Number(t.Versi_Semasa)) Db.update('Dokumen_Sewaan', d._row, { Status: 'Dihantar', Kelihatan: 'Ya', Tarikh: now });
+      });
+      Db.update('Permohonan_Lot', r._row, { Status: 'Ditawarkan' });
+      RnU.setLot(S(r.Kod_Lot), 'Dipohon');
+      [['Sewaan', Number(t.Cagaran_Sewaan_RM) || 0], ['Utiliti', Number(t.Cagaran_Utiliti_RM) || 0]].forEach(function (c) {
+        if (c[1] <= 0) return;
+        Db.append('Cagaran', {
+          ID_Cagaran: Util.formatId('CGR', null, Db.nextSeqLocked('CGR'), 4), ID_Permohonan: id, ID_Perniagaan: S(r.ID_Perniagaan), Jenis: c[0], Jumlah_RM: c[1],
+          Tarikh_Akhir_Bayar: akhirBayar, Status: 'Belum Bayar'
+        });
+      });
+      Audit.log(ctx, 'HANTAR_TAWARAN_SEWA', 'Ruang Niaga', id, 'Diluluskan', 'Ditawarkan', S(t.No_Rujukan) + ' | luput ' + RnU.dk(luput));
+      return { m: Util.normMatric(r.No_Matrik), luput: luput, akhirBayar: akhirBayar, nama: RnU.namaLot(lot) };
+    });
+    RnU.mel(RnU.emelOf(info.m), 'Surat tawaran sewa lot', 'Lot tenancy offer letter',
+      ['Surat tawaran sewa ' + info.nama + ' (' + id + ') telah dihantar. Sila lihat dan muat turun surat dalam UTMPreneur, kemudian terima atau tolak tawaran dengan kod OTP selewat-lewatnya ' + Util.fmtTarikhBM(info.luput) + '. Bayaran cagaran hendaklah dijelaskan sebelum ' + Util.fmtTarikhBM(info.akhirBayar) + '.'],
+      ['The tenancy offer letter for ' + info.nama + ' (' + id + ') has been sent. View and download it in UTMPreneur, then accept or decline with an OTP by ' + RnU.dk(info.luput) + '. The deposit must be paid by ' + RnU.dk(info.akhirBayar) + '.']);
+    return dapat_(ctx, { id: id });
+  }
+
+  // ---------- Pemohon: lihat tawaran, OTP, jawab ----------
+  function untukPemohon_(ctx, r) {
+    var t = RnU.tawaranById(S(r.ID_Permohonan));
+    if (!t || ['Dihantar', 'Diterima', 'Ditolak', 'Luput', 'Dibatalkan'].indexOf(S(t.Status)) < 0 || !t.Tarikh_Hantar) return null;
+    var v = view_(t, jadualOf_(S(r.ID_Permohonan)));
+    var luput = Util.toDate(t.Tarikh_Luput);
+    var baki = luput ? Util.daysBetween(new Date(), luput) : null;
+    var pemilik = RnU.akses(ctx, r) === 'pemilik';
+    delete v.salinan.penerima;
+    v.alamatLot = RnU.alamatLot(RnU.lotById(S(r.Kod_Lot)) || {});
+    v.hariBaki = baki;
+    v.bolehJawab = pemilik && S(t.Status) === 'Dihantar' && S(r.Status) === 'Ditawarkan' && baki !== null && baki >= 0;
+    return v;
+  }
+
+  function emelPemohon_(r) { return RnU.emelOf(Util.normMatric(r.No_Matrik)); }
+
+  function otpMinta_(ctx, p) {
+    var id = S(p.id);
+    var r = RnU.perById(id);
+    if (!r) throw appError_('RN_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r);
+    semakLuput_(id);
+    var v = untukPemohon_(ctx, RnU.perById(id));
+    if (!v || !v.bolehJawab) throw appError_(v && v.status === 'Luput' ? 'RN_TAWARAN_LUPUT' : 'RN_TAWARAN_TIDAK_BOLEH');
+    var emel = emelPemohon_(r);
+    if (!emel) throw appError_('EMEL_TIDAK_SAH');
+    var res = Otp.issue('TERIMA_TAWARAN:' + id, emel, {
+      subjectBm: 'Kod pengesahan jawapan tawaran sewa lot', subjectEn: 'Verification code for your lot offer response',
+      bm: ['Kod pengesahan anda untuk menerima atau menolak tawaran sewa lot (' + id + ') ialah: {kod}', 'Kod ini sah selama ' + Cfg.num('OTP_TAMAT_MINIT', 5) + ' minit. Jangan kongsikannya dengan sesiapa.'],
+      en: ['Your verification code to accept or decline the lot offer (' + id + ') is: {kod}', 'This code is valid for ' + Cfg.num('OTP_TAMAT_MINIT', 5) + ' minutes. Do not share it.']
+    });
+    res.emelTopeng = emel.replace(/^(.{2}).*(@.*)$/, '$1***$2');
+    return res;
+  }
+
+  function jawab_(ctx, p) {
+    var id = S(p.id), jawapan = S(p.jawapan);
+    if (['terima', 'tolak'].indexOf(jawapan) < 0) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+    var r0 = RnU.perById(id);
+    if (!r0) throw appError_('RN_TIDAK_DITEMUI');
+    RnU.requireOwner(ctx, r0);
+    semakLuput_(id);
+    var v0 = untukPemohon_(ctx, RnU.perById(id));
+    if (!v0 || !v0.bolehJawab) throw appError_(v0 && v0.status === 'Luput' ? 'RN_TAWARAN_LUPUT' : 'RN_TAWARAN_TIDAK_BOLEH');
+    var emel = emelPemohon_(r0);
+    if (!S(p.kod)) throw appError_('RN_OTP_PERLU');
+    Otp.verify('TERIMA_TAWARAN:' + id, emel, p.kod);
+    var now = new Date();
+    var info = Db.withLock(function () {
+      var r = RnU.perById(id), t = RnU.tawaranById(id);
+      if (!r || !t || S(r.Status) !== 'Ditawarkan' || S(t.Status) !== 'Dihantar') throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+      var terima = jawapan === 'terima';
+      Db.update('Tawaran_Sewa', t._row, { Status: terima ? 'Diterima' : 'Ditolak', Respons: terima ? 'Terima' : 'Tolak', Tarikh_Respons: now, Emel_Respons: emel });
+      if (terima) Db.update('Permohonan_Lot', r._row, { Status: 'Diterima' });
+      else {
+        Db.update('Permohonan_Lot', r._row, { Status: 'Ditolak Pemohon', Tarikh_Keputusan: now });
+        RnU.setLot(S(r.Kod_Lot), 'Kosong');
+        Db.find('Cagaran', function (c) { return S(c.ID_Permohonan) === id && ['Belum Bayar', 'Menunggu Pengesahan'].indexOf(S(c.Status)) >= 0; })
+          .forEach(function (c) { Db.update('Cagaran', c._row, { Status: 'Dibatalkan' }); });
+      }
+      Audit.log(ctx, terima ? 'TERIMA_TAWARAN_SEWA' : 'TOLAK_TAWARAN_SEWA', 'Ruang Niaga', id, 'Ditawarkan', terima ? 'Diterima' : 'Ditolak Pemohon',
+        'Disahkan OTP ke ' + emel + (ctx.bagiPihak ? ' (admin bagi pihak pemohon)' : ''));
+      return { nama: RnU.namaLot(RnU.lotById(S(r.Kod_Lot))), no: S(t.No_Rujukan) };
+    });
+    var amaran = [];
+    try { janaRekod_(id, jawapan, now, emel, ctx); } catch (err) {
+      console.error('Rekod penerimaan gagal: ' + err);
+      amaran.push('Rekod penerimaan (PDF) gagal dijana; admin akan menjana semula.');
+      Audit.log(ctx, 'REKOD_PENERIMAAN_GAGAL', 'Ruang Niaga', id, '', '', String(err && err.message ? err.message : err).substr(0, 300));
+    }
+    RnU.mel(emel, jawapan === 'terima' ? 'Tawaran sewa lot diterima' : 'Tawaran sewa lot ditolak', jawapan === 'terima' ? 'Lot offer accepted' : 'Lot offer declined',
+      [jawapan === 'terima'
+        ? 'Anda telah menerima tawaran sewa ' + info.nama + ' (' + id + ') pada ' + Util.fmtDate(now, 'dd/MM/yyyy HH:mm') + '. Sila bayar cagaran dan tunggu perjanjian sewa daripada UTMXCITE.'
+        : 'Anda telah menolak tawaran sewa ' + info.nama + ' (' + id + ') pada ' + Util.fmtDate(now, 'dd/MM/yyyy HH:mm') + '.'],
+      [jawapan === 'terima' ? 'You accepted the tenancy offer for ' + info.nama + ' (' + id + ').' : 'You declined the tenancy offer for ' + info.nama + ' (' + id + ').']);
+    RnU.melAdmin(jawapan === 'terima' ? 'Tawaran sewa lot diterima' : 'Tawaran sewa lot ditolak pemohon', 'Lot offer ' + (jawapan === 'terima' ? 'accepted' : 'declined'),
+      ['Pemohon ' + id + ' telah ' + (jawapan === 'terima' ? 'menerima' : 'menolak') + ' tawaran sewa ' + info.nama + '.'], ['Applicant ' + id + ' has ' + (jawapan === 'terima' ? 'accepted' : 'declined') + ' the offer.']);
+    return { id: id, status: jawapan === 'terima' ? 'Diterima' : 'Ditolak Pemohon', amaran: amaran };
+  }
+
+  /** Jana Rekod Penerimaan (PDF) dan simpan dalam Dokumen_Sewaan. */
+  function janaRekod_(id, jawapan, masa, emel, ctx) {
+    var r = RnU.perById(id), t = RnU.tawaranById(id);
+    var k = konteks_(r);
+    var terima = jawapan === 'terima';
+    var e = Pdf.esc;
+    var tajuk = terima ? 'Rekod Penerimaan Tawaran' : 'Rekod Penolakan Tawaran';
+    var versi = RnDok.versiSeterusnya(id, 'Penerimaan');
+    var nama = tajuk + ' ' + id + (versi > 1 ? ' v' + versi : '');
+    var tm = Util.fmtDate(masa, 'dd/MM/yyyy HH:mm');
+    var h = '<h1>' + e(tajuk.toUpperCase()) + '</h1>' +
+      '<p>Dokumen ini merekodkan bahawa tawaran sewa lot berikut telah <b>' + (terima ? 'DITERIMA' : 'DITOLAK') + '</b> oleh pemohon secara elektronik melalui sistem UTMPreneur.</p>' +
+      '<table><tr><td>ID permohonan</td><td>' + e(id) + '</td></tr><tr><td>No. rujukan surat tawaran</td><td>' + e(S(t.No_Rujukan)) + '</td></tr>' +
+      '<tr><td>Perniagaan</td><td>' + e(S(k.per.Nama_Perniagaan)) + '</td></tr><tr><td>Pemohon</td><td>' + e(S(k.pel.Nama_Penuh)) + ' (' + e(k.m) + ')</td></tr>' +
+      '<tr><td>Lot</td><td>' + e(RnU.alamatLot(k.lot)) + '</td></tr><tr><td>Tempoh kontrak</td><td>' + e(Util.fmtTarikhBM(t.Tarikh_Mula) + ' hingga ' + Util.fmtTarikhBM(t.Tarikh_Tamat)) + '</td></tr>' +
+      '<tr><td>Tarikh dan masa ' + (terima ? 'penerimaan' : 'penolakan') + '</td><td>' + e(tm) + '</td></tr><tr><td>Emel pengesahan</td><td>' + e(emel) + '</td></tr>' +
+      '<tr><td>Kaedah pengesahan</td><td>Kod OTP dihantar ke emel pemohon' + (ctx && ctx.bagiPihak ? ' (dikendalikan oleh admin bagi pihak pemohon)' : '') + '</td></tr></table>' +
+      '<p class="sm">Rekod ini dijana secara automatik oleh sistem dan sah tanpa tandatangan. Penerimaan tidak boleh ditarik balik oleh pemohon.</p>';
+    var res = Pdf.dariHtml(Pdf.wrap(h, nama), nama, 'FLD_LAMPIRAN_LOT');
+    Db.withLock(function () {
+      RnDok.tambahLocked({
+        ID_Permohonan: id, Jenis: 'Penerimaan', Versi: versi, Tajuk: tajuk, Fail: res.url, Nama_Fail: nama + '.pdf', Tarikh: masa, Dijana_Oleh: 'sistem',
+        Status: 'Rekod', Kelihatan: 'Ya', Catatan: tm
+      });
+    });
+  }
+
+  /** Admin menjana semula rekod penerimaan jika gagal dijana. */
+  function rekodSemula_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id);
+    var t = RnU.tawaranById(id);
+    if (!t || ['Diterima', 'Ditolak'].indexOf(S(t.Status)) < 0) throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+    if (RnDok.semua(id).some(function (d) { return S(d.Jenis) === 'Penerimaan'; })) throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+    janaRekod_(id, S(t.Respons) === 'Terima' ? 'terima' : 'tolak', Util.toDate(t.Tarikh_Respons), S(t.Emel_Respons), ctx);
+    Audit.log(ctx, 'JANA_SEMULA_REKOD_PENERIMAAN', 'Ruang Niaga', id, '', '', '');
+    return dapat_(ctx, { id: id });
+  }
+
+  // ---------- Luput, peringatan, salinan fizikal ----------
+  /** Tandakan Tawaran Luput jika tarikh luput telah lalu dan pemohon belum menjawab. Pulang true jika diluputkan. */
+  function semakLuput_(id) {
+    var r = RnU.perById(id), t = RnU.tawaranById(id);
+    if (!r || !t || S(t.Status) !== 'Dihantar' || S(r.Status) !== 'Ditawarkan' || !t.Tarikh_Luput) return false;
+    if (Util.daysBetween(new Date(), t.Tarikh_Luput) >= 0) return false;
+    var nama = '';
+    Db.withLock(function () {
+      var r2 = RnU.perById(id);
+      if (!r2 || S(r2.Status) !== 'Ditawarkan') return;
+      nama = RnU.namaLot(RnU.lotById(S(r2.Kod_Lot)));
+      RnPer.lepas(r2, 'Tawaran Luput', 'Tawaran luput tanpa jawapan', RnU.sys());
+      Audit.log(RnU.sys(), 'TAWARAN_LUPUT', 'Ruang Niaga', id, 'Ditawarkan', 'Tawaran Luput', RnU.dk(t.Tarikh_Luput));
+    });
+    RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Tawaran sewa lot telah luput', 'Your lot offer has expired',
+      ['Tawaran sewa ' + nama + ' (' + id + ') telah luput kerana tiada jawapan dalam tempoh yang ditetapkan.'], ['The tenancy offer for ' + nama + ' (' + id + ') has expired because no response was received in time.']);
+    RnU.melAdmin('Tawaran sewa lot luput', 'Lot offer expired',
+      ['Tawaran ' + id + ' (' + nama + ') telah luput tanpa jawapan. Lot kembali Kosong; anda boleh menawarkan kepada pemohon seterusnya mengikut kedudukan.'],
+      ['Offer ' + id + ' expired without a response. The lot is vacant again.']);
+    return true;
+  }
+
+  function peringatanBertingkat_(log, awalan, id, hari, ambang, hantar) {
+    var due = ambang.filter(function (a) { return hari >= a; });
+    if (!due.length) return 0;
+    var tertinggi = due[due.length - 1], n = 0;
+    due.forEach(function (a) {
+      var key = awalan + id + '_' + a;
+      if (log.ada(key)) return;
+      if (a === tertinggi) { hantar(a); n++; }
+      log.tambah(key, '-', id, 'hari ' + hari);
+    });
+    return n;
+  }
+  function ambang_(key) {
+    return Cfg.list(key).map(function (x) { return parseInt(x, 10); }).filter(function (x) { return !isNaN(x); }).sort(function (a, b) { return a - b; });
+  }
+
+  function jobHarian_() {
+    var hasil = { luput: 0, peringatanTawaran: 0, peringatanSalinan: 0, salinanLewat: 0 };
+    var log = RnU.peringatan();
+    Db.rows('Tawaran_Sewa').forEach(function (t) {
+      var id = S(t.ID_Permohonan);
+      var r = RnU.perById(id);
+      if (!r || !t.Tarikh_Hantar) return;
+      var hari = Util.daysBetween(t.Tarikh_Hantar, new Date());
+      var emel = RnU.emelOf(Util.normMatric(r.No_Matrik));
+      var nama = RnU.namaLot(RnU.lotById(S(r.Kod_Lot)));
+      if (S(t.Status) === 'Dihantar' && S(r.Status) === 'Ditawarkan') {
+        if (semakLuput_(id)) { hasil.luput++; return; }
+        hasil.peringatanTawaran += peringatanBertingkat_(log, 'RN_TAWARAN_H', id, hari, ambang_('TAWARAN_PERINGATAN_HARI'), function (a) {
+          RnU.mel(emel, 'Peringatan: tawaran sewa lot belum dijawab', 'Reminder: lot offer not yet answered',
+            ['Tawaran sewa ' + nama + ' (' + id + ') akan luput pada ' + Util.fmtTarikhBM(t.Tarikh_Luput) + '. Sila terima atau tolak tawaran dalam UTMPreneur.'],
+            ['Your tenancy offer for ' + nama + ' (' + id + ') expires on ' + RnU.dk(t.Tarikh_Luput) + '. Please accept or decline in UTMPreneur.']);
+        });
+      }
+      // salinan fizikal Surat Setuju Terima
+      if (S(t.Status) === 'Diterima' && !S(t.Salinan_Fizikal_Tarikh) && ['Diterima', 'Perjanjian', 'Sewaan Aktif'].indexOf(S(r.Status)) >= 0) {
+        var maks = Cfg.num('SALINAN_FIZIKAL_HARI', 14);
+        if (hari <= maks) {
+          hasil.peringatanSalinan += peringatanBertingkat_(log, 'RN_SALINAN_H', id, hari, ambang_('SALINAN_FIZIKAL_PERINGATAN_HARI'), function () {
+            RnU.mel(emel, 'Peringatan: pulangkan salinan fizikal Surat Setuju Terima', 'Reminder: return the signed Letter of Acceptance',
+              ['Sila pulangkan dua (2) salinan Surat Setuju Terima (' + id + ') yang telah ditandatangani dan disaksikan ke pejabat UTMXCITE selewat-lewatnya ' + Util.fmtTarikhBM(RnU.tambahHari(t.Tarikh_Hantar, maks)) + '.'],
+              ['Please return two (2) signed and witnessed copies of the Letter of Acceptance (' + id + ') to the UTMXCITE office.']);
+          });
+        } else if (!log.ada('RN_SALINAN_LEWAT_' + id)) {
+          log.tambah('RN_SALINAN_LEWAT_' + id, '-', id, 'hari ' + hari);
+          RnU.melAdmin('Salinan fizikal Surat Setuju Terima belum diterima', 'Signed letter copy not yet received',
+            ['Pemohon ' + id + ' (' + nama + ') belum memulangkan salinan fizikal Surat Setuju Terima dalam ' + maks + ' hari. Sila putuskan tindakan (tiada pembatalan automatik).'],
+            ['Applicant ' + id + ' has not returned the signed letter within ' + maks + ' days. Please decide (no automatic cancellation).']);
+          hasil.salinanLewat++;
+        }
+      }
+    });
+    return hasil;
+  }
+
+  /** Admin menanda salinan fizikal diterima. */
+  function salinanFizikal_(ctx, p) {
+    RnU.requireDecider(ctx);
+    var id = S(p.id), penerima = S(p.penerima).substr(0, 120);
+    var tarikh = S(p.tarikh) || RnU.dk(new Date());
+    var e = {};
+    if (!penerima) e.penerima = 'Wajib diisi / Required';
+    if (!RnU.isDate(tarikh) || Util.daysBetween(new Date(), Util.toDate(tarikh)) > 0) e.tarikh = 'Tarikh tidak sah atau akan datang / Invalid or future date';
+    if (Object.keys(e).length) throw appError_('RN_BORANG_TIDAK_SAH', { medan: e });
+    Db.withLock(function () {
+      var t = RnU.tawaranById(id);
+      if (!t || S(t.Status) !== 'Diterima') throw appError_('RN_TAWARAN_TIDAK_BOLEH');
+      if (S(t.Salinan_Fizikal_Tarikh)) throw appError_('RN_PERALIHAN_TIDAK_SAH');
+      Db.update('Tawaran_Sewa', t._row, { Salinan_Fizikal_Tarikh: Util.toDate(tarikh), Salinan_Fizikal_Penerima: penerima });
+      Audit.log(ctx, 'SALINAN_FIZIKAL_DITERIMA', 'Ruang Niaga', id, '', tarikh, 'Penerima: ' + penerima);
+    });
+    return dapat_(ctx, { id: id });
+  }
+
+  return {
+    jadualOf: jadualOf_, semakJadual: semakJadual_, bilBulan: bilBulan_, teksJadual: teksJadual_, konteks: konteks_, alamatPenyewa: alamatPenyewa_, view: view_, dapat: dapat_, simpan: simpan_,
+    jana: jana_, hantar: hantar_, untukPemohon: untukPemohon_, otpMinta: otpMinta_, jawab: jawab_, rekodSemula: rekodSemula_, semakLuput: semakLuput_,
+    jobHarian: jobHarian_, salinanFizikal: salinanFizikal_, peringatanBertingkat: peringatanBertingkat_, ambang: ambang_
+  };
+})();
+
+
+// ===== RuangNiagaTetapan.gs =====
+/**
+ * UTMPreneur: Tetapan khusus modul Ruang Niaga (digabungkan ke Seed.tetapan()).
+ * Setiap baris: [Kunci, Nilai lalai, Penerangan]. Nilai boleh diubah urusetia dalam tab Tetapan.
+ * Nama dan jawatan penandatangan ialah DATA (bukan kod); nilai lalai di bawah diambil daripada contoh surat/perjanjian
+ * dan mesti disemak sebelum pelancaran.
+ */
+var TETAPAN_RN = [
+  ['TAWARAN_TEMPOH_HARI', '7', 'Tempoh menerima tawaran sewa lot (hari dari tarikh surat tawaran dihantar)'],
+  ['TAWARAN_PERINGATAN_HARI', '4,6', 'Hari selepas tawaran dihantar untuk emel peringatan kepada pemohon (belum menjawab)'],
+  ['CAGARAN_BAYAR_HARI', '14', 'Tempoh membayar cagaran (hari dari tarikh surat tawaran dihantar)'],
+  ['CAGARAN_PERINGATAN_SEBELUM_HARI', '3', 'Emel peringatan bayar cagaran sekian hari sebelum tarikh akhir'],
+  ['CAGARAN_PULANG_HARI', '90', 'Tempoh pemulangan cagaran selepas tamat kontrak (hari)'],
+  ['CAGARAN_PERINGATAN_HARI', '60,80', 'Hari selepas tamat kontrak untuk peringatan emel kepada admin (pulangkan cagaran)'],
+  ['SALINAN_FIZIKAL_HARI', '14', 'Tempoh pemulangan salinan fizikal Surat Setuju Terima (hari dari tarikh surat dihantar)'],
+  ['SALINAN_FIZIKAL_PERINGATAN_HARI', '7,12', 'Hari selepas surat dihantar untuk peringatan salinan fizikal kepada pemohon'],
+  ['SURAT_PENANDATANGAN_NAMA', 'PROFESOR TS DR. ALI BIN SELAMAT', 'Nama penandatangan surat tawaran (semak dan kemas kini)'],
+  ['SURAT_PENANDATANGAN_JAWATAN', 'Timbalan Naib Canselor (Hal Ehwal Pelajar dan Alumni)', 'Jawatan penandatangan surat tawaran'],
+  ['PERJANJIAN_PENANDATANGAN_NAMA', 'Ybrs. Prof. Ts. Dr. Ali bin Selamat', 'Nama penandatangan perjanjian bagi pihak Universiti'],
+  ['PERJANJIAN_PENANDATANGAN_JAWATAN', 'Timbalan Naib Canselor (Hal Ehwal Pelajar & Alumni)', 'Jawatan penandatangan perjanjian bagi pihak Universiti'],
+  ['PERJANJIAN_SAKSI_UTM_NAMA', 'Prof. Madya Dr. Syed Norris Hikmi bin Syed Abdullah', 'Nama saksi Universiti pada perjanjian'],
+  ['PERJANJIAN_SAKSI_UTM_JAWATAN', 'Pengarah UTMXCITE', 'Jawatan saksi Universiti pada perjanjian'],
+  ['PERJANJIAN_SAKSI_SYARIKAT_NAMA', 'Pn. Siti Noraziah binti Satapah', 'Nama saksi bagi pihak Syarikat (pegawai UTMXCITE) pada perjanjian'],
+  ['PERJANJIAN_SAKSI_SYARIKAT_JAWATAN', 'Pegawai Tadbir UTMXCITE', 'Jawatan saksi bagi pihak Syarikat pada perjanjian'],
+  ['ALAMAT_UTMXCITE', 'UTMXCITE, Jabatan Timbalan Naib Canselor (Hal Ehwal Pelajar dan Alumni), Universiti Teknologi Malaysia, 81310 Johor Bahru, Johor', 'Alamat notis Universiti (perjanjian dan surat)'],
+  ['AKAUN_BANK_UTM', 'CIMB: 8006053536', 'Akaun bank rasmi Universiti untuk bayaran sewa dan cagaran'],
+  ['PENILAIAN_BEZA_JAUH', '20', 'Beza jumlah skor (daripada 100) antara dua penilai yang ditanda sebagai berbeza jauh'],
+  ['SEWA_PERINGATAN_SEBELUM_HARI', '2', 'Emel peringatan bil sewa sekian hari sebelum tarikh akhir'],
+  ['TUNGGAKAN_HARI', '30', 'Bil sewa lewat lebih sekian hari ditanda sebagai tunggakan lebih satu bulan'],
+  ['NOTIS_PENAMATAN_HARI', '7', 'Tempoh mengosongkan premis dalam Notis Penamatan (hari)']
+];
+
+
+// ===== RuangNiagaUtil.gs =====
+/**
+ * UTMPreneur: pembantu dikongsi modul Ruang Niaga (RnU). Tiada kebergantungan semasa muat fail.
+ * Capaian data, kebenaran, emel, log peringatan.
+ */
+
+var RnU = (function () {
+  /** Status permohonan lot yang masih "aktif" (menghalang permohonan lain bagi pelajar/perniagaan yang sama). */
+  var AKTIF = ['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai', 'Diluluskan', 'Ditawarkan', 'Diterima', 'Perjanjian', 'Sewaan Aktif'];
+  var STATUS_PER = ['Baharu', 'Disemak', 'Disenarai Pendek', 'Dinilai', 'Diluluskan', 'Ditolak', 'Ditawarkan', 'Diterima', 'Perjanjian', 'Sewaan Aktif',
+    'Tawaran Luput', 'Ditolak Pemohon', 'Dibatalkan', 'Tamat'];
+
+  function str_(v) { return Util.str(v); }
+  function today_() { return Util.toDate(Util.dateKey(new Date())); }
+  function dk_(v) { return Util.dateKey(v); }
+  /** Tarikh (tengah malam MYT) = tarikh v + n hari. v: Date atau yyyy-MM-dd. */
+  function tambahHari_(v, n) { var b = Util.toDate(Util.dateKey(v)); return new Date(b.getTime() + n * 86400000); }
+  function csv_(a) { return (a || []).join(','); }
+  function split_(s) { return str_(s) ? str_(s).split(',').map(function (x) { return x.trim(); }).filter(Boolean) : []; }
+  function num_(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function rm_(n) { var x = num_(n); return 'RM ' + (Math.round(x * 100) % 100 === 0 ? String(Math.round(x)) : x.toFixed(2)); }
+  function isDate_(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Util.toDate(s).getTime()); }
+
+  function find1_(tab, pred) { var l = Db.find(tab, pred); return l.length ? l[0] : null; }
+  function perById_(id) { return find1_('Permohonan_Lot', function (r) { return str_(r.ID_Permohonan) === id; }); }
+  function lotById_(kod) { return find1_('Lot', function (r) { return str_(r.Kod_Lot) === kod; }); }
+  function pelajar_(m) { return find1_('PELAJAR', function (r) { return Util.normMatric(r.No_Matrik) === m; }); }
+  function perniagaan_(id) { return find1_('Perniagaan', function (r) { return str_(r.ID_Perniagaan) === id; }); }
+  function perniagaanOwner_(m) {
+    var l = Db.find('Perniagaan', function (r) { return Util.normMatric(r.No_Matrik_Pemilik) === m; });
+    return l.length ? l[l.length - 1] : null;
+  }
+  function tawaranById_(id) { return find1_('Tawaran_Sewa', function (r) { return str_(r.ID_Permohonan) === id; }); }
+  function sewaanById_(id) { return find1_('Sewaan', function (r) { return str_(r.ID_Sewaan) === id; }); }
+
+  /** Status SSU semasa (dikira daripada tarikh tamat). */
+  function statusPer_(per) {
+    var t = Util.toDate(per.Tarikh_Tamat);
+    if (t && Util.daysBetween(new Date(), t) < 0) return 'Tamat Tempoh';
+    return str_(per.Status_SSU) || 'Aktif';
+  }
+
+  /** Permohonan SSU diluluskan terkini bagi perniagaan. */
+  function ssuLulus_(idPer) {
+    var l = Db.find('Permohonan_SSU', function (r) { return str_(r.ID_Perniagaan) === idPer && str_(r.Status) === 'Diluluskan'; });
+    return l.length ? l[l.length - 1] : null;
+  }
+
+  /**
+   * Peta orang bagi setiap perniagaan: {ahli: {ID_Perniagaan: [No_Matrik...]}} (pemilik dahulu). Dibina dengan membaca
+   * Perniagaan, Permohonan_SSU dan Ahli_Pasukan sekali sahaja.
+   */
+  function peta_() {
+    var ahli = {};
+    var latest = {}, ssuToPer = {};
+    Db.rows('Permohonan_SSU').forEach(function (r) {
+      if (str_(r.Status) === 'Diluluskan' && str_(r.ID_Perniagaan)) latest[str_(r.ID_Perniagaan)] = str_(r.ID_Permohonan);
+    });
+    Object.keys(latest).forEach(function (pid) { ssuToPer[latest[pid]] = pid; });
+    Db.rows('Perniagaan').forEach(function (p) { ahli[str_(p.ID_Perniagaan)] = [Util.normMatric(p.No_Matrik_Pemilik)]; });
+    Db.rows('Ahli_Pasukan').forEach(function (a) {
+      var pid = ssuToPer[str_(a.ID_Permohonan)];
+      if (!pid || !ahli[pid]) return;
+      var m = Util.normMatric(a.No_Matrik);
+      if (ahli[pid].indexOf(m) < 0) ahli[pid].push(m);
+    });
+    return { ahli: ahli };
+  }
+  function ahliMatrik_(idPer) { return peta_().ahli[idPer] || []; }
+
+  /** ID perniagaan di mana pelajar ialah ahli (bukan pemilik). */
+  function perniagaanAhli_(m) {
+    var p = peta_(), out = [];
+    Object.keys(p.ahli).forEach(function (id) { if (p.ahli[id].indexOf(m) > 0) out.push(id); });
+    return out;
+  }
+
+  /** Permohonan lot aktif yang bercanggah bagi perniagaan ini (pemilik atau ahli yang sama). Pulang baris atau null. */
+  function bercanggah_(idPer, kecualiId) {
+    var p = peta_();
+    var orang = p.ahli[idPer] || [];
+    var hit = null;
+    Db.rows('Permohonan_Lot').forEach(function (r) {
+      if (hit || AKTIF.indexOf(str_(r.Status)) < 0 || str_(r.ID_Permohonan) === (kecualiId || '')) return;
+      var lain = p.ahli[str_(r.ID_Perniagaan)] || [Util.normMatric(r.No_Matrik)];
+      if (str_(r.ID_Perniagaan) === idPer || lain.some(function (m) { return orang.indexOf(m) >= 0; })) hit = r;
+    });
+    return hit;
+  }
+
+  function emelOf_(m) {
+    var pg = Db.find('Pengguna', function (r) { return Util.normMatric(r.No_Matrik) === m; });
+    if (pg.length && str_(pg[0].Emel)) return Util.normEmail(pg[0].Emel);
+    var p = pelajar_(m);
+    return p ? Util.normEmail(p.Emel) : '';
+  }
+
+  // ---------- Kebenaran ----------
+  function isDecider_(ctx) {
+    if (ctx.role === ROLE.ADMIN_PENUH) return true;
+    if (ctx.role === ROLE.PEGAWAI_MODUL) {
+      var a = Admins.find(ctx.email);
+      var mod = a ? a.modul.toLowerCase() : '';
+      return !mod || mod.indexOf('semua') >= 0 || mod.indexOf('ruang niaga') >= 0;
+    }
+    return false;
+  }
+  function requireDecider_(ctx) { if (!isDecider_(ctx)) throw appError_('TIADA_KEBENARIAN'); }
+  function requireViewer_(ctx) {
+    if (ADMIN_ROLES.indexOf(ctx.role) < 0 || ctx.role === ROLE.PENILAI) throw appError_('TIADA_KEBENARIAN');
+  }
+
+  /** Akses pelajar kepada permohonan: 'pemilik', 'ahli' atau ''. Konteks pelajar (termasuk bagi pihak) sahaja. */
+  function akses_(ctx, r) {
+    var m = ctx.noMatrik;
+    if (!m) return '';
+    if (Util.normMatric(r.No_Matrik) === m) return 'pemilik';
+    return ahliMatrik_(str_(r.ID_Perniagaan)).indexOf(m) >= 0 ? 'ahli' : '';
+  }
+  function requireOwner_(ctx, r) {
+    var a = akses_(ctx, r);
+    if (!a) throw appError_('RN_TIDAK_DITEMUI');
+    if (a !== 'pemilik') throw appError_('RN_HANYA_PEMILIK');
+  }
+
+  // ---------- Emel dan log peringatan ----------
+  function mel_(to, sBm, sEn, bm, en) {
+    if (!to) return false;
+    try {
+      var url = Cfg.get('WEBAPP_URL', '');
+      if (url) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
+      return Mail.send(to, { subjectBm: sBm, subjectEn: sEn, bm: bm, en: en });
+    } catch (err) { console.error('Emel gagal: ' + err); return false; }
+  }
+  /** Emel admin yang boleh memutuskan Ruang Niaga (aktif). */
+  function emelAdmin_() {
+    var out = [];
+    Admins.list().forEach(function (a) {
+      if (!a.aktif || [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL].indexOf(a.peranan) < 0) return;
+      var mod = a.modul.toLowerCase();
+      if (a.peranan === ROLE.PEGAWAI_MODUL && mod && mod.indexOf('semua') < 0 && mod.indexOf('ruang niaga') < 0) return;
+      if (out.indexOf(a.emel) < 0) out.push(a.emel);
+    });
+    return out;
+  }
+  function melAdmin_(sBm, sEn, bm, en) {
+    emelAdmin_().forEach(function (e) { mel_(e, sBm, sEn, bm, en); });
+  }
+  /** Log peringatan dimuat sekali: {ada(kunci), tambah(kunci, emel, rujukan, catatan)}. */
+  function peringatan_() {
+    var ada = {};
+    Db.rows('Peringatan').forEach(function (l) { ada[str_(l.Jenis)] = true; });
+    return {
+      ada: function (k) { return !!ada[k]; },
+      tambah: function (k, emel, ruj, cat) {
+        ada[k] = true;
+        Db.append('Peringatan', { Masa: new Date(), Emel: emel || '-', Jenis: k, Rujukan: ruj || '', Status: 'Dihantar', Catatan: cat || '' });
+      }
+    };
+  }
+
+  function sys_() { return { email: 'sistem', role: '-' }; }
+
+  /** Nama paparan lot. */
+  function namaLot_(lot) { return lot ? (str_(lot.Nama_Paparan) || str_(lot.Kod_Lot)) : ''; }
+  function alamatLot_(lot) {
+    return str_(lot.Alamat_Surat) || (namaLot_(lot) + ', Universiti Teknologi Malaysia');
+  }
+  function isFnb_(lot) { return !!lot && str_(lot.Jenis) === 'FNB'; }
+
+  /** Kemas kini baris Lot (kunci dipegang oleh pemanggil). */
+  function setLot_(kod, status) {
+    var l = lotById_(kod);
+    if (l) Db.update('Lot', l._row, { Status_Lot: status });
+  }
+  /** Tulis semula baris tab yang sepadan dengan pred menggunakan baris baharu (kunci dipegang oleh pemanggil). */
+  function gantiBaris_(tab, pred, baru) {
+    var keep = Db.rows(tab).filter(function (r) { return !pred(r); });
+    Db.replaceAll(tab, keep.concat(baru));
+  }
+
+  return {
+    AKTIF: AKTIF, STATUS_PER: STATUS_PER, str: str_, today: today_, tambahHari: tambahHari_, dk: dk_, csv: csv_, split: split_, num: num_, rm: rm_, isDate: isDate_,
+    perById: perById_, lotById: lotById_, pelajar: pelajar_, perniagaan: perniagaan_, perniagaanOwner: perniagaanOwner_,
+    tawaranById: tawaranById_, sewaanById: sewaanById_, statusPer: statusPer_, ssuLulus: ssuLulus_, peta: peta_,
+    ahliMatrik: ahliMatrik_, perniagaanAhli: perniagaanAhli_, bercanggah: bercanggah_, emelOf: emelOf_,
+    isDecider: isDecider_, requireDecider: requireDecider_, requireViewer: requireViewer_, akses: akses_, requireOwner: requireOwner_,
+    mel: mel_, melAdmin: melAdmin_, emelAdmin: emelAdmin_, peringatan: peringatan_, sys: sys_,
+    namaLot: namaLot_, alamatLot: alamatLot_, isFnb: isFnb_, setLot: setLot_, gantiBaris: gantiBaris_
+  };
+})();
 
 
 // ===== Seed.gs =====

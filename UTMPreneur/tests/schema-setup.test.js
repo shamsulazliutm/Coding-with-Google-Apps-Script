@@ -92,7 +92,7 @@ test('MIKRO_KREDIT_MIN dan MAKS dalam Tetapan: 500 dan 3000', () => {
   assert.equal(g('MIKRO_KREDIT_MAKS'), '3000');
   assert.equal(g('MAKS_AHLI_SSU'), '12');
   assert.equal(g('JANA_BIL_SEWA_HARI'), '5');
-  assert.equal(g('TARIKH_AKHIR_SEWA_HARI'), '10');
+  assert.equal(g('TARIKH_AKHIR_SEWA_HARI'), '7');
   assert.equal(g('TARIKH_AKHIR_LAPORAN_HARI'), '7');
   assert.equal(new Set(t.map((x) => x.Kunci)).size, t.length);
 });
@@ -120,11 +120,11 @@ test('setup() mencipta semua spreadsheet, tab, folder dan Link_Dokumen dalam fol
   assert.ok(names(ind).includes('PELAJAR') && names(ind).includes('Link_Dokumen') && names(ind).includes('Admin'));
 
   // Folder dicipta dalam folder Induk
-  assert.equal(env.folder.children.length, 9);
+  assert.equal(env.folder.children.length, env.run('FOLDERS.length'));
 
-  // Link_Dokumen mengandungi 6 spreadsheet + 9 folder + 3 dokumen
+  // Link_Dokumen mengandungi 6 spreadsheet + semua folder + semua dokumen
   const links = env.plain(env.run('Db.links()'));
-  assert.equal(Object.keys(links).length, 18);
+  assert.equal(Object.keys(links).length, env.run('Object.keys(SCHEMA).length + FOLDERS.length + DOKUMEN.length'));
   ['SS_INDUK', 'SS_PROFILING', 'SS_SSU', 'SS_RUANG_NIAGA', 'SS_KEWANGAN', 'SS_TEMPAHAN_RUANG', 'FLD_SIJIL_SSU', 'FLD_TEMPLAT_SIJIL'].forEach((k) => assert.ok(links[k], k));
   assert.ok(links.SS_SSU.id.length >= 25);
 
