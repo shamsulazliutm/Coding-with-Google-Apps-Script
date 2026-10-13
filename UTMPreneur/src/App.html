@@ -1,0 +1,344 @@
+<script>
+(function () {
+  'use strict';
+
+  var ADMIN_ROLES = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati', 'Penilai'];
+  var S = { token: null, session: null, emel: '', timer: null, confirmImport: false };
+  var $ = function (id) { return document.getElementById(id); };
+
+  function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+
+  /** Panggil kaedah pelayan. Sentiasa selesai dengan {ok, data|error}. */
+  function api(method, payload) {
+    return new Promise(function (resolve) {
+      google.script.run
+        .withSuccessHandler(function (r) {
+          resolve(r || { ok: false, error: { bm: 'Tiada respons.', en: 'No response.' } });
+        })
+        .withFailureHandler(function () {
+          resolve({ ok: false, error: { code: 'RALAT_RANGKAIAN', bm: 'Sambungan gagal. Cuba lagi.', en: 'Connection failed. Please try again.' } });
+        })
+        .rpc(method, S.token, payload || {});
+    });
+  }
+
+  function views() { return document.querySelectorAll('#main > .view'); }
+  function show(id) {
+    views().forEach(function (v) { v.hidden = v.id !== id; });
+    $('main').className = (id === 'v-status' || id === 'v-import' || id === 'v-admin') ? 'wide' : '';
+    window.scrollTo(0, 0);
+  }
+
+  function msg(el, kind, bm, en) {
+    el.className = 'msg ' + kind;
+    el.textContent = '';
+    el.appendChild(document.createTextNode(bm));
+    if (en) { var i = document.createElement('i'); i.textContent = en; el.appendChild(i); }
+    el.hidden = false;
+  }
+  function msgErr(el, r) {
+    var e = r && r.error ? r.error : { bm: 'Ralat.', en: 'Error.' };
+    msg(el, 'err', e.bm || 'Ralat.', e.en || '');
+  }
+  function clearMsg(el) { el.hidden = true; el.textContent = ''; }
+  function busy(btn, on) { btn.disabled = !!on; }
+
+  function node(tag, text, cls) {
+    var n = document.createElement(tag);
+    if (text !== undefined && text !== null) n.textContent = text;
+    if (cls) n.className = cls;
+    return n;
+  }
+
+  // ---------- Log masuk ----------
+  function startTimer(sec) {
+    var btn = $('btn-semula'), lab = $('otp-pemasa');
+    clearInterval(S.timer);
+    var left = sec;
+    btn.disabled = true;
+    S.timer = setInterval(function () {
+      left--;
+      if (left <= 0) {
+        clearInterval(S.timer);
+        lab.textContent = '';
+        btn.disabled = false;
+      } else {
+        lab.textContent = 'Hantar semula dalam ' + left + ' saat';
+      }
+    }, 1000);
+    lab.textContent = 'Hantar semula dalam ' + left + ' saat';
+  }
+
+  function otpBoxes() { return Array.prototype.slice.call($('otp-boxes').querySelectorAll('input')); }
+  function otpValue() { return otpBoxes().map(function (b) { return b.value; }).join(''); }
+  function otpClear() { otpBoxes().forEach(function (b) { b.value = ''; }); }
+
+  function requestOtp() {
+    var emel = $('in-emel').value.trim().toLowerCase();
+    var m = $('msg-emel');
+    clearMsg(m);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emel)) { msg(m, 'err', 'Sila masukkan emel yang sah.', 'Please enter a valid email.'); return; }
+    var btn = $('btn-minta'); busy(btn, true);
+    api('otp.minta', { emel: emel }).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      S.emel = emel;
+      $('otp-emel').textContent = emel;
+      otpClear(); clearMsg($('msg-otp'));
+      show('v-otp');
+      startTimer((r.data && r.data.jedaSaat) || 60);
+      otpBoxes()[0].focus();
+    });
+  }
+
+  function verifyOtp() {
+    var m = $('msg-otp'); clearMsg(m);
+    var code = otpValue();
+    if (!/^\d{6}$/.test(code)) { msg(m, 'err', 'Masukkan 6 digit kod.', 'Enter the 6-digit code.'); return; }
+    var btn = $('btn-sahkan'); busy(btn, true);
+    api('otp.sahkan', { emel: S.emel, kod: code }).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); otpClear(); otpBoxes()[0].focus(); return; }
+      S.token = r.data.token;
+      store('tok', S.token);
+      route(r.data.session);
+    });
+  }
+
+  function wireOtpBoxes() {
+    var boxes = otpBoxes();
+    boxes.forEach(function (b, i) {
+      b.addEventListener('input', function () {
+        b.value = b.value.replace(/\D/g, '').substr(-1);
+        if (b.value && i < boxes.length - 1) boxes[i + 1].focus();
+        if (otpValue().length === 6) verifyOtp();
+      });
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !b.value && i > 0) boxes[i - 1].focus();
+        if (e.key === 'Enter') verifyOtp();
+      });
+      b.addEventListener('paste', function (e) {
+        var t = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').substr(0, 6);
+        if (!t) return;
+        e.preventDefault();
+        t.split('').forEach(function (d, k) { if (boxes[k]) boxes[k].value = d; });
+        if (t.length === 6) verifyOtp(); else boxes[Math.min(t.length, 5)].focus();
+      });
+    });
+  }
+
+  // ---------- Laluan selepas log masuk ----------
+  function route(session) {
+    S.session = session;
+    $('banner-uji').hidden = session.mode !== 'UJI';
+    $('btn-keluar').hidden = false;
+    if (session.perlu === 'MATRIK') { clearMsg($('msg-matrik')); show('v-matrik'); $('in-matrik').focus(); return; }
+    if (session.perlu === 'PROFIL') {
+      var staf = session.role === 'Staf';
+      $('g-staf').hidden = !staf;
+      $('g-luar').hidden = staf;
+      $('l-jabatan').textContent = staf ? 'Jabatan / Fakulti / Unit' : 'Organisasi (pilihan)';
+      $('e-jabatan').textContent = staf ? 'Department / Faculty / Unit' : 'Organisation (optional)';
+      clearMsg($('msg-profil'));
+      show('v-profil'); $('p-nama').focus(); return;
+    }
+    renderHome(session);
+  }
+
+  function renderHome(s) {
+    $('home-nama').textContent = 'Selamat datang, ' + (s.nama || s.email);
+    $('home-peranan').textContent = s.role;
+    $('home-emel').textContent = s.email + (s.noMatrik ? ' · ' + s.noMatrik : '');
+    var isAdmin = ADMIN_ROLES.indexOf(s.role) >= 0;
+    $('admin-menu-wrap').hidden = !isAdmin;
+    $('go-import').hidden = s.role !== 'Admin Penuh';
+    $('go-admin').hidden = s.role !== 'Admin Penuh';
+    show('v-home');
+  }
+
+  function claimMatric() {
+    var m = $('msg-matrik'); clearMsg(m);
+    var v = $('in-matrik').value.trim();
+    if (!v) { msg(m, 'err', 'Masukkan No. Matrik.', 'Enter your matric number.'); return; }
+    var btn = $('btn-matrik'); busy(btn, true);
+    api('daftar.matrik', { noMatrik: v }).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      route(r.data);
+    });
+  }
+
+  function saveProfile() {
+    var m = $('msg-profil'); clearMsg(m);
+    var staf = S.session && S.session.role === 'Staf';
+    var d = { nama: $('p-nama').value, jabatan: $('p-jabatan').value, telefon: $('p-tel').value };
+    if (staf) d.noStaf = $('p-nostaf').value; else d.noKp = $('p-nokp').value;
+    var btn = $('btn-profil'); busy(btn, true);
+    api('daftar.profil', d).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      route(r.data);
+    });
+  }
+
+  function logout() {
+    var t = S.token;
+    S.token = null; S.session = null; store('tok', null);
+    if (t) { try { google.script.run.rpc('sesi.keluar', t, {}); } catch (e) {} }
+    $('btn-keluar').hidden = true;
+    $('in-emel').value = '';
+    clearMsg($('msg-emel'));
+    show('v-emel');
+  }
+
+  // ---------- Admin: status ----------
+  function kv(rows) {
+    var g = node('div', null, 'kv');
+    rows.forEach(function (r) { g.appendChild(node('span', r[0])); g.appendChild(node('span', r[1])); });
+    return g;
+  }
+  function openStatus() {
+    show('v-status');
+    var body = $('status-body');
+    body.textContent = '';
+    body.appendChild(node('div', null, 'spinner'));
+    api('admin.status').then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { var m = node('div', null, 'msg err'); body.appendChild(m); msgErr(m, r); return; }
+      var d = r.data;
+      body.appendChild(kv([
+        ['Versi', d.versi], ['Mod', d.mode], ['Rekod PELAJAR', String(d.bilPelajar)],
+        ['Pengguna berdaftar', String(d.bilPengguna)], ['Admin aktif', String(d.bilAdmin)],
+        ['OTP hari ini', d.otpHariIni + ' / ' + d.otpHad], ['URL web app', d.webappUrl || '(belum ditetapkan)']
+      ]));
+      var st = d.struktur;
+      var box = node('div', null, 'msg ' + (st.ok ? 'ok' : 'err'));
+      box.appendChild(document.createTextNode('Struktur: ' + (st.ok ? 'OK' : 'ADA MASALAH') + ' (' + st.spreadsheet + ' spreadsheet, ' + st.tab + ' tab)'));
+      (st.masalah || []).forEach(function (x) { box.appendChild(node('i', x)); });
+      body.appendChild(box);
+    });
+  }
+
+  // ---------- Admin: import PELAJAR ----------
+  function renderImport(r) {
+    var out = $('imp-hasil');
+    out.textContent = '';
+    if (!r.ok) { var m = node('div', null, 'msg err'); out.appendChild(m); msgErr(m, r); $('btn-imp-jalan').disabled = true; return; }
+    var d = r.data;
+    var good = d.jumlahRalat === 0;
+    var head = node('div', null, 'msg ' + (good ? 'ok' : 'err'));
+    var t = d.ditulis
+      ? 'Import selesai. ' + d.ditambah + ' baharu, ' + d.dikemaskini + ' dikemas kini.'
+      : (good ? 'Semakan lulus: ' + d.jumlah + ' baris (' + d.ditambah + ' baharu, ' + d.dikemaskini + ' kemas kini). Tiada apa-apa ditulis lagi.'
+              : 'Terdapat ' + d.jumlahRalat + ' ralat. Tiada apa-apa ditulis.');
+    head.appendChild(document.createTextNode(t));
+    out.appendChild(head);
+    if (d.lajurTidakDikenali && d.lajurTidakDikenali.length) out.appendChild(node('p', 'Lajur tidak dikenali (diabaikan): ' + d.lajurTidakDikenali.join(', '), 'e'));
+    var list = function (title, arr, total) {
+      if (!arr.length) return;
+      out.appendChild(node('div', title + ' (' + total + ')', 'h2'));
+      var tb = node('table'); tb.appendChild(node('thead')).appendChild(node('tr')).appendChild(node('th', 'Baris'));
+      tb.querySelector('tr').appendChild(node('th', 'Mesej'));
+      var body = node('tbody');
+      arr.forEach(function (x) { var tr = node('tr'); tr.appendChild(node('td', String(x.baris))); tr.appendChild(node('td', x.mesej)); body.appendChild(tr); });
+      tb.appendChild(body);
+      var sc = node('div', null, 'scroll'); sc.appendChild(tb); out.appendChild(sc);
+    };
+    list('Ralat', d.ralat || [], d.jumlahRalat);
+    list('Amaran', d.amaran || [], d.jumlahAmaran);
+    $('btn-imp-jalan').disabled = !(good && !d.ditulis);
+    S.confirmImport = false;
+    $('btn-imp-jalan').firstChild.textContent = 'Import ';
+  }
+
+  function importCheck() {
+    var csv = $('imp-csv').value;
+    var btn = $('btn-imp-semak'); busy(btn, true);
+    api('admin.import', { csv: csv, dryRun: true, mod: $('imp-mod').value }).then(function (r) { busy(btn, false); renderImport(r); });
+  }
+  function importRun() {
+    var b = $('btn-imp-jalan');
+    if (!S.confirmImport) { S.confirmImport = true; b.firstChild.textContent = 'Tekan sekali lagi untuk sahkan '; return; }
+    S.confirmImport = false; busy(b, true);
+    api('admin.import', { csv: $('imp-csv').value, dryRun: false, mod: $('imp-mod').value }).then(function (r) { renderImport(r); });
+  }
+
+  // ---------- Admin: urus admin ----------
+  function renderAdmins(list) {
+    var tb = $('adm-body'); tb.textContent = '';
+    list.forEach(function (a) {
+      var tr = node('tr');
+      tr.appendChild(node('td', a.emel)); tr.appendChild(node('td', a.nama)); tr.appendChild(node('td', a.peranan)); tr.appendChild(node('td', a.modul));
+      var st = node('td'); st.appendChild(node('span', a.aktif ? 'Aktif' : 'Tidak aktif', 'pill ' + (a.aktif ? 'ok' : ''))); tr.appendChild(st);
+      var act = node('td');
+      if (a.dikunci) act.appendChild(node('span', 'Dikunci', 'e'));
+      else {
+        var b = node('button', a.aktif ? 'Nyahaktif' : 'Aktifkan', 'btn alt sm');
+        b.type = 'button';
+        b.addEventListener('click', function () {
+          b.disabled = true;
+          api('admin.aktif', { emel: a.emel, aktif: !a.aktif }).then(function (r) { if (r.ok) renderAdmins(r.data); else { b.disabled = false; msgErr($('msg-admin'), r); } });
+        });
+        act.appendChild(b);
+      }
+      tr.appendChild(act);
+      tb.appendChild(tr);
+    });
+  }
+  function openAdmins() {
+    show('v-admin'); clearMsg($('msg-admin'));
+    api('admin.senarai').then(function (r) { if (r.ok) renderAdmins(r.data); else msgErr($('msg-admin'), r); });
+  }
+  function addAdmin() {
+    var m = $('msg-admin'); clearMsg(m);
+    var btn = $('btn-adm-tambah'); busy(btn, true);
+    api('admin.tambah', { emel: $('a-emel').value, nama: $('a-nama').value, peranan: $('a-peranan').value, modul: $('a-modul').value }).then(function (r) {
+      busy(btn, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      renderAdmins(r.data);
+      msg(m, 'ok', 'Disimpan.', 'Saved.');
+      $('a-emel').value = ''; $('a-nama').value = ''; $('a-modul').value = '';
+    });
+  }
+
+  // ---------- Mula ----------
+  function init() {
+    if (window.LOGO_DEFAULT) { var lg = $('logo'); lg.src = window.LOGO_DEFAULT; lg.hidden = false; }
+    wireOtpBoxes();
+    $('btn-minta').addEventListener('click', requestOtp);
+    $('in-emel').addEventListener('keydown', function (e) { if (e.key === 'Enter') requestOtp(); });
+    $('btn-sahkan').addEventListener('click', verifyOtp);
+    $('btn-semula').addEventListener('click', function () { $('in-emel').value = S.emel; requestOtp(); });
+    $('btn-ubah-emel').addEventListener('click', function () { clearInterval(S.timer); show('v-emel'); });
+    $('btn-matrik').addEventListener('click', claimMatric);
+    $('in-matrik').addEventListener('keydown', function (e) { if (e.key === 'Enter') claimMatric(); });
+    $('btn-profil').addEventListener('click', saveProfile);
+    $('btn-keluar').addEventListener('click', logout);
+    $('go-status').addEventListener('click', openStatus);
+    $('go-import').addEventListener('click', function () { show('v-import'); $('imp-hasil').textContent = ''; $('btn-imp-jalan').disabled = true; });
+    $('go-admin').addEventListener('click', openAdmins);
+    document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { renderHome(S.session); }); });
+    $('btn-imp-semak').addEventListener('click', importCheck);
+    $('btn-imp-jalan').addEventListener('click', importRun);
+    $('imp-csv').addEventListener('input', function () { $('btn-imp-jalan').disabled = true; });
+    $('imp-file').addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () { $('imp-csv').value = String(rd.result || ''); $('btn-imp-jalan').disabled = true; };
+      rd.readAsText(f);
+    });
+    $('btn-adm-tambah').addEventListener('click', addAdmin);
+
+    S.token = load('tok');
+    if (!S.token) { show('v-emel'); return; }
+    api('sesi.saya').then(function (r) {
+      if (!r.ok) { S.token = null; store('tok', null); show('v-emel'); return; }
+      route(r.data);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>

@@ -1,0 +1,13 @@
+{
+  "name": "utmpreneur",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UTMPreneur: sistem aktiviti keusahawanan dan inovasi pelajar UTM (Google Apps Script + Google Sheets)",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "push:uji": "sh scripts/deploy.sh uji push",
+    "push:prod": "sh scripts/deploy.sh prod push",
+    "deploy:uji": "sh scripts/deploy.sh uji deploy",
+    "deploy:prod": "sh scripts/deploy.sh prod deploy"
+  }
+}

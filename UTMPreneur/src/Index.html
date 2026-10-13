@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>UTMPreneur · UTMXCITE</title>
+<?!= include('Styles') ?>
+</head>
+<body>
+<div id="banner-uji" hidden>MOD UJIAN / TEST MODE</div>
+<header class="bar">
+  <img id="logo" alt="UTM UTMXCITE" hidden>
+  <div class="t">UTMPreneur<i>Sistem aktiviti keusahawanan dan inovasi pelajar<span class="en-long"> / Student entrepreneurship and innovation system</span></i></div>
+  <button id="btn-keluar" type="button" hidden>Log keluar <span style="opacity:.8;font-style:italic">Sign out</span></button>
+</header>
+
+<main id="main">
+
+  <section id="v-loading" class="view"><div class="spinner" role="status" aria-label="Memuatkan / Loading"></div></section>
+
+  <!-- Log masuk: emel -->
+  <section id="v-emel" class="view" hidden>
+    <div class="card">
+      <div class="h1">Log masuk</div><div class="e">Sign in</div>
+      <label class="lab" for="in-emel"><span class="l">Emel</span> <span class="e">Email</span></label>
+      <input id="in-emel" type="email" inputmode="email" autocomplete="email" placeholder="nama@graduate.utm.my">
+      <div id="msg-emel" class="msg" hidden></div>
+      <button id="btn-minta" class="btn" type="button">Hantar kod OTP <i>Send OTP code</i></button>
+      <div class="msg info" style="margin-top:14px">
+        <b>Pelajar</b> guna emel <b>@graduate.utm.my</b>. <b>Staf</b> guna <b>@utm.my</b>. Orang luar boleh log masuk dengan emel sendiri.
+        <i>Students use @graduate.utm.my. Staff use @utm.my. External users may sign in with their own email.</i>
+      </div>
+    </div>
+  </section>
+
+  <!-- Log masuk: OTP -->
+  <section id="v-otp" class="view" hidden>
+    <div class="card">
+      <button class="back" id="btn-ubah-emel" type="button">&larr; Tukar emel <span class="e">Change email</span></button>
+      <div class="h1">Masukkan kod OTP</div><div class="e">Enter the OTP code</div>
+      <p class="muted" style="margin:8px 0 0">Kod 6 digit telah dihantar ke <b id="otp-emel"></b>. <span class="e">A 6-digit code was sent to your email.</span></p>
+      <div class="otp" style="margin-top:12px" id="otp-boxes">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 1">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 5">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 6">
+      </div>
+      <div id="msg-otp" class="msg" hidden></div>
+      <button id="btn-sahkan" class="btn" type="button">Sahkan <i>Verify</i></button>
+      <div class="row" style="margin-top:10px;font-size:12px">
+        <span class="muted" id="otp-pemasa"></span><span class="sp"></span>
+        <button id="btn-semula" class="back" type="button" disabled>Hantar semula kod <span class="e">Resend code</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pelajar: tuntut No. Matrik -->
+  <section id="v-matrik" class="view" hidden>
+    <div class="card">
+      <div class="h1">Sahkan No. Matrik</div><div class="e">Confirm your matric number</div>
+      <p class="muted">Ini dilakukan sekali sahaja. Maklumat anda akan diambil daripada rekod pelajar. <span class="e">This is done once. Your details are taken from student records.</span></p>
+      <label class="lab" for="in-matrik"><span class="l">No. Matrik</span> <span class="e">Matric number</span></label>
+      <input id="in-matrik" autocomplete="off" autocapitalize="characters" placeholder="A23EC0123">
+      <div id="msg-matrik" class="msg" hidden></div>
+      <button id="btn-matrik" class="btn" type="button">Teruskan <i>Continue</i></button>
+    </div>
+  </section>
+
+  <!-- Staf / Luar: profil -->
+  <section id="v-profil" class="view" hidden>
+    <div class="card">
+      <div class="h1">Lengkapkan maklumat anda</div><div class="e">Complete your details</div>
+      <label class="lab" for="p-nama"><span class="l">Nama penuh</span> <span class="e">Full name</span></label>
+      <input id="p-nama" autocomplete="name">
+      <div id="g-staf">
+        <label class="lab" for="p-nostaf"><span class="l">No. Staf</span> <span class="e">Staff number</span></label>
+        <input id="p-nostaf" autocomplete="off">
+      </div>
+      <div id="g-luar" hidden>
+        <label class="lab" for="p-nokp"><span class="l">No. Kad Pengenalan / Pasport</span> <span class="e">IC / Passport number</span></label>
+        <input id="p-nokp" autocomplete="off">
+      </div>
+      <label class="lab" for="p-jabatan"><span class="l" id="l-jabatan">Jabatan / Fakulti / Unit</span> <span class="e" id="e-jabatan">Department / Faculty / Unit</span></label>
+      <input id="p-jabatan" autocomplete="organization">
+      <label class="lab" for="p-tel"><span class="l">No. telefon</span> <span class="e">Phone number</span></label>
+      <input id="p-tel" type="tel" inputmode="tel" autocomplete="tel">
+      <div id="msg-profil" class="msg" hidden></div>
+      <button id="btn-profil" class="btn" type="button">Simpan <i>Save</i></button>
+    </div>
+  </section>
+
+  <!-- Laman utama -->
+  <section id="v-home" class="view" hidden>
+    <div class="card">
+      <div class="h1" id="home-nama">Selamat datang</div>
+      <div class="e">Welcome</div>
+      <div class="row" style="margin-top:8px"><span class="pill info" id="home-peranan"></span><span class="muted" id="home-emel" style="font-size:12px"></span></div>
+    </div>
+    <div class="h2" style="margin-top:4px">Modul <span class="e">Modules</span></div>
+    <div class="menu" id="menu-modul">
+      <div class="item off"><div class="l">Profiling</div><div class="e">Profile</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
+      <div class="item off"><div class="l">Pendaftaran SSU</div><div class="e">Startup registration</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
+      <div class="item off"><div class="l">Ruang niaga</div><div class="e">Business premises</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
+      <div class="item off"><div class="l">Laporan kewangan</div><div class="e">Financial report</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
+      <div class="item off"><div class="l">Makerspace</div><div class="e">Makerspace</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
+    </div>
+    <div id="admin-menu-wrap" hidden>
+      <div class="h2" style="margin:8px 0 8px">Pentadbir <span class="e">Admin</span></div>
+      <div class="menu">
+        <button class="item" id="go-status" type="button"><div class="l">Status sistem</div><div class="e">System status</div></button>
+        <button class="item" id="go-import" type="button" hidden><div class="l">Import data pelajar</div><div class="e">Import student data (PELAJAR)</div></button>
+        <button class="item" id="go-admin" type="button" hidden><div class="l">Urus admin</div><div class="e">Manage admins</div></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Admin: status -->
+  <section id="v-status" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card"><div class="h1">Status sistem</div><div class="e">System status</div>
+      <div id="status-body" style="margin-top:12px"></div></div>
+  </section>
+
+  <!-- Admin: import PELAJAR -->
+  <section id="v-import" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card">
+      <div class="h1">Import data pelajar</div><div class="e">Import student data into PELAJAR</div>
+      <p class="muted">Tampal kandungan CSV (daripada Excel: Simpan sebagai CSV) atau pilih fail. Lajur wajib: <code>No_Matrik, Nama_Penuh, Emel, No_KP_Pasport, Jantina, Etnik, Kewarganegaraan, Fakulti, Program, Tahun_Pengajian</code>.
+        <span class="e">Paste CSV content or choose a file.</span></p>
+      <input id="imp-file" type="file" accept=".csv,text/csv,text/plain" aria-label="Fail CSV">
+      <label class="lab" for="imp-csv"><span class="l">Kandungan CSV</span> <span class="e">CSV content</span></label>
+      <textarea id="imp-csv" spellcheck="false"></textarea>
+      <label class="lab" for="imp-mod"><span class="l">Mod</span> <span class="e">Mode</span></label>
+      <select id="imp-mod"><option value="gabung">Gabung (tambah dan kemas kini mengikut No. Matrik) / Merge</option><option value="ganti">Ganti semua data PELAJAR / Replace all</option></select>
+      <div class="row">
+        <button id="btn-imp-semak" class="btn alt sm" type="button" style="margin-top:12px">Semak dahulu <span class="e">Check first</span></button>
+        <button id="btn-imp-jalan" class="btn sm" type="button" style="margin-top:12px" disabled>Import <span style="font-style:italic;font-weight:400;font-size:10.5px">Import</span></button>
+      </div>
+      <div id="imp-hasil"></div>
+    </div>
+  </section>
+
+  <!-- Admin: urus admin -->
+  <section id="v-admin" class="view" hidden>
+    <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+    <div class="card"><div class="h1">Urus admin</div><div class="e">Manage admins</div>
+      <div class="scroll" style="margin-top:10px"><table><thead><tr><th>Emel</th><th>Nama</th><th>Peranan</th><th>Modul</th><th>Status</th><th></th></tr></thead><tbody id="adm-body"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="h2">Tambah atau kemas kini admin <span class="e">Add or update an admin</span></div>
+      <label class="lab" for="a-emel"><span class="l">Emel staf</span> <span class="e">Staff email</span></label><input id="a-emel" type="email">
+      <label class="lab" for="a-nama"><span class="l">Nama</span> <span class="e">Name</span></label><input id="a-nama">
+      <label class="lab" for="a-peranan"><span class="l">Peranan</span> <span class="e">Role</span></label>
+      <select id="a-peranan"><option>Pegawai Modul</option><option>Penilai</option><option>Pemerhati</option><option>Admin Penuh</option></select>
+      <label class="lab" for="a-modul"><span class="l">Modul (pilihan)</span> <span class="e">Module (optional)</span></label><input id="a-modul" placeholder="cth: Makerspace">
+      <div id="msg-admin" class="msg" hidden></div>
+      <button id="btn-adm-tambah" class="btn" type="button">Simpan <i>Save</i></button>
+    </div>
+  </section>
+
+</main>
+
+<?!= include('LogoData') ?>
+<?!= include('App') ?>
+</body>
+</html>
