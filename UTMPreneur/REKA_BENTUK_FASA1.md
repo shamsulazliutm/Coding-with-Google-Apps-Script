@@ -109,7 +109,8 @@ Peraturan: hanya SSU Diluluskan; pelajar nampak lot Dibuka + Kosong sahaja; **sa
 - **Paparan dokumen (rujukan contoh daripada Tuan, ilustrasi `11` dan `12`):** tab Ruang Niaga memaparkan kad **Penerimaan tawaran** ("Tawaran telah diterima pada <tarikh masa>") dan kad **Dokumen penyertaan** (senarai bernombor: Surat Tawaran, Rekod Penerimaan, Perjanjian Sewa, dan dokumen lain yang dimuat naik admin). Klik nama dokumen membuka **PDF dalam tab baharu**; muat turun melalui paparan PDF bila-bila masa. Pelaksanaan: pelayan mencipta **pautan sekali guna tamat dalam 5 minit** yang membuka halaman paparan PDF (tidak mendedahkan fail Drive).
 - **Perjanjian (disahkan): dicetak, ditandatangani, salinan bertandatangan dimuat naik oleh pemohon dan disahkan admin.** Status dokumen: Menunggu salinan bertandatangan -> Dimuat naik -> Disahkan (atau Dikembalikan dengan catatan).
 - **Surat tawaran (disahkan): admin menyemak pratonton dahulu, kemudian menekan "Hantar surat tawaran".** Sistem menjana pratonton PDF; hanya selepas admin menghantar, dokumen kelihatan kepada pemohon dan emel pemberitahuan dihantar. Admin boleh menjana semula (versi baharu) sebelum menghantar.
-- **[TERBUKA]** tempoh menerima dan luput tawaran, cara penerimaan, bila sewaan bermula, penanda templat, siapa boleh melihat (pemilik dan ahli pasukan).
+- **Tempoh menerima tawaran (disahkan): 7 hari** dari tarikh surat tawaran dihantar (`TAWARAN_TEMPOH_HARI` dalam `Tetapan`). Peringatan emel pada hari ke-4 dan ke-6. **[LALAI]** jika tamat tanpa jawapan: status **Tawaran Luput**, lot kembali Kosong, admin dimaklumkan dan boleh menawar pemohon seterusnya mengikut kedudukan.
+- **[TERBUKA]** cara penerimaan, bila sewaan bermula, penanda templat, siapa boleh melihat (pemilik dan ahli pasukan).
 
 **Penilaian jawatankuasa (disahkan):**
 - Permohonan dikumpul dalam **tempoh tertentu** (tarikh buka dan tutup ditetapkan admin dalam `Tetapan`/`Lot`), kemudian dinilai dalam satu sesi.
