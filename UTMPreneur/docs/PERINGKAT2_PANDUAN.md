@@ -73,3 +73,9 @@ Aliran pilihan ialah empat pilihan daripada borang lama.
 **D. Pembaharuan dan tamat**
 1. Ubah `Tarikh_Tamat` Perniagaan kepada 20 hari lagi; pelajar nampak butang Perbaharui; hantar; admin lulus; nombor berakhir `-02`.
 2. Jalankan `jobHarian()` secara manual; peringatan masuk `Peringatan` sekali sahaja.
+
+## 5. Versi dua fail (Code.gs + Index.html)
+
+`npm run bundle` menjana folder `dist/`: **`Code.gs`** (semua fail .gs), **`Index.html`** (semua antara muka, termasuk gaya dan logo) dan
+`appsscript.json`. Dalam editor Apps Script: padam fail lama, tampal kandungan `Code.gs` dan `Index.html`, dan dalam Tetapan Projek tandakan
+"Tunjukkan fail manifes appsscript.json" kemudian ganti kandungannya (perlu untuk skop Slides). Sunting sentiasa di `src/` dan jana semula.

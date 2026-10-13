@@ -284,10 +284,11 @@ function createEnv(opts) {
   };
   const ctx = vm.createContext(sandbox);
 
-  const files = fs.readdirSync(SRC).filter((f) => f.endsWith('.gs')).sort();
+  const dir = opts.dir || SRC;
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.gs')).sort();
   const order = opts.reverse ? files.slice().reverse() : files;
   order.forEach((f) => {
-    vm.runInContext(fs.readFileSync(path.join(SRC, f), 'utf8'), ctx, { filename: f });
+    vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
   });
 
   const env = {
