@@ -316,3 +316,22 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 9. Pembaharuan selepas 1 tahun: diurus admin dengan dokumen baharu.
 10. Nama penandatangan dan saksi disimpan dalam `Tetapan`.
 - Percanggahan deposit: pemulangan 90 hari selepas tamat kontrak (surat tawaran) kekal; admin boleh menahan dengan alasan direkodkan.
+
+## 13. Templat sijil SSU diterima (Google Slides)
+
+Fail: `16HKfrs-fu80ZxrrOrMlLq5Q9I1bS0XEK2oIjlOcjwYc` ("Perakuan Pendaftaran Syarikat Pemula Pelajar"). Satu slaid. Penanda guna **kurungan petak** (bukan `{{ }}`); enjin templat akan menyokong kedua-duanya:
+
+| Penanda | Sumber |
+|---|---|
+| `[nama_syarikat]` | SSU.nama_syarikat |
+| `[no_sijil]` | nombor sijil dijana sistem (`SEQ_SIJIL`) |
+| `[tarikh_daftar]` | tarikh kelulusan (format 13 Oktober 2026) |
+| `[alamat_berdaftar]` | alamat berdaftar SSU |
+| `[kod_kursus]` | kod subjek pendaftaran |
+| `[nama_ahli]` | senarai ahli (pemilik + ahli), satu baris setiap orang, huruf besar |
+| `[bil_ahli]` | bilangan ahli |
+| `[tarikh_tamat]` | tarikh tamat sah laku (tempoh mengikut Tetapan) |
+
+- Nama dan jawatan penandatangan (Pengarah UTMXCITE) ditetap dalam templat; tiada tandatangan imej buat masa ini.
+- Jana PDF: salin slaid ke Drive, ganti penanda, eksport PDF, simpan ke folder sijil, padam salinan.
+- Soalan terbuka: tempoh sah laku lalai (cadangan 1 tahun, boleh diperbaharui), dan format nombor sijil (cadangan `SSU/2026/0001`).
