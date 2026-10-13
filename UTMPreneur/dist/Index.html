@@ -178,14 +178,17 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     <div class="menu" id="menu-modul">
       <button class="item" id="go-profil" type="button"><div class="l">Profiling</div><div class="e">Profile</div><span class="pill" id="pill-profil" style="margin-top:6px"></span></button>
       <button class="item" id="go-ssu" type="button"><div class="l">Pendaftaran SSU</div><div class="e">Startup registration</div><span class="pill" id="pill-ssu" style="margin-top:6px"></span></button>
-      <div class="item off"><div class="l">Ruang niaga</div><div class="e">Business premises</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
-      <div class="item off"><div class="l">Laporan kewangan</div><div class="e">Financial report</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
-      <div class="item off"><div class="l">Makerspace</div><div class="e">Makerspace</div><span class="pill" style="margin-top:6px">Akan datang / Coming soon</span></div>
+      <button class="item off" id="go-rn" type="button" disabled><div class="l">Ruang niaga</div><div class="e">Business premises</div><span class="pill" id="pill-rn" style="margin-top:6px">Akan datang / Coming soon</span></button>
+      <button class="item off" id="go-kew" type="button" disabled><div class="l">Laporan kewangan</div><div class="e">Financial report</div><span class="pill" id="pill-kew" style="margin-top:6px">Akan datang / Coming soon</span></button>
+      <button class="item off" id="go-mk" type="button" disabled><div class="l">Makerspace</div><div class="e">Makerspace</div><span class="pill" id="pill-mk" style="margin-top:6px">Akan datang / Coming soon</span></button>
     </div>
     <div id="admin-menu-wrap" hidden>
       <div class="h2" style="margin:8px 0 8px">Pentadbir <span class="e">Admin</span></div>
       <div class="menu">
         <button class="item" id="go-ssu-admin" type="button" hidden><div class="l">Permohonan SSU</div><div class="e">SSU applications</div><span class="pill" id="pill-ssu-admin" style="margin-top:6px"></span></button>
+        <button class="item" id="go-rn-admin" type="button" hidden><div class="l">Ruang niaga (admin)</div><div class="e">Business premises admin</div><span class="pill" id="pill-rn-admin" style="margin-top:6px"></span></button>
+        <button class="item" id="go-kew-admin" type="button" hidden><div class="l">Laporan kewangan (admin)</div><div class="e">Financial reports admin</div><span class="pill" id="pill-kew-admin" style="margin-top:6px"></span></button>
+        <button class="item" id="go-mk-admin" type="button" hidden><div class="l">Makerspace (admin)</div><div class="e">Makerspace admin</div><span class="pill" id="pill-mk-admin" style="margin-top:6px"></span></button>
         <button class="item" id="go-bantu" type="button" hidden><div class="l">Bantu pelajar</div><div class="e">Register on behalf of a student</div></button>
         <button class="item" id="go-status" type="button"><div class="l">Status sistem</div><div class="e">System status</div></button>
         <button class="item" id="go-import" type="button" hidden><div class="l">Import data pelajar</div><div class="e">Import student data (PELAJAR)</div></button>
@@ -328,6 +331,12 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     <div id="bt-hasil"></div>
   </section>
 
+<!-- ViewsRn: skrin modul (diisi oleh modul) -->
+
+<!-- ViewsKew: skrin modul (diisi oleh modul) -->
+
+<!-- ViewsMk: skrin modul (diisi oleh modul) -->
+
 
 </main>
 
@@ -341,7 +350,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
   var S = { token: null, session: null, emel: '', timer: null, confirmImport: false };
   var $ = function (id) { return document.getElementById(id); };
   // Antara muka dikongsi dengan AppModul.html (Profiling, SSU)
-  var UP = window.UP = { hooks: {}, S: S };
+  var UP = window.UP = { hooks: {}, S: S, homeHooks: [], backHooks: [], initHooks: [], formTypes: {} };
 
   function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
@@ -496,7 +505,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     $('admin-menu-wrap').hidden = !isAdmin;
     $('go-import').hidden = s.role !== 'Admin Penuh';
     $('go-admin').hidden = s.role !== 'Admin Penuh';
-    if (UP.hooks.home) UP.hooks.home(s);
+    UP.homeHooks.forEach(function (fn) { fn(s); });
     show('v-home');
   }
 
@@ -661,7 +670,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     $('go-status').addEventListener('click', openStatus);
     $('go-import').addEventListener('click', function () { show('v-import'); $('imp-hasil').textContent = ''; $('btn-imp-jalan').disabled = true; });
     $('go-admin').addEventListener('click', openAdmins);
-    document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { if (UP.hooks.back && UP.hooks.back()) return; renderHome(S.session); }); });
+    document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { if (UP.backHooks.some(function (fn) { return fn(); })) return; renderHome(S.session); }); });
     $('btn-imp-semak').addEventListener('click', importCheck);
     $('btn-imp-jalan').addEventListener('click', importRun);
     $('imp-csv').addEventListener('input', function () { $('btn-imp-jalan').disabled = true; });
@@ -674,11 +683,15 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     });
     $('btn-adm-tambah').addEventListener('click', addAdmin);
 
-    S.token = load('tok');
-    if (!S.token) { show('v-emel'); return; }
-    api('sesi.saya').then(function (r) {
-      if (!r.ok) { S.token = null; store('tok', null); show('v-emel'); return; }
-      route(r.data);
+    // initHooks: setiap hook boleh memulangkan true (atau Promise<true>) jika ia mengendalikan skrin permulaan sendiri
+    Promise.all(UP.initHooks.map(function (fn) { try { return Promise.resolve(fn()); } catch (e) { return Promise.resolve(false); } })).then(function (rs) {
+      if (rs.some(Boolean)) return;
+      S.token = load('tok');
+      if (!S.token) { show('v-emel'); return; }
+      api('sesi.saya').then(function (r) {
+        if (!r.ok) { S.token = null; store('tok', null); show('v-emel'); return; }
+        route(r.data);
+      });
     });
   }
 
@@ -755,7 +768,9 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
         api.get = function () { return undefined; }; api.set = function () {};
       } else {
         wrap.appendChild(label(f));
-        if (f.t === 'text' || f.t === 'tel' || f.t === 'date' || f.t === 'number') {
+        if (UP.formTypes[f.t]) {
+          UP.formTypes[f.t](f, wrap, api, { node: node, optList: optList });
+        } else if (f.t === 'text' || f.t === 'tel' || f.t === 'date' || f.t === 'number') {
           ctl = document.createElement('input'); ctl.type = f.t; if (f.ph) ctl.placeholder = f.ph; if (f.max) ctl.maxLength = f.max;
           if (f.t === 'text') ctl.autocomplete = 'off';
           wrap.appendChild(ctl);
@@ -1320,10 +1335,28 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       out.appendChild(card);
     });
   }
-  UP.hooks.back = function () {
+  UP.backHooks.push(function () {
     if (!BAGI) return false;
     if (!$('v-profiling').hidden || !$('v-ssu').hidden) { var mat = BAGI.m; BAGI = null; paintBagi(); UP.show('v-bantu'); $('bt-matrik').value = mat; findBantu(); return true; }
     return false;
+  });
+
+  // ---------- Dikongsi dengan modul lain ----------
+  UP.Form = Form; UP.kv = kv; UP.pill = pill; UP.download = download; UP.loadRuj = loadRuj; UP.opts = opts; UP.PILL = PILL;
+  UP.YT = YT; UP.YTM = YTM; UP.TAHUN = TAHUN;
+  /** Butang muat turun generik: memanggil kaedah RPC yang memulangkan {nama, mime, data(base64)}. */
+  UP.fileBtn = function (bm, en, method, payload, outEl) {
+    var b = node('button', bm, 'btn alt sm'); b.type = 'button'; b.style.marginRight = '6px'; b.style.marginTop = '6px';
+    b.appendChild(document.createTextNode(' ')); b.appendChild(node('span', en, 'e'));
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      UP.api(method, payload).then(function (r) {
+        b.disabled = false;
+        if (!r.ok) { if (outEl) { outEl.hidden = false; msgErr(outEl, r); } return; }
+        download(r.data.nama, r.data.mime, r.data.data);
+      });
+    });
+    return b;
   };
 
   // ---------- Menu utama ----------
@@ -1331,7 +1364,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     btn.disabled = !on; btn.classList.toggle('off', !on);
     pillEl.textContent = text; pillEl.className = 'pill ' + (kind || '');
   }
-  UP.hooks.home = function (s) {
+  UP.homeHooks.push(function (s) {
     var pel = s.role === 'Pelajar';
     setItem($('go-profil'), $('pill-profil'), pel, pel ? '…' : 'Pelajar sahaja / Students only');
     setItem($('go-ssu'), $('pill-ssu'), pel, pel ? '…' : 'Pelajar sahaja / Students only');
@@ -1352,7 +1385,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     if (adm) UP.api('ssu.admin.senarai', { status: 'Baharu' }).then(function (r) {
       if (r.ok) { $('pill-ssu-admin').textContent = r.data.kiraan.Baharu + ' baharu / new'; $('pill-ssu-admin').className = 'pill ' + (r.data.kiraan.Baharu ? 'warn' : ''); }
     });
-  };
+  });
 
   function init() {
     $('go-profil').addEventListener('click', function () { if (!$('go-profil').disabled) openProfiling(); });
@@ -1372,6 +1405,18 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
   }
   document.addEventListener('DOMContentLoaded', init);
 })();
+</script>
+
+<script>
+(function () { 'use strict'; var UP = window.UP; /* AppRn: skrip modul; guna UP.Form, UP.api, UP.show, UP.homeHooks, UP.backHooks, UP.initHooks */ })();
+</script>
+
+<script>
+(function () { 'use strict'; var UP = window.UP; /* AppKew: skrip modul; guna UP.Form, UP.api, UP.show, UP.homeHooks, UP.backHooks, UP.initHooks */ })();
+</script>
+
+<script>
+(function () { 'use strict'; var UP = window.UP; /* AppMk: skrip modul; guna UP.Form, UP.api, UP.show, UP.homeHooks, UP.backHooks, UP.initHooks */ })();
 </script>
 
 </body>

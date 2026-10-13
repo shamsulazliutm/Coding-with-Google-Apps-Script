@@ -141,6 +141,11 @@ var Setup = (function () {
       appendMany_('PELAJAR', pc);
       log.push('MOD UJI: ' + pc.length + ' pelajar contoh rekaan ditambah');
     }
+    // Data awal modul (pilihan): setiap modul boleh menyediakan seed(appendMany, isEmpty, log)
+    [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
+     typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+      if (m && typeof m.seed === 'function') m.seed(appendMany_, isEmpty_, log);
+    });
     Cfg.invalidate();
     Admins.invalidate();
     Ref.invalidate();

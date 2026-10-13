@@ -42,7 +42,7 @@ function createEnv(opts) {
       return Array.from(Buffer.from(String(str), 'base64')).map((b) => (b > 127 ? b - 256 : b));
     },
     base64Encode(bytes) { return Buffer.from(bytes.map((b) => (b + 256) % 256)).toString('base64'); },
-    newBlob(bytes, mime, name) { return makeBlob(bytes, mime, name); },
+    newBlob(bytes, mime, name) { return makeBlob(typeof bytes === 'string' ? Array.from(Buffer.from(bytes, 'utf8')).map((x) => (x > 127 ? x - 256 : x)) : bytes, mime, name); },
     formatDate(date, tz, fmt) {
       const d = new Date(date.getTime() + 8 * 3600 * 1000); // Asia/Kuala_Lumpur = UTC+8
       const p = (n, w) => String(n).padStart(w || 2, '0');
@@ -56,7 +56,12 @@ function createEnv(opts) {
     const b = {
       bytes, type, name,
       getBytes() { return b.bytes; }, getContentType() { return b.type; }, getName() { return b.name; },
-      setName(n) { b.name = n; return b; }
+      setName(n) { b.name = n; return b; },
+      getAs(mime) {
+        if (mime !== 'application/pdf') throw new Error('Tukar jenis tidak disokong dalam mock');
+        const src = Array.isArray(b.bytes) ? Buffer.from(b.bytes.map((x) => (x + 256) % 256)).toString('utf8') : String(b.bytes);
+        return makeBlob(Array.from(Buffer.from('%PDF-1.4\n' + src, 'utf8')).map((x) => (x > 127 ? x - 256 : x)), 'application/pdf', (b.name || 'fail') + '.pdf');
+      }
     };
     return b;
   }
@@ -199,14 +204,14 @@ function createEnv(opts) {
       getBlob() { if (!rec.blob) throw new Error('Fail tiada kandungan'); return rec.blob; },
       makeCopy(name, folder) {
         const id = newId('CP');
-        const r2 = { id, name, parents: [folder || rec.parents[0]], blob: rec.blob, slides: rec.slides ? { text: rec.slides.text } : null };
+        const r2 = { id, name, parents: [folder || rec.parents[0]], blob: rec.blob, slides: rec.slides ? { text: rec.slides.text } : null, doc: rec.doc ? { text: rec.doc.text } : null };
         state.files[id] = r2;
         if (folder) folder.children.push({ name, file: r2 });
         return wrapFile(r2);
       },
       getAs(mime) {
         if (mime !== 'application/pdf') throw new Error('Tukar jenis tidak disokong dalam mock');
-        const txt = rec.slides ? rec.slides.text : '';
+        const txt = rec.slides ? rec.slides.text : (rec.doc ? rec.doc.text : '');
         return makeBlob(Array.from(Buffer.from('%PDF-1.4\n' + txt, 'utf8')).map((b) => (b > 127 ? b - 256 : b)), 'application/pdf', (rec.name || 'fail') + '.pdf');
       }
     };
@@ -266,6 +271,18 @@ function createEnv(opts) {
     }
   };
 
+  const DocumentApp = {
+    openById(id) {
+      const rec = state.files[id];
+      if (!rec || !rec.doc) throw new Error('Bukan dokumen: ' + id);
+      const body = {
+        replaceText(re, repl) { rec.doc.text = rec.doc.text.replace(new RegExp(re, 'g'), repl.replace(/\\\$/g, '$$$$')); return body; },
+        getText() { return rec.doc.text; }
+      };
+      return { getBody() { return body; }, getHeader() { return null; }, getFooter() { return null; }, saveAndClose() {} };
+    }
+  };
+
   const triggers = [];
   state.triggers = triggers;
   const ScriptApp = {
@@ -279,7 +296,7 @@ function createEnv(opts) {
   };
 
   const sandbox = {
-    Utilities, CacheService, PropertiesService, LockService, MailApp, SpreadsheetApp, DriveApp, SlidesApp, ScriptApp,
+    Utilities, CacheService, PropertiesService, LockService, MailApp, SpreadsheetApp, DriveApp, SlidesApp, DocumentApp, ScriptApp,
     console: { log() {}, error() {}, warn() {} },
     Logger: { log() {} }
   };
@@ -311,6 +328,16 @@ function createEnv(opts) {
       state.files[id] = { id, name: 'Templat sijil', parents: [state.folders.root], slides: { text } };
       env.run(`(function(){ var r = Db.find('Link_Dokumen', function(x){ return x.Kod==='TEMPLAT_SIJIL_SSU'; })[0];
         Db.update('Link_Dokumen', r._row, {URL: 'https://docs.google.com/presentation/d/${id}/edit'}); Db.reset(); })()`);
+      return id;
+    },
+    /** Daftar templat Google Docs (teks) dalam Drive tiruan di bawah kod Link_Dokumen yang diberi (baris dicipta jika tiada). */
+    addDocTemplate(kod, text) {
+      const id = newId('DT');
+      state.files[id] = { id, name: 'Templat ' + kod, parents: [state.folders.root], doc: { text } };
+      env.run(`(function(){ var r = Db.find('Link_Dokumen', function(x){ return x.Kod===${JSON.stringify(kod)}; })[0];
+        var url = 'https://docs.google.com/document/d/${id}/edit';
+        if (r) Db.update('Link_Dokumen', r._row, {URL: url}); else Db.append('Link_Dokumen', {Kod: ${JSON.stringify(kod)}, Jenis: 'Templat', Modul: 'Ujian', Nama: ${JSON.stringify(kod)}, URL: url, Status: 'Aktif'});
+        Db.reset(); })()`);
       return id;
     },
     /** Sediakan Induk kosong dalam folder, tetapkan properties dan jalankan Setup.run(). */

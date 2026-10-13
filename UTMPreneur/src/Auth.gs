@@ -265,6 +265,8 @@ var Auth = (function () {
     claimMatric: claimMatric,
     registerProfile: registerProfile,
     invalidatePengguna: pgInvalidate_,
+    pepper: pepper_,
+    bumpDaily: bumpDaily_,
     me: me
   };
 })();

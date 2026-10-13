@@ -6,7 +6,7 @@
   var S = { token: null, session: null, emel: '', timer: null, confirmImport: false };
   var $ = function (id) { return document.getElementById(id); };
   // Antara muka dikongsi dengan AppModul.html (Profiling, SSU)
-  var UP = window.UP = { hooks: {}, S: S };
+  var UP = window.UP = { hooks: {}, S: S, homeHooks: [], backHooks: [], initHooks: [], formTypes: {} };
 
   function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
@@ -161,7 +161,7 @@
     $('admin-menu-wrap').hidden = !isAdmin;
     $('go-import').hidden = s.role !== 'Admin Penuh';
     $('go-admin').hidden = s.role !== 'Admin Penuh';
-    if (UP.hooks.home) UP.hooks.home(s);
+    UP.homeHooks.forEach(function (fn) { fn(s); });
     show('v-home');
   }
 
@@ -326,7 +326,7 @@
     $('go-status').addEventListener('click', openStatus);
     $('go-import').addEventListener('click', function () { show('v-import'); $('imp-hasil').textContent = ''; $('btn-imp-jalan').disabled = true; });
     $('go-admin').addEventListener('click', openAdmins);
-    document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { if (UP.hooks.back && UP.hooks.back()) return; renderHome(S.session); }); });
+    document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { if (UP.backHooks.some(function (fn) { return fn(); })) return; renderHome(S.session); }); });
     $('btn-imp-semak').addEventListener('click', importCheck);
     $('btn-imp-jalan').addEventListener('click', importRun);
     $('imp-csv').addEventListener('input', function () { $('btn-imp-jalan').disabled = true; });
@@ -339,11 +339,15 @@
     });
     $('btn-adm-tambah').addEventListener('click', addAdmin);
 
-    S.token = load('tok');
-    if (!S.token) { show('v-emel'); return; }
-    api('sesi.saya').then(function (r) {
-      if (!r.ok) { S.token = null; store('tok', null); show('v-emel'); return; }
-      route(r.data);
+    // initHooks: setiap hook boleh memulangkan true (atau Promise<true>) jika ia mengendalikan skrin permulaan sendiri
+    Promise.all(UP.initHooks.map(function (fn) { try { return Promise.resolve(fn()); } catch (e) { return Promise.resolve(false); } })).then(function (rs) {
+      if (rs.some(Boolean)) return;
+      S.token = load('tok');
+      if (!S.token) { show('v-emel'); return; }
+      api('sesi.saya').then(function (r) {
+        if (!r.ok) { S.token = null; store('tok', null); show('v-emel'); return; }
+        route(r.data);
+      });
     });
   }
 

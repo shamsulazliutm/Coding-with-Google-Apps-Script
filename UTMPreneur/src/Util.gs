@@ -282,11 +282,17 @@ var MSG = {
   SIJIL_TEMPLAT_TIADA: ['Templat sijil belum didaftar atau tidak boleh dibuka. Semak Link_Dokumen (TEMPLAT_SIJIL_SSU) dan kebenaran akaun pelaksana.', 'The certificate template is not registered or cannot be opened. Check Link_Dokumen (TEMPLAT_SIJIL_SSU) and the executing account\'s access.'],
   SIJIL_TIADA: ['Sijil belum dijana.', 'The certificate has not been generated.'],
   FAIL_TIDAK_SAH: ['Fail tidak sah. Gunakan jenis fail yang dibenarkan dan saiz yang dibenarkan.', 'Invalid file. Use an allowed file type and size.'],
+  TEMPLAT_TIADA: ['Templat dokumen belum didaftar atau tidak boleh dibuka. Semak Link_Dokumen dan kebenaran akaun pelaksana.', 'The document template is not registered or cannot be opened. Check Link_Dokumen and the executing account\'s access.'],
   FAIL_TIDAK_DITEMUI: ['Fail tidak ditemui.', 'File not found.'],
   RALAT_DALAMAN: ['Ralat dalaman. Sila cuba lagi atau hubungi UTMXCITE.', 'Internal error. Please try again or contact UTMXCITE.']
 };
 
 function appError_(code, extra) {
-  var m = MSG[code] || MSG.RALAT_DALAMAN;
+  // Mesej modul (MSG_RN, MSG_KEW, MSG_MK) ditakrif dalam fail modul masing-masing
+  var m = MSG[code] ||
+    (typeof MSG_RN !== 'undefined' && MSG_RN[code]) ||
+    (typeof MSG_KEW !== 'undefined' && MSG_KEW[code]) ||
+    (typeof MSG_MK !== 'undefined' && MSG_MK[code]) ||
+    MSG.RALAT_DALAMAN;
   return new AppError(code, m[0], m[1], extra);
 }

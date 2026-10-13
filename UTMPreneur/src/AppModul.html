@@ -67,7 +67,9 @@
         api.get = function () { return undefined; }; api.set = function () {};
       } else {
         wrap.appendChild(label(f));
-        if (f.t === 'text' || f.t === 'tel' || f.t === 'date' || f.t === 'number') {
+        if (UP.formTypes[f.t]) {
+          UP.formTypes[f.t](f, wrap, api, { node: node, optList: optList });
+        } else if (f.t === 'text' || f.t === 'tel' || f.t === 'date' || f.t === 'number') {
           ctl = document.createElement('input'); ctl.type = f.t; if (f.ph) ctl.placeholder = f.ph; if (f.max) ctl.maxLength = f.max;
           if (f.t === 'text') ctl.autocomplete = 'off';
           wrap.appendChild(ctl);
@@ -632,10 +634,28 @@
       out.appendChild(card);
     });
   }
-  UP.hooks.back = function () {
+  UP.backHooks.push(function () {
     if (!BAGI) return false;
     if (!$('v-profiling').hidden || !$('v-ssu').hidden) { var mat = BAGI.m; BAGI = null; paintBagi(); UP.show('v-bantu'); $('bt-matrik').value = mat; findBantu(); return true; }
     return false;
+  });
+
+  // ---------- Dikongsi dengan modul lain ----------
+  UP.Form = Form; UP.kv = kv; UP.pill = pill; UP.download = download; UP.loadRuj = loadRuj; UP.opts = opts; UP.PILL = PILL;
+  UP.YT = YT; UP.YTM = YTM; UP.TAHUN = TAHUN;
+  /** Butang muat turun generik: memanggil kaedah RPC yang memulangkan {nama, mime, data(base64)}. */
+  UP.fileBtn = function (bm, en, method, payload, outEl) {
+    var b = node('button', bm, 'btn alt sm'); b.type = 'button'; b.style.marginRight = '6px'; b.style.marginTop = '6px';
+    b.appendChild(document.createTextNode(' ')); b.appendChild(node('span', en, 'e'));
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      UP.api(method, payload).then(function (r) {
+        b.disabled = false;
+        if (!r.ok) { if (outEl) { outEl.hidden = false; msgErr(outEl, r); } return; }
+        download(r.data.nama, r.data.mime, r.data.data);
+      });
+    });
+    return b;
   };
 
   // ---------- Menu utama ----------
@@ -643,7 +663,7 @@
     btn.disabled = !on; btn.classList.toggle('off', !on);
     pillEl.textContent = text; pillEl.className = 'pill ' + (kind || '');
   }
-  UP.hooks.home = function (s) {
+  UP.homeHooks.push(function (s) {
     var pel = s.role === 'Pelajar';
     setItem($('go-profil'), $('pill-profil'), pel, pel ? '…' : 'Pelajar sahaja / Students only');
     setItem($('go-ssu'), $('pill-ssu'), pel, pel ? '…' : 'Pelajar sahaja / Students only');
@@ -664,7 +684,7 @@
     if (adm) UP.api('ssu.admin.senarai', { status: 'Baharu' }).then(function (r) {
       if (r.ok) { $('pill-ssu-admin').textContent = r.data.kiraan.Baharu + ' baharu / new'; $('pill-ssu-admin').className = 'pill ' + (r.data.kiraan.Baharu ? 'warn' : ''); }
     });
-  };
+  });
 
   function init() {
     $('go-profil').addEventListener('click', function () { if (!$('go-profil').disabled) openProfiling(); });

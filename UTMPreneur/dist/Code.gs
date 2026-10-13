@@ -339,6 +339,8 @@ var Auth = (function () {
     claimMatric: claimMatric,
     registerProfile: registerProfile,
     invalidatePengguna: pgInvalidate_,
+    pepper: pepper_,
+    bumpDaily: bumpDaily_,
     me: me
   };
 })();
@@ -354,19 +356,22 @@ var Auth = (function () {
  */
 
 var Bantu = (function () {
-  function allowed_(ctx) {
+  /** modulKey: huruf kecil, contoh 'ssu', 'profil', 'ruang niaga', 'kewangan', 'makerspace'. Lalai: SSU atau Profiling. */
+  function allowed_(ctx, modulKey) {
     if (ctx.role === ROLE.ADMIN_PENUH) return true;
     if (ctx.role === ROLE.PEGAWAI_MODUL) {
       var a = Admins.find(ctx.email);
       var mod = a ? a.modul.toLowerCase() : '';
-      return !mod || mod.indexOf('semua') >= 0 || mod.indexOf('ssu') >= 0 || mod.indexOf('profil') >= 0;
+      if (!mod || mod.indexOf('semua') >= 0) return true;
+      var keys = modulKey ? [String(modulKey).toLowerCase()] : ['ssu', 'profil'];
+      return keys.some(function (k) { return mod.indexOf(k) >= 0; });
     }
     return false;
   }
 
   /** Konteks pelajar untuk fungsi modul. Identiti audit kekal emel admin. */
-  function ctx_(ctx, noMatrik) {
-    if (!allowed_(ctx)) throw appError_('TIADA_KEBENARIAN');
+  function ctx_(ctx, noMatrik, modulKey) {
+    if (!allowed_(ctx, modulKey)) throw appError_('TIADA_KEBENARIAN');
     var m = Util.normMatric(noMatrik);
     var pel = Util.isMatric(m) ? Db.find('PELAJAR', function (r) { return Util.normMatric(r.No_Matrik) === m; }) : [];
     if (!pel.length) throw appError_('MATRIK_TIDAK_DITEMUI');
@@ -426,7 +431,7 @@ function include(name) {
  * dan ROLE/ADMIN_ROLES ditakrifkan dalam Config.gs.
  */
 function rpcTable_() {
-  return {
+  var t = {
     'ping':          { auth: false, fn: function () { return { versi: APP.VERSI, masa: new Date().toISOString() }; } },
     'otp.minta':     { auth: false, fn: function (c, p) { return Auth.requestOtp(p.emel); } },
     'otp.sahkan':    { auth: false, fn: function (c, p) { return Auth.verifyOtp(p.emel, p.kod); } },
@@ -460,6 +465,15 @@ function rpcTable_() {
     'ssu.admin.hantar':   { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.hantarBagiPihak(c, p); } },
     'ssu.admin.sedia':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminDaftarSedia(c, p); } }
   };
+  // Laluan modul lain: setiap modul menyediakan routes() yang memulangkan {nama: {auth, roles, matrik, fn}}
+  [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
+   typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+    if (m && typeof m.routes === 'function') {
+      var r = m.routes();
+      Object.keys(r).forEach(function (k) { t[k] = r[k]; });
+    }
+  });
+  return t;
 }
 
 /** Dipanggil oleh antara muka melalui google.script.run. Sentiasa pulang objek {ok, data|error}. */
@@ -1230,6 +1244,11 @@ var Jobs = {
   harian: function () {
     var out = {};
     try { out.ssu = Ssu.jobHarian(); } catch (e) { console.error('Kerja SSU gagal: ' + e); out.ssu = { ralat: String(e) }; }
+    [['rn', typeof RuangNiaga !== 'undefined' ? RuangNiaga : null], ['kew', typeof Kewangan !== 'undefined' ? Kewangan : null],
+     ['mk', typeof Makerspace !== 'undefined' ? Makerspace : null]].forEach(function (x) {
+      if (!x[1] || typeof x[1].jobHarian !== 'function') return;
+      try { out[x[0]] = x[1].jobHarian(); } catch (e) { console.error('Kerja ' + x[0] + ' gagal: ' + e); out[x[0]] = { ralat: String(e) }; }
+    });
     return out;
   }
 };
@@ -1308,6 +1327,160 @@ var Mail = {
     });
   }
 };
+
+
+// ===== Otp.gs =====
+/**
+ * UTMPreneur: OTP berasaskan tujuan (bukan log masuk). Contoh: pemohon mengesahkan penerimaan tawaran,
+ * penyelia memperakui tempahan. OTP dihantar ke emel yang ditentukan, disimpan sebagai hash dalam CacheService,
+ * had percubaan, jeda dan had sejam; dikira dalam kuota OTP harian yang sama dengan log masuk.
+ *   Otp.issue('TERIMA_TAWARAN:PLT-2026-0001', emel, {subjectBm, subjectEn, bm:[...], en:[...]})
+ *   Otp.verify('TERIMA_TAWARAN:PLT-2026-0001', emel, kod)   // lempar AppError jika tidak sah, pulang true
+ * opts.bm / opts.en ialah tatasusunan perenggan; "{kod}" dalam perenggan diganti kod OTP.
+ */
+
+var Otp = (function () {
+  var P = 'otpx:', CD = 'otpxcd:', HR = 'otpxh:';
+
+  function key_(purpose, email) { return Util.sha256(Auth.pepper() + '|x|' + purpose + '|' + email).substr(0, 40); }
+  function hash_(purpose, email, code) { return Util.sha256(Auth.pepper() + '|xc|' + purpose + '|' + email + '|' + code); }
+
+  function issue_(purpose, emailRaw, opts) {
+    opts = opts || {};
+    var email = Util.normEmail(emailRaw);
+    if (!Util.isEmail(email)) throw appError_('EMEL_TIDAK_SAH');
+    if (Mode.isUji() && !Mail.allowed(email)) throw appError_('UJI_TIADA_SENARAI');
+    var c = Db.cache(), k = key_(purpose, email);
+    if (c.get(CD + k)) throw appError_('RATE_JEDA');
+    var hourly = parseInt(c.get(HR + k) || '0', 10);
+    if (hourly >= Cfg.num('OTP_MAKS_SEJAM', 3) + 2) throw appError_('RATE_SEJAM');
+    if (Auth.bumpDaily() > Cfg.num('OTP_MAKS_HARIAN', 1000)) throw appError_('RATE_HARIAN');
+    var minit = Cfg.num('OTP_TAMAT_MINIT', 5);
+    var code = Util.randomOtp();
+    c.put(P + k, JSON.stringify({ h: hash_(purpose, email, code), t: 0, exp: new Date().getTime() + minit * 60000 }), minit * 60);
+    c.put(CD + k, '1', Cfg.num('OTP_JEDA_SAAT', 60));
+    c.put(HR + k, String(hourly + 1), 3600);
+    var sub = function (arr) { return (arr || []).map(function (t) { return String(t).replace(/\{kod\}/g, code); }); };
+    var sent;
+    try {
+      sent = Mail.send(email, {
+        subjectBm: opts.subjectBm || 'Kod pengesahan', subjectEn: opts.subjectEn || 'Verification code',
+        bm: sub(opts.bm && opts.bm.length ? opts.bm : ['Kod pengesahan anda ialah: {kod}', 'Kod ini sah selama ' + minit + ' minit. Jangan kongsikannya.']),
+        en: sub(opts.en && opts.en.length ? opts.en : ['Your verification code is: {kod}', 'This code is valid for ' + minit + ' minutes. Do not share it.'])
+      });
+    } catch (e) {
+      console.error('Emel OTP tujuan gagal: ' + e);
+      throw appError_('HANTAR_GAGAL');
+    }
+    if (!sent) throw appError_('UJI_TIADA_SENARAI');
+    return { jedaSaat: Cfg.num('OTP_JEDA_SAAT', 60), tamatMinit: minit };
+  }
+
+  function verify_(purpose, emailRaw, codeRaw) {
+    var email = Util.normEmail(emailRaw);
+    var code = String(codeRaw == null ? '' : codeRaw).replace(/\s+/g, '');
+    var c = Db.cache(), k = key_(purpose, email);
+    var raw = c.get(P + k);
+    if (!raw) throw appError_('OTP_TAMAT');
+    var rec = JSON.parse(raw);
+    var maxTries = Cfg.num('OTP_MAKS_PERCUBAAN', 5);
+    if (rec.t >= maxTries) { c.remove(P + k); throw appError_('OTP_TERLALU_BANYAK'); }
+    if (!/^\d{6}$/.test(code) || !Util.safeEqual(rec.h, hash_(purpose, email, code))) {
+      rec.t++;
+      if (rec.t >= maxTries) { c.remove(P + k); throw appError_('OTP_TERLALU_BANYAK'); }
+      c.put(P + k, JSON.stringify(rec), Math.max(1, Math.floor((rec.exp - new Date().getTime()) / 1000)));
+      throw appError_('OTP_SALAH');
+    }
+    c.remove(P + k);
+    return true;
+  }
+
+  return { issue: issue_, verify: verify_ };
+})();
+
+
+// ===== Pdf.gs =====
+/**
+ * UTMPreneur: penjanaan PDF daripada HTML (tanpa templat Google Docs) dan enjin templat Google Docs.
+ *   Pdf.wrap(bodyHtml, tajuk)               -> HTML A4 dengan gaya seragam (UTMXCITE)
+ *   Pdf.dariHtml(html, namaFail, folderKod) -> {url}   (simpan dalam folder berdaftar)
+ *   DocTpl.jana(kodTemplat, data, folderKod, namaFail) -> {url, amaran[]}  (templat Google Docs dalam Link_Dokumen)
+ * Penanda dalam templat Docs: [nama] atau {{NAMA}}; data ialah {nama: 'nilai'} (kunci tanpa kurungan, huruf kecil;
+ * penanda besar {{NAMA}} diterima juga). Penanda tidak dikenali dibiarkan dan dilaporkan dalam amaran.
+ */
+
+var Pdf = {
+  esc: function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); },
+
+  wrap: function (bodyHtml, tajuk) {
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + Pdf.esc(tajuk || 'UTMPreneur') + '</title><style>' +
+      '@page{size:A4;margin:22mm 20mm}body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#000}' +
+      'h1{font-size:14pt;text-align:center;margin:6pt 0}h2{font-size:12pt;margin:12pt 0 4pt}p{margin:0 0 7pt;text-align:justify}' +
+      'table{border-collapse:collapse;width:100%}td,th{border:1px solid #444;padding:4pt 6pt;vertical-align:top;font-size:10.5pt}' +
+      '.nb td{border:0;padding:2pt 4pt}.c{text-align:center}.r{text-align:right}.sm{font-size:9.5pt}.sig{margin-top:36pt}' +
+      '</style></head><body>' + bodyHtml + '</body></html>';
+  },
+
+  /** Jana PDF daripada HTML penuh dan simpan dalam folder berdaftar (Link_Dokumen). */
+  dariHtml: function (html, namaFail, folderKod) {
+    var fl = Db.links()[folderKod];
+    if (!fl || !fl.id) throw appError_('SETUP_TIADA_LINK', { kod: folderKod });
+    var blob = Utilities.newBlob(html, 'text/html', namaFail + '.html').getAs('application/pdf');
+    blob.setName(namaFail + '.pdf');
+    var file = DriveApp.getFolderById(fl.id).createFile(blob);
+    file.setName(namaFail + '.pdf');
+    return { url: file.getUrl() };
+  }
+};
+
+var DocTpl = (function () {
+  function reEsc_(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function repEsc_(s) { return String(s).replace(/\$/g, '\\$'); }
+  var LEFT = /\[[a-z0-9_]{3,}\]|\{\{[A-Z0-9_]{3,}\}\}/g;
+
+  function jana_(kodTemplat, data, folderKod, namaFail) {
+    var t = Db.links()[kodTemplat];
+    if (!t || !t.id) throw appError_('TEMPLAT_TIADA', { kod: kodTemplat });
+    var fl = Db.links()[folderKod];
+    if (!fl || !fl.id) throw appError_('SETUP_TIADA_LINK', { kod: folderKod });
+    var folder = DriveApp.getFolderById(fl.id);
+    var copy;
+    try { copy = DriveApp.getFileById(t.id).makeCopy('~sementara ' + namaFail, folder); } catch (e) {
+      console.error('Templat tidak boleh dibuka (' + kodTemplat + '): ' + e);
+      throw appError_('TEMPLAT_TIADA', { kod: kodTemplat });
+    }
+    var amaran = [], url;
+    try {
+      var doc = DocumentApp.openById(copy.getId());
+      var parts = [doc.getBody()];
+      try { if (doc.getHeader()) parts.push(doc.getHeader()); } catch (e) { /* tiada pengepala */ }
+      try { if (doc.getFooter()) parts.push(doc.getFooter()); } catch (e) { /* tiada pengaki */ }
+      Object.keys(data).forEach(function (k) {
+        var low = String(k).toLowerCase(), up = String(k).toUpperCase();
+        var val = repEsc_(data[k] == null ? '' : data[k]);
+        parts.forEach(function (p) {
+          p.replaceText(reEsc_('[' + low + ']'), val);
+          p.replaceText(reEsc_('{{' + up + '}}'), val);
+        });
+      });
+      doc.saveAndClose();
+      var left = {};
+      var txt = DocumentApp.openById(copy.getId()).getBody().getText();
+      (txt.match(LEFT) || []).forEach(function (m) { left[m] = true; });
+      if (Object.keys(left).length) amaran.push('Penanda tidak dikenali dalam templat (dibiarkan): ' + Object.keys(left).join(', '));
+      var blob = copy.getAs('application/pdf');
+      blob.setName(namaFail + '.pdf');
+      var file = folder.createFile(blob);
+      file.setName(namaFail + '.pdf');
+      url = file.getUrl();
+    } finally {
+      try { copy.setTrashed(true); } catch (e) { console.error('Salinan sementara tidak dapat dipadam: ' + e); }
+    }
+    return { url: url, amaran: amaran };
+  }
+
+  return { jana: jana_ };
+})();
 
 
 // ===== Profiling.gs =====
@@ -1793,7 +1966,9 @@ var Seed = (function () {
   }
 
   function tetapan_() {
-    return TETAPAN_LALAI.map(function (t) { return { Kunci: t[0], Nilai: t[1], Penerangan: t[2] }; });
+    var all = TETAPAN_LALAI.concat(typeof TETAPAN_RN !== 'undefined' ? TETAPAN_RN : [], typeof TETAPAN_KEW !== 'undefined' ? TETAPAN_KEW : [],
+      typeof TETAPAN_MK !== 'undefined' ? TETAPAN_MK : []);
+    return all.map(function (t) { return { Kunci: t[0], Nilai: t[1], Penerangan: t[2] }; });
   }
 
   function admin_() {
@@ -1951,6 +2126,11 @@ var Setup = (function () {
       appendMany_('PELAJAR', pc);
       log.push('MOD UJI: ' + pc.length + ' pelajar contoh rekaan ditambah');
     }
+    // Data awal modul (pilihan): setiap modul boleh menyediakan seed(appendMany, isEmpty, log)
+    [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
+     typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+      if (m && typeof m.seed === 'function') m.seed(appendMany_, isEmpty_, log);
+    });
     Cfg.invalidate();
     Admins.invalidate();
     Ref.invalidate();
@@ -3195,11 +3375,17 @@ var MSG = {
   SIJIL_TEMPLAT_TIADA: ['Templat sijil belum didaftar atau tidak boleh dibuka. Semak Link_Dokumen (TEMPLAT_SIJIL_SSU) dan kebenaran akaun pelaksana.', 'The certificate template is not registered or cannot be opened. Check Link_Dokumen (TEMPLAT_SIJIL_SSU) and the executing account\'s access.'],
   SIJIL_TIADA: ['Sijil belum dijana.', 'The certificate has not been generated.'],
   FAIL_TIDAK_SAH: ['Fail tidak sah. Gunakan jenis fail yang dibenarkan dan saiz yang dibenarkan.', 'Invalid file. Use an allowed file type and size.'],
+  TEMPLAT_TIADA: ['Templat dokumen belum didaftar atau tidak boleh dibuka. Semak Link_Dokumen dan kebenaran akaun pelaksana.', 'The document template is not registered or cannot be opened. Check Link_Dokumen and the executing account\'s access.'],
   FAIL_TIDAK_DITEMUI: ['Fail tidak ditemui.', 'File not found.'],
   RALAT_DALAMAN: ['Ralat dalaman. Sila cuba lagi atau hubungi UTMXCITE.', 'Internal error. Please try again or contact UTMXCITE.']
 };
 
 function appError_(code, extra) {
-  var m = MSG[code] || MSG.RALAT_DALAMAN;
+  // Mesej modul (MSG_RN, MSG_KEW, MSG_MK) ditakrif dalam fail modul masing-masing
+  var m = MSG[code] ||
+    (typeof MSG_RN !== 'undefined' && MSG_RN[code]) ||
+    (typeof MSG_KEW !== 'undefined' && MSG_KEW[code]) ||
+    (typeof MSG_MK !== 'undefined' && MSG_MK[code]) ||
+    MSG.RALAT_DALAMAN;
   return new AppError(code, m[0], m[1], extra);
 }

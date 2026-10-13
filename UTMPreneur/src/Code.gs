@@ -32,7 +32,7 @@ function include(name) {
  * dan ROLE/ADMIN_ROLES ditakrifkan dalam Config.gs.
  */
 function rpcTable_() {
-  return {
+  var t = {
     'ping':          { auth: false, fn: function () { return { versi: APP.VERSI, masa: new Date().toISOString() }; } },
     'otp.minta':     { auth: false, fn: function (c, p) { return Auth.requestOtp(p.emel); } },
     'otp.sahkan':    { auth: false, fn: function (c, p) { return Auth.verifyOtp(p.emel, p.kod); } },
@@ -66,6 +66,15 @@ function rpcTable_() {
     'ssu.admin.hantar':   { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.hantarBagiPihak(c, p); } },
     'ssu.admin.sedia':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminDaftarSedia(c, p); } }
   };
+  // Laluan modul lain: setiap modul menyediakan routes() yang memulangkan {nama: {auth, roles, matrik, fn}}
+  [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
+   typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+    if (m && typeof m.routes === 'function') {
+      var r = m.routes();
+      Object.keys(r).forEach(function (k) { t[k] = r[k]; });
+    }
+  });
+  return t;
 }
 
 /** Dipanggil oleh antara muka melalui google.script.run. Sentiasa pulang objek {ok, data|error}. */

@@ -7,19 +7,22 @@
  */
 
 var Bantu = (function () {
-  function allowed_(ctx) {
+  /** modulKey: huruf kecil, contoh 'ssu', 'profil', 'ruang niaga', 'kewangan', 'makerspace'. Lalai: SSU atau Profiling. */
+  function allowed_(ctx, modulKey) {
     if (ctx.role === ROLE.ADMIN_PENUH) return true;
     if (ctx.role === ROLE.PEGAWAI_MODUL) {
       var a = Admins.find(ctx.email);
       var mod = a ? a.modul.toLowerCase() : '';
-      return !mod || mod.indexOf('semua') >= 0 || mod.indexOf('ssu') >= 0 || mod.indexOf('profil') >= 0;
+      if (!mod || mod.indexOf('semua') >= 0) return true;
+      var keys = modulKey ? [String(modulKey).toLowerCase()] : ['ssu', 'profil'];
+      return keys.some(function (k) { return mod.indexOf(k) >= 0; });
     }
     return false;
   }
 
   /** Konteks pelajar untuk fungsi modul. Identiti audit kekal emel admin. */
-  function ctx_(ctx, noMatrik) {
-    if (!allowed_(ctx)) throw appError_('TIADA_KEBENARIAN');
+  function ctx_(ctx, noMatrik, modulKey) {
+    if (!allowed_(ctx, modulKey)) throw appError_('TIADA_KEBENARIAN');
     var m = Util.normMatric(noMatrik);
     var pel = Util.isMatric(m) ? Db.find('PELAJAR', function (r) { return Util.normMatric(r.No_Matrik) === m; }) : [];
     if (!pel.length) throw appError_('MATRIK_TIDAK_DITEMUI');
