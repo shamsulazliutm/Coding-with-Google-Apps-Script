@@ -1,6 +1,6 @@
 # UTMPreneur: Reka Bentuk Fasa 1 (untuk semakan)
 
-Status: **draf untuk semakan. Belum ada kod.** Dihasilkan daripada perbincangan dan borang lama yang dikongsi.
+Status: **reka bentuk fasa 1 lengkap, menunggu arahan mula membina. Belum ada kod.** Dihasilkan daripada perbincangan dan borang lama yang dikongsi.
 Platform: Google Apps Script (web app) + Google Sheets. Pemilik skrip dan penghantar OTP: `utmxcite@utm.my`.
 
 Tanda: **[LALAI]** = andaian saya yang belum disahkan Tuan. **[TERBUKA]** = perlu keputusan.
@@ -234,3 +234,35 @@ Borang lama: 32 soalan. Pemetaan yang dicadangkan:
 
 ### Modul lain (belum dibincangkan)
 Penyelenggaraan, Pendaftaran Aktiviti Usahawan dan Inovasi, padanan mentor, dashboard statistik lanjutan.
+
+---
+
+## 11. Keputusan muktamad: lalai diterima ("guna lalai")
+
+| # | Perkara | Keputusan |
+|---|---|---|
+| 9 | Teks emel automatik | Saya tulis dwibahasa (BM dahulu, *English* italik); nama penghantar "UTMPreneur · UTMXCITE"; Tuan semak sebelum pelancaran |
+| 10 | Format ID | `SSU-2026-0001` (permohonan SSU), `PRN-0001` (perniagaan), `PLT-2026-0001` (permohonan lot), `SWA-0001` (sewaan), `BSW-` (bil sewa), `LKB-` (laporan kewangan), `TMP-2026-0001` (tempahan Makerspace), `SES-` (sesi penilaian). Awalan dalam `Tetapan` |
+| 12 | Slot Laser Cut / 3D Printer | Slot 30 minit, maksimum 4 jam, tiada jeda; nilai dalam `Tetapan` |
+| 13 | Sewaan lot | Tempoh dimasukkan admin; tiada deposit; admin menamatkan atau memperbaharui sewaan secara manual |
+| 14 | Tempoh permohonan lot | Satu tempoh global (tarikh buka dan tutup) dalam `Tetapan` |
+| 15 | Sistem KPI sedia ada | Tab `Ringkasan_KPI` mudah dalam `SS_INDUK` yang boleh dibaca oleh `IMPORTRANGE`; padanan terperinci dibuat kemudian apabila senarai petunjuk dibekalkan |
+| 16 | Data lama | Alat import CSV untuk SSU (admin); data lain bermula kosong |
+| 17 | Laporan universiti/KPT | Eksport CSV/Excel bagi setiap senarai; tiada laporan PDF khas |
+| 18 | PDPA | Notis privasi dwibahasa umum pada log masuk pertama untuk disemak Tuan; tiada penghapusan automatik |
+| 19 | Panduan | Panduan pengguna pelajar dan panduan admin (BM) dalam `UTMPreneur/docs/` |
+| 20 | Semester/sesi | Format `2026/2027-1`; tarikh mula diisi admin dalam `Tetapan` |
+| - | Waktu rehat Makerspace | Tiada |
+| - | Tempoh ujian | Dua minggu sebelum pelancaran |
+| - | Templat sijil | Google Slides |
+| - | Kumpulan perintis | Disediakan Tuan sebelum fasa ujian (tidak menghalang pembinaan) |
+
+### Maklumat yang Tuan sediakan semasa atau selepas pembinaan (tidak menghalang pembinaan)
+1. Fail templat sijil (Google Slides) dalam folder templat, dengan penanda dalam bahagian 4.
+2. Data `PELAJAR` (import).
+3. Kadar sewa 15 lot, kadar Maker Lab/Bilik Mesyuarat, kadar 3D Printer, senarai `PERALATAN` dan `ALAT`.
+4. Senarai cuti umum/universiti dalam `Tetapan`.
+5. Senarai petunjuk KPI sedia ada (untuk padanan lanjut).
+6. Senarai penguji kumpulan perintis dan penilai jawatankuasa.
+7. Nama admin tambahan (selain `utmxcite@utm.my`).
+
