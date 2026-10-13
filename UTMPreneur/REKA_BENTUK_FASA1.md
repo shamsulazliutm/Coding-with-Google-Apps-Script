@@ -99,7 +99,7 @@ Peraturan: hanya SSU Diluluskan; pelajar nampak lot Dibuka + Kosong sahaja; **sa
 - **Pemohon hadir membentang.** Sistem menghantar jemputan emel (tarikh, tempat, slot masa) kepada pemohon yang disenarai pendek.
 - **Penilai** menskor secara bebas dan tidak melihat skor penilai lain sehingga sesi ditutup. Skor dikunci selepas Hantar (admin boleh membuka semula, direkod dalam `Audit`).
 - Antara muka penilai (cadangan): satu skrin, jumlah /100 serta-merta, ulasan pantas, simpan draf automatik, berfungsi pada telefon/tablet; admin ditanda jika skor dua penilai berbeza jauh bagi pemohon sama.
-- Skrin penilai: maklumat calon diisi automatik (nama, No. Matrik, No. KP, tahun, fakulti, kursus, CGPA, nama syarikat/No. SSM, jenis perniagaan) + pautan **cadangan perniagaan**.
+- Skrin penilai: maklumat calon diisi automatik (nama, No. Matrik, No. KP, tahun, fakulti, kursus, nama syarikat/No. SSM, jenis perniagaan) + pautan **cadangan perniagaan**.
 - Apabila sesi ditutup: purata skor dan **kedudukan** dipaparkan. **Admin memutuskan selepas melihat kedudukan; tiada skor minimum dan tiada kelulusan automatik.**
 - Pemohon tidak melihat skor; hanya keputusan (dan ulasan ringkas jika admin mahu).
 - Pertindihan lot diselesaikan oleh penilaian jawatankuasa.
@@ -183,7 +183,7 @@ Bil dijana selepas sesi, **tarikh akhir 7 hari**, peringatan emel (hari ke-4), L
 | 8 | Visual: logo UTM + UTMXCITE (diterima); warna maroon UTM dan emas "X" diambil daripada logo; reka bentuk telefon dahulu; logo didaftar dalam `Link_Dokumen` (`LOGO_UTMXCITE`) supaya boleh diganti | Disahkan |
 | 9 | Bahasa antara muka: **dwibahasa**. Bahasa Melayu sebagai teks utama, terjemahan English dalam *italik* bersaiz kecil di bawah atau di sebelah label (seperti borang Makerspace lama) | Disahkan |
 | 10 | Domain emel: pelajar `@graduate.utm.my`, staf `@utm.my` (disimpan dalam `Tetapan`) | Disahkan |
-| 11 | **CGPA** untuk skrin penilai: tambah lajur dalam `PELAJAR` (import pihak Tuan), atau pelajar isi dalam permohonan lot. Data sensitif: penilai dan admin sahaja | **[TERBUKA]** |
+| 11 | **CGPA tidak diperlukan**: dibuang daripada skrin penilai dan tiada lajur dalam `PELAJAR` | Disahkan |
 | 12 | Kriteria rubrik dan markah daripada borang penilaian 11 Mei 2026 dijadikan rubrik awal; Tuan boleh ubah dalam tab `Rubrik` | Disahkan |
 
 ---
