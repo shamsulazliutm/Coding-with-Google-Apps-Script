@@ -75,13 +75,14 @@ Import mempunyai semakan: No. Matrik pendua, emel tidak sah, nilai tidak sepadan
 | Tab | Isi |
 |---|---|
 | `Permohonan_SSU` | `ID_Permohonan`, No. Matrik pemilik, nama perniagaan (HURUF BESAR), produk/perkhidmatan (berbilang), syarat subjek (UBSS1032 / ULRS3032 / **MFMS1143** / SBSF1023 / Tiada / Lain-lain) + pensyarah/seksyen/kumpulan, status SSM (Ya/Tidak/Dalam proses), sijil SSM + maklumat SSM (jika Ya), jenis perniagaan, kluster, sumber pembiayaan, modal permulaan (RM tepat), pendapatan kasar bulanan (RM tepat), alamat perniagaan, tarikh mula, laman/media sosial, bil. rakan kongsi, **status**, tarikh keputusan, catatan admin, no. sijil, pautan sijil PDF |
-| `Ahli_Pasukan` | `ID_Permohonan`, **No. Matrik** rakan kongsi + salinan butiran semasa hantar. **Hanya pelajar UTM**; boleh ditambah tanpa had tetap 12 |
+| `Ahli_Pasukan` | `ID_Permohonan`, **No. Matrik** rakan kongsi + salinan butiran semasa hantar. **Hanya pelajar UTM**; **had 12 ahli keseluruhan termasuk pemilik** (disahkan; selaras sijil yang memuatkan 12 nama; had dalam `Tetapan`); butang "Tambah rakan kongsi" dilumpuhkan apabila had dicapai |
 
 Status: Baharu / Disemak / Diluluskan / Ditolak / Perlu Pembetulan. 
 
 **Sijil SSU (disahkan):** dijana sebagai PDF selepas kelulusan admin daripada **templat dalam folder Google Drive** (didaftar dalam `Link_Dokumen`: `FLD_TEMPLAT_SIJIL`, `FLD_SIJIL_SSU`). Templat dibaca pada masa penjanaan, tidak ditetapkan dalam kod; tandatangan, logo dan bingkai ialah sebahagian templat.
 - Tajuk templat: *Perakuan Pendaftaran Syarikat Pemula Pelajar, Universiti Teknologi Malaysia* (BM sahaja, mengikut templat Tuan).
 - **No. pendaftaran:** `XCITE-{tahun}S{5 digit}`, contoh `XCITE-2026S00001`, jujukan berasingan bagi setiap tahun. **Pembaharuan (disahkan): nombor asal (tahun dan jujukan) dikekalkan, dengan akhiran 2 digit yang menunjukkan kali ke berapa sijil dikeluarkan.** Sijil asal `XCITE-2026S00001-01` (kali pertama dikeluarkan), pembaharuan pertama `-02`, kedua `-03`. Akhiran sentiasa ada.
+- **Had 12 ahli keseluruhan (termasuk pemilik)**, jadi semua nama muat pada sijil.
 - Penanda dalam templat: `{{NAMA_PERNIAGAAN}}`, `{{NO_PENDAFTARAN}}`, `{{TARIKH_PENDAFTARAN}}`, `{{ALAMAT_PERNIAGAAN}}`, `{{KOD_SUBJEK}}` (jika berkaitan; jika tiada, `-`), `{{SENARAI_AHLI}}` (semua ahli termasuk pemilik, bernombor), `{{JUMLAH_AHLI}}`, `{{TEMPOH_SAH_LAKU}}`.
 - **Tempoh sah laku (disahkan): satu tahun dari tarikh pendaftaran** (`{{TEMPOH_SAH_LAKU}}` = tarikh pendaftaran + 1 tahun). Peraturan pembaharuan dan kesan tamat tempoh: lihat bahagian 8, perkara 13.
 - Penandatangan dalam templat: Pengarah UTMXCITE. Tiada kod QR.
