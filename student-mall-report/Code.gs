@@ -12,6 +12,7 @@ var APP = {
   NAME: 'Laporan Pendapatan dan Perbelanjaan Usahawan Pelajar',
   SENDER: 'UTMXCITE',
   CONTACT_EMAIL: 'utmxcite@utm.my',
+  CONTACT_PHONE: '013-7630079',
   DEFAULT_ADMIN: 'utmxcite@utm.my',   // admin lalai yang didaftarkan oleh setupSystem()
   TZ: 'Asia/Kuala_Lumpur',
   DUE_DAY: 7,              // tarikh akhir hantar: hari ke-7 bulan berikutnya
@@ -392,10 +393,11 @@ function auth_(token) {
 // ============================================================
 /** E-mel sistem: OTP, peringatan, keputusan semakan. */
 
-function sendMail_(to, subject, bodyHtml) {
-  var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#222;max-width:520px">' + bodyHtml +
+function sendMail_(to, subject, bodyHtml, opts) {
+  var footer = opts && opts.noFooter ? '' :
     '<hr style="border:none;border-top:1px solid #ddd;margin:20px 0">' +
-    '<p style="font-size:12px;color:#777">UTMXCITE, Jabatan Hal Ehwal Pelajar dan Alumni, UTM. ' + APP.CONTACT_EMAIL + '</p></div>';
+    '<p style="font-size:12px;color:#777">UTMXCITE, Jabatan Hal Ehwal Pelajar dan Alumni, UTM. ' + APP.CONTACT_EMAIL + '</p>';
+  var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#222;max-width:520px">' + bodyHtml + footer + '</div>';
   MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: APP.SENDER });
 }
 
@@ -426,13 +428,19 @@ function sendReminderMail_(kodLot, y, m) {
   var today = todayStr_();
   var deadline = addDays_(today, APP.REMINDER_DEADLINE_DAYS);
   var url = appUrl_();
-  to.forEach(function (email) {
-    sendMail_(email, 'Peringatan: Laporan kewangan ' + MONTHS_MS[m - 1] + ' ' + y,
-      '<p>Salam,</p>' +
-      '<p>Laporan kewangan bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> belum dihantar.</p>' +
-      '<p>Tarikh akhir hantar: <b>' + dateLabelMs_(deadline) + '</b> (' + APP.REMINDER_DEADLINE_DAYS + ' hari dari tarikh e-mel ini). Laporan selepas tarikh ini ditanda lewat.</p>' +
-      (url ? '<p><a href="' + url + '">Buka sistem</a></p>' : ''));
-  });
+  var subject = 'Peringatan Penghantaran Laporan Kewangan: ' + MONTHS_MS[m - 1] + ' ' + y;
+  var body =
+    '<h2 style="font-size:16px;letter-spacing:.5px;margin:0 0 16px;color:#5b1a33">PERINGATAN PENGHANTARAN LAPORAN KEWANGAN</h2>' +
+    '<p>Assalamualaikum dan salam sejahtera.</p>' +
+    '<p>Dimaklumkan bahawa laporan kewangan bagi bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> masih belum diterima.</p>' +
+    '<p>Sehubungan itu, mohon kerjasama pihak tuan/puan untuk mengemukakan laporan tersebut selewat-lewatnya pada <b>' + dateLabelMs_(deadline) + '</b>.</p>' +
+    '<p>Laporan yang diterima selepas tarikh berkenaan akan direkodkan sebagai penghantaran lewat.</p>' +
+    (url ? '<p style="margin:20px 0"><a href="' + url + '" style="background:#5b1a33;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:bold">\uD83D\uDD17 Buka Sistem</a></p>' : '') +
+    '<p>Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
+    '<p style="margin-top:20px"><b>UTMXCITE</b><br>' +
+    '\uD83D\uDCE7 ' + APP.CONTACT_EMAIL + '<br>' +
+    '\uD83D\uDCDE ' + APP.CONTACT_PHONE + '</p>';
+  to.forEach(function (email) { sendMail_(email, subject, body, { noFooter: true }); });
   appendObj_(SHEETS.REMINDERS, { kunci: kodLot + '|' + y + '-' + pad2_(m) + '|' + today + '|' + nowStr_().slice(11), masa: nowStr_(), akhir: deadline });
   REMINDER_DEADLINES_ = null;   // tarikh akhir baharu berkuat kuasa serta-merta
   return to.length;

@@ -105,4 +105,4 @@ Versi lama menyimpan tarikh sewa pada sheet **Lot** dan memautkan peniaga dan pe
 
 ## Ujian
 
-Logik pelayan diuji dengan tiruan API Apps Script (70 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
+Logik pelayan diuji dengan tiruan API Apps Script (71 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.

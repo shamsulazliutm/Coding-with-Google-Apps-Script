@@ -352,11 +352,22 @@ t('ralat tidak dijangka: mesej ada kod rujukan dan butiran dalam Log', () => {
 t('checkSystem melaporkan semua langkah OK', () => { const m = b.checkSystem(); assert.ok(!/GAGAL/.test(m), m); assert.match(m, /Kebenaran e-mel/); });
 
 console.log('Peringatan automatik & keselamatan');
+t('ayat e-mel peringatan mengikut teks yang diluluskan (tajuk, salam, tarikh akhir, pautan, penutup, tandatangan)', () => {
+  const m = b.outbox.filter(x => x.to === 'din@graduan.example' && /Peringatan/.test(x.subject)).pop(), h = m.htmlBody;
+  assert.strictEqual(m.subject, 'Peringatan Penghantaran Laporan Kewangan: September 2026');
+  ['PERINGATAN PENGHANTARAN LAPORAN KEWANGAN', 'Assalamualaikum dan salam sejahtera.',
+   'Dimaklumkan bahawa laporan kewangan bagi bulan <b>September 2026</b> untuk <b>SUB-Lot2</b> masih belum diterima.',
+   'Sehubungan itu, mohon kerjasama pihak tuan/puan untuk mengemukakan laporan tersebut selewat-lewatnya pada',
+   'Laporan yang diterima selepas tarikh berkenaan akan direkodkan sebagai penghantaran lewat.',
+   'Buka Sistem', 'Terima kasih atas perhatian dan kerjasama yang diberikan.', '<b>UTMXCITE</b>', 'utmxcite@utm.my', '013-7630079']
+    .forEach(x => assert.ok(h.includes(x), 'tiada dalam e-mel: ' + x));
+  assert.ok(h.includes('href="https://script.google.com/macros/s/TEST/exec"'), 'pautan sistem'); assert.ok(!/<hr/.test(h), 'tiada pengaki berganda');
+});
 t('tarikh akhir dalam e-mel peringatan = tarikh e-mel dihantar + 7 hari (bukan hari ke-7 bulan berikutnya)', () => {
   const rows = b.readTable_('Peringatan').filter(r => r.kunci.startsWith('SUB-Lot2|2026-09|'));
   assert.ok(rows.length >= 1); assert.strictEqual(rows[rows.length - 1].akhir, '2026-10-21', 'hantar 14 Okt -> akhir 21 Okt');
   const mail = b.outbox.filter(m => m.to === 'din@graduan.example' && /Peringatan/.test(m.subject)).pop();
-  assert.match(mail.htmlBody, /21 Oktober 2026/); assert.match(mail.htmlBody, /7 hari dari tarikh e-mel/); assert.ok(!/7 Oktober 2026/.test(mail.htmlBody));
+  assert.match(mail.htmlBody, /selewat-lewatnya pada <b>21 Oktober 2026<\/b>/); assert.ok(!/7 Oktober 2026/.test(mail.htmlBody));
 });
 t('tarikh akhir peringatan berkuat kuasa: paparan penyewa dan penentuan lewat', () => {
   const din = login('din@graduan.example');
