@@ -119,20 +119,31 @@ td.act .btn + .btn { margin-left: 4px; }
 .declare { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--bg); border-radius: 8px; font-size: 13px; }
 .declare input { margin-top: 3px; accent-color: var(--accent); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 600; z-index: 20; }
+.vw { display: flex; flex-direction: column; gap: 16px; }
+.vw[hidden] { display: none; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.card .ch { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; }
+.card .ch h2 { margin: 0; font-size: 16px; } .card .ch p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.card .cb { padding: 20px; display: flex; flex-direction: column; gap: 22px; }
+.sech { margin: 0 0 10px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.fi { width: 100%; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.fi[readonly] { color: var(--muted); }
+.lock { font-size: 12px; color: var(--muted); }
+.role { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.role.t { background: var(--idle-soft); color: var(--idle); }
+.mm { color: var(--muted); font-size: 12.5px; }
 </style>
 
 <div class="wrap">
   <header class="top">
     <div class="brand"><img src="assets/logo-utmxcite.png" alt="UTM dan UTMXCITE" class="logo"><div class="bt"><small>Student Mall &amp; SUB</small><strong>Laporan Kewangan Bulanan Penyewa</strong></div></div>
-    <div class="who"><span>Log masuk sebagai <b>aina@graduan.example</b></span><button type="button">Log keluar</button></div>
+    <div class="who" id="who"></div>
   </header>
-  <p class="note">Paparan contoh untuk rujukan reka bentuk. Semua nama, angka dan fail ialah data contoh. Klik Edit untuk melihat borang.</p>
+  <p class="note">Paparan contoh untuk rujukan reka bentuk. Semua nama, angka dan fail ialah data contoh.</p>
 
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="false" type="button">Maklumat Peniaga</button>
-    <button class="tab" role="tab" aria-selected="true" type="button">Laporan Kewangan</button>
-  </div>
+  <div class="tabs" role="tablist" id="tabs"></div>
 
+  <div id="view-fin" class="vw">
   <div class="stats" id="stats"></div>
 
   <div class="bar">
@@ -155,6 +166,11 @@ td.act .btn + .btn { margin-left: 4px; }
       <tbody id="rows"></tbody>
     </table>
   </div>
+  </div>
+
+  <div id="view-info" class="vw" hidden></div>
+  <div id="view-admin" class="vw" hidden></div>
+  <div id="view-users" class="vw" hidden></div>
 </div>
 
 <div id="dlg-slot"></div>
@@ -287,5 +303,109 @@ td.act .btn + .btn { margin-left: 4px; }
   document.getElementById("q").addEventListener("input", function (e) { state.q = e.target.value; rows(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && state.open !== null) { state.open = null; render(); } });
   render();
+
+  /* ===== Peranan, tab dan paparan tambahan ===== */
+  var role = location.hash === "#admin" || location.hash === "#users" ? "admin" : "tenant";
+  var tab = location.hash === "#info" ? "info" : location.hash === "#admin" ? "admin" : location.hash === "#users" ? "users" : (role === "admin" ? "admin" : "fin");
+
+  var LOTS = [
+    ["StudentMall-Lot1","Student Mall · Lot 1","Warung Ayu","Ayu Rahimah","ok",6420,4100,false],
+    ["StudentMall-Lot2","Student Mall · Lot 2","Print Siswa","Hafiz Zainal","ok",5230,3350,false],
+    ["StudentMall-Lot3","Student Mall · Lot 3","Kopi Kampus Enterprise","Aina Sofea","fix",8650,9560,true],
+    ["StudentMall-Lot4","Student Mall · Lot 4","Roti Gebu","Nurul Izzati","sent",4980,3120,false],
+    ["StudentMall-Lot5","Student Mall · Lot 5","Batik Muda","Farah Najwa","ok",7710,4930,false],
+    ["StudentMall-Lot6","Student Mall · Lot 6","Whiskers & Bean","M. Safihakimi","sent",3900,2800,false],
+    ["StudentMall-Lot7","Student Mall · Lot 7","Tech Fixit","Adam Harith","none","","",false],
+    ["StudentMall-Lot8","Student Mall · Lot 8","Kek Rindu","Siti Hajar","ok",5560,3640,false],
+    ["StudentMall-Lot9","Student Mall · Lot 9","Gadget Corner","Imran Shah","ok",9120,6200,true],
+    ["StudentMall-Lot10","Student Mall · Lot 10","Cetak Pantas","Zulaikha","sent",4410,2980,false],
+    ["SUB-Lot1","SUB · Lot 1","Minuman Segar","Hakim Roslan","ok",3720,2400,false],
+    ["SUB-Lot2","SUB · Lot 2","Nasi Lemak Pak Din","Din Ismail","none","","",false],
+    ["SUB-Lot3","SUB · Lot 3","Tudung Ceria","Maisarah","ok",6180,4020,false],
+    ["SUB-Lot4","SUB · Lot 4","Snek Siswa","Daniel Lee","sent",2950,2110,false],
+    ["SUB-Lot5","SUB · Lot 5","Craft Kampus","Aisyah Nabila","ok",3340,1960,false]
+  ];
+  var USERS = [
+    ["pn.salmah@utm.my","Pn. Salmah","Admin","","Aktif"],
+    ["encik.rashid@utm.my","En. Rashid","Admin","","Aktif"],
+    ["aina@graduan.example","Aina Sofea","Penyewa","StudentMall-Lot3","Aktif"],
+    ["ayu@graduan.example","Ayu Rahimah","Penyewa","StudentMall-Lot1","Aktif"],
+    ["hafiz@graduan.example","Hafiz Zainal","Penyewa","StudentMall-Lot2","Aktif"],
+    ["adam@graduan.example","Adam Harith","Penyewa","StudentMall-Lot7","Aktif"],
+    ["din@graduan.example","Din Ismail","Penyewa","SUB-Lot2","Tidak aktif"]
+  ];
+
+  function field(label, val, ro, req) {
+    return '<div class="field"><label>' + label + (req ? ' <span class="req">*</span>' : "") + '</label><input class="fi" value="' + val + '"' + (ro ? " readonly" : "") + "></div>";
+  }
+  function viewInfo() {
+    return '<div class="card"><div class="ch"><div><h2>Maklumat Peniaga</h2><p>Dikemas kini sekali, digunakan untuk semua laporan bulanan.</p></div>' + pill("ok").replace("Disahkan", "Aktif") + "</div>" +
+      '<div class="cb"><section><h3 class="sech">Perniagaan</h3><div class="grid">' +
+      field("Nama perniagaan / syarikat", BIZ, false, true) + field("Jenis perniagaan", "Makanan dan minuman", false, true) + field("No. pendaftaran (SSM)", "003412345-K", false) + field("Lot sewaan", LOT, true) + field("Tarikh mula sewa", "1 Januari 2026", true) + field("Sewa bulanan (RM)", "600.00", true) +
+      '</div></section><section><h3 class="sech">Pelajar / pemilik</h3><div class="grid">' +
+      field("Nama pelajar", "AINA SOFEA BINTI ALI", false, true) + field("No. matrik", "A22EA0123", false, true) + field("Fakulti", "FKA", false, true) + field("No. telefon", "012-345 6789", false, true) +
+      '</div></section><section><h3 class="sech">Akaun log masuk</h3><div class="grid">' + field("E-mel (untuk OTP)", "aina@graduan.example", true) + field("Peranan", "Penyewa", true) +
+      '</div><p class="lock" style="margin:10px 0 0">E-mel, lot dan sewa hanya boleh diubah oleh admin UTMXCITE. Hubungi utmxcite@utm.my.</p></section>' +
+      '<div style="display:flex;justify-content:flex-end;gap:10px"><button class="btn" type="button">Batal</button><button class="btn primary" type="button">Simpan maklumat</button></div></div></div>';
+  }
+
+  function viewAdmin() {
+    var c = { ok:0, sent:0, fix:0, none:0 };
+    LOTS.forEach(function (l) { c[l[4]]++; });
+    var h = '<div class="stats">' +
+      '<div class="stat"><small>Lot aktif</small><strong>15</strong></div>' +
+      '<div class="stat"><small>Disahkan</small><strong>' + c.ok + " / 15</strong></div>" +
+      '<div class="stat"><small>Menunggu semakan</small><strong>' + c.sent + "</strong></div>" +
+      '<div class="stat bad"><small>Perlu dibetulkan</small><strong>' + c.fix + "</strong></div>" +
+      '<div class="stat bad"><small>Belum dihantar</small><strong>' + c.none + "</strong></div></div>" +
+      '<div class="bar"><div class="grow"><input type="search" placeholder="Cari lot, perniagaan atau pelajar"></div>' +
+      '<select><option>Bulan: September 2026</option><option>Ogos 2026</option></select>' +
+      '<select><option>Lokasi: Semua</option><option>Student Mall</option><option>SUB</option></select>' +
+      '<select><option>Status: Semua</option><option>Menunggu semakan</option><option>Belum dihantar</option></select>' +
+      '<button class="btn" type="button">Eksport CSV</button><button class="btn primary" type="button">+ Tambah lot</button></div>' +
+      '<div class="tbl-wrap"><table><thead><tr><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Untung/Rugi (RM)</th><th>Status</th><th></th></tr></thead><tbody>';
+    LOTS.forEach(function (l) {
+      var net = l[5] === "" ? null : l[5] - l[6];
+      var act = l[4] === "sent" ? '<button class="btn sm fill" type="button">Semak</button>' :
+                l[4] === "none" ? '<button class="btn sm" type="button">Ingatkan</button>' :
+                l[4] === "fix" ? '<button class="btn sm" type="button">Lihat</button>' : '<button class="btn sm" type="button">Lihat</button>';
+      h += '<tr><td class="nw"><b>' + l[1] + "</b></td><td>" + l[2] + '<span class="mm" style="display:block">' + l[3] + "</span></td>" +
+        '<td class="num mono">' + fmt(l[5]) + '</td><td class="num mono">' + fmt(l[6]) + '</td><td class="num mono" style="' + (net !== null && net < 0 ? "color:var(--bad)" : "") + '">' + (net === null ? "-" : (net < 0 ? "-" : "") + fmt(Math.abs(net))) + "</td>" +
+        "<td>" + pill(l[4]) + (l[7] ? '<span class="late">Lewat</span>' : "") + '</td><td class="act">' + act + "</td></tr>";
+    });
+    return h + "</tbody></table></div>";
+  }
+
+  function viewUsers() {
+    var h = '<div class="bar"><div class="grow"><input type="search" placeholder="Cari e-mel atau nama"></div><select><option>Peranan: Semua</option><option>Admin</option><option>Penyewa</option></select><button class="btn primary" type="button">+ Tambah pengguna</button></div>' +
+      '<div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>E-mel</th><th>Nama</th><th>Peranan</th><th>Kod lot</th><th>Status</th><th></th></tr></thead><tbody>';
+    USERS.forEach(function (u) {
+      h += "<tr><td>" + u[0] + "</td><td>" + u[1] + '</td><td><span class="role' + (u[2] === "Penyewa" ? " t" : "") + '">' + u[2] + "</span></td><td class=\"mono\">" + (u[3] || "-") + "</td><td>" +
+        '<span class="pill ' + (u[4] === "Aktif" ? "s-ok" : "s-idle") + '">' + u[4] + '</span></td><td class="act"><button class="btn sm" type="button">Edit</button></td></tr>';
+    });
+    return h + "</tbody></table></div>";
+  }
+
+  function chrome() {
+    var tabs = role === "admin"
+      ? [["admin","Semua Laporan"],["users","Pengguna"]]
+      : [["info","Maklumat Peniaga"],["fin","Laporan Kewangan"]];
+    document.getElementById("tabs").innerHTML = tabs.map(function (t) {
+      return '<button class="tab" role="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '" type="button">' + t[1] + "</button>";
+    }).join("");
+    document.getElementById("who").innerHTML = role === "admin"
+      ? '<span><b>pn.salmah@utm.my</b> <span class="role">Admin</span></span><button type="button">Log keluar</button>'
+      : '<span><b>aina@graduan.example</b> <span class="role t">Penyewa</span></span><button type="button">Log keluar</button>';
+    document.querySelector(".brand strong").textContent = role === "admin" ? "Pentadbiran Laporan Kewangan" : "Laporan Kewangan Bulanan Penyewa";
+    document.getElementById("view-fin").hidden = tab !== "fin";
+    var vi = document.getElementById("view-info"); vi.hidden = tab !== "info"; if (tab === "info") vi.innerHTML = viewInfo();
+    var va = document.getElementById("view-admin"); va.hidden = tab !== "admin"; if (tab === "admin") va.innerHTML = viewAdmin();
+    var vu = document.getElementById("view-users"); vu.hidden = tab !== "users"; if (tab === "users") vu.innerHTML = viewUsers();
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-tab]"); if (!t) return;
+    tab = t.dataset.tab; chrome();
+  });
+  chrome();
 })();
 </script>
