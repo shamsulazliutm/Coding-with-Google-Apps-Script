@@ -116,7 +116,11 @@ let browser;
   // ===== admin =====
   const a = await newPage(); await uiLogin(a, 'utmxcite@utm.my'); await a.waitForSelector('#a-rows tr'); await settle(a);
   assert.match(await a.textContent('.who'), /Admin/); await shot(a, '10-admin', true);
-  assert.ok((await a.locator('#a-rows tr').count()) >= 9);
+  assert.strictEqual(await a.inputValue('#a-month'), '0', 'lalai: Bulan Semua');
+  assert.ok((await a.locator('#a-rows tr').count()) >= 80, 'semua bulan semua lot');
+  assert.ok(!/NaN/.test(await a.textContent('#a-rows')), 'tiada NaN');
+  await a.selectOption('#a-month', '9'); await a.waitForFunction(() => document.querySelectorAll('#a-rows tr').length < 20); await settle(a);
+  assert.strictEqual(await a.locator('#a-rows tr').count(), 9); await shot(a, '10b-admin-bulan');
   await a.selectOption('#a-status', 'sent'); const sentRows = await a.locator('#a-rows tr').count(); assert.ok(sentRows >= 3); await a.selectOption('#a-status', '');
   await a.fill('#a-q', 'kopi'); assert.strictEqual(await a.locator('#a-rows tr').count(), 1); await a.fill('#a-q', '');
   await a.click('#a-rows tr:has-text("Kopi Kampus") [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await shot(a, '11-semak');

@@ -743,29 +743,39 @@ function getFile_(user, p) {
 // ============================================================
 /** Fungsi admin: pantauan semua lot, semakan, pengguna, lot, eksport. */
 
+/**
+ * Senarai laporan semua lot. p.bulan = 0 bermaksud semua bulan dalam tahun itu.
+ * Setiap baris ialah satu lot untuk satu bulan dalam tempoh sewanya.
+ */
 function adminReports_(user, p) {
   var today = todayStr_();
   var t = ymFromStr_(today);
-  var y = Number(p.tahun) || t.y, m = Number(p.bulan) || t.m;
+  var y = Number(p.tahun) || t.y;
+  var m = p.bulan === undefined || p.bulan === null || p.bulan === '' ? 0 : Number(p.bulan);
+  if (!isFinite(m) || m < 0 || m > 12) fail_('Bulan tidak sah.');
   var lots = readTable_(SHEETS.LOTS).filter(function (l) { return l.status === 'Aktif'; });
   var bizMap = {}; readTable_(SHEETS.BIZ).forEach(function (b) { bizMap[b.kodLot] = b; });
   var map = reportMap_();
-  var counts = { ok: 0, sent: 0, fix: 0, none: 0 }, rows = [];
+  var counts = { ok: 0, sent: 0, fix: 0, none: 0 }, rows = [], tanpaTarikh = 0;
 
   lots.forEach(function (lot) {
-    if (!monthAllowed_(lot, y, m, today)) return;
-    var v = reportView_(map[reportId_(lot.kodLot, y, m)], lot, y, m);
-    var b = bizMap[lot.kodLot] || {};
-    v.lotNama = lot.lokasi + ' · Lot ' + lot.noLot;
-    v.lokasi = lot.lokasi;
-    v.perniagaan = b.nama || '';
-    v.pelajar = b.pelajar || '';
-    v.untungRugi = v.pendapatan === null || v.perbelanjaan === null ? null : round2_(v.pendapatan - v.perbelanjaan);
-    counts[v.status]++;
-    rows.push(v);
+    var months = requiredMonths_(lot, today).filter(function (x) { return x.y === y && (m === 0 || x.m === m); });
+    if (!isDateStr_(lot.mula)) tanpaTarikh++;
+    months.forEach(function (x) {
+      var v = reportView_(map[reportId_(lot.kodLot, x.y, x.m)], lot, x.y, x.m);
+      var b = bizMap[lot.kodLot] || {};
+      v.lotNama = lot.lokasi + ' · Lot ' + lot.noLot;
+      v.lokasi = lot.lokasi;
+      v.perniagaan = b.nama || '';
+      v.pelajar = b.pelajar || '';
+      v.untungRugi = typeof v.pendapatan === 'number' && typeof v.perbelanjaan === 'number' ? round2_(v.pendapatan - v.perbelanjaan) : null;
+      counts[v.status]++;
+      rows.push(v);
+    });
   });
-  var lotAktif = lots.length;
-  return { tahun: y, bulan: m, counts: counts, lotAktif: lotAktif, jumlahLot: rows.length, rows: rows, lokasiList: uniq_(lots.map(function (l) { return l.lokasi; })) };
+  rows.sort(function (a, b) { return b.bulan - a.bulan; });   // bulan terkini dahulu; susunan lot dikekalkan (sort stabil)
+  return { tahun: y, bulan: m, counts: counts, lotAktif: lots.length, jumlahLot: rows.length, tanpaTarikh: tanpaTarikh,
+           rows: rows, lokasiList: uniq_(lots.map(function (l) { return l.lokasi; })) };
 }
 
 function uniq_(arr) { var s = {}; return arr.filter(function (x) { if (s[x]) return false; s[x] = 1; return true; }); }
@@ -905,8 +915,8 @@ function adminExport_(user, p) {
       r.sewa, r.sewaPeralatan === null ? '' : (r.sewaPeralatan ? 'Ya' : 'Tidak'),
       ({ ok: 'Disahkan', sent: 'Dihantar', fix: 'Perlu dibetulkan', none: 'Belum dihantar' })[r.status], r.lewat ? 'Ya' : '', r.tarikhHantar, r.disemakOleh].map(csvCell_).join(','));
   });
-  logAction_(user.email, 'Eksport CSV', data.tahun + '-' + pad2_(data.bulan));
-  return { name: 'Laporan_' + data.tahun + '-' + pad2_(data.bulan) + '.csv', csv: '﻿' + lines.join('\r\n') };
+  logAction_(user.email, 'Eksport CSV', data.tahun + '-' + (data.bulan ? pad2_(data.bulan) : 'semua'));
+  return { name: 'Laporan_' + data.tahun + '-' + (data.bulan ? pad2_(data.bulan) : 'semua') + '.csv', csv: '﻿' + lines.join('\r\n') };
 }
 
 // ============================================================

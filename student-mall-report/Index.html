@@ -484,9 +484,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   /* ---------- admin: semua laporan ---------- */
   function admDefaults() {
-    var n = new Date(), y = n.getFullYear(), m = n.getMonth();   // bulan lepas
-    if (m === 0) { y -= 1; m = 12; }
-    if (!S.admY) { S.admY = y; S.admM = m; }
+    if (!S.admY) { S.admY = new Date().getFullYear(); S.admM = 0; }   // 0 = semua bulan
   }
 
   function loadAdm() {
@@ -503,37 +501,39 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<div class="stat' + (c.fix ? ' bad' : '') + '"><small>Perlu dibetulkan</small><strong>' + c.fix + '</strong></div>' +
       '<div class="stat' + (c.none ? ' bad' : '') + '"><small>Belum dihantar</small><strong>' + c.none + '</strong></div></div>' +
       '<div class="bar"><div class="grow"><input id="a-q" type="search" placeholder="Cari lot, perniagaan atau pelajar" value="' + esc(S.admQ) + '"></div>' +
-      '<select id="a-month" aria-label="Bulan">' + MS.map(function (n, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === a.bulan ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
+      '<select id="a-month" aria-label="Bulan"><option value="0"' + (a.bulan === 0 ? ' selected' : '') + '>Bulan: Semua</option>' + MS.map(function (n, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === a.bulan ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
       '<select id="a-year" aria-label="Tahun">' + yrs.map(function (y) { return '<option' + (y === a.tahun ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
       '<select id="a-lokasi" aria-label="Lokasi"><option value="">Lokasi: Semua</option>' + a.lokasiList.map(function (l) { return '<option' + (S.admLokasi === l ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select>' +
       '<select id="a-status" aria-label="Status"><option value="">Status: Semua</option>' +
       [['sent', 'Menunggu semakan'], ['fix', 'Perlu dibetulkan'], ['none', 'Belum dihantar'], ['ok', 'Disahkan']].map(function (o) { return '<option value="' + o[0] + '"' + (S.admStatus === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
       '</select><button class="btn" data-act="export" type="button">Eksport CSV</button></div>' +
-      '<div class="tbl-wrap"><table><thead><tr><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Untung/Rugi (RM)</th><th>Status</th><th></th></tr></thead><tbody id="a-rows">' + admRows() + '</tbody></table></div>';
+      (a.tanpaTarikh ? '<p class="note">' + a.tanpaTarikh + ' lot aktif belum ada tarikh mula sewa, jadi belum disenaraikan. Tetapkan di tab <b>Lot</b>.</p>' : '') +
+      '<div class="tbl-wrap"><table><thead><tr><th>Bulan</th><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Untung/Rugi (RM)</th><th>Status</th><th></th></tr></thead><tbody id="a-rows">' + admRows() + '</tbody></table></div>';
     return h;
   }
 
   function admRows() {
     var q = S.admQ.toLowerCase(), out = '', n = 0;
     S.adm.rows.forEach(function (r) {
-      if (q && (r.lotNama + ' ' + r.perniagaan + ' ' + r.pelajar).toLowerCase().indexOf(q) < 0) return;
+      if (q && (r.lotNama + ' ' + r.perniagaan + ' ' + r.pelajar + ' ' + r.bulanNama).toLowerCase().indexOf(q) < 0) return;
       if (S.admStatus && r.status !== S.admStatus) return;
       if (S.admLokasi && r.lokasi !== S.admLokasi) return;
       n++;
       var net = r.untungRugi;
-      var act = r.status === 'sent' ? '<button class="btn sm fill" data-act="review" data-lot="' + esc(r.kodLot) + '" type="button">Semak</button>'
-        : r.status === 'none' ? '<button class="btn sm" data-act="remind" data-lot="' + esc(r.kodLot) + '" type="button">Ingatkan</button>'
-        : '<button class="btn sm" data-act="review" data-lot="' + esc(r.kodLot) + '" type="button">Lihat</button>';
-      out += '<tr><td class="nw"><b>' + esc(r.lotNama) + '</b></td><td>' + esc(r.perniagaan || '-') + '<span class="sub">' + esc(r.pelajar) + '</span></td>' +
+      var at = ' data-lot="' + esc(r.kodLot) + '" data-y="' + r.tahun + '" data-m="' + r.bulan + '"';
+      var act = r.status === 'sent' ? '<button class="btn sm fill" data-act="review"' + at + ' type="button">Semak</button>'
+        : r.status === 'none' ? '<button class="btn sm" data-act="remind"' + at + ' type="button">Ingatkan</button>'
+        : '<button class="btn sm" data-act="review"' + at + ' type="button">Lihat</button>';
+      out += '<tr><td class="nw">' + esc(r.bulanNama) + ' ' + r.tahun + '</td><td class="nw"><b>' + esc(r.lotNama) + '</b></td><td>' + esc(r.perniagaan || '-') + '<span class="sub">' + esc(r.pelajar) + '</span></td>' +
         '<td class="num mono">' + fmt(r.pendapatan) + '</td><td class="num mono">' + fmt(r.perbelanjaan) + '</td>' +
-        '<td class="num mono ' + (net !== null && net < 0 ? 'neg' : '') + '">' + (net === null ? '-' : (net < 0 ? '-' : '') + fmt(Math.abs(net))) + '</td>' +
+        '<td class="num mono ' + (net != null && net < 0 ? 'neg' : '') + '">' + (net == null ? '-' : (net < 0 ? '-' : '') + fmt(Math.abs(net))) + '</td>' +
         '<td>' + pill(r.status) + (r.lewat ? '<span class="late">Lewat</span>' : '') + '</td><td class="act">' + act + '</td></tr>';
     });
-    return n ? out : '<tr><td class="empty" colspan="7">Tiada lot sepadan untuk bulan ini.</td></tr>';
+    return n ? out : '<tr><td class="empty" colspan="8">Tiada laporan sepadan.</td></tr>';
   }
 
-  function openReview(kodLot) {
-    run(api('adminReport', { kodLot: kodLot, tahun: S.adm.tahun, bulan: S.adm.bulan }).then(function (r) { drawReview(r, ''); }));
+  function openReview(kodLot, tahun, bulan) {
+    run(api('adminReport', { kodLot: kodLot, tahun: tahun, bulan: bulan }).then(function (r) { drawReview(r, ''); }));
   }
 
   function drawReview(r, err) {
@@ -663,12 +663,12 @@ textarea.fi { min-height: 72px; resize: vertical; }
       case 'viewfile': openFile(D.year, D.month, t.dataset.kind); break;
       case 'savedraft': persist(false); break;
       case 'submitreport': persist(true); break;
-      case 'review': openReview(t.dataset.lot); break;
+      case 'review': openReview(t.dataset.lot, Number(t.dataset.y), Number(t.dataset.m)); break;
       case 'admfile': var d2 = document.querySelector('.dlg[data-lot]'); openFile(Number(d2.dataset.y), Number(d2.dataset.m), t.dataset.kind, d2.dataset.lot); break;
       case 'rv-ok': doReview('ok'); break;
       case 'rv-fix': doReview('fix'); break;
       case 'remind':
-        run(api('adminRemind', { kodLot: t.dataset.lot, tahun: S.adm.tahun, bulan: S.adm.bulan }).then(function (d) { toast('Peringatan dihantar kepada ' + d.dihantar + ' pengguna'); })); break;
+        run(api('adminRemind', { kodLot: t.dataset.lot, tahun: Number(t.dataset.y), bulan: Number(t.dataset.m) }).then(function (d) { toast('Peringatan dihantar kepada ' + d.dihantar + ' pengguna'); })); break;
       case 'export':
         run(api('adminExport', { tahun: S.adm.tahun, bulan: S.adm.bulan }).then(function (d) { download(d.name, 'text/csv;charset=utf-8', d.csv, false); })); break;
       case 'newlot': lotDlg(null); break;

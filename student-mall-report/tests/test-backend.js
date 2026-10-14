@@ -135,6 +135,17 @@ t('ringkasan admin Sep 2026: 1 lot dihantar, lot lain belum; lot tanpa tarikh mu
   assert.strictEqual(d.counts.sent, 1); assert.strictEqual(d.counts.none, 1);
   const row = d.rows.find(r => r.kodLot === 'StudentMall-Lot3'); assert.strictEqual(row.untungRugi, -910); assert.strictEqual(row.perniagaan, 'Kopi Kampus Enterprise');
 });
+t('admin: bulan = 0 (Semua) menyenaraikan semua bulan dalam tempoh sewa setiap lot', () => {
+  const d = ok('adminReports', adm.token, { tahun: 2026, bulan: 0 });
+  assert.strictEqual(d.bulan, 0); assert.strictEqual(d.rows.length, 13, 'Lot3 Jan-Okt (10) + SUB2 Ogos-Okt (3)');
+  assert.strictEqual(d.jumlahLot, 13); assert.strictEqual(d.tanpaTarikh, 14);
+  assert.strictEqual(JSON.stringify(d.rows.map(r => r.bulan).slice(0, 3)), '[10,10,9]', 'bulan terkini dahulu');
+  d.rows.forEach(r => { assert.ok(r.untungRugi === null || typeof r.untungRugi === 'number', 'untungRugi mesti null atau nombor'); });
+  assert.ok(d.rows.filter(r => r.status === 'none').every(r => r.untungRugi === null));
+  assert.strictEqual(ok('adminReports', adm.token, { tahun: 2026 }).bulan, 0, 'tanpa bulan = semua');
+  bad('adminReports', adm.token, { tahun: 2026, bulan: 13 }, /Bulan tidak sah/);
+  assert.strictEqual(ok('adminReports', adm.token, { tahun: 2025, bulan: 0 }).rows.length, 0);
+});
 t('butiran laporan admin: No. KP bertopeng', () => { const r = ok('adminReport', adm.token, { kodLot: 'StudentMall-Lot3', tahun: 2026, bulan: 9 }); assert.strictEqual(r.biz.kp, '010203-01-****'); });
 t('admin muat turun fail penyewa (PDF sah)', () => {
   const f = ok('getFile', adm.token, { kodLot: 'StudentMall-Lot3', tahun: 2026, bulan: 9, kind: 'laporan' });
