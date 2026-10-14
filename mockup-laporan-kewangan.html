@@ -1,0 +1,361 @@
+<title>Laporan Kewangan Penyewa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: sidebar-less single column app. Tenant header, two tabs, month rail on the left, report form/summary on the right. */
+:root {
+  --bg: #f6f4f3;
+  --surface: #ffffff;
+  --fg: #231f20;
+  --muted: #6d6567;
+  --line: #e3dedd;
+  --accent: #8a1c2b;
+  --accent-fg: #ffffff;
+  --accent-soft: #f6e6e8;
+  --ok: #1f7a4d;
+  --ok-soft: #e2f3ea;
+  --warn: #9a5b00;
+  --warn-soft: #fbefd5;
+  --bad: #b3261e;
+  --bad-soft: #fbe4e2;
+  --info: #2c5d8f;
+  --info-soft: #e3edf8;
+  --idle: #6d6567;
+  --idle-soft: #ece8e7;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171415; --surface: #221e1f; --fg: #f1ecec; --muted: #a79ea0; --line: #3a3436;
+    --accent: #e0707f; --accent-fg: #1b0f11; --accent-soft: #3a2327;
+    --ok: #62c58f; --ok-soft: #1b3326; --warn: #e6b45a; --warn-soft: #3a2d14;
+    --bad: #f08a83; --bad-soft: #3d1f1d; --info: #86b4e6; --info-soft: #1e2d40;
+    --idle: #a79ea0; --idle-soft: #2e2829; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171415; --surface: #221e1f; --fg: #f1ecec; --muted: #a79ea0; --line: #3a3436;
+  --accent: #e0707f; --accent-fg: #1b0f11; --accent-soft: #3a2327;
+  --ok: #62c58f; --ok-soft: #1b3326; --warn: #e6b45a; --warn-soft: #3a2d14;
+  --bad: #f08a83; --bad-soft: #3d1f1d; --info: #86b4e6; --info-soft: #1e2d40;
+  --idle: #a79ea0; --idle-soft: #2e2829; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body);
+  font-size: 14px; line-height: 1.5;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.note { font-size: 12px; color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* top bar */
+.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+.brand { display: flex; flex-direction: column; min-width: 0; }
+.brand small { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.brand strong { font-size: 17px; font-weight: 700; text-wrap: balance; }
+.who { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); min-width: 0; }
+.who b { color: var(--fg); font-weight: 600; }
+.who button { font: inherit; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px 0; text-decoration: underline; }
+
+/* tabs */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab {
+  font: inherit; font-weight: 600; padding: 10px 16px; border: 0; background: none; color: var(--muted);
+  border-bottom: 3px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;
+}
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.tab:focus-visible, button:focus-visible, input:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* tenant strip */
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px 24px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; }
+.strip dt { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.strip dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+
+/* main layout */
+.main { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 760px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+/* month rail */
+.rail { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.rail h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 8px 8px 6px; font-weight: 600; }
+.mrow {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  font: inherit; text-align: left; color: var(--fg); background: none; border: 0; border-radius: 6px;
+  padding: 8px; cursor: pointer;
+}
+.mrow:hover:not(:disabled) { background: var(--bg); }
+.mrow[aria-current="true"] { background: var(--accent-soft); }
+.mrow:disabled { color: var(--muted); cursor: not-allowed; opacity: .6; }
+@media (max-width: 760px) {
+  .rail { flex-direction: row; overflow-x: auto; }
+  .rail h2 { display: none; }
+  .mrow { flex-direction: column; align-items: flex-start; min-width: 108px; }
+}
+
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.s-ok { color: var(--ok); background: var(--ok-soft); }
+.s-info { color: var(--info); background: var(--info-soft); }
+.s-bad { color: var(--bad); background: var(--bad-soft); }
+.s-warn { color: var(--warn); background: var(--warn-soft); }
+.s-idle { color: var(--idle); background: var(--idle-soft); }
+
+/* report panel */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.phead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.phead h1 { margin: 0; font-size: 18px; font-weight: 700; }
+.phead p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.deadline { font-size: 12.5px; }
+.pbody { padding: 20px; display: flex; flex-direction: column; gap: 22px; }
+
+.banner { border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.banner b { font-weight: 700; }
+.banner .who2 { font-size: 12px; opacity: .85; }
+.banner.s-bad, .banner.s-ok, .banner.s-info, .banner.s-warn { border: 1px solid currentColor; }
+.banner.s-bad::before, .banner.s-ok::before, .banner.s-info::before, .banner.s-warn::before { display: none; }
+.banner p { margin: 0; color: var(--fg); }
+
+.sec h3 { margin: 0 0 10px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field label, .field .lbl { font-size: 13px; font-weight: 600; }
+.req { color: var(--bad); }
+.money { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); overflow: hidden; }
+.money span { padding: 8px 10px; color: var(--muted); border-right: 1px solid var(--line); font-size: 13px; }
+.money input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-family: var(--font-mono); padding: 8px 10px; text-align: right; }
+.money:focus-within { border-color: var(--accent); }
+.money input:focus-visible { outline: none; }
+.money input:disabled { color: var(--fg); }
+.help { font-size: 12px; color: var(--muted); }
+
+.calc { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.calc div { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.calc small { display: block; font-size: 11.5px; color: var(--muted); }
+.calc strong { font-family: var(--font-mono); font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.calc .neg strong { color: var(--bad); }
+.calc .pos strong { color: var(--ok); }
+
+.toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; align-self: flex-start; }
+.toggle button { font: inherit; padding: 7px 18px; border: 0; background: var(--bg); color: var(--fg); cursor: pointer; }
+.toggle button + button { border-left: 1px solid var(--line); }
+.toggle button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.toggle button:disabled { cursor: default; }
+
+.files { display: flex; flex-direction: column; gap: 10px; }
+.file { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.file .meta { min-width: 0; flex: 1 1 260px; }
+.file .meta b { display: block; font-size: 13px; }
+.file .fname { font-family: var(--font-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.file.empty { border-style: dashed; background: var(--bg); }
+.file.off { opacity: .55; }
+.btn { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.link { border: 0; background: none; color: var(--accent); padding: 4px 0; text-decoration: underline; font-weight: 500; }
+
+.declare { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--bg); border-radius: 8px; font-size: 13px; }
+.declare input { margin-top: 3px; accent-color: var(--accent); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.timeline { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.timeline li { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.timeline time { font-family: var(--font-mono); font-size: 12px; min-width: 92px; }
+.toast { position: sticky; bottom: max(12px, env(safe-area-inset-bottom, 0px)); align-self: center; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 600; }
+.stub { padding: 24px 20px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .mrow { transition: background .12s; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <small>UTMXCITE · Student Mall &amp; SUB</small>
+      <strong>Laporan Kewangan Bulanan Penyewa</strong>
+    </div>
+    <div class="who">
+      <span>Log masuk sebagai <b>aina@graduan.example</b></span>
+      <button type="button">Log keluar</button>
+    </div>
+  </header>
+
+  <p class="note">Paparan contoh untuk rujukan reka bentuk. Semua nama, angka dan fail di bawah ialah data contoh.</p>
+
+  <div class="tabs" role="tablist" aria-label="Menu penyewa">
+    <button class="tab" role="tab" id="tab-info" aria-selected="false" aria-controls="view" type="button">Maklumat Peniaga</button>
+    <button class="tab" role="tab" id="tab-fin" aria-selected="true" aria-controls="view" type="button">Laporan Kewangan</button>
+  </div>
+
+  <dl class="strip" aria-label="Maklumat lot">
+    <div><dt>Perniagaan</dt><dd>Kopi Kampus Enterprise</dd></div>
+    <div><dt>Lot</dt><dd>Student Mall · Lot 3</dd></div>
+    <div><dt>Tahun laporan</dt><dd class="mono">2026</dd></div>
+    <div><dt>Tarikh akhir</dt><dd>7hb bulan berikutnya</dd></div>
+  </dl>
+
+  <div id="view"></div>
+  <div id="toast-slot"></div>
+</div>
+
+<script>
+(function () {
+  var BIZ = "Kopi Kampus Enterprise", LOCATION = "StudentMall", LOT = "Lot3";
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var MS = ["Januari","Februari","Mac","April","Mei","Jun","Julai","Ogos","September","Oktober","November","Disember"];
+
+  /* Contoh data. today = 14 Okt 2026 */
+  var R = {
+    0: { st: "ok",   income: 8420, expense: 5310, rent: 600, equip: false, sent: "3 Feb 2026", by: "Admin UTMXCITE" },
+    1: { st: "ok",   income: 7980, expense: 5100, rent: 600, equip: true,  sent: "5 Mac 2026", by: "Admin UTMXCITE" },
+    2: { st: "ok",   income: 9150, expense: 5870, rent: 600, equip: true,  sent: "6 Apr 2026", by: "Admin UTMXCITE" },
+    3: { st: "ok",   income: 8700, expense: 5420, rent: 600, equip: false, sent: "4 Mei 2026", by: "Admin UTMXCITE" },
+    4: { st: "ok",   income: 7600, expense: 5000, rent: 600, equip: false, sent: "8 Jun 2026", late: true, by: "Admin UTMXCITE" },
+    5: { st: "ok",   income: 6900, expense: 4800, rent: 600, equip: false, sent: "2 Jul 2026", by: "Admin UTMXCITE" },
+    6: { st: "ok",   income: 7300, expense: 4950, rent: 600, equip: true,  sent: "6 Ogos 2026", by: "Admin UTMXCITE" },
+    7: { st: "sent", income: 8100, expense: 5240, rent: 600, equip: false, sent: "6 Sep 2026" },
+    8: { st: "fix",  income: 8650, expense: 9560, rent: 600, equip: true,  sent: "7 Okt 2026",
+         comment: "Jumlah perbelanjaan melebihi pendapatan dua kali ganda. Sila semak sama ada bayaran sewa RM600 sudah dikira dua kali, dan muat naik semula laporan yang lengkap.",
+         by: "Pn. Salmah (UTMXCITE)", reviewed: "9 Okt 2026" },
+    9: { st: "none", income: "", expense: "", rent: "", equip: null }
+  };
+  var ST = {
+    ok:   ["s-ok",   "Disahkan"],
+    sent: ["s-info", "Dihantar"],
+    fix:  ["s-bad",  "Perlu dibetulkan"],
+    none: ["s-warn", "Belum dihantar"],
+    lock: ["s-idle", "Belum tiba"]
+  };
+
+  var state = { tab: "fin", month: 8, equip: null, ack: false, toast: "" };
+  var view = document.getElementById("view");
+  var slot = document.getElementById("toast-slot");
+
+  function rm(n) { return "RM " + Number(n).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fname(m, kind) {
+    var base = LOCATION + "_" + LOT + "_" + MONTHS[m];
+    if (kind === "report") return base + "_" + BIZ + "_FinancialReport.pdf";
+    return base + "_" + (kind === "rent" ? "RentReceipt" : "IncubatorReceipt") + ".pdf";
+  }
+  function dueText(m) {
+    var y = m === 11 ? 2027 : 2026, mm = (m + 1) % 12;
+    return "7 " + MS[mm] + " " + y;
+  }
+  function status(m) { return m > 9 ? "lock" : R[m].st; }
+
+  function pill(s) { return '<span class="pill ' + ST[s][0] + '">' + ST[s][1] + "</span>"; }
+
+  function rail() {
+    var h = '<nav class="rail" aria-label="Pilih bulan"><h2>Bulan laporan</h2>';
+    for (var m = 0; m < 12; m++) {
+      var s = status(m);
+      h += '<button type="button" class="mrow" data-m="' + m + '"' + (m === state.month ? ' aria-current="true"' : "") + (s === "lock" ? " disabled" : "") + ">" +
+           "<span>" + MS[m] + "</span>" + pill(s) + "</button>";
+    }
+    return h + "</nav>";
+  }
+
+  function money(id, label, val, editable, help) {
+    return '<div class="field"><label for="' + id + '">' + label + (editable ? ' <span class="req">*</span>' : "") + "</label>" +
+      '<div class="money"><span>RM</span><input id="' + id + '" type="text" inputmode="decimal" value="' + (val === "" ? "" : Number(val).toFixed(2)) + '"' + (editable ? "" : " disabled") + ' placeholder="0.00"></div>' +
+      (help ? '<span class="help">' + help + "</span>" : "") + "</div>";
+  }
+
+  function fileRow(title, name, present, editable, off) {
+    if (off) return '<div class="file off"><div class="meta"><b>' + title + '</b><span class="fname">Tidak diperlukan kerana tiada sewa peralatan UTMXCITE bulan ini.</span></div></div>';
+    if (!present) return '<div class="file empty"><div class="meta"><b>' + title + ' <span class="req">*</span></b><span class="fname">Akan disimpan sebagai ' + name + '</span></div><button type="button" class="btn">Pilih fail PDF</button></div>';
+    return '<div class="file"><div class="meta"><b>' + title + '</b><span class="fname">' + name + ' · 1.2 MB</span></div>' +
+      '<span><button type="button" class="btn link">Lihat</button>' + (editable ? ' <button type="button" class="btn link">Ganti fail</button>' : "") + "</span></div>";
+  }
+
+  function banner(m, r, s) {
+    var late = "";
+    if (s === "ok") {
+      return '<div class="banner s-ok"><b>Disahkan oleh admin</b><p>Laporan ' + MS[m] + ' telah disemak pada ' + (r.sent) + '. Laporan dikunci dan tidak boleh diubah.</p><span class="who2">' + r.by + (r.late ? " · dihantar lewat" : "") + "</span></div>";
+    }
+    if (s === "sent") return '<div class="banner s-info"><b>Menunggu semakan admin</b><p>Dihantar pada ' + r.sent + '. Anda akan terima e-mel apabila admin menyemak laporan ini.</p></div>';
+    if (s === "fix") return '<div class="banner s-bad"><b>Admin meminta pembetulan</b><p>' + r.comment + '</p><span class="who2">' + r.by + " · " + r.reviewed + "</span></div>";
+    return '<div class="banner s-warn"><b>Laporan belum dihantar</b><p>Hantar sebelum ' + dueText(m) + ". Selepas tarikh ini laporan ditanda lewat.</p></div>";
+  }
+
+  function report() {
+    var m = state.month, r = R[m], s = status(m);
+    var editable = (s === "fix" || s === "none");
+    var equip = editable ? (state.equip === null ? r.equip : state.equip) : r.equip;
+    var inc = Number(r.income) || 0, exp = Number(r.expense) || 0;
+    var net = inc - exp;
+    var h = '<div class="panel"><div class="phead"><div><h1>Laporan ' + MS[m] + " 2026</h1><p>" + BIZ + " · Student Mall, Lot 3</p></div>" +
+      '<div class="deadline">Tarikh akhir <b class="mono">' + dueText(m) + "</b> &nbsp;" + pill(s) + "</div></div>";
+    h += '<div class="pbody">' + banner(m, r, s);
+
+    h += '<section class="sec"><h3>Ringkasan kewangan</h3><div class="grid">' +
+      money("f-inc", "Jumlah pendapatan bulanan", r.income, editable) +
+      money("f-exp", "Jumlah perbelanjaan bulanan", r.expense, editable) + "</div>";
+    if (r.income !== "") {
+      h += '<div class="calc" style="margin-top:12px"><div><small>Pendapatan</small><strong>' + rm(inc) + "</strong></div>" +
+        "<div><small>Perbelanjaan</small><strong>" + rm(exp) + "</strong></div>" +
+        '<div class="' + (net < 0 ? "neg" : "pos") + '"><small>' + (net < 0 ? "Rugi bulan ini" : "Untung bulan ini") + "</small><strong>" + (net < 0 ? "-" : "") + rm(Math.abs(net)) + "</strong></div></div>";
+    }
+    h += "</section>";
+
+    h += '<section class="sec"><h3>Laporan kewangan</h3><div class="files">' +
+      fileRow("Laporan kewangan bulanan (PDF)", fname(m, "report"), r.income !== "", editable) +
+      '</div><p class="help" style="margin:8px 0 0">PDF sahaja, maksimum 10 MB. Nama fail dijana oleh sistem. Anda boleh guna templat sendiri.</p></section>';
+
+    h += '<section class="sec"><h3>Bayaran sewa</h3><div class="grid">' +
+      money("f-rent", "Jumlah bayaran sewa bulan ini", r.rent, editable) + '</div><div class="files" style="margin-top:12px">' +
+      fileRow("Resit bayaran sewa (PDF)", fname(m, "rent"), r.income !== "", editable) + "</div></section>";
+
+    h += '<section class="sec"><h3>Sewa peralatan UTMXCITE</h3><div class="field"><span class="lbl">Adakah anda menyewa peralatan daripada UTMXCITE? ' + (editable ? '<span class="req">*</span>' : "") + "</span>" +
+      '<div class="toggle" role="group" aria-label="Sewa peralatan">' +
+      '<button type="button" data-eq="1" aria-pressed="' + (equip === true) + '"' + (editable ? "" : " disabled") + ">Ya</button>" +
+      '<button type="button" data-eq="0" aria-pressed="' + (equip === false) + '"' + (editable ? "" : " disabled") + ">Tidak</button></div></div>";
+    h += '<div class="files" style="margin-top:12px">' + fileRow("Resit bayaran incubator (PDF)", fname(m, "incubator"), r.income !== "" && equip === true, editable, equip === false) + "</div></section>";
+
+    if (editable) {
+      h += '<label class="declare"><input id="f-ack" type="checkbox"' + (state.ack ? " checked" : "") + '><span>Saya mengesahkan bahawa semua maklumat yang diberikan adalah lengkap dan tepat mengikut pengetahuan saya.</span></label>' +
+        '<div class="actions"><span class="help">Selepas dihantar, status menjadi “Dihantar” dan admin akan menyemak.</span>' +
+        '<span><button type="button" class="btn" id="draft">Simpan draf</button> <button type="button" class="btn primary" id="submit"' + (state.ack ? "" : " disabled") + ">" + (s === "fix" ? "Hantar semula" : "Hantar laporan") + "</button></span></div>";
+    }
+
+    h += '<section class="sec"><h3>Sejarah</h3><ul class="timeline">';
+    if (s === "fix") h += '<li><time>' + r.reviewed + "</time><span>" + r.by + " meminta pembetulan</span></li>";
+    if (s === "ok") h += '<li><time>' + r.sent + "</time><span>" + r.by + " mengesahkan laporan</span></li>";
+    if (s !== "none") h += '<li><time>' + r.sent + "</time><span>Laporan dihantar oleh aina@graduan.example</span></li>";
+    else h += "<li><span>Tiada aktiviti lagi untuk bulan ini.</span></li>";
+    h += "</ul></section></div></div>";
+    return h;
+  }
+
+  function render() {
+    document.getElementById("tab-fin").setAttribute("aria-selected", state.tab === "fin");
+    document.getElementById("tab-info").setAttribute("aria-selected", state.tab === "info");
+    if (state.tab === "info") {
+      view.innerHTML = '<div class="panel"><div class="stub"><b>Maklumat Peniaga</b><p class="note" style="margin-top:6px">Tab ini dipaparkan dalam rekaan berasingan.</p></div></div>';
+    } else {
+      view.innerHTML = '<div class="main">' + rail() + report() + "</div>";
+    }
+    slot.innerHTML = state.toast ? '<div class="toast" role="status">' + state.toast + "</div>" : "";
+  }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("button, input");
+    if (!t) return;
+    if (t.id === "tab-fin") { state.tab = "fin"; render(); return; }
+    if (t.id === "tab-info") { state.tab = "info"; render(); return; }
+    if (t.dataset.m !== undefined) { state.month = +t.dataset.m; state.equip = null; state.ack = false; state.toast = ""; render(); return; }
+    if (t.dataset.eq !== undefined) { state.equip = t.dataset.eq === "1"; render(); return; }
+    if (t.id === "draft") { state.toast = "Draf disimpan"; render(); return; }
+    if (t.id === "submit") {
+      var r = R[state.month]; r.st = "sent"; r.sent = "14 Okt 2026";
+      state.toast = "Laporan dihantar untuk semakan"; state.ack = false; render(); return;
+    }
+  });
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "f-ack") { state.ack = e.target.checked; render(); document.getElementById("f-ack").focus(); }
+  });
+  render();
+})();
+</script>
