@@ -516,7 +516,9 @@ test('Admin: eksport CSV dikembalikan sebagai teks, ikut penapis, melindungi for
   assert.equal(t.charCodeAt(0), 0xFEFF, 'BOM untuk Excel');
   const baris = t.replace(/^﻿/, '').trim().split('\r\n');
   assert.equal(baris.length, 3);
-  assert.match(baris[0], /^ID_Laporan,ID_Perniagaan,Nama_Perniagaan,No_Matrik_Pemilik,Nama_Pemilik,Bulan,Tahun,Status/);
+  assert.match(baris[0], /^ID_Laporan,ID_Perniagaan,Nama_Perniagaan,No_Matrik_Pemilik,No_KP,Nama_Pemilik,Bulan,Tahun,Status/);
+  const bk = baris.find((b) => b.includes('KEDAI'));
+  assert.match(bk, /,[A-Z0-9]+,\d{6}-\d{2}-\d{4},/, 'No. KP bergandingan dengan No. Matrik dalam eksport Admin Penuh');
   assert.ok(t.includes('"KEDAI ""AIN"", ENT"'), 'petikan dan koma dilepaskan');
   assert.ok(t.includes(",'-CMD|X,"), 'formula dilindungi');
   assert.ok(baris.find((b) => b.includes('KEDAI')).includes(',Dihantar,Tidak,10,25.5,-15.5,Tidak,2026-10-07,'), t);

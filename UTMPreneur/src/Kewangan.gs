@@ -540,13 +540,13 @@ var Kewangan = (function () {
     requireViewer_(ctx);
     var t = tapis_(p);
     var sewaan = sewaanRows_();
-    var tajuk = ['ID_Laporan', 'ID_Perniagaan', 'Nama_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Pemilik', 'Bulan', 'Tahun', 'Status', 'Tiada_Aktiviti',
+    var tajuk = ['ID_Laporan', 'ID_Perniagaan', 'Nama_Perniagaan', 'No_Matrik_Pemilik', 'No_KP', 'Nama_Pemilik', 'Bulan', 'Tahun', 'Status', 'Tiada_Aktiviti',
       'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Penyewa_Lot', 'Tarikh_Akhir', 'Tarikh_Hantar', 'Hantar_Lewat', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan'];
     var lines = [tajuk.join(',')];
     t.rows.forEach(function (r) {
       var o = barisAdmin_(r, t.pm, t.pl, sewaan);
       var rec = [
-        [o.id, 1], [o.perniagaanId, 1], [o.perniagaan, 1], [o.noMatrik, 1], [o.pemilik, 1], [o.bulan, 0], [o.tahun, 0], [o.status, 1],
+        [o.id, 1], [o.perniagaanId, 1], [o.perniagaan, 1], [o.noMatrik, 1], [ctx.role === ROLE.ADMIN_PENUH ? str_(r.No_KP) : '', 1], [o.pemilik, 1], [o.bulan, 0], [o.tahun, 0], [o.status, 1],
         [o.tiadaAktiviti ? 'Ya' : 'Tidak', 1], [o.pendapatan, 0], [o.perbelanjaan, 0], [o.untung, 0], [o.penyewaLot ? 'Ya' : 'Tidak', 1],
         [o.tarikhAkhir, 0], [o.tarikhHantar, 0], [o.hantarLewat ? 'Ya' : 'Tidak', 1], [o.disemakOleh, 1], [o.tarikhSemakan, 0], [str_(r.Catatan_Semakan), 1]
       ];

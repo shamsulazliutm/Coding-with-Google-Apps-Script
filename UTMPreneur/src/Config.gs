@@ -193,3 +193,33 @@ var TETAPAN_LALAI = [
   ['SSU_PERINGATAN_HARI', '60,30,7', 'Hari sebelum tamat sijil SSU untuk emel peringatan pembaharuan'],
   ['SSU_PEMBAHARUAN_AWAL_HARI', '60', 'Pembaharuan SSU dibenarkan bermula sekian hari sebelum tamat']
 ];
+
+/**
+ * Gandingan No. KP dengan No. Matrik (keputusan pengguna: semua data yang memuatkan No. Matrik mesti memuatkan No. KP).
+ * - Tab yang ada lajur No_Matrik* mendapat lajur `No_KP` tepat selepasnya.
+ * - Tab yang hanya ada ID_Perniagaan (Sewaan, Bayaran_Sewa, Cagaran, Laporan_Bulanan) mendapat `No_Matrik_Pemilik` dan `No_KP`
+ *   selepas ID_Perniagaan (diisi daripada pemilik perniagaan).
+ * Nilai diisi secara automatik oleh Db (sumber: PELAJAR) pada setiap tulis; setup() melengkapkan rekod lama (isiNoKp).
+ * PELAJAR dan Pengguna sudah ada No_KP_Pasport; Pengguna pelajar diisi daripada PELAJAR.
+ */
+(function () {
+  Object.keys(SCHEMA).forEach(function (ssKod) {
+    Object.keys(SCHEMA[ssKod].tabs).forEach(function (tab) {
+      if (tab === 'PELAJAR' || tab === 'Pengguna') return;
+      var cols = SCHEMA[ssKod].tabs[tab];
+      if (cols.indexOf('No_KP') >= 0) return;
+      var mi = -1;
+      cols.forEach(function (c, i) { if (mi < 0 && /^No_Matrik/.test(c)) mi = i; });
+      if (mi >= 0) {
+        cols.splice(mi + 1, 0, 'No_KP');
+      } else {
+        var pi = cols.indexOf('ID_Perniagaan');
+        if (pi < 0) return;
+        cols.splice(pi + 1, 0, 'No_Matrik_Pemilik', 'No_KP');
+        mi = pi + 1;
+      }
+      TEXT_COLS[tab] = (TEXT_COLS[tab] || []).concat(['No_KP']);
+      if (cols[mi] === 'No_Matrik_Pemilik' && TEXT_COLS[tab].indexOf('No_Matrik_Pemilik') < 0) TEXT_COLS[tab].push('No_Matrik_Pemilik');
+    });
+  });
+})();

@@ -702,6 +702,36 @@ var TETAPAN_LALAI = [
   ['SSU_PEMBAHARUAN_AWAL_HARI', '60', 'Pembaharuan SSU dibenarkan bermula sekian hari sebelum tamat']
 ];
 
+/**
+ * Gandingan No. KP dengan No. Matrik (keputusan pengguna: semua data yang memuatkan No. Matrik mesti memuatkan No. KP).
+ * - Tab yang ada lajur No_Matrik* mendapat lajur `No_KP` tepat selepasnya.
+ * - Tab yang hanya ada ID_Perniagaan (Sewaan, Bayaran_Sewa, Cagaran, Laporan_Bulanan) mendapat `No_Matrik_Pemilik` dan `No_KP`
+ *   selepas ID_Perniagaan (diisi daripada pemilik perniagaan).
+ * Nilai diisi secara automatik oleh Db (sumber: PELAJAR) pada setiap tulis; setup() melengkapkan rekod lama (isiNoKp).
+ * PELAJAR dan Pengguna sudah ada No_KP_Pasport; Pengguna pelajar diisi daripada PELAJAR.
+ */
+(function () {
+  Object.keys(SCHEMA).forEach(function (ssKod) {
+    Object.keys(SCHEMA[ssKod].tabs).forEach(function (tab) {
+      if (tab === 'PELAJAR' || tab === 'Pengguna') return;
+      var cols = SCHEMA[ssKod].tabs[tab];
+      if (cols.indexOf('No_KP') >= 0) return;
+      var mi = -1;
+      cols.forEach(function (c, i) { if (mi < 0 && /^No_Matrik/.test(c)) mi = i; });
+      if (mi >= 0) {
+        cols.splice(mi + 1, 0, 'No_KP');
+      } else {
+        var pi = cols.indexOf('ID_Perniagaan');
+        if (pi < 0) return;
+        cols.splice(pi + 1, 0, 'No_Matrik_Pemilik', 'No_KP');
+        mi = pi + 1;
+      }
+      TEXT_COLS[tab] = (TEXT_COLS[tab] || []).concat(['No_KP']);
+      if (cols[mi] === 'No_Matrik_Pemilik' && TEXT_COLS[tab].indexOf('No_Matrik_Pemilik') < 0) TEXT_COLS[tab].push('No_Matrik_Pemilik');
+    });
+  });
+})();
+
 
 // ===== Db.gs =====
 /**
@@ -815,7 +845,71 @@ var Db = (function () {
     return v;
   }
 
-  function toRow_(hdr, obj) {
+  // ---------- Gandingan No. KP dengan No. Matrik ----------
+  var kpMemo = { pel: null, per: null };
+
+  /** Tetapan gandingan bagi tab: {mc: lajur matrik, kp: lajur KP, byPer} atau null. */
+  function kpCfg_(tab) {
+    if (tab === 'Pengguna') return { mc: 'No_Matrik', kp: 'No_KP_Pasport', byPer: false, onlyBlank: true };
+    var kod = TAB_SS[tab];
+    var cols = kod && SCHEMA[kod] ? SCHEMA[kod].tabs[tab] : null;
+    if (!cols || cols.indexOf('No_KP') < 0) return null;
+    var mc = '';
+    cols.forEach(function (c) { if (!mc && /^No_Matrik/.test(c)) mc = c; });
+    return mc ? { mc: mc, kp: 'No_KP', byPer: cols.indexOf('ID_Perniagaan') >= 0 && mc === 'No_Matrik_Pemilik', onlyBlank: false } : null;
+  }
+
+  /** Nilai satu lajur pada baris yang padan dalam tab (baca lajur kunci sahaja, kemudian satu sel). */
+  function lookupCell_(tab, keyCol, key, valCol, normFn) {
+    var sh = sheet_(tab), h = headers_(tab);
+    var ki = h.indexOf(keyCol), vi = h.indexOf(valCol);
+    var lr = sh.getLastRow();
+    if (ki < 0 || vi < 0 || lr < 2) return '';
+    var keys = sh.getRange(2, ki + 1, lr - 1, 1).getValues();
+    for (var i = 0; i < keys.length; i++) {
+      if ((normFn ? normFn(keys[i][0]) : String(keys[i][0]).trim()) === key) {
+        var v = sh.getRange(i + 2, vi + 1).getValue();
+        return v === null || v === undefined ? '' : String(v).trim();
+      }
+    }
+    return '';
+  }
+
+  function kpOf_(matric) {
+    kpMemo.pel = kpMemo.pel || {};
+    if (!Object.prototype.hasOwnProperty.call(kpMemo.pel, matric)) {
+      kpMemo.pel[matric] = lookupCell_('PELAJAR', 'No_Matrik', matric, 'No_KP_Pasport', Util.normMatric);
+    }
+    return kpMemo.pel[matric];
+  }
+
+  function matricOfPer_(idPer) {
+    kpMemo.per = kpMemo.per || {};
+    if (!Object.prototype.hasOwnProperty.call(kpMemo.per, idPer) || !kpMemo.per[idPer]) {
+      kpMemo.per[idPer] = Util.normMatric(lookupCell_('Perniagaan', 'ID_Perniagaan', idPer, 'No_Matrik_Pemilik'));
+    }
+    return kpMemo.per[idPer];
+  }
+
+  /** Isi No. KP (dan matrik pemilik bagi tab ID_Perniagaan) pada objek baris. Pulang true jika ada perubahan. */
+  function fillKp_(tab, obj) {
+    var cfg = kpCfg_(tab);
+    if (!cfg) return false;
+    var m = Util.normMatric(obj[cfg.mc]);
+    if (!m && cfg.byPer && Util.str(obj.ID_Perniagaan)) {
+      m = matricOfPer_(Util.str(obj.ID_Perniagaan));
+      if (m) obj[cfg.mc] = m;
+    }
+    if (!m) return false;
+    if (cfg.onlyBlank && Util.str(obj[cfg.kp])) return false;
+    var kp = kpOf_(m);
+    if (!kp || Util.str(obj[cfg.kp]) === kp) return false;
+    obj[cfg.kp] = kp;
+    return true;
+  }
+
+  function toRow_(hdr, obj, tab) {
+    if (tab) fillKp_(tab, obj);
     return hdr.map(function (h) { return safeCell_(obj[h] === undefined || obj[h] === null ? '' : obj[h]); });
   }
 
@@ -823,7 +917,7 @@ var Db = (function () {
     var sh = sheet_(tab);
     var hdr = headers_(tab);
     var r = Math.max(sh.getLastRow(), 1) + 1;
-    sh.getRange(r, 1, 1, hdr.length).setValues([toRow_(hdr, obj)]);
+    sh.getRange(r, 1, 1, hdr.length).setValues([toRow_(hdr, obj, tab)]);
     return r;
   }
 
@@ -834,6 +928,12 @@ var Db = (function () {
     hdr.forEach(function (h, i) {
       if (Object.prototype.hasOwnProperty.call(patch, h)) cur[i] = patch[h] === null ? '' : patch[h];
     });
+    // gandingan No. KP: bina objek baris, isi, kemudian tulis semula lajur berkaitan
+    if (kpCfg_(tab)) {
+      var o = {};
+      hdr.forEach(function (h, i) { o[h] = cur[i]; });
+      if (fillKp_(tab, o)) hdr.forEach(function (h, i) { cur[i] = o[h]; });
+    }
     // nilai sedia ada yang dibaca semula sebagai teks juga mesti dilindungi
     sh.getRange(rowNum, 1, 1, hdr.length).setValues([cur.map(safeCell_)]);
   }
@@ -847,7 +947,7 @@ var Db = (function () {
     if (!objs.length) return;
     var need = objs.length + 1 - sh.getMaxRows();
     if (need > 0) sh.insertRowsAfter(sh.getMaxRows(), need);
-    var data = objs.map(function (o) { return toRow_(hdr, o); });
+    var data = objs.map(function (o) { return toRow_(hdr, o, tab); });
     sh.getRange(2, 1, data.length, hdr.length).setValues(data);
   }
 
@@ -883,6 +983,7 @@ var Db = (function () {
 
   function reset_() {
     memo = { induk: null, sheets: {}, hdr: {}, ss: {} };
+    kpMemo = { pel: null, per: null };
     cache_().remove('links');
   }
 
@@ -899,6 +1000,9 @@ var Db = (function () {
     update: update_,
     replaceAll: replaceAll_,
     safeCell: safeCell_,
+    kpCfg: kpCfg_,
+    fillKp: fillKp_,
+    kpOf: kpOf_,
     find: find_,
     withLock: withLock_,
     nextSeq: nextSeq_,
@@ -1823,13 +1927,13 @@ var Kewangan = (function () {
     requireViewer_(ctx);
     var t = tapis_(p);
     var sewaan = sewaanRows_();
-    var tajuk = ['ID_Laporan', 'ID_Perniagaan', 'Nama_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Pemilik', 'Bulan', 'Tahun', 'Status', 'Tiada_Aktiviti',
+    var tajuk = ['ID_Laporan', 'ID_Perniagaan', 'Nama_Perniagaan', 'No_Matrik_Pemilik', 'No_KP', 'Nama_Pemilik', 'Bulan', 'Tahun', 'Status', 'Tiada_Aktiviti',
       'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Penyewa_Lot', 'Tarikh_Akhir', 'Tarikh_Hantar', 'Hantar_Lewat', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan'];
     var lines = [tajuk.join(',')];
     t.rows.forEach(function (r) {
       var o = barisAdmin_(r, t.pm, t.pl, sewaan);
       var rec = [
-        [o.id, 1], [o.perniagaanId, 1], [o.perniagaan, 1], [o.noMatrik, 1], [o.pemilik, 1], [o.bulan, 0], [o.tahun, 0], [o.status, 1],
+        [o.id, 1], [o.perniagaanId, 1], [o.perniagaan, 1], [o.noMatrik, 1], [ctx.role === ROLE.ADMIN_PENUH ? str_(r.No_KP) : '', 1], [o.pemilik, 1], [o.bulan, 0], [o.tahun, 0], [o.status, 1],
         [o.tiadaAktiviti ? 'Ya' : 'Tidak', 1], [o.pendapatan, 0], [o.perbelanjaan, 0], [o.untung, 0], [o.penyewaLot ? 'Ya' : 'Tidak', 1],
         [o.tarikhAkhir, 0], [o.tarikhHantar, 0], [o.hantarLewat ? 'Ya' : 'Tidak', 1], [o.disemakOleh, 1], [o.tarikhSemakan, 0], [str_(r.Catatan_Semakan), 1]
       ];
@@ -8341,6 +8445,35 @@ var Setup = (function () {
     return out;
   }
 
+  /**
+   * Lengkapkan No. KP (dan matrik pemilik) pada rekod sedia ada. semula=true menyegerak semula semua rekod
+   * (contoh selepas No. KP dalam PELAJAR dikemas kini). Pulang bilangan baris dikemas kini.
+   */
+  function isiNoKp_(semula) {
+    var n = 0;
+    Db.reset();
+    Object.keys(TAB_SS).forEach(function (tab) {
+      var cfg = Db.kpCfg(tab);
+      if (!cfg) return;
+      try { Db.sheet(tab); } catch (e) { return; }
+      Db.rows(tab).forEach(function (r) {
+        if (!semula && Util.str(r[cfg.kp])) return;
+        var m = Util.normMatric(r[cfg.mc]);
+        if (!m && !(cfg.byPer && Util.str(r.ID_Perniagaan))) return;
+        var o = {};
+        Object.keys(r).forEach(function (k) { o[k] = r[k]; });
+        if (semula) o[cfg.kp] = '';
+        var before = Util.str(r[cfg.kp]) + '|' + Util.str(r[cfg.mc]);
+        if (Db.fillKp(tab, o) && (Util.str(o[cfg.kp]) + '|' + Util.str(o[cfg.mc])) !== before) {
+          var patch = {}; patch[cfg.kp] = o[cfg.kp]; patch[cfg.mc] = o[cfg.mc];
+          Db.update(tab, r._row, patch);
+          n++;
+        }
+      });
+    });
+    return n;
+  }
+
   function run_() {
     var t0 = new Date().getTime();
     var log = [];
@@ -8398,6 +8531,10 @@ var Setup = (function () {
     if (timeUp()) { log.push('Masa hampir habis. Jalankan setup() sekali lagi.'); return result(false); }
     seed_(log);
 
+    // 5b. No. KP gandingan bagi rekod sedia ada
+    var nKp = isiNoKp_(false);
+    if (nKp) log.push('No. KP dilengkapkan pada ' + nKp + ' baris');
+
     // 6. Pengesah
     var v = validate_();
     var r = result(true);
@@ -8408,7 +8545,7 @@ var Setup = (function () {
     return r;
   }
 
-  return { run: run_, validate: validate_, ensureTabs: ensureTabs_ };
+  return { run: run_, validate: validate_, ensureTabs: ensureTabs_, isiNoKp: isiNoKp_ };
 })();
 
 /** Jalankan dari editor Apps Script. */
@@ -8437,6 +8574,13 @@ function tetapPengeluaran() {
   p.deleteProperty(PROPS.INDUK_ID);
   CacheService.getScriptCache().removeAll(['links', 'cfg', 'admins', 'ruj']);
   Logger.log('MODE = PRODUKSI. INDUK_ID dipadam (Induk lama kekal dalam Drive). Sekarang jalankan setup().');
+}
+
+/** Segerak semula No. KP semua rekod daripada PELAJAR (jalankan dari editor selepas mengimport No. KP baharu). */
+function isiNoKp() {
+  var n = Setup.isiNoKp(true);
+  Logger.log('No. KP disegerakkan pada ' + n + ' baris');
+  return n;
 }
 
 

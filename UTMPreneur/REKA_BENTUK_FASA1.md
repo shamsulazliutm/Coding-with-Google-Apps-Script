@@ -350,3 +350,12 @@ Dilaksanakan dan diuji setempat; butiran peraturan, lalai yang dipilih dan senar
 **[LALAI, sila semak]** pelajar boleh menjadi rakan kongsi dalam lebih daripada satu SSU (amaran kepada admin); sijil pembaharuan
 bertarikh hari kelulusan dan tamat = tarikh tamat lama + 12 bulan jika masih sah; senarai MOTIVASI, HUBUNGAN dan TEMPOH_NIAGA ialah draf.
 Belum dibina: muat naik fail berbahagian, medan khusus startup.
+
+## 15. No. KP digandingkan dengan No. Matrik (keputusan pengguna)
+
+Setiap tab yang memuatkan lajur `No_Matrik*` kini memuatkan lajur `No_KP` tepat selepasnya (`Profil`, `Ahli_Pasukan`, `Permohonan_SSU`, `Perniagaan`,
+`Permohonan_Lot`, `Pekerja_Penyewa`, `Tempahan`). Tab yang hanya memuatkan `ID_Perniagaan` (`Sewaan`, `Bayaran_Sewa`, `Cagaran`, `Laporan_Bulanan`) mendapat
+`No_Matrik_Pemilik` dan `No_KP` selepas `ID_Perniagaan`. `Pengguna.No_KP_Pasport` bagi pelajar juga diisi. Sumber nilai ialah `PELAJAR.No_KP_Pasport`.
+Pengisian automatik dalam lapisan data (`Db.append/update/replaceAll`), jadi setiap modul memperolehnya tanpa kod tambahan. `setup()` melengkapkan rekod sedia ada;
+`isiNoKp()` (dari editor) menyegerak semula semua rekod selepas No. KP dalam `PELAJAR` dikemas kini. Lajur disimpan sebagai teks. Paparan skrin kekal
+mengikut PDPA (No. KP penuh hanya kepada Admin Penuh); eksport CSV Kewangan memuatkan No. KP hanya untuk Admin Penuh.

@@ -109,7 +109,71 @@ var Db = (function () {
     return v;
   }
 
-  function toRow_(hdr, obj) {
+  // ---------- Gandingan No. KP dengan No. Matrik ----------
+  var kpMemo = { pel: null, per: null };
+
+  /** Tetapan gandingan bagi tab: {mc: lajur matrik, kp: lajur KP, byPer} atau null. */
+  function kpCfg_(tab) {
+    if (tab === 'Pengguna') return { mc: 'No_Matrik', kp: 'No_KP_Pasport', byPer: false, onlyBlank: true };
+    var kod = TAB_SS[tab];
+    var cols = kod && SCHEMA[kod] ? SCHEMA[kod].tabs[tab] : null;
+    if (!cols || cols.indexOf('No_KP') < 0) return null;
+    var mc = '';
+    cols.forEach(function (c) { if (!mc && /^No_Matrik/.test(c)) mc = c; });
+    return mc ? { mc: mc, kp: 'No_KP', byPer: cols.indexOf('ID_Perniagaan') >= 0 && mc === 'No_Matrik_Pemilik', onlyBlank: false } : null;
+  }
+
+  /** Nilai satu lajur pada baris yang padan dalam tab (baca lajur kunci sahaja, kemudian satu sel). */
+  function lookupCell_(tab, keyCol, key, valCol, normFn) {
+    var sh = sheet_(tab), h = headers_(tab);
+    var ki = h.indexOf(keyCol), vi = h.indexOf(valCol);
+    var lr = sh.getLastRow();
+    if (ki < 0 || vi < 0 || lr < 2) return '';
+    var keys = sh.getRange(2, ki + 1, lr - 1, 1).getValues();
+    for (var i = 0; i < keys.length; i++) {
+      if ((normFn ? normFn(keys[i][0]) : String(keys[i][0]).trim()) === key) {
+        var v = sh.getRange(i + 2, vi + 1).getValue();
+        return v === null || v === undefined ? '' : String(v).trim();
+      }
+    }
+    return '';
+  }
+
+  function kpOf_(matric) {
+    kpMemo.pel = kpMemo.pel || {};
+    if (!Object.prototype.hasOwnProperty.call(kpMemo.pel, matric)) {
+      kpMemo.pel[matric] = lookupCell_('PELAJAR', 'No_Matrik', matric, 'No_KP_Pasport', Util.normMatric);
+    }
+    return kpMemo.pel[matric];
+  }
+
+  function matricOfPer_(idPer) {
+    kpMemo.per = kpMemo.per || {};
+    if (!Object.prototype.hasOwnProperty.call(kpMemo.per, idPer) || !kpMemo.per[idPer]) {
+      kpMemo.per[idPer] = Util.normMatric(lookupCell_('Perniagaan', 'ID_Perniagaan', idPer, 'No_Matrik_Pemilik'));
+    }
+    return kpMemo.per[idPer];
+  }
+
+  /** Isi No. KP (dan matrik pemilik bagi tab ID_Perniagaan) pada objek baris. Pulang true jika ada perubahan. */
+  function fillKp_(tab, obj) {
+    var cfg = kpCfg_(tab);
+    if (!cfg) return false;
+    var m = Util.normMatric(obj[cfg.mc]);
+    if (!m && cfg.byPer && Util.str(obj.ID_Perniagaan)) {
+      m = matricOfPer_(Util.str(obj.ID_Perniagaan));
+      if (m) obj[cfg.mc] = m;
+    }
+    if (!m) return false;
+    if (cfg.onlyBlank && Util.str(obj[cfg.kp])) return false;
+    var kp = kpOf_(m);
+    if (!kp || Util.str(obj[cfg.kp]) === kp) return false;
+    obj[cfg.kp] = kp;
+    return true;
+  }
+
+  function toRow_(hdr, obj, tab) {
+    if (tab) fillKp_(tab, obj);
     return hdr.map(function (h) { return safeCell_(obj[h] === undefined || obj[h] === null ? '' : obj[h]); });
   }
 
@@ -117,7 +181,7 @@ var Db = (function () {
     var sh = sheet_(tab);
     var hdr = headers_(tab);
     var r = Math.max(sh.getLastRow(), 1) + 1;
-    sh.getRange(r, 1, 1, hdr.length).setValues([toRow_(hdr, obj)]);
+    sh.getRange(r, 1, 1, hdr.length).setValues([toRow_(hdr, obj, tab)]);
     return r;
   }
 
@@ -128,6 +192,12 @@ var Db = (function () {
     hdr.forEach(function (h, i) {
       if (Object.prototype.hasOwnProperty.call(patch, h)) cur[i] = patch[h] === null ? '' : patch[h];
     });
+    // gandingan No. KP: bina objek baris, isi, kemudian tulis semula lajur berkaitan
+    if (kpCfg_(tab)) {
+      var o = {};
+      hdr.forEach(function (h, i) { o[h] = cur[i]; });
+      if (fillKp_(tab, o)) hdr.forEach(function (h, i) { cur[i] = o[h]; });
+    }
     // nilai sedia ada yang dibaca semula sebagai teks juga mesti dilindungi
     sh.getRange(rowNum, 1, 1, hdr.length).setValues([cur.map(safeCell_)]);
   }
@@ -141,7 +211,7 @@ var Db = (function () {
     if (!objs.length) return;
     var need = objs.length + 1 - sh.getMaxRows();
     if (need > 0) sh.insertRowsAfter(sh.getMaxRows(), need);
-    var data = objs.map(function (o) { return toRow_(hdr, o); });
+    var data = objs.map(function (o) { return toRow_(hdr, o, tab); });
     sh.getRange(2, 1, data.length, hdr.length).setValues(data);
   }
 
@@ -177,6 +247,7 @@ var Db = (function () {
 
   function reset_() {
     memo = { induk: null, sheets: {}, hdr: {}, ss: {} };
+    kpMemo = { pel: null, per: null };
     cache_().remove('links');
   }
 
@@ -193,6 +264,9 @@ var Db = (function () {
     update: update_,
     replaceAll: replaceAll_,
     safeCell: safeCell_,
+    kpCfg: kpCfg_,
+    fillKp: fillKp_,
+    kpOf: kpOf_,
     find: find_,
     withLock: withLock_,
     nextSeq: nextSeq_,

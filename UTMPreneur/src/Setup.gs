@@ -174,6 +174,35 @@ var Setup = (function () {
     return out;
   }
 
+  /**
+   * Lengkapkan No. KP (dan matrik pemilik) pada rekod sedia ada. semula=true menyegerak semula semua rekod
+   * (contoh selepas No. KP dalam PELAJAR dikemas kini). Pulang bilangan baris dikemas kini.
+   */
+  function isiNoKp_(semula) {
+    var n = 0;
+    Db.reset();
+    Object.keys(TAB_SS).forEach(function (tab) {
+      var cfg = Db.kpCfg(tab);
+      if (!cfg) return;
+      try { Db.sheet(tab); } catch (e) { return; }
+      Db.rows(tab).forEach(function (r) {
+        if (!semula && Util.str(r[cfg.kp])) return;
+        var m = Util.normMatric(r[cfg.mc]);
+        if (!m && !(cfg.byPer && Util.str(r.ID_Perniagaan))) return;
+        var o = {};
+        Object.keys(r).forEach(function (k) { o[k] = r[k]; });
+        if (semula) o[cfg.kp] = '';
+        var before = Util.str(r[cfg.kp]) + '|' + Util.str(r[cfg.mc]);
+        if (Db.fillKp(tab, o) && (Util.str(o[cfg.kp]) + '|' + Util.str(o[cfg.mc])) !== before) {
+          var patch = {}; patch[cfg.kp] = o[cfg.kp]; patch[cfg.mc] = o[cfg.mc];
+          Db.update(tab, r._row, patch);
+          n++;
+        }
+      });
+    });
+    return n;
+  }
+
   function run_() {
     var t0 = new Date().getTime();
     var log = [];
@@ -231,6 +260,10 @@ var Setup = (function () {
     if (timeUp()) { log.push('Masa hampir habis. Jalankan setup() sekali lagi.'); return result(false); }
     seed_(log);
 
+    // 5b. No. KP gandingan bagi rekod sedia ada
+    var nKp = isiNoKp_(false);
+    if (nKp) log.push('No. KP dilengkapkan pada ' + nKp + ' baris');
+
     // 6. Pengesah
     var v = validate_();
     var r = result(true);
@@ -241,7 +274,7 @@ var Setup = (function () {
     return r;
   }
 
-  return { run: run_, validate: validate_, ensureTabs: ensureTabs_ };
+  return { run: run_, validate: validate_, ensureTabs: ensureTabs_, isiNoKp: isiNoKp_ };
 })();
 
 /** Jalankan dari editor Apps Script. */
@@ -270,4 +303,11 @@ function tetapPengeluaran() {
   p.deleteProperty(PROPS.INDUK_ID);
   CacheService.getScriptCache().removeAll(['links', 'cfg', 'admins', 'ruj']);
   Logger.log('MODE = PRODUKSI. INDUK_ID dipadam (Induk lama kekal dalam Drive). Sekarang jalankan setup().');
+}
+
+/** Segerak semula No. KP semua rekod daripada PELAJAR (jalankan dari editor selepas mengimport No. KP baharu). */
+function isiNoKp() {
+  var n = Setup.isiNoKp(true);
+  Logger.log('No. KP disegerakkan pada ' + n + ' baris');
+  return n;
 }
