@@ -16,9 +16,9 @@ const lots = [['Student Mall', 1, 'Ayu Rahimah', 'Warung Ayu', 'ok'], ['Student 
   ['Student Mall', 4, 'Nurul Izzati', 'Roti Gebu', 'sent'], ['Student Mall', 5, 'Farah Najwa', 'Batik Muda', 'ok'], ['Student Mall', 6, 'M. Safihakimi', 'Whiskers & Bean', 'sent'],
   ['Student Mall', 7, 'Adam Harith', 'Tech Fixit', 'none'], ['SUB', 1, 'Hakim Roslan', 'Minuman Segar', 'ok'], ['SUB', 2, 'Din Ismail', 'Nasi Lemak Pak Din', 'none']];
 lots.forEach(([lok, no, nama, biz, st], i) => {
-  ok('adminSaveLot', adm.token, { lot: { lokasi: lok, noLot: no, mula: '2026-01-01', akhir: '2026-12-31', sewa: '600', status: 'Aktif' } });
   const email = nama.split(' ')[0].toLowerCase() + '@graduan.example', kod = lok.replace(/\s/g, '') + '-Lot' + no;
-  ok('adminSaveUser', adm.token, { user: { email, nama, peranan: 'Penyewa', kodLot: kod, status: 'Aktif' } });
+  const idSewa = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: kod, mula: '2026-01-01', akhir: '2026-12-31', sewa: '600' } }).tenancies.find(x => x.kodLot === kod).id;
+  ok('adminSaveUser', adm.token, { user: { email, nama, peranan: 'Penyewa', idSewa, status: 'Aktif' } });
   const t = login(email).token;
   ok('saveBusiness', t, { biz: { nama: biz, jenis: 'Makanan dan minuman', ssm: '003412345-K', pelajar: nama, kp: '01020301' + String(1000 + i), matrik: 'A22EA01' + (10 + i), fakulti: 'FKA', telefon: '012-345 67' + (10 + i) } });
   const months = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -32,6 +32,19 @@ lots.forEach(([lok, no, nama, biz, st], i) => {
     if (target === 'ok' || m < 9) ok('adminReview', adm.token, { kodLot: kod, tahun: 2026, bulan: m, decision: 'ok' });
     if (target === 'fix') ok('adminReview', adm.token, { kodLot: kod, tahun: 2026, bulan: m, decision: 'fix', komen: 'Perbelanjaan terlalu tinggi. Semak sama ada sewa RM600 dikira dua kali dan muat naik semula laporan.' });
   });
+});
+// SUB Lot 3: Cafe A (Jan-Jun) kemudian Cafe B (Jul-Dis)
+[['SUB-Lot3', '2026-01-01', '2026-06-30', 'sitia@graduan.example', 'Siti A', 'Cafe A', 1, 6], ['SUB-Lot3', '2026-07-01', '2026-12-31', 'zulb@graduan.example', 'Zul B', 'Cafe B', 7, 9]].forEach(([kod, mula, akhir, email, nama, biz, m1, m2], i) => {
+  const idSewa = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: kod, mula, akhir, sewa: '500' } }).tenancies.find(x => x.kodLot === kod && x.mula === mula).id;
+  ok('adminSaveUser', adm.token, { user: { email, nama, peranan: 'Penyewa', idSewa, status: 'Aktif' } });
+  const t = login(email).token;
+  ok('saveBusiness', t, { biz: { nama: biz, jenis: 'Kafe', ssm: '', pelajar: nama, kp: '0203040' + (51111 + i), matrik: 'A22EA02' + i, fakulti: 'FKA', telefon: '0198765432' } });
+  for (let m = m1; m <= m2; m++) {
+    ok('saveReport', t, { tahun: 2026, bulan: m, data: { pendapatan: 4000 + m * 10, perbelanjaan: 2500, sewa: 500, sewaPeralatan: false, akuan: true } });
+    ['laporan', 'sewa'].forEach(k => ok('uploadFile', t, { tahun: 2026, bulan: m, kind: k, base64: pdf }));
+    ok('submitReport', t, { tahun: 2026, bulan: m });
+    if (m < 9) ok('adminReview', adm.token, { kodLot: kod, tahun: 2026, bulan: m, decision: 'ok' });
+  }
 });
 ok('adminSaveUser', adm.token, { user: { email: 'rashid@utm.my', nama: 'En. Rashid', peranan: 'Admin', status: 'Aktif' } });
 b.outbox.length = 0;
@@ -117,10 +130,14 @@ let browser;
   const a = await newPage(); await uiLogin(a, 'utmxcite@utm.my'); await a.waitForSelector('#a-rows tr'); await settle(a);
   assert.match(await a.textContent('.who'), /Admin/); await shot(a, '10-admin', true);
   assert.strictEqual(await a.inputValue('#a-month'), '0', 'lalai: Bulan Semua');
-  assert.ok((await a.locator('#a-rows tr').count()) >= 80, 'semua bulan semua lot');
+  assert.ok((await a.locator('#a-rows tr').count()) >= 90, 'semua bulan semua lot');
+  const rowText = async (bulan, lot) => a.textContent('#a-rows tr:has-text("' + bulan + '"):has-text("' + lot + '")');
+  assert.match(await rowText('Januari 2026', 'SUB · Lot 3'), /Cafe A/); assert.match(await rowText('Jun 2026', 'SUB · Lot 3'), /Cafe A/);
+  assert.match(await rowText('Julai 2026', 'SUB · Lot 3'), /Cafe B/); assert.match(await rowText('September 2026', 'SUB · Lot 3'), /Cafe B/);
+  assert.ok(!/Cafe B/.test(await rowText('Mei 2026', 'SUB · Lot 3')), 'Cafe B tidak dikenakan sebelum Julai');
   assert.ok(!/NaN/.test(await a.textContent('#a-rows')), 'tiada NaN');
   await a.selectOption('#a-month', '9'); await a.waitForFunction(() => document.querySelectorAll('#a-rows tr').length < 20); await settle(a);
-  assert.strictEqual(await a.locator('#a-rows tr').count(), 9); await shot(a, '10b-admin-bulan');
+  assert.strictEqual(await a.locator('#a-rows tr').count(), 10); await shot(a, '10b-admin-bulan');
   await a.selectOption('#a-status', 'sent'); const sentRows = await a.locator('#a-rows tr').count(); assert.ok(sentRows >= 3); await a.selectOption('#a-status', '');
   await a.fill('#a-q', 'kopi'); assert.strictEqual(await a.locator('#a-rows tr').count(), 1); await a.fill('#a-q', '');
   await a.click('#a-rows tr:has-text("Kopi Kampus") [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await shot(a, '11-semak');
@@ -137,8 +154,15 @@ let browser;
   await a.click('[data-tab=lots]'); await a.waitForSelector('[data-act=newlot]'); await settle(a); await shot(a, '12-lot', true);
   await a.click('[data-act=newlot]'); await a.fill('#l-lokasi', 'SUB'); await a.fill('#l-no', '6'); await a.click('[data-act=savelot]'); await a.waitForFunction(() => /Lot disimpan/.test((document.querySelector('.toast') || {}).textContent || ''));
   assert.ok(await a.locator('td.mono:text-is("SUB-Lot6")').count());
+  await a.click('[data-tab=tn]'); await a.waitForSelector('#t-rows tr'); await settle(a); await shot(a, '12b-penyewaan', true);
+  assert.match(await a.textContent('#t-rows'), /Cafe A/); assert.match(await a.textContent('#t-rows'), /Cafe B/);
+  await a.click('[data-act=newtn]'); await a.selectOption('#n-lot', 'SUB-Lot6'); await a.fill('#n-mula', '2026-07'); await a.fill('#n-akhir', '2026-05'); await a.fill('#n-sewa', '450'); await a.click('[data-act=savetn]');
+  await a.waitForSelector('.dlg .errbox'); assert.match(await a.textContent('.dlg .errbox'), /selepas tarikh mula/);
+  await a.fill('#n-akhir', '2026-12'); await shot(a, '12c-tambah-penyewaan'); await a.click('[data-act=savetn]');
+  await a.waitForFunction(() => /Penyewaan disimpan/.test((document.querySelector('.toast') || {}).textContent || ''));
+  assert.match(await a.textContent('#t-rows tr:has-text("SUB · Lot 6")'), /Jul 2026 hingga Dis 2026/);
   await a.click('[data-tab=users]'); await a.waitForSelector('#u-rows tr'); await settle(a); await shot(a, '13-pengguna', true);
-  await a.click('[data-act=newuser]'); await shot(a, '14-tambah-pengguna'); await a.fill('#u-email', 'baru@graduan.example'); await a.fill('#u-nama', 'Pelajar Baru'); await a.selectOption('#u-lot', 'SUB-Lot6'); await a.click('[data-act=saveuser]');
+  await a.click('[data-act=newuser]'); await shot(a, '14-tambah-pengguna'); await a.fill('#u-email', 'baru@graduan.example'); await a.fill('#u-nama', 'Pelajar Baru'); const opt = await a.$eval('#u-lot', el => [...el.options].find(o => /SUB · Lot 6/.test(o.textContent)).value); await a.selectOption('#u-lot', opt); await a.click('[data-act=saveuser]');
   await a.waitForFunction(() => /Pengguna disimpan/.test((document.querySelector('.toast') || {}).textContent || ''));
   assert.ok((await a.textContent('#u-rows')).includes('baru@graduan.example'));
   // tamat sesi

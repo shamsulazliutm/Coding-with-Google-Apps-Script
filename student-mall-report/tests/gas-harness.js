@@ -16,7 +16,7 @@ function createBackend(opts = {}) {
     return {
       getValues() { const out = []; for (let i = 0; i < nr; i++) { const row = []; for (let j = 0; j < nc; j++) { const v = (sh.data[r - 1 + i] || [])[c - 1 + j]; row.push(v === undefined ? '' : v); } out.push(row); } return out; },
       setValues(vals) { for (let i = 0; i < nr; i++) { sh.data[r - 1 + i] = sh.data[r - 1 + i] || []; for (let j = 0; j < nc; j++) sh.data[r - 1 + i][c - 1 + j] = vals[i][j]; } return this; },
-      setNumberFormat() { return this; }, setDataValidation() { return this; }, setFontWeight() { return this; }, setBackground() { return this; }
+      clearContent() { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { if (sh.data[r - 1 + i]) sh.data[r - 1 + i][c - 1 + j] = undefined; } return this; }, setNumberFormat() { return this; }, setDataValidation() { return this; }, setFontWeight() { return this; }, setBackground() { return this; }
     };
   }
   function makeSheet(name) {

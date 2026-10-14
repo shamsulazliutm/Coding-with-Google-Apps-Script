@@ -173,7 +173,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   var S = { token: null, user: null, tab: null, login: { step: 'email', email: '', msg: '', err: '' },
             fin: null, finQ: '', finStatus: '', biz: null,
-            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null };
+            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null, tns: null, tnOpts: null, tnQ: '' };
   var D = null;   // dialog laporan penyewa
   var pending = 0;
 
@@ -251,7 +251,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     var app = $('app');
     if (!S.token) { app.innerHTML = loginHtml(); return; }
     var admin = S.user.peranan === 'Admin';
-    var tabs = admin ? [['adm', 'Semua Laporan'], ['lots', 'Lot'], ['users', 'Pengguna']] : [['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
+    var tabs = admin ? [['adm', 'Semua Laporan'], ['tn', 'Penyewaan'], ['lots', 'Lot'], ['users', 'Pengguna']] : [['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
     if (!S.tab) S.tab = tabs[0][0];
     app.innerHTML = '<div class="wrap">' + header() + tabsHtml(tabs) + '<div id="view" class="wrap"></div></div>';
     loadTab();
@@ -263,8 +263,9 @@ textarea.fi { min-height: 72px; resize: vertical; }
     if (S.tab === 'info') run(api('getBusiness').then(function (d) { S.biz = d; v.innerHTML = bizHtml(); }));
     else if (S.tab === 'fin') run(api('myReports', { tahun: S.fin && S.fin.tahun }).then(function (d) { S.fin = d; v.innerHTML = finHtml(); }));
     else if (S.tab === 'adm') loadAdm();
+    else if (S.tab === 'tn') run(api('adminTenancies').then(function (d) { S.tns = d.tenancies; S.lots = d.lots; v.innerHTML = tnHtml(); }));
     else if (S.tab === 'lots') run(api('adminLots').then(function (d) { S.lots = d.lots; v.innerHTML = lotsHtml(); }));
-    else if (S.tab === 'users') run(Promise.all([api('adminUsers'), api('adminLots')]).then(function (r) { S.users = r[0].users; S.lots = r[1].lots; v.innerHTML = usersHtml(); }));
+    else if (S.tab === 'users') run(api('adminUsers').then(function (d) { S.users = d.users; S.tnOpts = d.penyewaan; v.innerHTML = usersHtml(); }));
   }
 
   function refreshView(html) { var v = $('view'); if (v) v.innerHTML = html; }
@@ -507,7 +508,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<select id="a-status" aria-label="Status"><option value="">Status: Semua</option>' +
       [['sent', 'Menunggu semakan'], ['fix', 'Perlu dibetulkan'], ['none', 'Belum dihantar'], ['ok', 'Disahkan']].map(function (o) { return '<option value="' + o[0] + '"' + (S.admStatus === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
       '</select><button class="btn" data-act="export" type="button">Eksport CSV</button></div>' +
-      (a.tanpaTarikh ? '<p class="note">' + a.tanpaTarikh + ' lot aktif belum ada tarikh mula sewa, jadi belum disenaraikan. Tetapkan di tab <b>Lot</b>.</p>' : '') +
+      (a.tanpaTarikh ? '<p class="note">' + a.tanpaTarikh + ' lot aktif belum ada penyewaan, jadi belum disenaraikan. Tambah di tab <b>Penyewaan</b>.</p>' : '') +
       '<div class="tbl-wrap"><table><thead><tr><th>Bulan</th><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Untung/Rugi (RM)</th><th>Status</th><th></th></tr></thead><tbody id="a-rows">' + admRows() + '</tbody></table></div>';
     return h;
   }
@@ -566,42 +567,86 @@ textarea.fi { min-height: 72px; resize: vertical; }
       .catch(function (e) { api('adminReport', p).then(function (r) { drawReview(r, e.message); }).catch(function () { toast(e.message, true); }); });
   }
 
+  /* ---------- admin: penyewaan (tempoh sewa; lot boleh bertukar penyewa) ---------- */
+  function monthVal(s) { return s ? s.slice(0, 7) : ''; }   // yyyy-MM-dd -> yyyy-MM
+  function lastDayOf(ym) { var p = ym.split('-'); var d = new Date(Date.UTC(Number(p[0]), Number(p[1]), 0)).getUTCDate(); return ym + '-' + String(d).padStart(2, '0'); }
+
+  function tnHtml() {
+    var q = S.tnQ.toLowerCase();
+    var rows = S.tns.map(function (t, i) { return [t, i]; }).filter(function (x) {
+      return !q || (x[0].lotNama + ' ' + x[0].perniagaan + ' ' + x[0].pelajar + ' ' + x[0].id).toLowerCase().indexOf(q) >= 0;
+    });
+    return '<div class="bar"><div class="grow"><input id="t-q" type="search" placeholder="Cari lot, syarikat atau pelajar" value="' + esc(S.tnQ) + '"></div><button class="btn primary" data-act="newtn" type="button">+ Tambah penyewaan</button></div>' +
+      '<p class="note">Satu baris bagi setiap tempoh sewa. Jika penyewa bertukar, tamatkan penyewaan lama pada hari terakhir bulan dan tambah penyewaan baharu bermula bulan berikutnya.</p>' +
+      '<div class="tbl-wrap"><table style="min-width:860px"><thead><tr><th>Lot</th><th>Syarikat · Pelajar</th><th>Tempoh sewa</th><th class="num">Sewa (RM)</th><th>Pengguna</th><th>Status</th><th></th></tr></thead><tbody id="t-rows">' + tnRows(rows) + '</tbody></table></div>';
+  }
+  function tnRows(rows) {
+    if (!rows.length) return '<tr><td class="empty" colspan="7">Tiada penyewaan. Tambah penyewaan untuk setiap lot.</td></tr>';
+    return rows.map(function (x) {
+      var t = x[0];
+      return '<tr><td class="nw"><b>' + esc(t.lotNama) + '</b><span class="sub mono">' + esc(t.id) + '</span></td>' +
+        '<td>' + esc(t.perniagaan || 'Maklumat belum diisi') + '<span class="sub">' + esc(t.pelajar) + '</span></td>' +
+        '<td class="nw">' + esc(t.tempoh) + '</td><td class="num mono">' + fmt(t.sewa) + '</td>' +
+        '<td>' + (t.pengguna.length ? t.pengguna.map(esc).join('<br>') : '<span class="sub">Tiada pengguna</span>') + '</td>' +
+        '<td>' + (t.semasa ? '<span class="pill s-ok">Semasa</span>' : '<span class="pill s-idle">Bukan semasa</span>') + '</td>' +
+        '<td class="act"><button class="btn sm" data-act="edittn" data-i="' + x[1] + '" type="button">Edit</button> <button class="btn sm del" data-act="deltn" data-i="' + x[1] + '" type="button">Padam</button></td></tr>';
+    }).join('');
+  }
+
+  function tnDlg(i, err, keep) {
+    var t = keep || (i === null ? { id: '', kodLot: '', mula: '', akhir: '', sewa: null } : S.tns[i]);
+    var isNew = !t.id;
+    $('dlg-slot').innerHTML = '<div class="scrim"><div class="dlg sm" role="dialog" aria-modal="true" data-tnid="' + esc(t.id) + '"><div class="dhead"><h2>' + (isNew ? 'Tambah penyewaan' : 'Edit penyewaan ' + esc(t.id)) + '</h2><button class="x" data-act="closedlg" aria-label="Tutup" type="button">×</button></div><div class="dbody">' +
+      (err ? '<div class="errbox" role="alert">' + esc(err) + '</div>' : '') +
+      '<div class="field"><label for="n-lot">Lot <span class="req">*</span></label><select class="fi" id="n-lot"' + (isNew ? '' : ' disabled') + '><option value="">Pilih lot</option>' +
+      S.lots.map(function (l) { return '<option value="' + esc(l.kodLot) + '"' + (t.kodLot === l.kodLot ? ' selected' : '') + '>' + esc(l.nama) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field"><label for="n-mula">Mula sewa (bulan) <span class="req">*</span></label><input class="fi" type="month" id="n-mula" value="' + esc(monthVal(t.mula)) + '"><span class="help">Penyewa mula pada hari pertama bulan ini.</span></div>' +
+      '<div class="field"><label for="n-akhir">Tamat sewa (bulan)</label><input class="fi" type="month" id="n-akhir" value="' + esc(monthVal(t.akhir)) + '"><span class="help">Tamat pada hari terakhir bulan ini. Kosongkan jika belum ditetapkan.</span></div>' +
+      '<div class="field"><label for="n-sewa">Sewa bulanan (RM)</label><input class="fi" id="n-sewa" inputmode="decimal" value="' + esc(t.sewa === null || t.sewa === undefined ? '' : t.sewa) + '"></div>' +
+      '</div><div class="dfoot" style="justify-content:flex-end"><button class="btn" data-act="closedlg" type="button">Batal</button><button class="btn primary" data-act="savetn" type="button">Simpan</button></div></div></div>';
+  }
+
+  function doSaveTn() {
+    var dlg = document.querySelector('.dlg[data-tnid]'), id = dlg.dataset.tnid;
+    var lot = $('n-lot').value, m1 = $('n-mula').value, m2 = $('n-akhir').value;
+    var t = { id: id, kodLot: lot, mula: m1 ? m1 + '-01' : '', akhir: m2 ? lastDayOf(m2) : '', sewa: $('n-sewa').value };
+    api('adminSaveTenancy', { tenancy: t }).then(function (d) { S.tns = d.tenancies; S.lots = d.lots; $('dlg-slot').innerHTML = ''; refreshView(tnHtml()); toast('Penyewaan disimpan'); })
+      .catch(function (e) { tnDlg(null, e.message, t); });
+  }
+
   /* ---------- admin: lot ---------- */
   function lotsHtml() {
     return '<div class="bar"><div class="grow"></div><button class="btn primary" data-act="newlot" type="button">+ Tambah lot</button></div>' +
-      '<div class="tbl-wrap"><table style="min-width:700px"><thead><tr><th>Lot</th><th>Kod</th><th>Tarikh mula</th><th>Tarikh akhir</th><th class="num">Sewa (RM)</th><th>Status</th><th></th></tr></thead><tbody>' +
+      '<div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>Lot</th><th>Kod</th><th>Penyewa semasa</th><th class="num">Bil. penyewaan</th><th>Status</th><th></th></tr></thead><tbody>' +
       S.lots.map(function (l, i) {
-        return '<tr><td class="nw"><b>' + esc(l.nama) + '</b></td><td class="mono">' + esc(l.kodLot) + '</td><td>' + esc(dateLabel(l.mula)) + '</td><td>' + esc(dateLabel(l.akhir)) + '</td><td class="num mono">' + fmt(l.sewa) + '</td>' +
+        return '<tr><td class="nw"><b>' + esc(l.nama) + '</b></td><td class="mono">' + esc(l.kodLot) + '</td><td>' + (l.semasa ? esc(l.semasa) : '<span class="sub">Tiada</span>') + '</td><td class="num mono">' + l.bilPenyewaan + '</td>' +
           '<td><span class="pill ' + (l.status === 'Aktif' ? 's-ok' : 's-idle') + '">' + esc(l.status) + '</span></td><td class="act"><button class="btn sm" data-act="editlot" data-i="' + i + '" type="button">Edit</button></td></tr>';
       }).join('') + '</tbody></table></div>';
   }
 
   function lotDlg(i, err) {
-    var l = i === null ? { lokasi: '', noLot: '', mula: '', akhir: '', sewa: '', status: 'Aktif' } : S.lots[i];
+    var l = i === null ? { lokasi: '', noLot: '', status: 'Aktif' } : S.lots[i];
     var isNew = i === null;
     $('dlg-slot').innerHTML = '<div class="scrim"><div class="dlg sm" role="dialog" aria-modal="true" data-new="' + (isNew ? 1 : 0) + '"><div class="dhead"><h2>' + (isNew ? 'Tambah lot' : 'Edit ' + esc(l.nama)) + '</h2><button class="x" data-act="closedlg" aria-label="Tutup" type="button">×</button></div><div class="dbody">' +
       (err ? '<div class="errbox" role="alert">' + esc(err) + '</div>' : '') +
       '<div class="field"><label for="l-lokasi">Lokasi <span class="req">*</span></label><input class="fi" id="l-lokasi" value="' + esc(l.lokasi) + '" placeholder="Contoh: Student Mall"' + (isNew ? '' : ' readonly') + '></div>' +
       '<div class="field"><label for="l-no">No. lot <span class="req">*</span></label><input class="fi" id="l-no" inputmode="numeric" value="' + esc(l.noLot) + '"' + (isNew ? '' : ' readonly') + '></div>' +
-      '<div class="field"><label for="l-mula">Tarikh mula sewa</label><input class="fi" type="date" id="l-mula" value="' + esc(l.mula) + '"></div>' +
-      '<div class="field"><label for="l-akhir">Tarikh akhir sewa</label><input class="fi" type="date" id="l-akhir" value="' + esc(l.akhir) + '"></div>' +
-      '<div class="field"><label for="l-sewa">Sewa bulanan (RM)</label><input class="fi" id="l-sewa" inputmode="decimal" value="' + esc(l.sewa === null ? '' : l.sewa) + '"></div>' +
       '<div class="field"><label for="l-status">Status</label><select class="fi" id="l-status"><option' + (l.status === 'Aktif' ? ' selected' : '') + '>Aktif</option><option' + (l.status !== 'Aktif' ? ' selected' : '') + '>Tidak aktif</option></select></div>' +
+      (isNew ? '<p class="help" style="margin:0">Selepas lot dicipta, tambah penyewa di tab Penyewaan.</p>' : '') +
       '</div><div class="dfoot" style="justify-content:flex-end"><button class="btn" data-act="closedlg" type="button">Batal</button><button class="btn primary" data-act="savelot" type="button">Simpan</button></div></div></div>';
   }
 
   function doSaveLot() {
     var dlg = document.querySelector('.dlg[data-new]'); var isNew = dlg.dataset.new === '1';
-    var lot = { lokasi: $('l-lokasi').value, noLot: $('l-no').value, mula: $('l-mula').value, akhir: $('l-akhir').value, sewa: $('l-sewa').value, status: $('l-status').value };
+    var lot = { lokasi: $('l-lokasi').value, noLot: $('l-no').value, status: $('l-status').value };
     api('adminSaveLot', { lot: lot, isNew: isNew }).then(function (d) { S.lots = d.lots; $('dlg-slot').innerHTML = ''; refreshView(lotsHtml()); toast('Lot disimpan'); })
-      .catch(function (e) { var i = null; if (!isNew) { for (var k = 0; k < S.lots.length; k++) if (S.lots[k].noLot === Number(lot.noLot) && S.lots[k].lokasi === lot.lokasi) i = k; } lotDlg(i, e.message); restoreLot(lot); });
+      .catch(function (e) { var i = null; if (!isNew) { for (var k = 0; k < S.lots.length; k++) if (S.lots[k].noLot === Number(lot.noLot) && S.lots[k].lokasi === lot.lokasi) i = k; } lotDlg(i, e.message); });
   }
-  function restoreLot(l) { ['lokasi:l-lokasi', 'noLot:l-no', 'mula:l-mula', 'akhir:l-akhir', 'sewa:l-sewa', 'status:l-status'].forEach(function (p) { var s = p.split(':'); var e = $(s[1]); if (e && l[s[0]] !== undefined) e.value = l[s[0]]; }); }
 
   /* ---------- admin: pengguna ---------- */
   function usersHtml() {
     return '<div class="bar"><div class="grow"><input id="u-q" type="search" placeholder="Cari e-mel atau nama"></div><button class="btn primary" data-act="newuser" type="button">+ Tambah pengguna</button></div>' +
-      '<div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>E-mel</th><th>Nama</th><th>Peranan</th><th>Kod lot</th><th>Status</th><th></th></tr></thead><tbody id="u-rows">' + userRows('') + '</tbody></table></div>';
+      '<div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>E-mel</th><th>Nama</th><th>Peranan</th><th>Penyewaan</th><th>Status</th><th></th></tr></thead><tbody id="u-rows">' + userRows('') + '</tbody></table></div>';
   }
   function userRows(q) {
     q = q.toLowerCase();
@@ -609,20 +654,20 @@ textarea.fi { min-height: 72px; resize: vertical; }
     if (!rows.length) return '<tr><td class="empty" colspan="6">Tiada pengguna.</td></tr>';
     return rows.map(function (x) {
       var u = x[0];
-      return '<tr><td>' + esc(u.email) + '</td><td>' + esc(u.nama) + '</td><td><span class="role' + (u.peranan === 'Penyewa' ? ' t' : '') + '">' + esc(u.peranan) + '</span></td><td class="mono">' + esc(u.kodLot || '-') + '</td>' +
+      return '<tr><td>' + esc(u.email) + '</td><td>' + esc(u.nama) + '</td><td><span class="role' + (u.peranan === 'Penyewa' ? ' t' : '') + '">' + esc(u.peranan) + '</span></td><td>' + (u.penyewaan ? esc(u.penyewaan) : '-') + '</td>' +
         '<td><span class="pill ' + (u.status === 'Aktif' ? 's-ok' : 's-idle') + '">' + esc(u.status) + '</span></td><td class="act"><button class="btn sm" data-act="edituser" data-i="' + x[1] + '" type="button">Edit</button></td></tr>';
     }).join('');
   }
 
   function userDlg(i, err, keep) {
-    var u = keep || (i === null ? { email: '', nama: '', peranan: 'Penyewa', kodLot: '', status: 'Aktif' } : S.users[i]);
+    var u = keep || (i === null ? { email: '', nama: '', peranan: 'Penyewa', idSewa: '', status: 'Aktif' } : S.users[i]);
     var isNew = i === null && !(keep && keep._edit);
     $('dlg-slot').innerHTML = '<div class="scrim"><div class="dlg sm" role="dialog" aria-modal="true" data-newu="' + (isNew ? 1 : 0) + '"><div class="dhead"><h2>' + (isNew ? 'Tambah pengguna' : 'Edit pengguna') + '</h2><button class="x" data-act="closedlg" aria-label="Tutup" type="button">×</button></div><div class="dbody">' +
       (err ? '<div class="errbox" role="alert">' + esc(err) + '</div>' : '') +
       '<div class="field"><label for="u-email">E-mel <span class="req">*</span></label><input class="fi" id="u-email" type="email" value="' + esc(u.email) + '"' + (isNew ? '' : ' readonly') + '></div>' +
       '<div class="field"><label for="u-nama">Nama <span class="req">*</span></label><input class="fi" id="u-nama" value="' + esc(u.nama) + '"></div>' +
       '<div class="field"><label for="u-role">Peranan</label><select class="fi" id="u-role"><option' + (u.peranan === 'Penyewa' ? ' selected' : '') + '>Penyewa</option><option' + (u.peranan === 'Admin' ? ' selected' : '') + '>Admin</option></select></div>' +
-      '<div class="field" id="u-lotf"><label for="u-lot">Lot (penyewa sahaja)</label><select class="fi" id="u-lot"><option value="">Pilih lot</option>' + S.lots.map(function (l) { return '<option value="' + esc(l.kodLot) + '"' + (u.kodLot === l.kodLot ? ' selected' : '') + '>' + esc(l.nama) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field" id="u-lotf"><label for="u-lot">Penyewaan (penyewa sahaja)</label><select class="fi" id="u-lot"><option value="">Pilih penyewaan</option>' + S.tnOpts.map(function (o) { return '<option value="' + esc(o.id) + '"' + (u.idSewa === o.id ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join('') + '</select></div>' +
       '<div class="field"><label for="u-status">Status</label><select class="fi" id="u-status"><option' + (u.status === 'Aktif' ? ' selected' : '') + '>Aktif</option><option' + (u.status !== 'Aktif' ? ' selected' : '') + '>Tidak aktif</option></select></div>' +
       '</div><div class="dfoot" style="justify-content:flex-end"><button class="btn" data-act="closedlg" type="button">Batal</button><button class="btn primary" data-act="saveuser" type="button">Simpan</button></div></div></div>';
     toggleLotField();
@@ -631,7 +676,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   function doSaveUser() {
     var dlg = document.querySelector('.dlg[data-newu]'); var isNew = dlg.dataset.newu === '1';
-    var user = { email: $('u-email').value, nama: $('u-nama').value, peranan: $('u-role').value, kodLot: $('u-lot').value, status: $('u-status').value };
+    var user = { email: $('u-email').value, nama: $('u-nama').value, peranan: $('u-role').value, idSewa: $('u-lot').value, status: $('u-status').value };
     api('adminSaveUser', { user: user }).then(function (d) { S.users = d.users; $('dlg-slot').innerHTML = ''; refreshView(usersHtml()); toast('Pengguna disimpan'); })
       .catch(function (e) { user._edit = !isNew; userDlg(isNew ? null : 0, e.message, user); });
   }
@@ -671,6 +716,14 @@ textarea.fi { min-height: 72px; resize: vertical; }
         run(api('adminRemind', { kodLot: t.dataset.lot, tahun: Number(t.dataset.y), bulan: Number(t.dataset.m) }).then(function (d) { toast('Peringatan dihantar kepada ' + d.dihantar + ' pengguna'); })); break;
       case 'export':
         run(api('adminExport', { tahun: S.adm.tahun, bulan: S.adm.bulan }).then(function (d) { download(d.name, 'text/csv;charset=utf-8', d.csv, false); })); break;
+      case 'newtn': tnDlg(null); break;
+      case 'edittn': tnDlg(Number(t.dataset.i)); break;
+      case 'savetn': doSaveTn(); break;
+      case 'deltn':
+        var tn0 = S.tns[Number(t.dataset.i)];
+        askConfirm('Padam penyewaan?', tn0.lotNama + ' (' + tn0.tempoh + ') akan dipadam. Hanya boleh jika belum ada laporan atau pengguna.', 'Padam').then(function (ok) {
+          if (ok) run(api('adminDeleteTenancy', { id: tn0.id }).then(function (d) { S.tns = d.tenancies; refreshView(tnHtml()); toast('Penyewaan dipadam'); }));
+        }); break;
       case 'newlot': lotDlg(null); break;
       case 'editlot': lotDlg(Number(t.dataset.i)); break;
       case 'savelot': doSaveLot(); break;
@@ -697,6 +750,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     if (id === 'f-q') { S.finQ = e.target.value; $('f-rows').innerHTML = finRows(); }
     else if (id === 'a-q') { S.admQ = e.target.value; $('a-rows').innerHTML = admRows(); }
     else if (id === 'u-q') { $('u-rows').innerHTML = userRows(e.target.value); }
+    else if (id === 't-q') { S.tnQ = e.target.value; $('t-rows').innerHTML = tnRows(S.tns.map(function (t, i) { return [t, i]; }).filter(function (x) { var q = S.tnQ.toLowerCase(); return !q || (x[0].lotNama + ' ' + x[0].perniagaan + ' ' + x[0].pelajar + ' ' + x[0].id).toLowerCase().indexOf(q) >= 0; })); }
   });
 
   document.addEventListener('keydown', function (e) {

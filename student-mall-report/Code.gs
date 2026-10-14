@@ -28,6 +28,7 @@ var APP = {
 var SHEETS = {
   USERS: 'Pengguna',
   LOTS: 'Lot',
+  TENANCIES: 'Penyewaan',
   BIZ: 'Peniaga',
   REPORTS: 'Laporan',
   LOG: 'Log',
@@ -43,14 +44,17 @@ var MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
 /** [kunci, tajuk lajur, jenis]  jenis: t = teks, n = nombor, d = tarikh, dt = tarikh dan masa */
 var COLS = {};
 COLS[SHEETS.USERS] = [
-  ['email', 'E-mel', 't'], ['nama', 'Nama', 't'], ['peranan', 'Peranan', 't'], ['kodLot', 'Kod lot', 't'], ['status', 'Status', 't']
+  ['email', 'E-mel', 't'], ['nama', 'Nama', 't'], ['peranan', 'Peranan', 't'], ['idSewa', 'ID penyewaan', 't'], ['status', 'Status', 't']
 ];
 COLS[SHEETS.LOTS] = [
-  ['kodLot', 'Kod lot', 't'], ['lokasi', 'Lokasi', 't'], ['noLot', 'No lot', 'n'], ['status', 'Status', 't'],
-  ['mula', 'Tarikh mula sewa', 'd'], ['akhir', 'Tarikh akhir sewa', 'd'], ['sewa', 'Sewa bulanan (RM)', 'n']
+  ['kodLot', 'Kod lot', 't'], ['lokasi', 'Lokasi', 't'], ['noLot', 'No lot', 'n'], ['status', 'Status', 't']
+];
+/** Satu baris bagi setiap tempoh sewa. Penukaran penyewa dibuat pada awal bulan: mula = hari pertama, akhir = hari terakhir bulan. */
+COLS[SHEETS.TENANCIES] = [
+  ['id', 'ID penyewaan', 't'], ['kodLot', 'Kod lot', 't'], ['mula', 'Tarikh mula sewa', 'd'], ['akhir', 'Tarikh akhir sewa', 'd'], ['sewa', 'Sewa bulanan (RM)', 'n']
 ];
 COLS[SHEETS.BIZ] = [
-  ['kodLot', 'Kod lot', 't'], ['nama', 'Nama perniagaan', 't'], ['jenis', 'Jenis perniagaan', 't'], ['ssm', 'No SSM', 't'],
+  ['idSewa', 'ID penyewaan', 't'], ['nama', 'Nama perniagaan', 't'], ['jenis', 'Jenis perniagaan', 't'], ['ssm', 'No SSM', 't'],
   ['pelajar', 'Nama pelajar', 't'], ['kp', 'No KP', 't'], ['matrik', 'No matrik', 't'], ['fakulti', 'Fakulti', 't'],
   ['telefon', 'No telefon', 't'], ['dikemaskini', 'Dikemas kini', 'dt']
 ];
@@ -60,7 +64,7 @@ COLS[SHEETS.REPORTS] = [
   ['sewaPeralatan', 'Sewa peralatan', 't'], ['fLaporan', 'Fail laporan', 't'], ['fSewa', 'Fail resit sewa', 't'],
   ['fIncubator', 'Fail resit incubator', 't'], ['status', 'Status', 't'], ['lewat', 'Lewat', 't'], ['komen', 'Komen admin', 't'],
   ['disemakOleh', 'Disemak oleh', 't'], ['tarikhSemak', 'Tarikh disemak', 'dt'], ['tarikhHantar', 'Tarikh hantar', 'dt'],
-  ['akuan', 'Akuan', 't'], ['dikemaskini', 'Dikemas kini', 'dt']
+  ['akuan', 'Akuan', 't'], ['dikemaskini', 'Dikemas kini', 'dt'], ['idSewa', 'ID penyewaan', 't']
 ];
 COLS[SHEETS.LOG] = [
   ['masa', 'Masa', 'dt'], ['email', 'E-mel', 't'], ['tindakan', 'Tindakan', 't'], ['butiran', 'Butiran', 't']
@@ -271,7 +275,7 @@ function findUser_(email) {
 }
 
 function userView_(u) {
-  return { email: u.email, nama: u.nama, peranan: u.peranan, kodLot: u.kodLot || '' };
+  return { email: u.email, nama: u.nama, peranan: u.peranan, idSewa: u.idSewa || '' };
 }
 
 /** Mesej sama sama ada e-mel berdaftar atau tidak, supaya senarai e-mel tidak terdedah. */
@@ -367,14 +371,17 @@ function sendOtpMail_(email, nama, code) {
     '<p>Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. Jangan kongsi kod ini dengan sesiapa.</p>');
 }
 
-function tenantEmailsForLot_(kodLot) {
+/** E-mel penyewa yang memegang lot pada bulan itu. */
+function tenantEmailsForLot_(kodLot, y, m) {
+  var tn = tenancyFor_(kodLot, y, m);
+  if (!tn) return [];
   return readTable_(SHEETS.USERS)
-    .filter(function (u) { return u.kodLot === kodLot && u.peranan === ROLE.TENANT && u.status === 'Aktif'; })
+    .filter(function (u) { return u.idSewa === tn.id && u.peranan === ROLE.TENANT && u.status === 'Aktif'; })
     .map(function (u) { return u.email; });
 }
 
 function sendReminderMail_(kodLot, y, m) {
-  var to = tenantEmailsForLot_(kodLot);
+  var to = tenantEmailsForLot_(kodLot, y, m);
   if (!to.length) return 0;
   var url = appUrl_();
   to.forEach(function (email) {
@@ -388,7 +395,7 @@ function sendReminderMail_(kodLot, y, m) {
 }
 
 function sendReviewMail_(kodLot, y, m, decision, komen, by) {
-  var to = tenantEmailsForLot_(kodLot);
+  var to = tenantEmailsForLot_(kodLot, y, m);
   var ok = decision === 'ok';
   to.forEach(function (email) {
     sendMail_(email, (ok ? 'Laporan disahkan: ' : 'Pembetulan diminta: ') + MONTHS_MS[m - 1] + ' ' + y,
@@ -405,11 +412,57 @@ function sendReviewMail_(kodLot, y, m, decision, komen, by) {
 // ============================================================
 /** Maklumat peniaga (tab 1 untuk penyewa). */
 
+/* ---------- Penyewaan (tempoh sewa) ---------- */
+
+function tenancyById_(id) { return findBy_(readTable_(SHEETS.TENANCIES), 'id', id); }
+
+/** Gabungkan lot dan penyewaan menjadi satu objek konteks (kodLot, lokasi, noLot, mula, akhir, sewa, idSewa). */
+function mergeTn_(lot, tn) {
+  var o = {};
+  Object.keys(lot).forEach(function (k) { o[k] = lot[k]; });
+  o.mula = tn ? tn.mula : ''; o.akhir = tn ? tn.akhir : ''; o.sewa = tn ? tn.sewa : ''; o.idSewa = tn ? tn.id : '';
+  return o;
+}
+
+function lotCtx_(tn) {
+  var lot = findBy_(readTable_(SHEETS.LOTS), 'kodLot', tn.kodLot);
+  if (!lot) fail_('Lot untuk penyewaan ini tidak dijumpai. Hubungi ' + APP.CONTACT_EMAIL + '.');
+  return mergeTn_(lot, tn);
+}
+
+/** Adakah penyewaan meliputi bulan y/m? (bulan penuh dari bulan mula hingga bulan akhir) */
+function tnCovers_(tn, y, m) {
+  if (!isDateStr_(tn.mula)) return false;
+  var idx = monthIndex_(y, m), s0 = ymFromStr_(tn.mula);
+  if (idx < monthIndex_(s0.y, s0.m)) return false;
+  if (isDateStr_(tn.akhir)) { var e = ymFromStr_(tn.akhir); if (idx > monthIndex_(e.y, e.m)) return false; }
+  return true;
+}
+
+function tenancyFor_(kodLot, y, m) {
+  var all = readTable_(SHEETS.TENANCIES);
+  for (var i = 0; i < all.length; i++) if (all[i].kodLot === kodLot && tnCovers_(all[i], y, m)) return all[i];
+  return null;
+}
+
+function ctxFor_(kodLot, y, m) {
+  var tn = tenancyFor_(kodLot, y, m);
+  return tn ? lotCtx_(tn) : null;
+}
+
+function nextTenancyId_() {
+  var max = 0;
+  readTable_(SHEETS.TENANCIES).forEach(function (t) { var n = Number(String(t.id).replace(/\D/g, '')); if (n > max) max = n; });
+  return 'PS-' + ('0000' + (max + 1)).slice(-4);
+}
+
+function daysInMonth_(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+
 function lotOfUser_(user) {
   if (user.peranan !== ROLE.TENANT) fail_('Akses tidak dibenarkan.');
-  var lot = findBy_(readTable_(SHEETS.LOTS), 'kodLot', user.kodLot);
-  if (!lot) fail_('Lot anda belum didaftarkan. Hubungi ' + APP.CONTACT_EMAIL + '.');
-  return lot;
+  var tn = tenancyById_(user.idSewa);
+  if (!tn) fail_('Penyewaan anda belum didaftarkan. Hubungi ' + APP.CONTACT_EMAIL + '.');
+  return lotCtx_(tn);
 }
 
 function lotView_(lot) {
@@ -430,7 +483,7 @@ function bizView_(b, mask) {
 
 function getBusiness_(user) {
   var lot = lotOfUser_(user);
-  var biz = findBy_(readTable_(SHEETS.BIZ), 'kodLot', lot.kodLot);
+  var biz = findBy_(readTable_(SHEETS.BIZ), 'idSewa', lot.idSewa);
   return { lot: lotView_(lot), email: user.email, peranan: user.peranan, biz: bizView_(biz, false), lengkap: !!(biz && biz.nama) };
 }
 
@@ -448,7 +501,7 @@ function saveBusiness_(user, p) {
   if (tel.replace(/\D/g, '').length < 9) fail_('No. telefon tidak sah.');
 
   return withLock_(function () {
-    var cur = findBy_(readTable_(SHEETS.BIZ), 'kodLot', lot.kodLot) || { kodLot: lot.kodLot };
+    var cur = findBy_(readTable_(SHEETS.BIZ), 'idSewa', lot.idSewa) || { idSewa: lot.idSewa };
     cur.nama = String(f.nama).trim().slice(0, 120);
     cur.jenis = String(f.jenis).trim().slice(0, 80);
     cur.ssm = String(f.ssm || '').trim().slice(0, 40);
@@ -564,7 +617,7 @@ function myReports_(user, p) {
     }
   });
   rows.sort(function (a, b) { return b.bulan - a.bulan; });
-  var biz = findBy_(readTable_(SHEETS.BIZ), 'kodLot', lot.kodLot);
+  var biz = findBy_(readTable_(SHEETS.BIZ), 'idSewa', lot.idSewa);
   return { lot: lotView_(lot), perniagaan: biz ? biz.nama : '', tahun: year, tahunList: yearList, rows: rows, counts: counts, jumlahBulan: rows.length, bulanDibenarkan: !!months.length };
 }
 
@@ -580,7 +633,7 @@ function ensureReport_(lot, y, m) {
   var id = reportId_(lot.kodLot, y, m);
   var rep = findBy_(readTable_(SHEETS.REPORTS), 'id', id);
   if (rep) return rep;
-  rep = { id: id, kodLot: lot.kodLot, tahun: y, bulan: m, status: STATUS.DRAFT, dikemaskini: nowStr_() };
+  rep = { id: id, kodLot: lot.kodLot, tahun: y, bulan: m, status: STATUS.DRAFT, dikemaskini: nowStr_(), idSewa: lot.idSewa };
   appendObj_(SHEETS.REPORTS, rep);
   return findBy_(readTable_(SHEETS.REPORTS), 'id', id);
 }
@@ -660,7 +713,7 @@ function uploadMyFile_(user, p) {
     var existing = findBy_(readTable_(SHEETS.REPORTS), 'id', reportId_(lot.kodLot, y, m));
     checkEditable_(lot, y, m, existing);
     var rep = existing || ensureReport_(lot, y, m);
-    var biz = findBy_(readTable_(SHEETS.BIZ), 'kodLot', lot.kodLot);
+    var biz = findBy_(readTable_(SHEETS.BIZ), 'idSewa', lot.idSewa);
 
     var folder = subFolder_(subFolder_(subFolder_(rootFolder_(), String(y)), pad2_(m) + ' ' + MONTHS_EN[m - 1]), lot.kodLot);
     var name = fileNameFor_(lot, biz, y, m, kind);
@@ -728,9 +781,15 @@ function deleteMyReport_(user, p) {
 
 /** Muat turun fail: penyewa untuk lot sendiri sahaja, admin untuk mana-mana lot. Dikembalikan sebagai base64. */
 function getFile_(user, p) {
-  var kodLot = user.peranan === ROLE.ADMIN ? String(p.kodLot || '') : user.kodLot;
   var spec = FILE_KINDS[String(p.kind)];
   if (!spec) fail_('Jenis fail tidak sah.');
+  var kodLot;
+  if (user.peranan === ROLE.ADMIN) kodLot = String(p.kodLot || '');
+  else {
+    var own = lotOfUser_(user);
+    kodLot = own.kodLot;
+    if (!monthAllowed_(own, Number(p.tahun), Number(p.bulan), todayStr_())) fail_('Fail tidak dijumpai.');   // bukan bulan penyewa ini
+  }
   var rep = findBy_(readTable_(SHEETS.REPORTS), 'id', reportId_(kodLot, Number(p.tahun), Number(p.bulan)));
   var ref = rep && parseRef_(rep[spec.col]);
   if (!ref) fail_('Fail tidak dijumpai.');
@@ -745,7 +804,7 @@ function getFile_(user, p) {
 
 /**
  * Senarai laporan semua lot. p.bulan = 0 bermaksud semua bulan dalam tahun itu.
- * Setiap baris ialah satu lot untuk satu bulan dalam tempoh sewanya.
+ * Setiap baris ialah satu lot untuk satu bulan dalam tempoh sewa penyewanya (lot boleh bertukar penyewa).
  */
 function adminReports_(user, p) {
   var today = todayStr_();
@@ -754,23 +813,28 @@ function adminReports_(user, p) {
   var m = p.bulan === undefined || p.bulan === null || p.bulan === '' ? 0 : Number(p.bulan);
   if (!isFinite(m) || m < 0 || m > 12) fail_('Bulan tidak sah.');
   var lots = readTable_(SHEETS.LOTS).filter(function (l) { return l.status === 'Aktif'; });
-  var bizMap = {}; readTable_(SHEETS.BIZ).forEach(function (b) { bizMap[b.kodLot] = b; });
+  var tns = readTable_(SHEETS.TENANCIES);
+  var bizMap = {}; readTable_(SHEETS.BIZ).forEach(function (b) { bizMap[b.idSewa] = b; });
   var map = reportMap_();
   var counts = { ok: 0, sent: 0, fix: 0, none: 0 }, rows = [], tanpaTarikh = 0;
 
   lots.forEach(function (lot) {
-    var months = requiredMonths_(lot, today).filter(function (x) { return x.y === y && (m === 0 || x.m === m); });
-    if (!isDateStr_(lot.mula)) tanpaTarikh++;
-    months.forEach(function (x) {
-      var v = reportView_(map[reportId_(lot.kodLot, x.y, x.m)], lot, x.y, x.m);
-      var b = bizMap[lot.kodLot] || {};
-      v.lotNama = lot.lokasi + ' · Lot ' + lot.noLot;
-      v.lokasi = lot.lokasi;
-      v.perniagaan = b.nama || '';
-      v.pelajar = b.pelajar || '';
-      v.untungRugi = typeof v.pendapatan === 'number' && typeof v.perbelanjaan === 'number' ? round2_(v.pendapatan - v.perbelanjaan) : null;
-      counts[v.status]++;
-      rows.push(v);
+    var lotTns = tns.filter(function (x) { return x.kodLot === lot.kodLot && isDateStr_(x.mula); });
+    if (!lotTns.length) tanpaTarikh++;
+    lotTns.forEach(function (tn) {
+      var ctx = mergeTn_(lot, tn);
+      requiredMonths_(ctx, today).filter(function (x) { return x.y === y && (m === 0 || x.m === m); }).forEach(function (x) {
+        var v = reportView_(map[reportId_(lot.kodLot, x.y, x.m)], ctx, x.y, x.m);
+        var b = bizMap[tn.id] || {};
+        v.idSewa = tn.id;
+        v.lotNama = lot.lokasi + ' · Lot ' + lot.noLot;
+        v.lokasi = lot.lokasi;
+        v.perniagaan = b.nama || '';
+        v.pelajar = b.pelajar || '';
+        v.untungRugi = typeof v.pendapatan === 'number' && typeof v.perbelanjaan === 'number' ? round2_(v.pendapatan - v.perbelanjaan) : null;
+        counts[v.status]++;
+        rows.push(v);
+      });
     });
   });
   rows.sort(function (a, b) { return b.bulan - a.bulan; });   // bulan terkini dahulu; susunan lot dikekalkan (sort stabil)
@@ -781,13 +845,14 @@ function adminReports_(user, p) {
 function uniq_(arr) { var s = {}; return arr.filter(function (x) { if (s[x]) return false; s[x] = 1; return true; }); }
 
 function adminGetReport_(user, p) {
-  var lot = findBy_(readTable_(SHEETS.LOTS), 'kodLot', String(p.kodLot));
-  if (!lot) fail_('Lot tidak dijumpai.');
   var y = Number(p.tahun), m = Number(p.bulan);
-  var v = reportView_(reportMap_()[reportId_(lot.kodLot, y, m)], lot, y, m);
-  var b = findBy_(readTable_(SHEETS.BIZ), 'kodLot', lot.kodLot);
-  v.lot = lotView_(lot);
+  var ctx = ctxFor_(String(p.kodLot), y, m);
+  if (!ctx) fail_('Tiada penyewaan untuk lot dan bulan ini.');
+  var v = reportView_(reportMap_()[reportId_(ctx.kodLot, y, m)], ctx, y, m);
+  var b = findBy_(readTable_(SHEETS.BIZ), 'idSewa', ctx.idSewa);
+  v.lot = lotView_(ctx);
   v.biz = bizView_(b, true);
+  v.idSewa = ctx.idSewa;
   return v;
 }
 
@@ -825,10 +890,107 @@ function adminRemind_(user, p) {
   return { dihantar: n };
 }
 
+/* ---------- Penyewaan ---------- */
+
+function tnRangeLabel_(tn) {
+  var f = function (s) { var d = ymFromStr_(s); return MONTHS_MS[d.m - 1].slice(0, 3) + ' ' + d.y; };
+  return (isDateStr_(tn.mula) ? f(tn.mula) : '?') + ' hingga ' + (isDateStr_(tn.akhir) ? f(tn.akhir) : 'kini');
+}
+
+function tenancyList_() {
+  var lots = {}; readTable_(SHEETS.LOTS).forEach(function (l) { lots[l.kodLot] = l; });
+  var biz = {}; readTable_(SHEETS.BIZ).forEach(function (b) { biz[b.idSewa] = b; });
+  var users = readTable_(SHEETS.USERS);
+  var today = todayStr_(), t = ymFromStr_(today);
+  return readTable_(SHEETS.TENANCIES).map(function (tn) {
+    var l = lots[tn.kodLot], b = biz[tn.id] || {};
+    var lotNama = l ? l.lokasi + ' · Lot ' + l.noLot : tn.kodLot;
+    return {
+      id: tn.id, kodLot: tn.kodLot, lotNama: lotNama, mula: tn.mula || '', akhir: tn.akhir || '',
+      sewa: tn.sewa === '' ? null : Number(tn.sewa), tempoh: tnRangeLabel_(tn),
+      perniagaan: b.nama || '', pelajar: b.pelajar || '',
+      pengguna: users.filter(function (u) { return u.idSewa === tn.id; }).map(function (u) { return u.email; }),
+      semasa: tnCovers_(tn, t.y, t.m),
+      label: lotNama + ' · ' + (b.nama || 'maklumat belum diisi') + ' (' + tnRangeLabel_(tn) + ')'
+    };
+  }).sort(function (a, b) { return a.lotNama < b.lotNama ? -1 : a.lotNama > b.lotNama ? 1 : (a.mula < b.mula ? -1 : 1); });
+}
+
+function adminTenancies_() {
+  return { tenancies: tenancyList_(), lots: adminLots_().lots };
+}
+
+function monthRange_(tn) {
+  var s0 = ymFromStr_(tn.mula);
+  var lo = monthIndex_(s0.y, s0.m), hi = Infinity;
+  if (isDateStr_(tn.akhir)) { var e = ymFromStr_(tn.akhir); hi = monthIndex_(e.y, e.m); }
+  return [lo, hi];
+}
+
+function adminSaveTenancy_(user, p) {
+  var d = p.tenancy || {};
+  var kodLot = String(d.kodLot || '');
+  if (!findBy_(readTable_(SHEETS.LOTS), 'kodLot', kodLot)) fail_('Pilih lot yang sah.');
+  var mula = String(d.mula || ''), akhir = String(d.akhir || '');
+  if (!isDateStr_(mula)) fail_('Tarikh mula sewa wajib diisi.');
+  if (mula.slice(8, 10) !== '01') fail_('Tarikh mula mesti hari pertama bulan (contoh 2026-07-01). Penukaran penyewa dibuat pada awal bulan.');
+  if (akhir) {
+    if (!isDateStr_(akhir)) fail_('Tarikh akhir sewa tidak sah.');
+    var a = ymFromStr_(akhir);
+    if (Number(akhir.slice(8, 10)) !== daysInMonth_(a.y, a.m)) fail_('Tarikh akhir mesti hari terakhir bulan (contoh 2026-06-30).');
+    if (akhir < mula) fail_('Tarikh akhir mesti selepas tarikh mula.');
+  }
+  var sewa = toNum_(d.sewa);
+  if (sewa !== null && (isNaN(sewa) || sewa < 0)) fail_('Sewa bulanan tidak sah.');
+
+  return withLock_(function () {
+    var all = readTable_(SHEETS.TENANCIES);
+    var cur = d.id ? findBy_(all, 'id', String(d.id)) : null;
+    if (d.id && !cur) fail_('Penyewaan tidak dijumpai.');
+    var mine = monthRange_({ mula: mula, akhir: akhir });
+    all.forEach(function (o) {
+      if (o.kodLot !== kodLot || (cur && o.id === cur.id) || !isDateStr_(o.mula)) return;
+      var r = monthRange_(o);
+      if (mine[0] <= r[1] && r[0] <= mine[1]) fail_('Tempoh bertindih dengan penyewaan ' + o.id + ' (' + tnRangeLabel_(o) + ') pada lot yang sama.');
+    });
+    if (cur) {
+      readTable_(SHEETS.REPORTS).forEach(function (r) {
+        if (r.idSewa !== cur.id) return;
+        var idx = monthIndex_(Number(r.tahun), Number(r.bulan));
+        if (idx < mine[0] || idx > mine[1]) fail_('Tempoh baharu mengecualikan laporan ' + MONTHS_MS[r.bulan - 1] + ' ' + r.tahun + ' yang sudah ada. Padam laporan itu dahulu atau laraskan tarikh.');
+      });
+    }
+    var rec = cur || { id: nextTenancyId_() };
+    rec.kodLot = kodLot; rec.mula = mula; rec.akhir = akhir; rec.sewa = sewa === null ? '' : sewa;
+    if (cur) updateObj_(SHEETS.TENANCIES, rec); else appendObj_(SHEETS.TENANCIES, rec);
+    logAction_(user.email, cur ? 'Kemas kini penyewaan' : 'Tambah penyewaan', rec.id + ' / ' + kodLot + ' / ' + mula + ' - ' + (akhir || 'kini'));
+    return adminTenancies_();
+  });
+}
+
+function adminDeleteTenancy_(user, p) {
+  return withLock_(function () {
+    var cur = findBy_(readTable_(SHEETS.TENANCIES), 'id', String(p.id || ''));
+    if (!cur) fail_('Penyewaan tidak dijumpai.');
+    if (readTable_(SHEETS.REPORTS).some(function (r) { return r.idSewa === cur.id; })) fail_('Penyewaan ini sudah ada laporan, jadi tidak boleh dipadam. Laraskan tarikh atau biarkan sahaja.');
+    if (readTable_(SHEETS.USERS).some(function (u) { return u.idSewa === cur.id; })) fail_('Masih ada pengguna dipautkan kepada penyewaan ini. Tukar atau nyahaktifkan pengguna dahulu.');
+    deleteObj_(SHEETS.TENANCIES, cur);
+    logAction_(user.email, 'Padam penyewaan', cur.id + ' / ' + cur.kodLot);
+    return adminTenancies_();
+  });
+}
+
 /* ---------- Pengguna ---------- */
 
 function adminUsers_() {
-  return { users: readTable_(SHEETS.USERS).map(function (u) { return { email: u.email, nama: u.nama, peranan: u.peranan, kodLot: u.kodLot || '', status: u.status }; }) };
+  var tl = tenancyList_(), byId = {};
+  tl.forEach(function (t) { byId[t.id] = t; });
+  return {
+    users: readTable_(SHEETS.USERS).map(function (u) {
+      return { email: u.email, nama: u.nama, peranan: u.peranan, idSewa: u.idSewa || '', penyewaan: u.idSewa && byId[u.idSewa] ? byId[u.idSewa].label : '', status: u.status };
+    }),
+    penyewaan: tl.map(function (t) { return { id: t.id, label: t.label }; })
+  };
 }
 
 function adminSaveUser_(user, p) {
@@ -840,9 +1002,9 @@ function adminSaveUser_(user, p) {
   var peranan = String(d.peranan);
   if (peranan !== ROLE.ADMIN && peranan !== ROLE.TENANT) fail_('Peranan tidak sah.');
   var status = d.status === 'Tidak aktif' ? 'Tidak aktif' : 'Aktif';
-  var kodLot = peranan === ROLE.TENANT ? String(d.kodLot || '') : '';
+  var idSewa = peranan === ROLE.TENANT ? String(d.idSewa || '') : '';
   if (peranan === ROLE.TENANT) {
-    if (!findBy_(readTable_(SHEETS.LOTS), 'kodLot', kodLot)) fail_('Pilih lot yang sah untuk penyewa.');
+    if (!tenancyById_(idSewa)) fail_('Pilih penyewaan yang sah untuk penyewa. Tambah penyewaan di tab Penyewaan jika belum ada.');
   }
   if (email === user.email && (peranan !== ROLE.ADMIN || status !== 'Aktif')) fail_('Anda tidak boleh menurunkan atau menyahaktifkan akaun sendiri.');
 
@@ -854,7 +1016,7 @@ function adminSaveUser_(user, p) {
       if (!otherAdmins.length) fail_('Mesti ada sekurang-kurangnya seorang admin aktif.');
     }
     var rec = cur || { email: email };
-    rec.nama = nama; rec.peranan = peranan; rec.kodLot = kodLot; rec.status = status;
+    rec.nama = nama; rec.peranan = peranan; rec.idSewa = idSewa; rec.status = status;
     if (cur) updateObj_(SHEETS.USERS, rec); else appendObj_(SHEETS.USERS, rec);
     logAction_(user.email, cur ? 'Kemas kini pengguna' : 'Tambah pengguna', email + ' / ' + peranan + ' / ' + status);
     return adminUsers_();
@@ -864,7 +1026,17 @@ function adminSaveUser_(user, p) {
 /* ---------- Lot ---------- */
 
 function adminLots_() {
-  return { lots: readTable_(SHEETS.LOTS).map(function (l) { var v = lotView_(l); return v; }) };
+  var today = todayStr_(), t = ymFromStr_(today);
+  var biz = {}; readTable_(SHEETS.BIZ).forEach(function (b) { biz[b.idSewa] = b; });
+  var tns = readTable_(SHEETS.TENANCIES);
+  return {
+    lots: readTable_(SHEETS.LOTS).map(function (l) {
+      var mine = tns.filter(function (x) { return x.kodLot === l.kodLot; });
+      var now = mine.filter(function (x) { return tnCovers_(x, t.y, t.m); })[0];
+      return { kodLot: l.kodLot, lokasi: l.lokasi, noLot: l.noLot, nama: l.lokasi + ' · Lot ' + l.noLot, status: l.status,
+               bilPenyewaan: mine.length, semasa: now ? ((biz[now.id] || {}).nama || 'maklumat belum diisi') : '' };
+    })
+  };
 }
 
 function adminSaveLot_(user, p) {
@@ -873,12 +1045,6 @@ function adminSaveLot_(user, p) {
   var noLot = Number(d.noLot);
   if (!lokasi) fail_('Lokasi wajib diisi.');
   if (!isFinite(noLot) || noLot < 1 || noLot !== Math.floor(noLot)) fail_('No. lot mesti nombor bulat 1 atau lebih.');
-  var mula = String(d.mula || ''), akhir = String(d.akhir || '');
-  if (mula && !isDateStr_(mula)) fail_('Tarikh mula sewa tidak sah.');
-  if (akhir && !isDateStr_(akhir)) fail_('Tarikh akhir sewa tidak sah.');
-  if (mula && akhir && akhir < mula) fail_('Tarikh akhir sewa mesti selepas tarikh mula.');
-  var sewa = toNum_(d.sewa);
-  if (sewa !== null && (isNaN(sewa) || sewa < 0)) fail_('Sewa bulanan tidak sah.');
   var status = d.status === 'Tidak aktif' ? 'Tidak aktif' : 'Aktif';
   var kod = lotCode_(lokasi, noLot);
 
@@ -889,7 +1055,7 @@ function adminSaveLot_(user, p) {
     if (cur && p.isNew === true) fail_('Lot ' + lokasi + ' ' + noLot + ' sudah wujud.');
     var rec = cur || { kodLot: kod };
     rec.lokasi = cur ? cur.lokasi : lokasi;
-    rec.noLot = noLot; rec.status = status; rec.mula = mula; rec.akhir = akhir; rec.sewa = sewa === null ? '' : sewa;
+    rec.noLot = noLot; rec.status = status;
     if (cur) updateObj_(SHEETS.LOTS, rec); else appendObj_(SHEETS.LOTS, rec);
     logAction_(user.email, cur ? 'Kemas kini lot' : 'Tambah lot', kod);
     return adminLots_();
@@ -944,7 +1110,8 @@ function runReminders_(today) {
   var sent = 0;
 
   lots.forEach(function (lot) {
-    if (!monthAllowed_(lot, y, m, today)) return;
+    var ctx = ctxFor_(lot.kodLot, y, m);          // penyewa yang memegang lot pada bulan itu
+    if (!ctx || !monthAllowed_(ctx, y, m, today)) return;
     var key = statusKey_(map[reportId_(lot.kodLot, y, m)]);
     if (key === 'sent' || key === 'ok') return;
     var kunci = lot.kodLot + '|' + y + '-' + pad2_(m) + '|' + today;
@@ -982,6 +1149,7 @@ function setupSystem() {
   salt_();
 
   Object.keys(COLS).forEach(function (name) { ensureSheet_(ss, name); });
+  migrateToTenancies_();
   seedLotsIfEmpty_();
   seedDefaultAdmin_();
   rootFolder_();
@@ -1036,8 +1204,45 @@ function migrateDateColumns_(sh, cols) {
 function seedLotsIfEmpty_() {
   if (readTable_(SHEETS.LOTS).length) return;
   var i;
-  for (i = 1; i <= 10; i++) appendObj_(SHEETS.LOTS, { kodLot: lotCode_('Student Mall', i), lokasi: 'Student Mall', noLot: i, status: 'Aktif', mula: '', akhir: '', sewa: '' });
-  for (i = 1; i <= 5; i++) appendObj_(SHEETS.LOTS, { kodLot: lotCode_('SUB', i), lokasi: 'SUB', noLot: i, status: 'Aktif', mula: '', akhir: '', sewa: '' });
+  for (i = 1; i <= 10; i++) appendObj_(SHEETS.LOTS, { kodLot: lotCode_('Student Mall', i), lokasi: 'Student Mall', noLot: i, status: 'Aktif' });
+  for (i = 1; i <= 5; i++) appendObj_(SHEETS.LOTS, { kodLot: lotCode_('SUB', i), lokasi: 'SUB', noLot: i, status: 'Aktif' });
+}
+
+/**
+ * Naik taraf daripada struktur lama (tarikh sewa pada sheet Lot, pengguna dan peniaga dipautkan kepada kod lot)
+ * kepada struktur penyewaan. Selamat dijalankan berulang kali.
+ */
+function migrateToTenancies_() {
+  var lotSh = sheet_(SHEETS.LOTS);
+  var last = lotSh.getLastRow();
+  var tnCount = readTable_(SHEETS.TENANCIES).length;
+
+  if (last >= 2 && tnCount === 0) {
+    var map = {};
+    var legacy = lotSh.getRange(2, 5, last - 1, 3).getValues();   // lajur lama: mula, akhir, sewa
+    readTable_(SHEETS.LOTS).forEach(function (l) {
+      var row = legacy[l._row - 2];
+      var mula = cell_(row[0], 'd'), akhir = cell_(row[1], 'd'), sewa = row[2];
+      if (!isDateStr_(mula)) return;
+      var id = nextTenancyId_();
+      appendObj_(SHEETS.TENANCIES, { id: id, kodLot: l.kodLot, mula: mula, akhir: isDateStr_(akhir) ? akhir : '', sewa: sewa === '' || sewa === undefined ? '' : Number(sewa) });
+      map[l.kodLot] = id;
+    });
+    if (Object.keys(map).length) {
+      readTable_(SHEETS.BIZ).forEach(function (b) { if (map[b.idSewa]) { b.idSewa = map[b.idSewa]; updateObj_(SHEETS.BIZ, b); } });
+      readTable_(SHEETS.USERS).forEach(function (u) { if (map[u.idSewa]) { u.idSewa = map[u.idSewa]; updateObj_(SHEETS.USERS, u); } });
+      logAction_('sistem', 'Migrasi penyewaan', Object.keys(map).length + ' penyewaan dicipta daripada tarikh sewa pada sheet Lot');
+    }
+  }
+  if (readTable_(SHEETS.TENANCIES).length) {
+    lotSh.getRange(1, 5, Math.max(last, 1), 3).clearContent();      // buang lajur lama yang tidak digunakan lagi
+  }
+  // laporan lama: isi ID penyewaan mengikut bulan
+  readTable_(SHEETS.REPORTS).forEach(function (r) {
+    if (r.idSewa) return;
+    var tn = tenancyFor_(r.kodLot, Number(r.tahun), Number(r.bulan));
+    if (tn) { r.idSewa = tn.id; updateObj_(SHEETS.REPORTS, r); }
+  });
 }
 
 /** Pastikan admin lalai (APP.DEFAULT_ADMIN) wujud dan aktif. Pengguna lain tidak diubah. */
@@ -1089,6 +1294,9 @@ var ROUTES = {
   adminUsers:    { auth: true, role: ROLE.ADMIN, fn: adminUsers_ },
   adminSaveUser: { auth: true, role: ROLE.ADMIN, fn: adminSaveUser_ },
   adminLots:     { auth: true, role: ROLE.ADMIN, fn: adminLots_ },
+  adminTenancies:    { auth: true, role: ROLE.ADMIN, fn: adminTenancies_ },
+  adminSaveTenancy:  { auth: true, role: ROLE.ADMIN, fn: adminSaveTenancy_ },
+  adminDeleteTenancy: { auth: true, role: ROLE.ADMIN, fn: adminDeleteTenancy_ },
   adminSaveLot:  { auth: true, role: ROLE.ADMIN, fn: adminSaveLot_ },
   adminExport:   { auth: true, role: ROLE.ADMIN, fn: adminExport_ }
 };

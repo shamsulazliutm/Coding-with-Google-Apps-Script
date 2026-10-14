@@ -23,7 +23,7 @@ Dibina dengan Google Apps Script (Web App) dan Google Sheets sebagai pangkalan d
    - mendaftarkan `utmxcite@utm.my` sebagai admin lalai (ubah `APP.DEFAULT_ADMIN` dalam `Config` di bahagian atas `Code.gs` jika perlu);
    - mencipta folder Drive "Laporan Kewangan Penyewa" untuk fail PDF;
    - memasang trigger harian untuk peringatan.
-6. Dalam sheet **Lot**, isi **Tarikh mula sewa** (format `2026-01-01`), **Tarikh akhir sewa** dan **Sewa bulanan** bagi setiap lot. Lot tanpa tarikh mula tidak mempunyai bulan laporan.
+6. Dalam sistem (tab **Penyewaan**), tambah penyewaan bagi setiap lot: pilih lot, bulan mula, bulan tamat (jika ada) dan sewa bulanan. Lot tanpa penyewaan tidak mempunyai bulan laporan.
 7. **Deploy > New deployment > Web app**:
    - Execute as: **Me**
    - Who has access: **Anyone**
@@ -49,7 +49,7 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 ## Cara ia berfungsi
 
 - **Log masuk**: e-mel berdaftar dan OTP 6 digit (sah 5 minit, sekali guna, maksimum 5 percubaan). Tiada akaun Google diperlukan. Peranan (`Admin` atau `Penyewa`) dibaca daripada sheet **Pengguna**.
-- **Penyewa**: dua tab, *Maklumat Peniaga* dan *Laporan Kewangan*. Satu baris bagi setiap bulan sewa, dari bulan mula sewa hingga bulan semasa. Laporan disimpan sebagai draf, dihantar, dan boleh diedit sehingga disahkan.
+- **Penyewa**: dua tab, *Maklumat Peniaga* dan *Laporan Kewangan*. Satu baris bagi setiap bulan dalam tempoh sewa penyewa itu, dari bulan mula sewa hingga bulan semasa. Laporan disimpan sebagai draf, dihantar, dan boleh diedit sehingga disahkan.
 - **Lampiran**: PDF sahaja, maksimum 10 MB (laporan kewangan, resit sewa, resit incubator jika menyewa peralatan UTMXCITE). Nama fail dijana: `StudentMall_Lot3_September_<Perniagaan>_FinancialReport.pdf`. Fail disimpan di Drive: `tahun / 09 September / <kod lot>`.
 - **Tarikh akhir**: hari ke-7 bulan berikutnya. Hantaran selepas tarikh itu ditanda *Lewat*.
 - **Admin**: lihat semua lot mengikut bulan, semak laporan (Sahkan atau Minta pembetulan dengan komen), hantar peringatan manual, eksport CSV, urus lot dan pengguna.
@@ -64,14 +64,35 @@ Jangan ubah susunan lajur. Kod membaca lajur mengikut kedudukan. Anda boleh mena
 
 | Sheet | Lajur |
 |---|---|
-| Pengguna | E-mel, Nama, **Peranan** (Admin / Penyewa), Kod lot, Status (Aktif / Tidak aktif) |
-| Lot | Kod lot, Lokasi, No lot, Status, Tarikh mula sewa, Tarikh akhir sewa, Sewa bulanan (RM) |
-| Peniaga | Kod lot, Nama perniagaan, Jenis, No SSM, Nama pelajar, No KP, No matrik, Fakulti, No telefon, Dikemas kini |
-| Laporan | ID, Kod lot, Tahun, Bulan, Pendapatan, Perbelanjaan, Bayaran sewa, Sewa peralatan, 3 lajur fail, Status, Lewat, Komen admin, Disemak oleh, Tarikh disemak, Tarikh hantar, Akuan, Dikemas kini |
+| Pengguna | E-mel, Nama, **Peranan** (Admin / Penyewa), ID penyewaan, Status (Aktif / Tidak aktif) |
+| Lot | Kod lot, Lokasi, No lot, Status |
+| Penyewaan | ID penyewaan, Kod lot, Tarikh mula sewa, Tarikh akhir sewa, Sewa bulanan (RM) |
+| Peniaga | ID penyewaan, Nama perniagaan, Jenis, No SSM, Nama pelajar, No KP, No matrik, Fakulti, No telefon, Dikemas kini |
+| Laporan | ID, Kod lot, Tahun, Bulan, Pendapatan, Perbelanjaan, Bayaran sewa, Sewa peralatan, 3 lajur fail, Status, Lewat, Komen admin, Disemak oleh, Tarikh disemak, Tarikh hantar, Akuan, Dikemas kini, ID penyewaan |
 | Log | Masa, E-mel, Tindakan, Butiran (audit semua tindakan penting) |
 | Peringatan | Rekod peringatan automatik yang telah dihantar |
 
 Lot baharu ditambah melalui tab **Lot** dalam sistem (butang *+ Tambah lot*), atau terus dalam sheet **Lot**. Kod lot dijana daripada lokasi dan nombor, contohnya `StudentMall-Lot3`.
+
+## Lot bertukar penyewa
+
+Sebuah lot boleh mempunyai beberapa penyewaan pada masa berbeza. Contoh: Lot 6, Syarikat A dari Januari hingga Jun dan Syarikat B dari Julai hingga Disember.
+
+1. Tab **Penyewaan > + Tambah penyewaan**: Lot 6, mula Januari 2026, tamat Jun 2026.
+2. Tambah penyewaan kedua: Lot 6, mula Julai 2026, tamat Disember 2026.
+3. Tab **Pengguna**: daftarkan pemilik A dengan penyewaan pertama dan pemilik B dengan penyewaan kedua.
+
+Peraturan:
+- **Penukaran dibuat pada awal bulan.** Tarikh mula mesti hari pertama bulan dan tarikh akhir mesti hari terakhir bulan (pemilih bulan dalam sistem menetapkannya secara automatik).
+- Dua penyewaan pada lot yang sama tidak boleh bertindih.
+- Setiap penyewa hanya melihat dan menghantar laporan bagi bulan dalam tempoh sewanya sendiri, dengan maklumat peniaga dan sewa sendiri. Penyewa lama tidak boleh melihat laporan atau fail penyewa baharu, dan sebaliknya.
+- Dashboard admin menunjukkan syarikat yang betul pada setiap bulan. E-mel peringatan dan keputusan semakan hanya dihantar kepada penyewa pada bulan itu.
+- Selepas tempoh sewa tamat, penyewa lama masih boleh melengkapkan laporan tertunggak dalam tempoh sewanya sehingga admin menyahaktifkan akaunnya (tab **Pengguna**).
+- Penyewaan yang sudah ada laporan atau pengguna tidak boleh dipadam, dan tempohnya tidak boleh dikecilkan sehingga mengecualikan laporan sedia ada.
+
+### Naik taraf daripada versi lama
+
+Versi lama menyimpan tarikh sewa pada sheet **Lot** dan memautkan peniaga dan pengguna kepada kod lot. Selepas menampal `Code.gs` baharu, jalankan `setupSystem` sekali. Ia mencipta sheet **Penyewaan** daripada tarikh sewa lama, memautkan peniaga, pengguna dan laporan sedia ada kepada penyewaan itu, dan mengosongkan lajur tarikh lama pada sheet **Lot**. Selamat dijalankan berulang kali.
 
 ## Keselamatan dan privasi
 
@@ -84,4 +105,4 @@ Lot baharu ditambah melalui tab **Lot** dalam sistem (butang *+ Tambah lot*), at
 
 ## Ujian
 
-Logik pelayan diuji dengan tiruan API Apps Script (46 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
+Logik pelayan diuji dengan tiruan API Apps Script (66 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.

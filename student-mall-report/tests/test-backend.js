@@ -1,6 +1,7 @@
 const assert = require('assert');
 const { createBackend } = require('./gas-harness');
 const b = createBackend();
+let T3, TS2;
 let pass = 0; const t = (n, f) => { try { f(); pass++; console.log('  ok  ' + n); } catch (e) { console.log('FAIL  ' + n + '\n      ' + e.message); process.exitCode = 1; } };
 const call = (m, tok, p) => b.rpc(m, tok, p);
 const ok = (m, tok, p) => { const r = call(m, tok, p); assert.ok(r.ok, m + ': ' + r.error); return r.data; };
@@ -47,31 +48,41 @@ t('token palsu / tiada ditolak (SESSION)', () => { assert.strictEqual(bad('me', 
 t('kaedah tidak wujud ditolak (termasuk nama prototaip)', () => { bad('nope', adm.token); bad('constructor', adm.token); bad('__proto__', adm.token); });
 
 console.log('Admin: lot dan pengguna');
-t('tetapkan lot Student Mall 3 dan SUB 2', () => {
-  ok('adminSaveLot', adm.token, { lot: { lokasi: 'Student Mall', noLot: 3, mula: '2026-01-01', akhir: '2026-12-31', sewa: '600', status: 'Aktif' } });
-  ok('adminSaveLot', adm.token, { lot: { lokasi: 'SUB', noLot: 2, mula: '2026-08-01', akhir: '', sewa: '450', status: 'Aktif' } });
-  const l = b.readTable_('Lot').find(x => x.kodLot === 'StudentMall-Lot3'); assert.strictEqual(l.mula, '2026-01-01'); assert.strictEqual(l.sewa, 600);
+t('tambah penyewaan: Lot 3 (Jan-Dis 2026) dan SUB 2 (mula Ogos, tanpa tarikh akhir)', () => {
+  const r1 = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'StudentMall-Lot3', mula: '2026-01-01', akhir: '2026-12-31', sewa: '600' } });
+  const r2 = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot2', mula: '2026-08-01', akhir: '', sewa: '450' } });
+  T3 = r1.tenancies.find(x => x.kodLot === 'StudentMall-Lot3').id; TS2 = r2.tenancies.find(x => x.kodLot === 'SUB-Lot2').id;
+  assert.strictEqual(T3, 'PS-0001'); assert.strictEqual(TS2, 'PS-0002');
+  const row = b.readTable_('Penyewaan').find(x => x.id === T3); assert.strictEqual(row.mula, '2026-01-01'); assert.strictEqual(row.sewa, 600);
 });
 t('lot baharu: kod dijana dan duplikasi ditolak', () => {
   ok('adminSaveLot', adm.token, { isNew: true, lot: { lokasi: 'Student Mall', noLot: 11, status: 'Aktif' } });
   assert.ok(b.readTable_('Lot').find(x => x.kodLot === 'StudentMall-Lot11'));
   bad('adminSaveLot', adm.token, { isNew: true, lot: { lokasi: 'Student Mall', noLot: 11, status: 'Aktif' } }, /sudah wujud/);
 });
-t('tarikh akhir sebelum tarikh mula ditolak', () => bad('adminSaveLot', adm.token, { lot: { lokasi: 'SUB', noLot: 2, mula: '2026-08-01', akhir: '2026-01-01' } }, /selepas tarikh mula/));
+t('peraturan penukaran awal bulan: mula mesti hari pertama, akhir mesti hari terakhir bulan', () => {
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot3', mula: '2026-07-15' } }, /hari pertama bulan/);
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot3', mula: '2026-07-01', akhir: '2026-12-15' } }, /hari terakhir bulan/);
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot3', mula: '2026-07-01', akhir: '2026-05-31' } }, /selepas tarikh mula/);
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot3', mula: '' } }, /wajib/);
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'TIADA', mula: '2026-07-01' } }, /lot yang sah/);
+  ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot3', mula: '2026-02-01', akhir: '2026-02-28' } });   // Feb bukan lompat: 28 hari sah
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot3', mula: '2026-03-01', akhir: '2026-04-31' } }, /tidak sah|hari terakhir/);
+});
 t('tambah penyewa (lot sah) dan admin kedua', () => {
-  ok('adminSaveUser', adm.token, { user: { email: 'Aina@Graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', kodLot: 'StudentMall-Lot3', status: 'Aktif' } });
-  ok('adminSaveUser', adm.token, { user: { email: 'din@graduan.example', nama: 'Din Ismail', peranan: 'Penyewa', kodLot: 'SUB-Lot2', status: 'Aktif' } });
+  ok('adminSaveUser', adm.token, { user: { email: 'Aina@Graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Aktif' } });
+  ok('adminSaveUser', adm.token, { user: { email: 'din@graduan.example', nama: 'Din Ismail', peranan: 'Penyewa', idSewa: TS2, status: 'Aktif' } });
   ok('adminSaveUser', adm.token, { user: { email: 'rashid@utm.my', nama: 'En. Rashid', peranan: 'Admin', status: 'Aktif' } });
   assert.strictEqual(b.readTable_('Pengguna').length, 4);
 });
 t('penyewa tanpa lot sah ditolak; admin tak boleh nyahaktif diri sendiri', () => {
-  bad('adminSaveUser', adm.token, { user: { email: 'x@y.com', nama: 'X', peranan: 'Penyewa', kodLot: 'TIADA' } }, /lot yang sah/);
+  bad('adminSaveUser', adm.token, { user: { email: 'x@y.com', nama: 'X', peranan: 'Penyewa', idSewa: 'TIADA' } }, /penyewaan yang sah/);
   bad('adminSaveUser', adm.token, { user: { email: 'utmxcite@utm.my', nama: 'A', peranan: 'Admin', status: 'Tidak aktif' } }, /sendiri/);
 });
 
 console.log('Penyewa');
 let ten;
-t('penyewa log masuk (e-mel dinormalisasi huruf kecil)', () => { ten = login('aina@graduan.example'); assert.strictEqual(ten.user.kodLot, 'StudentMall-Lot3'); });
+t('penyewa log masuk (e-mel dinormalisasi huruf kecil)', () => { ten = login('aina@graduan.example'); assert.strictEqual(ten.user.idSewa, T3); });
 t('penyewa tidak boleh akses API admin', () => { assert.strictEqual(bad('adminReports', ten.token, {}).code, 'FORBIDDEN'); bad('adminUsers', ten.token, {}); bad('adminReview', ten.token, {}); });
 t('maklumat peniaga: No. KP tidak sah ditolak, sah disimpan', () => {
   const biz = { nama: 'Kopi Kampus Enterprise', jenis: 'Makanan dan minuman', ssm: '003412345-K', pelajar: 'aina sofea binti ali', kp: '0102030', matrik: 'a22ea0123', fakulti: 'fka', telefon: '012-345 6789' };
@@ -137,8 +148,8 @@ t('ringkasan admin Sep 2026: 1 lot dihantar, lot lain belum; lot tanpa tarikh mu
 });
 t('admin: bulan = 0 (Semua) menyenaraikan semua bulan dalam tempoh sewa setiap lot', () => {
   const d = ok('adminReports', adm.token, { tahun: 2026, bulan: 0 });
-  assert.strictEqual(d.bulan, 0); assert.strictEqual(d.rows.length, 13, 'Lot3 Jan-Okt (10) + SUB2 Ogos-Okt (3)');
-  assert.strictEqual(d.jumlahLot, 13); assert.strictEqual(d.tanpaTarikh, 14);
+  assert.strictEqual(d.bulan, 0); assert.strictEqual(d.rows.length, 14, 'Lot3 Jan-Okt (10) + SUB2 Ogos-Okt (3) + SUB3 Feb (1)');
+  assert.strictEqual(d.jumlahLot, 14); assert.strictEqual(d.tanpaTarikh, 13);
   assert.strictEqual(JSON.stringify(d.rows.map(r => r.bulan).slice(0, 3)), '[10,10,9]', 'bulan terkini dahulu');
   d.rows.forEach(r => { assert.ok(r.untungRugi === null || typeof r.untungRugi === 'number', 'untungRugi mesti null atau nombor'); });
   assert.ok(d.rows.filter(r => r.status === 'none').every(r => r.untungRugi === null));
@@ -190,24 +201,139 @@ t('eksport CSV: tiada No. KP, dengan BOM, sel formula dilindungi', () => {
   assert.ok(d.csv.startsWith('﻿')); assert.ok(!/010203/.test(d.csv)); assert.match(d.csv, /"'=HYPERLINK/); assert.strictEqual(d.name, 'Laporan_2026-09.csv');
 });
 
+
+console.log('Lot bertukar penyewa (Syarikat A Jan-Jun, Syarikat B Jul-Dis)');
+let tA, tB, uA, uB;
+const submitFull = (tok, y, m, extra = {}) => {
+  ok('saveReport', tok, { tahun: y, bulan: m, data: { pendapatan: 5000, perbelanjaan: 3000, sewa: 600, sewaPeralatan: false, akuan: true, ...extra } });
+  ['laporan', 'sewa'].forEach(k => ok('uploadFile', tok, { tahun: y, bulan: m, kind: k, base64: pdf }));
+  return ok('submitReport', tok, { tahun: y, bulan: m });
+};
+const bizOf = n => ({ nama: n, jenis: 'Perkhidmatan', ssm: '', pelajar: 'Pelajar ' + n, kp: '010203011234', matrik: 'A1', fakulti: 'FKA', telefon: '0123456789' });
+t('admin cipta dua penyewaan pada Lot 6: A (Jan-Jun) dan B (Jul-Dis), tiada pertindihan', () => {
+  const r = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'StudentMall-Lot6', mula: '2026-01-01', akhir: '2026-06-30', sewa: 500 } });
+  tA = r.tenancies.find(x => x.kodLot === 'StudentMall-Lot6').id;
+  const r2 = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'StudentMall-Lot6', mula: '2026-07-01', akhir: '2026-12-31', sewa: 700 } });
+  tB = r2.tenancies.find(x => x.kodLot === 'StudentMall-Lot6' && x.id !== tA).id;
+  assert.notStrictEqual(tA, tB);
+});
+t('tempoh bertindih pada lot yang sama ditolak', () => {
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'StudentMall-Lot6', mula: '2026-06-01', akhir: '2026-08-31' } }, /bertindih/);
+});
+t('tarikh mula 2027 selepas B tamat Dis 2026 dibenarkan; tanpa tarikh akhir yang bertindih ditolak', () => {
+  ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'StudentMall-Lot6', mula: '2027-01-01', akhir: '2027-03-31' } });
+  bad('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'StudentMall-Lot6', mula: '2026-12-01' } }, /bertindih/);
+  // buang penyewaan 2027 supaya tidak mengganggu ujian lain
+  const id = b.readTable_('Penyewaan').find(x => x.kodLot === 'StudentMall-Lot6' && x.mula === '2027-01-01').id;
+  ok('adminDeleteTenancy', adm.token, { id });
+});
+t('daftar pengguna A (ikut penyewaan A) dan B (ikut penyewaan B)', () => {
+  ok('adminSaveUser', adm.token, { user: { email: 'a@syarikat.example', nama: 'Pemilik A', peranan: 'Penyewa', idSewa: tA, status: 'Aktif' } });
+  ok('adminSaveUser', adm.token, { user: { email: 'b@syarikat.example', nama: 'Pemilik B', peranan: 'Penyewa', idSewa: tB, status: 'Aktif' } });
+  uA = login('a@syarikat.example'); uB = login('b@syarikat.example');
+  ok('saveBusiness', uA.token, { biz: bizOf('Syarikat A') }); ok('saveBusiness', uB.token, { biz: bizOf('Syarikat B') });
+});
+t('A hanya nampak Jan-Jun; B hanya nampak Jul-Okt; masing-masing dengan syarikat dan sewa sendiri', () => {
+  const a = ok('myReports', uA.token, {}), bb = ok('myReports', uB.token, {});
+  assert.strictEqual(a.rows.length, 6); assert.strictEqual(JSON.stringify(a.rows.map(r => r.bulan)), '[6,5,4,3,2,1]'); assert.strictEqual(a.perniagaan, 'Syarikat A'); assert.strictEqual(a.lot.sewa, 500);
+  assert.strictEqual(bb.rows.length, 4); assert.strictEqual(JSON.stringify(bb.rows.map(r => r.bulan)), '[10,9,8,7]'); assert.strictEqual(bb.perniagaan, 'Syarikat B'); assert.strictEqual(bb.lot.sewa, 700);
+  assert.strictEqual(bb.counts.none, 4, 'B tidak dikenakan Jan-Jun');
+});
+t('A tidak boleh menyimpan/melihat bulan Julai; B tidak boleh menyentuh bulan Jun', () => {
+  bad('saveReport', uA.token, { tahun: 2026, bulan: 7, data: {} }, /tempoh sewa/); bad('getMyReport', uB.token, { tahun: 2026, bulan: 6 }, /tempoh sewa/);
+  bad('uploadFile', uB.token, { tahun: 2026, bulan: 6, kind: 'laporan', base64: pdf }, /tempoh sewa/);
+});
+t('laporan A (Jun) dan B (Jul) disimpan dengan ID penyewaan masing-masing', () => {
+  submitFull(uA.token, 2026, 6); submitFull(uB.token, 2026, 7);
+  const rows = b.readTable_('Laporan');
+  assert.strictEqual(rows.find(r => r.id === 'StudentMall-Lot6_2026-06').idSewa, tA);
+  assert.strictEqual(rows.find(r => r.id === 'StudentMall-Lot6_2026-07').idSewa, tB);
+});
+t('dashboard admin: baris lot yang sama menunjukkan syarikat berbeza mengikut bulan', () => {
+  const d = ok('adminReports', adm.token, { tahun: 2026, bulan: 0 });
+  const rows = d.rows.filter(r => r.kodLot === 'StudentMall-Lot6');
+  assert.strictEqual(rows.length, 10, 'Jan-Jun (A) + Jul-Okt (B)');
+  rows.forEach(r => assert.strictEqual(r.perniagaan, r.bulan <= 6 ? 'Syarikat A' : 'Syarikat B', 'bulan ' + r.bulan));
+  rows.forEach(r => assert.strictEqual(r.idSewa, r.bulan <= 6 ? tA : tB));
+  assert.strictEqual(ok('adminReports', adm.token, { tahun: 2026, bulan: 6 }).rows.find(r => r.kodLot === 'StudentMall-Lot6').perniagaan, 'Syarikat A');
+  assert.strictEqual(ok('adminReports', adm.token, { tahun: 2026, bulan: 7 }).rows.find(r => r.kodLot === 'StudentMall-Lot6').perniagaan, 'Syarikat B');
+});
+t('butiran semakan admin ikut penyewa pada bulan itu; e-mel keputusan hanya kepada penyewa yang betul', () => {
+  assert.strictEqual(ok('adminReport', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 6 }).biz.nama, 'Syarikat A');
+  assert.strictEqual(ok('adminReport', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 7 }).biz.nama, 'Syarikat B');
+  ok('adminReview', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 6, decision: 'fix', komen: 'Semak semula' });
+  assert.strictEqual(lastMail().to, 'a@syarikat.example');
+  ok('adminReview', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 7, decision: 'ok' });
+  assert.strictEqual(lastMail().to, 'b@syarikat.example');
+});
+t('peringatan untuk Sep (lot 6) hanya kepada B', () => {
+  const n = b.outbox.length; const r = ok('adminRemind', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 9 });
+  assert.strictEqual(r.dihantar, 1); assert.strictEqual(b.outbox.length, n + 1); assert.strictEqual(lastMail().to, 'b@syarikat.example');
+});
+t('B tidak boleh memuat turun fail A (bulan Jun) walaupun lot sama', () => {
+  bad('getFile', uB.token, { tahun: 2026, bulan: 6, kind: 'laporan' }, /tidak dijumpai/);
+  assert.match(ok('getFile', uA.token, { tahun: 2026, bulan: 6, kind: 'laporan' }).name, /_June_Syarikat A_FinancialReport\.pdf$/);
+  assert.match(ok('getFile', uB.token, { tahun: 2026, bulan: 7, kind: 'laporan' }).name, /_July_Syarikat B_FinancialReport\.pdf$/);
+});
+t('mengubah tempoh sehingga mengecualikan laporan sedia ada ditolak; padam penyewaan yang ada laporan/pengguna ditolak', () => {
+  bad('adminSaveTenancy', adm.token, { tenancy: { id: tA, kodLot: 'StudentMall-Lot6', mula: '2026-01-01', akhir: '2026-05-31' } }, /mengecualikan laporan/);
+  bad('adminDeleteTenancy', adm.token, { id: tA }, /sudah ada laporan/);
+  const empty = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot5', mula: '2027-01-01' } }).tenancies.find(x => x.kodLot === 'SUB-Lot5').id;
+  ok('adminSaveUser', adm.token, { user: { email: 'tmp@x.example', nama: 'Tmp', peranan: 'Penyewa', idSewa: empty, status: 'Aktif' } });
+  bad('adminDeleteTenancy', adm.token, { id: empty }, /pengguna dipautkan/);
+  ok('adminSaveUser', adm.token, { user: { email: 'tmp@x.example', nama: 'Tmp', peranan: 'Penyewa', idSewa: tB, status: 'Tidak aktif' } });
+  ok('adminDeleteTenancy', adm.token, { id: empty });
+});
+t('A boleh dinyahaktifkan tanpa menjejaskan B atau laporan lama', () => {
+  ok('adminSaveUser', adm.token, { user: { email: 'a@syarikat.example', nama: 'Pemilik A', peranan: 'Penyewa', idSewa: tA, status: 'Tidak aktif' } });
+  assert.strictEqual(bad('myReports', uA.token, {}).code, 'SESSION');
+  assert.strictEqual(ok('myReports', uB.token, {}).perniagaan, 'Syarikat B');
+  assert.ok(b.readTable_('Laporan').find(r => r.id === 'StudentMall-Lot6_2026-06'));
+});
+
+console.log('Naik taraf daripada struktur lama (tarikh sewa pada sheet Lot)');
+t('setupSystem menukar data lama kepada penyewaan: lot, peniaga, pengguna dan laporan dipautkan', () => {
+  const o = createBackend(); o.setupSystem();
+  // simulasi sheet versi lama: tarikh sewa dalam lajur 5-7 pada sheet Lot, peniaga/pengguna ikut kod lot
+  const lotRow = o.sheets['Lot'].data.find(r => r[0] === 'StudentMall-Lot3');
+  lotRow[4] = '2026-01-01'; lotRow[5] = '2026-12-31'; lotRow[6] = 600;
+  const lot2 = o.sheets['Lot'].data.find(r => r[0] === 'SUB-Lot1'); lot2[4] = '2026-03-01'; lot2[5] = ''; lot2[6] = '';
+  o.sheets['Peniaga'].data.push(['StudentMall-Lot3', 'Kopi Lama', 'F&B', '', 'AINA', '010203-01-1234', 'A1', 'FKA', '0123456789', '']);
+  o.sheets['Pengguna'].data.push(['aina@graduan.example', 'Aina', 'Penyewa', 'StudentMall-Lot3', 'Aktif']);
+  const rep = new Array(19).fill(''); rep[0] = 'StudentMall-Lot3_2026-02'; rep[1] = 'StudentMall-Lot3'; rep[2] = 2026; rep[3] = 2; rep[11] = 'Disahkan';
+  o.sheets['Laporan'].data.push(rep);
+  assert.strictEqual(o.readTable_('Penyewaan').length, 0);
+  o.setupSystem();
+  const tns = o.readTable_('Penyewaan'); assert.strictEqual(tns.length, 2);
+  const t3 = tns.find(x => x.kodLot === 'StudentMall-Lot3'); assert.strictEqual(t3.mula, '2026-01-01'); assert.strictEqual(t3.akhir, '2026-12-31'); assert.strictEqual(t3.sewa, 600);
+  assert.strictEqual(tns.find(x => x.kodLot === 'SUB-Lot1').akhir, '');
+  assert.strictEqual(o.readTable_('Peniaga')[0].idSewa, t3.id); assert.strictEqual(o.readTable_('Pengguna').find(u => u.email === 'aina@graduan.example').idSewa, t3.id);
+  assert.strictEqual(o.readTable_('Laporan')[0].idSewa, t3.id);
+  assert.strictEqual(o.sheets['Lot'].data.find(r => r[0] === 'StudentMall-Lot3')[4], undefined, 'lajur lama dikosongkan');
+  o.setupSystem(); assert.strictEqual(o.readTable_('Penyewaan').length, 2, 'selamat dijalankan semula');
+  // pengguna lama boleh log masuk dan melihat bulan sendiri
+  o.cache['otpwait:aina@graduan.example'] && delete o.cache['otpwait:aina@graduan.example'];
+  o.rpc('requestOtp', null, { email: 'aina@graduan.example' }); const code = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1];
+  const tok = o.rpc('verifyOtp', null, { email: 'aina@graduan.example', code }).data.token;
+  const mr = o.rpc('myReports', tok, {}).data; assert.strictEqual(mr.rows.length, 10); assert.strictEqual(mr.perniagaan, 'Kopi Lama');
+  assert.strictEqual(mr.rows.find(r => r.bulan === 2).status, 'ok');
+});
+
 console.log('Format tarikh');
 t('lajur tarikh disimpan sebagai tarikh sebenar (bukan teks) dan dibaca semula sebagai teks piawai', () => {
-  const lotRow = b.sheets['Lot'].data.find(r => r[0] === 'StudentMall-Lot3');
-  assert.ok(lotRow[4] instanceof Date, 'mula mesti Date'); assert.ok(lotRow[5] instanceof Date, 'akhir mesti Date');
-  assert.strictEqual(b.readTable_('Lot').find(l => l.kodLot === 'StudentMall-Lot3').mula, '2026-01-01');
+  const tnRow = b.sheets['Penyewaan'].data.find(r => r[0] === T3);
+  assert.ok(tnRow[2] instanceof Date, 'mula mesti Date'); assert.ok(tnRow[3] instanceof Date, 'akhir mesti Date');
+  assert.strictEqual(b.readTable_('Penyewaan').find(x => x.id === T3).mula, '2026-01-01');
   const rep = b.sheets['Laporan'].data.find(r => String(r[0]).startsWith('StudentMall-Lot3_2026-09'));
   assert.ok(rep[16] instanceof Date, 'tarikh hantar mesti Date');
   assert.match(b.readTable_('Laporan').find(r => r.id === 'StudentMall-Lot3_2026-09').tarikhHantar, /^2026-10-14 09:30:00$/);
 });
-t('migrasi: teks lama dalam lajur tarikh ditukar kepada tarikh sebenar semasa setup', () => {
-  const row = b.sheets['Lot'].data.find(r => r[0] === 'SUB-Lot5'); row[4] = '2026-03-01'; row[5] = '2026-12-31';
-  b.setupSystem();
-  assert.ok(row[4] instanceof Date && row[5] instanceof Date);
-  assert.strictEqual(b.readTable_('Lot').find(l => l.kodLot === 'SUB-Lot5').mula, '2026-03-01');
-});
 t('tarikh yang ditaip admin sebagai Date dalam sheet dibaca betul', () => {
-  const row = b.sheets['Lot'].data.find(r => r[0] === 'SUB-Lot4'); row[4] = new Date(Date.UTC(2026, 5, 14, 16));   // 15 Jun 2026 00:00 MYT
-  assert.strictEqual(b.readTable_('Lot').find(l => l.kodLot === 'SUB-Lot4').mula, '2026-06-15');
+  const r = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot4', mula: '2026-03-01' } });
+  const id = r.tenancies.find(x => x.kodLot === 'SUB-Lot4').id;
+  const row = b.sheets['Penyewaan'].data.find(x => x[0] === id); row[2] = new b.ctx.Date(Date.UTC(2026, 5, 14, 16));   // 15 Jun 2026 00:00 MYT
+  assert.strictEqual(b.readTable_('Penyewaan').find(x => x.id === id).mula, '2026-06-15');
+  row[2] = new b.ctx.Date(Date.UTC(2026, 2, 1) - 8 * 3600e3);
 });
 
 console.log('Ralat dan diagnostik');
@@ -235,13 +361,13 @@ t('5hb: lot belum hantar diingatkan sekali sahaja (tiada duplikasi)', () => {
   b.setNow(Date.parse('2026-10-14T01:30:00Z'));
 });
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
-  ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', kodLot: 'StudentMall-Lot3', status: 'Tidak aktif' } });
+  ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Tidak aktif' } });
   assert.strictEqual(bad('myReports', ten.token, {}).code, 'SESSION');
   delete b.cache['otpwait:aina@graduan.example']; const n = b.outbox.length; ok('requestOtp', null, { email: 'aina@graduan.example' }); assert.strictEqual(b.outbox.length, n, 'tiada OTP untuk akaun tidak aktif');
 });
 t('admin terakhir tidak boleh diturunkan', () => {
-  ok('adminSaveUser', adm.token, { user: { email: 'rashid@utm.my', nama: 'En. Rashid', peranan: 'Penyewa', kodLot: 'SUB-Lot2', status: 'Aktif' } });
-  bad('adminSaveUser', adm.token, { user: { email: 'utmxcite@utm.my', nama: 'A', peranan: 'Penyewa', kodLot: 'SUB-Lot2', status: 'Aktif' } }, /sendiri/);
+  ok('adminSaveUser', adm.token, { user: { email: 'rashid@utm.my', nama: 'En. Rashid', peranan: 'Penyewa', idSewa: TS2, status: 'Aktif' } });
+  bad('adminSaveUser', adm.token, { user: { email: 'utmxcite@utm.my', nama: 'A', peranan: 'Penyewa', idSewa: TS2, status: 'Aktif' } }, /sendiri/);
 });
 t('logout membatalkan sesi', () => { ok('logout', adm.token, {}); assert.strictEqual(bad('me', adm.token).code, 'SESSION'); });
 t('log audit direkod', () => { const log = b.readTable_('Log'); assert.ok(log.length > 20); assert.ok(log.some(l => l.tindakan === 'Sahkan laporan')); });
