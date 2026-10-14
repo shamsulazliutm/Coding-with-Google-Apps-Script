@@ -4,358 +4,274 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout: sidebar-less single column app. Tenant header, two tabs, month rail on the left, report form/summary on the right. */
+/* Layout: tenant header + tabs, then a filterable month list (one row per reporting month) with an edit dialog. */
 :root {
-  --bg: #f6f4f3;
-  --surface: #ffffff;
-  --fg: #231f20;
-  --muted: #6d6567;
-  --line: #e3dedd;
-  --accent: #8a1c2b;
-  --accent-fg: #ffffff;
-  --accent-soft: #f6e6e8;
-  --ok: #1f7a4d;
-  --ok-soft: #e2f3ea;
-  --warn: #9a5b00;
-  --warn-soft: #fbefd5;
-  --bad: #b3261e;
-  --bad-soft: #fbe4e2;
-  --info: #2c5d8f;
-  --info-soft: #e3edf8;
-  --idle: #6d6567;
-  --idle-soft: #ece8e7;
+  --bg: #f4f0ee; --surface: #ffffff; --fg: #2a2224; --muted: #6f6467; --line: #e8e0e1;
+  --head: #f1e5e8; --accent: #5b1a33; --accent-fg: #ffffff; --accent-soft: #f6e6e8;
+  --ok: #1f7a4d; --ok-soft: #e2f3ea; --warn: #9a5b00; --warn-soft: #fbefd5;
+  --bad: #b3261e; --bad-soft: #fbe4e2; --info: #2c5d8f; --info-soft: #e3edf8;
+  --idle: #6f6467; --idle-soft: #ece8e7; --scrim: rgba(30,15,20,.45);
   --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #171415; --surface: #221e1f; --fg: #f1ecec; --muted: #a79ea0; --line: #3a3436;
+    --bg: #171415; --surface: #221e1f; --fg: #f1ecec; --muted: #a79ea0; --line: #3a3436; --head: #33262a;
     --accent: #e0707f; --accent-fg: #1b0f11; --accent-soft: #3a2327;
     --ok: #62c58f; --ok-soft: #1b3326; --warn: #e6b45a; --warn-soft: #3a2d14;
     --bad: #f08a83; --bad-soft: #3d1f1d; --info: #86b4e6; --info-soft: #1e2d40;
-    --idle: #a79ea0; --idle-soft: #2e2829; color-scheme: dark;
+    --idle: #a79ea0; --idle-soft: #2e2829; --scrim: rgba(0,0,0,.6); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #171415; --surface: #221e1f; --fg: #f1ecec; --muted: #a79ea0; --line: #3a3436;
+  --bg: #171415; --surface: #221e1f; --fg: #f1ecec; --muted: #a79ea0; --line: #3a3436; --head: #33262a;
   --accent: #e0707f; --accent-fg: #1b0f11; --accent-soft: #3a2327;
   --ok: #62c58f; --ok-soft: #1b3326; --warn: #e6b45a; --warn-soft: #3a2d14;
   --bad: #f08a83; --bad-soft: #3d1f1d; --info: #86b4e6; --info-soft: #1e2d40;
-  --idle: #a79ea0; --idle-soft: #2e2829; color-scheme: dark;
+  --idle: #a79ea0; --idle-soft: #2e2829; --scrim: rgba(0,0,0,.6); color-scheme: dark;
 }
 * { box-sizing: border-box; }
-body {
-  background: var(--bg); color: var(--fg); font-family: var(--font-body);
-  font-size: 14px; line-height: 1.5;
-  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 48px;
-}
-.wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
-.note { font-size: 12px; color: var(--muted); }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.note { font-size: 12px; color: var(--muted); margin: 0; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* top bar */
 .top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
-.brand { display: flex; flex-direction: column; min-width: 0; }
-.brand small { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.brand strong { font-size: 17px; font-weight: 700; text-wrap: balance; }
-.who { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); min-width: 0; }
+.brand small { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.brand strong { font-size: 17px; font-weight: 700; }
+.who { font-size: 13px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
 .who b { color: var(--fg); font-weight: 600; }
-.who button { font: inherit; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px 0; text-decoration: underline; }
+.who button { color: var(--accent); background: none; border: 0; cursor: pointer; text-decoration: underline; padding: 0; }
 
-/* tabs */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.tab {
-  font: inherit; font-weight: 600; padding: 10px 16px; border: 0; background: none; color: var(--muted);
-  border-bottom: 3px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;
-}
+.tab { font-weight: 600; padding: 10px 16px; border: 0; background: none; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap; }
 .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
-.tab:focus-visible, button:focus-visible, input:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* tenant strip */
-.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px 24px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; }
-.strip dt { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.strip dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.stat small { display: block; font-size: 11.5px; color: var(--muted); }
+.stat strong { font-size: 18px; font-family: var(--font-mono); font-weight: 500; }
+.stat.bad strong { color: var(--bad); }
 
-/* main layout */
-.main { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 760px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.bar .grow { flex: 1 1 200px; min-width: 0; }
+.bar input, .bar select { width: 100%; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
+.bar select { width: auto; }
+.btn { font-weight: 600; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); padding: 10px 18px; border-radius: 8px; }
+.btn.sm { padding: 4px 12px; font-weight: 500; font-size: 13px; border-color: var(--accent); color: var(--accent); background: var(--surface); }
+.btn.sm.del { border-color: color-mix(in srgb, var(--bad) 55%, var(--surface)); color: var(--bad); }
+.btn.sm.fill { background: var(--accent); color: var(--accent-fg); }
+.btn.sm:disabled { opacity: .45; cursor: not-allowed; }
 
-/* month rail */
-.rail { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
-.rail h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 8px 8px 6px; font-weight: 600; }
-.mrow {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
-  font: inherit; text-align: left; color: var(--fg); background: none; border: 0; border-radius: 6px;
-  padding: 8px; cursor: pointer;
-}
-.mrow:hover:not(:disabled) { background: var(--bg); }
-.mrow[aria-current="true"] { background: var(--accent-soft); }
-.mrow:disabled { color: var(--muted); cursor: not-allowed; opacity: .6; }
-@media (max-width: 760px) {
-  .rail { flex-direction: row; overflow-x: auto; }
-  .rail h2 { display: none; }
-  .mrow { flex-direction: column; align-items: flex-start; min-width: 108px; }
-}
-
+.tbl-wrap { background: var(--surface); border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 820px; }
+thead th { background: var(--head); text-align: left; font-size: 13px; font-weight: 700; padding: 11px 12px; white-space: nowrap; }
+tbody td { padding: 11px 12px; border-top: 1px solid var(--line); vertical-align: middle; }
+.nw { white-space: nowrap; }
+td.num, th.num { text-align: right; }
+td.act { text-align: right; white-space: nowrap; display: table-cell; }
+td.act .btn + .btn { margin-left: 4px; }
 .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
 .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.s-ok { color: var(--ok); background: var(--ok-soft); }
-.s-info { color: var(--info); background: var(--info-soft); }
-.s-bad { color: var(--bad); background: var(--bad-soft); }
-.s-warn { color: var(--warn); background: var(--warn-soft); }
+.s-ok { color: var(--ok); background: var(--ok-soft); } .s-info { color: var(--info); background: var(--info-soft); }
+.s-bad { color: var(--bad); background: var(--bad-soft); } .s-warn { color: var(--warn); background: var(--warn-soft); }
 .s-idle { color: var(--idle); background: var(--idle-soft); }
+.late { font-size: 11.5px; color: var(--bad); margin-left: 6px; }
+.cmt { display: block; font-size: 12px; color: var(--bad); max-width: 260px; margin-top: 3px; }
+.empty-row td { text-align: center; color: var(--muted); padding: 28px; }
 
-/* report panel */
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
-.phead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
-.phead h1 { margin: 0; font-size: 18px; font-weight: 700; }
-.phead p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
-.deadline { font-size: 12.5px; }
-.pbody { padding: 20px; display: flex; flex-direction: column; gap: 22px; }
-
-.banner { border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
-.banner b { font-weight: 700; }
-.banner .who2 { font-size: 12px; opacity: .85; }
-.banner.s-bad, .banner.s-ok, .banner.s-info, .banner.s-warn { border: 1px solid currentColor; }
-.banner.s-bad::before, .banner.s-ok::before, .banner.s-info::before, .banner.s-warn::before { display: none; }
-.banner p { margin: 0; color: var(--fg); }
-
-.sec h3 { margin: 0 0 10px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+/* dialog */
+.scrim { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: flex-start; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); overflow-y: auto; z-index: 10; }
+.dlg { background: var(--surface); border-radius: 12px; width: min(640px, 100%); margin: auto; display: flex; flex-direction: column; }
+.dhead { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.dhead h2 { margin: 0; font-size: 17px; } .dhead p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.dhead .x { border: 0; background: none; font-size: 22px; line-height: 1; cursor: pointer; color: var(--muted); }
+.dbody { padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
+.dfoot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.banner { border: 1px solid currentColor; border-radius: 8px; padding: 10px 14px; }
+.banner b { display: block; } .banner p { margin: 2px 0 0; color: var(--fg); } .banner span { font-size: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.field label, .field .lbl { font-size: 13px; font-weight: 600; }
+.field > label, .field > .lbl { font-size: 13px; font-weight: 600; }
 .req { color: var(--bad); }
-.money { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); overflow: hidden; }
+.money { display: flex; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); overflow: hidden; }
 .money span { padding: 8px 10px; color: var(--muted); border-right: 1px solid var(--line); font-size: 13px; }
-.money input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-family: var(--font-mono); padding: 8px 10px; text-align: right; }
-.money:focus-within { border-color: var(--accent); }
-.money input:focus-visible { outline: none; }
-.money input:disabled { color: var(--fg); }
+.money input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font-family: var(--font-mono); padding: 8px 10px; text-align: right; }
+.money:focus-within { border-color: var(--accent); } .money input:focus-visible { outline: none; }
 .help { font-size: 12px; color: var(--muted); }
-
-.calc { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-.calc div { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
-.calc small { display: block; font-size: 11.5px; color: var(--muted); }
-.calc strong { font-family: var(--font-mono); font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.calc .neg strong { color: var(--bad); }
-.calc .pos strong { color: var(--ok); }
-
 .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; align-self: flex-start; }
-.toggle button { font: inherit; padding: 7px 18px; border: 0; background: var(--bg); color: var(--fg); cursor: pointer; }
+.toggle button { padding: 7px 18px; border: 0; background: var(--bg); color: var(--fg); cursor: pointer; }
 .toggle button + button { border-left: 1px solid var(--line); }
 .toggle button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
-.toggle button:disabled { cursor: default; }
-
-.files { display: flex; flex-direction: column; gap: 10px; }
-.file { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
-.file .meta { min-width: 0; flex: 1 1 260px; }
-.file .meta b { display: block; font-size: 13px; }
-.file .fname { font-family: var(--font-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-.file.empty { border-style: dashed; background: var(--bg); }
+.file { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: space-between; }
+.file .meta { flex: 1 1 240px; min-width: 0; } .file b { display: block; font-size: 13px; }
+.fname { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
 .file.off { opacity: .55; }
-.btn { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.btn.link { border: 0; background: none; color: var(--accent); padding: 4px 0; text-decoration: underline; font-weight: 500; }
-
 .declare { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--bg); border-radius: 8px; font-size: 13px; }
 .declare input { margin-top: 3px; accent-color: var(--accent); }
-.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
-.timeline { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--muted); }
-.timeline li { display: flex; flex-wrap: wrap; gap: 4px 10px; }
-.timeline time { font-family: var(--font-mono); font-size: 12px; min-width: 92px; }
-.toast { position: sticky; bottom: max(12px, env(safe-area-inset-bottom, 0px)); align-self: center; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 600; }
-.stub { padding: 24px 20px; color: var(--muted); }
-@media (prefers-reduced-motion: no-preference) { .mrow { transition: background .12s; } }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 600; z-index: 20; }
 </style>
 
 <div class="wrap">
   <header class="top">
-    <div class="brand">
-      <small>UTMXCITE · Student Mall &amp; SUB</small>
-      <strong>Laporan Kewangan Bulanan Penyewa</strong>
-    </div>
-    <div class="who">
-      <span>Log masuk sebagai <b>aina@graduan.example</b></span>
-      <button type="button">Log keluar</button>
-    </div>
+    <div class="brand"><small>UTMXCITE · Student Mall &amp; SUB</small><strong>Laporan Kewangan Bulanan Penyewa</strong></div>
+    <div class="who"><span>Log masuk sebagai <b>aina@graduan.example</b></span><button type="button">Log keluar</button></div>
   </header>
+  <p class="note">Paparan contoh untuk rujukan reka bentuk. Semua nama, angka dan fail ialah data contoh. Klik Edit untuk melihat borang.</p>
 
-  <p class="note">Paparan contoh untuk rujukan reka bentuk. Semua nama, angka dan fail di bawah ialah data contoh.</p>
-
-  <div class="tabs" role="tablist" aria-label="Menu penyewa">
-    <button class="tab" role="tab" id="tab-info" aria-selected="false" aria-controls="view" type="button">Maklumat Peniaga</button>
-    <button class="tab" role="tab" id="tab-fin" aria-selected="true" aria-controls="view" type="button">Laporan Kewangan</button>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="false" type="button">Maklumat Peniaga</button>
+    <button class="tab" role="tab" aria-selected="true" type="button">Laporan Kewangan</button>
   </div>
 
-  <dl class="strip" aria-label="Maklumat lot">
-    <div><dt>Perniagaan</dt><dd>Kopi Kampus Enterprise</dd></div>
-    <div><dt>Lot</dt><dd>Student Mall · Lot 3</dd></div>
-    <div><dt>Tahun laporan</dt><dd class="mono">2026</dd></div>
-    <div><dt>Tarikh akhir</dt><dd>7hb bulan berikutnya</dd></div>
-  </dl>
+  <div class="stats" id="stats"></div>
 
-  <div id="view"></div>
-  <div id="toast-slot"></div>
+  <div class="bar">
+    <div class="grow"><input id="q" type="search" placeholder="Cari bulan atau status" aria-label="Cari"></div>
+    <select id="fy" aria-label="Tahun"><option>Tahun: 2026</option><option>Tahun: 2025</option></select>
+    <select id="fs" aria-label="Status">
+      <option value="">Status: Semua</option><option value="fix">Perlu dibetulkan</option><option value="none">Belum dihantar</option>
+      <option value="sent">Dihantar</option><option value="ok">Disahkan</option>
+    </select>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Bulan</th><th>Nama perniagaan · Lot</th>
+        <th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Sewa (RM)</th>
+        <th>Status</th><th></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
 </div>
+
+<div id="dlg-slot"></div>
+<div id="toast-slot"></div>
 
 <script>
 (function () {
-  var BIZ = "Kopi Kampus Enterprise", LOCATION = "StudentMall", LOT = "Lot3";
-  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var BIZ = "Kopi Kampus Enterprise", LOT = "Student Mall · Lot 3", FL = "StudentMall_Lot3";
+  var EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var MS = ["Januari","Februari","Mac","April","Mei","Jun","Julai","Ogos","September","Oktober","November","Disember"];
+  var D = [
+    { st:"ok",  inc:8420, exp:5310, rent:600, eq:false, late:false },
+    { st:"ok",  inc:7980, exp:5100, rent:600, eq:true,  late:false },
+    { st:"ok",  inc:9150, exp:5870, rent:600, eq:true,  late:false },
+    { st:"ok",  inc:8700, exp:5420, rent:600, eq:false, late:false },
+    { st:"ok",  inc:7600, exp:5000, rent:600, eq:false, late:true  },
+    { st:"ok",  inc:6900, exp:4800, rent:600, eq:false, late:false },
+    { st:"ok",  inc:7300, exp:4950, rent:600, eq:true,  late:false },
+    { st:"sent",inc:8100, exp:5240, rent:600, eq:false, late:false },
+    { st:"fix", inc:8650, exp:9560, rent:600, eq:true,  late:true,
+      cmt:"Perbelanjaan terlalu tinggi. Semak sama ada sewa RM600 dikira dua kali dan muat naik semula laporan.", by:"Pn. Salmah (UTMXCITE), 9 Okt 2026" },
+    { st:"none",inc:"",   exp:"",   rent:"",  eq:null,  late:false }
+  ];
+  var ST = { ok:["s-ok","Disahkan"], sent:["s-info","Dihantar"], fix:["s-bad","Perlu dibetulkan"], none:["s-warn","Belum dihantar"] };
+  var state = { open:null, eq:null, ack:false, q:"", fs:"" };
 
-  /* Contoh data. today = 14 Okt 2026 */
-  var R = {
-    0: { st: "ok",   income: 8420, expense: 5310, rent: 600, equip: false, sent: "3 Feb 2026", by: "Admin UTMXCITE" },
-    1: { st: "ok",   income: 7980, expense: 5100, rent: 600, equip: true,  sent: "5 Mac 2026", by: "Admin UTMXCITE" },
-    2: { st: "ok",   income: 9150, expense: 5870, rent: 600, equip: true,  sent: "6 Apr 2026", by: "Admin UTMXCITE" },
-    3: { st: "ok",   income: 8700, expense: 5420, rent: 600, equip: false, sent: "4 Mei 2026", by: "Admin UTMXCITE" },
-    4: { st: "ok",   income: 7600, expense: 5000, rent: 600, equip: false, sent: "8 Jun 2026", late: true, by: "Admin UTMXCITE" },
-    5: { st: "ok",   income: 6900, expense: 4800, rent: 600, equip: false, sent: "2 Jul 2026", by: "Admin UTMXCITE" },
-    6: { st: "ok",   income: 7300, expense: 4950, rent: 600, equip: true,  sent: "6 Ogos 2026", by: "Admin UTMXCITE" },
-    7: { st: "sent", income: 8100, expense: 5240, rent: 600, equip: false, sent: "6 Sep 2026" },
-    8: { st: "fix",  income: 8650, expense: 9560, rent: 600, equip: true,  sent: "7 Okt 2026",
-         comment: "Jumlah perbelanjaan melebihi pendapatan dua kali ganda. Sila semak sama ada bayaran sewa RM600 sudah dikira dua kali, dan muat naik semula laporan yang lengkap.",
-         by: "Pn. Salmah (UTMXCITE)", reviewed: "9 Okt 2026" },
-    9: { st: "none", income: "", expense: "", rent: "", equip: null }
-  };
-  var ST = {
-    ok:   ["s-ok",   "Disahkan"],
-    sent: ["s-info", "Dihantar"],
-    fix:  ["s-bad",  "Perlu dibetulkan"],
-    none: ["s-warn", "Belum dihantar"],
-    lock: ["s-idle", "Belum tiba"]
-  };
-
-  var state = { tab: "fin", month: 8, equip: null, ack: false, toast: "" };
-  var view = document.getElementById("view");
-  var slot = document.getElementById("toast-slot");
-
-  function rm(n) { return "RM " + Number(n).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function fname(m, kind) {
-    var base = LOCATION + "_" + LOT + "_" + MONTHS[m];
-    if (kind === "report") return base + "_" + BIZ + "_FinancialReport.pdf";
-    return base + "_" + (kind === "rent" ? "RentReceipt" : "IncubatorReceipt") + ".pdf";
-  }
-  function dueText(m) {
-    var y = m === 11 ? 2027 : 2026, mm = (m + 1) % 12;
-    return "7 " + MS[mm] + " " + y;
-  }
-  function status(m) { return m > 9 ? "lock" : R[m].st; }
-
+  function fmt(n) { return n === "" ? "-" : Number(n).toLocaleString("en-MY", { minimumFractionDigits:2 }); }
+  function id(m) { return "PP-" + String(m + 1).padStart(3, "0"); }
+  function due(m) { return "7 " + MS[(m + 1) % 12]; }
   function pill(s) { return '<span class="pill ' + ST[s][0] + '">' + ST[s][1] + "</span>"; }
 
-  function rail() {
-    var h = '<nav class="rail" aria-label="Pilih bulan"><h2>Bulan laporan</h2>';
-    for (var m = 0; m < 12; m++) {
-      var s = status(m);
-      h += '<button type="button" class="mrow" data-m="' + m + '"' + (m === state.month ? ' aria-current="true"' : "") + (s === "lock" ? " disabled" : "") + ">" +
-           "<span>" + MS[m] + "</span>" + pill(s) + "</button>";
+  function stats() {
+    var c = { ok:0, sent:0, fix:0, none:0 };
+    D.forEach(function (r) { c[r.st]++; });
+    document.getElementById("stats").innerHTML =
+      '<div class="stat"><small>Disahkan</small><strong>' + c.ok + " / 10</strong></div>" +
+      '<div class="stat"><small>Menunggu semakan</small><strong>' + c.sent + "</strong></div>" +
+      '<div class="stat' + (c.fix ? " bad" : "") + '"><small>Perlu dibetulkan</small><strong>' + c.fix + "</strong></div>" +
+      '<div class="stat"><small>Belum dihantar</small><strong>' + c.none + "</strong></div>";
+  }
+
+  function rows() {
+    var h = "", n = 0;
+    for (var m = D.length - 1; m >= 0; m--) {
+      var r = D[m];
+      var hay = (MS[m] + " " + ST[r.st][1] + " " + id(m)).toLowerCase();
+      if (state.q && hay.indexOf(state.q.toLowerCase()) < 0) continue;
+      if (state.fs && r.st !== state.fs) continue;
+      n++;
+      var act;
+      if (r.st === "ok") act = '<button class="btn sm" data-o="' + m + '">Lihat</button> <button class="btn sm del" disabled title="Laporan disahkan dikunci">Padam</button>';
+      else if (r.st === "none") act = '<button class="btn sm fill" data-o="' + m + '">Isi laporan</button>';
+      else act = '<button class="btn sm" data-o="' + m + '">Edit</button> <button class="btn sm del" data-d="' + m + '">Padam</button>';
+      h += "<tr><td class=\"nw\">" + id(m) + "</td><td class=\"nw\">2026-" + String(m + 1).padStart(2, "0") + "</td>" +
+        "<td>" + BIZ + '<span class="help" style="display:block">' + LOT + "</span></td>" +
+        '<td class="num mono">' + fmt(r.inc) + '</td><td class="num mono">' + fmt(r.exp) + '</td><td class="num mono">' + fmt(r.rent) + "</td>" +
+        "<td>" + pill(r.st) + (r.late ? '<span class="late">Lewat</span>' : "") + (r.st === "fix" ? '<span class="cmt">' + r.cmt + "</span>" : "") +
+        (r.st === "none" ? '<span class="help" style="display:block;font-size:12px;color:var(--muted)">Tarikh akhir ' + due(m) + "</span>" : "") + "</td>" +
+        '<td class="act">' + act + "</td></tr>";
     }
-    return h + "</nav>";
+    document.getElementById("rows").innerHTML = n ? h : '<tr class="empty-row"><td colspan="9">Tiada laporan sepadan dengan carian.</td></tr>';
   }
 
-  function money(id, label, val, editable, help) {
-    return '<div class="field"><label for="' + id + '">' + label + (editable ? ' <span class="req">*</span>' : "") + "</label>" +
-      '<div class="money"><span>RM</span><input id="' + id + '" type="text" inputmode="decimal" value="' + (val === "" ? "" : Number(val).toFixed(2)) + '"' + (editable ? "" : " disabled") + ' placeholder="0.00"></div>' +
-      (help ? '<span class="help">' + help + "</span>" : "") + "</div>";
+  function money(idd, label, v, ed) {
+    return '<div class="field"><label for="' + idd + '">' + label + (ed ? ' <span class="req">*</span>' : "") + '</label><div class="money"><span>RM</span><input id="' + idd + '" inputmode="decimal" placeholder="0.00" value="' + (v === "" ? "" : Number(v).toFixed(2)) + '"' + (ed ? "" : " disabled") + "></div></div>";
+  }
+  function file(title, name, show, off) {
+    if (off) return '<div class="file off"><div class="meta"><b>' + title + '</b><span class="fname">Tidak diperlukan jika tiada sewa peralatan UTMXCITE.</span></div></div>';
+    return '<div class="file"><div class="meta"><b>' + title + ' (PDF)</b><span class="fname">' + (show ? name + " · 1.2 MB" : "Akan disimpan sebagai " + name) + "</span></div>" +
+      '<button class="btn sm" type="button">' + (show ? "Ganti fail" : "Pilih fail PDF") + "</button></div>";
   }
 
-  function fileRow(title, name, present, editable, off) {
-    if (off) return '<div class="file off"><div class="meta"><b>' + title + '</b><span class="fname">Tidak diperlukan kerana tiada sewa peralatan UTMXCITE bulan ini.</span></div></div>';
-    if (!present) return '<div class="file empty"><div class="meta"><b>' + title + ' <span class="req">*</span></b><span class="fname">Akan disimpan sebagai ' + name + '</span></div><button type="button" class="btn">Pilih fail PDF</button></div>';
-    return '<div class="file"><div class="meta"><b>' + title + '</b><span class="fname">' + name + ' · 1.2 MB</span></div>' +
-      '<span><button type="button" class="btn link">Lihat</button>' + (editable ? ' <button type="button" class="btn link">Ganti fail</button>' : "") + "</span></div>";
+  function dialog() {
+    var slot = document.getElementById("dlg-slot");
+    if (state.open === null) { slot.innerHTML = ""; return; }
+    var m = state.open, r = D[m], ed = (r.st === "fix" || r.st === "none");
+    var eq = ed ? (state.eq === null ? r.eq : state.eq) : r.eq;
+    var has = r.inc !== "";
+    var banner = "";
+    if (r.st === "fix") banner = '<div class="banner s-bad"><b>Admin meminta pembetulan</b><p>' + r.cmt + "</p><span>" + r.by + "</span></div>";
+    if (r.st === "sent") banner = '<div class="banner s-info"><b>Menunggu semakan admin</b><p>Anda masih boleh edit sehingga admin menyemak.</p></div>';
+    if (r.st === "ok") banner = '<div class="banner s-ok"><b>Disahkan</b><p>Laporan ini dikunci dan tidak boleh diubah.</p></div>';
+    var editable = ed || r.st === "sent";
+    var h = '<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt">' +
+      '<div class="dhead"><div><h2 id="dt">' + (r.st === "none" ? "Isi" : r.st === "ok" ? "Lihat" : "Edit") + " laporan " + MS[m] + ' 2026</h2><p>' + BIZ + " · " + LOT + " · tarikh akhir " + due(m) + '</p></div><button class="x" data-x aria-label="Tutup">×</button></div>' +
+      '<div class="dbody">' + banner +
+      '<div class="grid">' + money("f1", "Jumlah pendapatan bulanan", r.inc, editable) + money("f2", "Jumlah perbelanjaan bulanan", r.exp, editable) + money("f3", "Bayaran sewa bulan ini", r.rent, editable) + "</div>" +
+      file("Laporan kewangan bulanan", FL + "_" + EN[m] + "_" + BIZ + "_FinancialReport.pdf", has) +
+      file("Resit bayaran sewa", FL + "_" + EN[m] + "_RentReceipt.pdf", has) +
+      '<div class="field"><span class="lbl">Adakah anda menyewa peralatan UTMXCITE? ' + (editable ? '<span class="req">*</span>' : "") + '</span><div class="toggle">' +
+      '<button type="button" data-eq="1" aria-pressed="' + (eq === true) + '"' + (editable ? "" : " disabled") + '>Ya</button><button type="button" data-eq="0" aria-pressed="' + (eq === false) + '"' + (editable ? "" : " disabled") + ">Tidak</button></div></div>" +
+      (eq === false ? file("Resit incubator", "", false, true) : eq === true ? file("Resit bayaran incubator", FL + "_" + EN[m] + "_IncubatorReceipt.pdf", has) : "") +
+      (editable ? '<label class="declare"><input id="ack" type="checkbox"' + (state.ack ? " checked" : "") + '><span>Saya mengesahkan bahawa semua maklumat yang diberikan adalah lengkap dan tepat mengikut pengetahuan saya.</span></label>' : "") +
+      '</div><div class="dfoot"><span class="help">PDF sahaja, maksimum 10 MB setiap fail.</span><span>' +
+      '<button class="btn" data-x type="button">' + (editable ? "Batal" : "Tutup") + "</button> " +
+      (editable ? '<button class="btn" data-draft type="button">Simpan draf</button> <button class="btn primary" data-send type="button"' + (state.ack ? "" : " disabled") + ">Hantar laporan</button>" : "") +
+      "</span></div></div></div>";
+    slot.innerHTML = h;
   }
 
-  function banner(m, r, s) {
-    var late = "";
-    if (s === "ok") {
-      return '<div class="banner s-ok"><b>Disahkan oleh admin</b><p>Laporan ' + MS[m] + ' telah disemak pada ' + (r.sent) + '. Laporan dikunci dan tidak boleh diubah.</p><span class="who2">' + r.by + (r.late ? " · dihantar lewat" : "") + "</span></div>";
-    }
-    if (s === "sent") return '<div class="banner s-info"><b>Menunggu semakan admin</b><p>Dihantar pada ' + r.sent + '. Anda akan terima e-mel apabila admin menyemak laporan ini.</p></div>';
-    if (s === "fix") return '<div class="banner s-bad"><b>Admin meminta pembetulan</b><p>' + r.comment + '</p><span class="who2">' + r.by + " · " + r.reviewed + "</span></div>";
-    return '<div class="banner s-warn"><b>Laporan belum dihantar</b><p>Hantar sebelum ' + dueText(m) + ". Selepas tarikh ini laporan ditanda lewat.</p></div>";
+  function toast(t) {
+    var s = document.getElementById("toast-slot");
+    s.innerHTML = '<div class="toast" role="status">' + t + "</div>";
+    setTimeout(function () { s.innerHTML = ""; }, 2200);
   }
-
-  function report() {
-    var m = state.month, r = R[m], s = status(m);
-    var editable = (s === "fix" || s === "none");
-    var equip = editable ? (state.equip === null ? r.equip : state.equip) : r.equip;
-    var inc = Number(r.income) || 0, exp = Number(r.expense) || 0;
-    var net = inc - exp;
-    var h = '<div class="panel"><div class="phead"><div><h1>Laporan ' + MS[m] + " 2026</h1><p>" + BIZ + " · Student Mall, Lot 3</p></div>" +
-      '<div class="deadline">Tarikh akhir <b class="mono">' + dueText(m) + "</b> &nbsp;" + pill(s) + "</div></div>";
-    h += '<div class="pbody">' + banner(m, r, s);
-
-    h += '<section class="sec"><h3>Ringkasan kewangan</h3><div class="grid">' +
-      money("f-inc", "Jumlah pendapatan bulanan", r.income, editable) +
-      money("f-exp", "Jumlah perbelanjaan bulanan", r.expense, editable) + "</div>";
-    if (r.income !== "") {
-      h += '<div class="calc" style="margin-top:12px"><div><small>Pendapatan</small><strong>' + rm(inc) + "</strong></div>" +
-        "<div><small>Perbelanjaan</small><strong>" + rm(exp) + "</strong></div>" +
-        '<div class="' + (net < 0 ? "neg" : "pos") + '"><small>' + (net < 0 ? "Rugi bulan ini" : "Untung bulan ini") + "</small><strong>" + (net < 0 ? "-" : "") + rm(Math.abs(net)) + "</strong></div></div>";
-    }
-    h += "</section>";
-
-    h += '<section class="sec"><h3>Laporan kewangan</h3><div class="files">' +
-      fileRow("Laporan kewangan bulanan (PDF)", fname(m, "report"), r.income !== "", editable) +
-      '</div><p class="help" style="margin:8px 0 0">PDF sahaja, maksimum 10 MB. Nama fail dijana oleh sistem. Anda boleh guna templat sendiri.</p></section>';
-
-    h += '<section class="sec"><h3>Bayaran sewa</h3><div class="grid">' +
-      money("f-rent", "Jumlah bayaran sewa bulan ini", r.rent, editable) + '</div><div class="files" style="margin-top:12px">' +
-      fileRow("Resit bayaran sewa (PDF)", fname(m, "rent"), r.income !== "", editable) + "</div></section>";
-
-    h += '<section class="sec"><h3>Sewa peralatan UTMXCITE</h3><div class="field"><span class="lbl">Adakah anda menyewa peralatan daripada UTMXCITE? ' + (editable ? '<span class="req">*</span>' : "") + "</span>" +
-      '<div class="toggle" role="group" aria-label="Sewa peralatan">' +
-      '<button type="button" data-eq="1" aria-pressed="' + (equip === true) + '"' + (editable ? "" : " disabled") + ">Ya</button>" +
-      '<button type="button" data-eq="0" aria-pressed="' + (equip === false) + '"' + (editable ? "" : " disabled") + ">Tidak</button></div></div>";
-    h += '<div class="files" style="margin-top:12px">' + fileRow("Resit bayaran incubator (PDF)", fname(m, "incubator"), r.income !== "" && equip === true, editable, equip === false) + "</div></section>";
-
-    if (editable) {
-      h += '<label class="declare"><input id="f-ack" type="checkbox"' + (state.ack ? " checked" : "") + '><span>Saya mengesahkan bahawa semua maklumat yang diberikan adalah lengkap dan tepat mengikut pengetahuan saya.</span></label>' +
-        '<div class="actions"><span class="help">Selepas dihantar, status menjadi “Dihantar” dan admin akan menyemak.</span>' +
-        '<span><button type="button" class="btn" id="draft">Simpan draf</button> <button type="button" class="btn primary" id="submit"' + (state.ack ? "" : " disabled") + ">" + (s === "fix" ? "Hantar semula" : "Hantar laporan") + "</button></span></div>";
-    }
-
-    h += '<section class="sec"><h3>Sejarah</h3><ul class="timeline">';
-    if (s === "fix") h += '<li><time>' + r.reviewed + "</time><span>" + r.by + " meminta pembetulan</span></li>";
-    if (s === "ok") h += '<li><time>' + r.sent + "</time><span>" + r.by + " mengesahkan laporan</span></li>";
-    if (s !== "none") h += '<li><time>' + r.sent + "</time><span>Laporan dihantar oleh aina@graduan.example</span></li>";
-    else h += "<li><span>Tiada aktiviti lagi untuk bulan ini.</span></li>";
-    h += "</ul></section></div></div>";
-    return h;
-  }
-
-  function render() {
-    document.getElementById("tab-fin").setAttribute("aria-selected", state.tab === "fin");
-    document.getElementById("tab-info").setAttribute("aria-selected", state.tab === "info");
-    if (state.tab === "info") {
-      view.innerHTML = '<div class="panel"><div class="stub"><b>Maklumat Peniaga</b><p class="note" style="margin-top:6px">Tab ini dipaparkan dalam rekaan berasingan.</p></div></div>';
-    } else {
-      view.innerHTML = '<div class="main">' + rail() + report() + "</div>";
-    }
-    slot.innerHTML = state.toast ? '<div class="toast" role="status">' + state.toast + "</div>" : "";
-  }
+  function render() { stats(); rows(); dialog(); }
 
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("button, input");
-    if (!t) return;
-    if (t.id === "tab-fin") { state.tab = "fin"; render(); return; }
-    if (t.id === "tab-info") { state.tab = "info"; render(); return; }
-    if (t.dataset.m !== undefined) { state.month = +t.dataset.m; state.equip = null; state.ack = false; state.toast = ""; render(); return; }
-    if (t.dataset.eq !== undefined) { state.equip = t.dataset.eq === "1"; render(); return; }
-    if (t.id === "draft") { state.toast = "Draf disimpan"; render(); return; }
-    if (t.id === "submit") {
-      var r = R[state.month]; r.st = "sent"; r.sent = "14 Okt 2026";
-      state.toast = "Laporan dihantar untuk semakan"; state.ack = false; render(); return;
-    }
+    var t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.o !== undefined) { state.open = +t.dataset.o; state.eq = null; state.ack = false; render(); }
+    else if (t.hasAttribute("data-x")) { state.open = null; render(); }
+    else if (t.dataset.eq !== undefined) { state.eq = t.dataset.eq === "1"; render(); }
+    else if (t.hasAttribute("data-draft")) { toast("Draf disimpan"); }
+    else if (t.hasAttribute("data-send")) { var r = D[state.open]; if (r.st !== "sent") { r.st = "sent"; r.late = r.late && false; } state.open = null; render(); toast("Laporan dihantar untuk semakan"); }
+    else if (t.dataset.d !== undefined) { toast("Pengesahan padam dipaparkan di sini"); }
   });
   document.addEventListener("change", function (e) {
-    if (e.target.id === "f-ack") { state.ack = e.target.checked; render(); document.getElementById("f-ack").focus(); }
+    if (e.target.id === "ack") { state.ack = e.target.checked; render(); var a = document.getElementById("ack"); if (a) a.focus(); }
+    if (e.target.id === "fs") { state.fs = e.target.value; rows(); }
   });
+  document.getElementById("q").addEventListener("input", function (e) { state.q = e.target.value; rows(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && state.open !== null) { state.open = null; render(); } });
   render();
 })();
 </script>
