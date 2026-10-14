@@ -139,10 +139,10 @@ let browser;
   // ===== admin =====
   const a = await newPage(); await uiLogin(a, 'utmxcite@utm.my'); await a.waitForSelector('.kpis'); await settle(a);
   // ===== dashboard admin =====
-  assert.match(await a.textContent('.hero'), /Ringkasan September 2026/, 'lalai: bulan lepas');
+  assert.match(await a.textContent('.hero'), /Ringkasan sepanjang 2026/, 'lalai: semua bulan, tahun semasa');
+  assert.strictEqual(await a.inputValue('#ds-month'), '0'); assert.strictEqual(await a.inputValue('#ds-year'), '2026');
   assert.match(await a.textContent('.kpis'), /Kadar penghantaran/); assert.ok(await a.locator('.chart svg').count() >= 2);
   assert.ok(await a.locator('.todo [data-act=review]').count() >= 3, 'senarai menunggu semakan'); await shot(a, '21-dash-admin', true);
-  await a.selectOption('#ds-month', '0'); await a.waitForFunction(() => /sepanjang 2026/.test(document.querySelector('.hero').textContent)); await settle(a);
   assert.match(await a.textContent('.hero'), /laporan dijangka/); await a.selectOption('#ds-month', '9'); await a.waitForFunction(() => /September 2026/.test(document.querySelector('.hero').textContent)); await settle(a);
   await a.click('.todo [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await a.click('[data-act=closedlg]');
   await a.click('[data-tab=adm]'); await a.waitForSelector('#a-rows tr'); await settle(a);

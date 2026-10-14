@@ -1192,13 +1192,11 @@ function myDashboard_(user, p) {
   };
 }
 
-/** Dashboard admin: p.tahun, p.bulan (0 = semua bulan dalam tahun itu; lalai = bulan lepas bagi tahun semasa). */
+/** Dashboard admin: p.tahun (lalai: tahun semasa), p.bulan (0 = semua bulan dalam tahun itu; lalai: semua). */
 function adminDashboard_(user, p) {
   var today = todayStr_(), t = ymFromStr_(today);
   var y = Number(p.tahun) || t.y;
-  var m;
-  if (p.bulan === undefined || p.bulan === null || p.bulan === '') m = y === t.y ? (t.m === 1 ? 1 : t.m - 1) : 0;
-  else m = Number(p.bulan);
+  var m = p.bulan === undefined || p.bulan === null || p.bulan === '' ? 0 : Number(p.bulan);   // lalai: semua bulan
   if (!isFinite(m) || m < 0 || m > 12) fail_('Bulan tidak sah.');
   var all = adminReports_(user, { tahun: y, bulan: 0 });
   var sel = all.rows.filter(function (r) { return m === 0 || r.bulan === m; });

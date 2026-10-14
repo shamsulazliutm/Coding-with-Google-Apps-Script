@@ -347,8 +347,12 @@ t('dashboard penyewa: komen pembetulan admin dipaparkan', () => {
   submitFull(ten.token, 2026, 8, { pendapatan: 8100, perbelanjaan: 5240 });
   assert.strictEqual(ok('myDashboard', ten.token, {}).jumlah.bulanDikira, 2);
 });
-t('dashboard admin: lalai bulan lepas; ringkasan sepadan dengan senarai laporan', () => {
-  const d = ok('adminDashboard', adm.token, {});
+t('dashboard admin: lalai ialah tahun semasa dan semua bulan', () => {
+  const d = ok('adminDashboard', adm.token, {}); assert.strictEqual(d.tahun, 2026); assert.strictEqual(d.bulan, 0);
+  assert.strictEqual(d.jumlahBaris, ok('adminReports', adm.token, { tahun: 2026, bulan: 0 }).rows.length);
+});
+t('dashboard admin: ringkasan satu bulan sepadan dengan senarai laporan', () => {
+  const d = ok('adminDashboard', adm.token, { bulan: 9 });
   const list = ok('adminReports', adm.token, { tahun: 2026, bulan: 9 });
   assert.strictEqual(d.tahun, 2026); assert.strictEqual(d.bulan, 9);
   assert.strictEqual(d.jumlahBaris, list.rows.length); assert.strictEqual(JSON.stringify(d.counts), JSON.stringify(list.counts));
@@ -369,7 +373,7 @@ t('dashboard admin: bulan = 0 (semua) dan tindakan mengikut keseluruhan tahun', 
   assert.strictEqual(d.tindakan.tertunggak.jumlah, yr.rows.filter(r => r.status === 'none' && r.kesempatanLewat).length);
   assert.strictEqual(d.tindakan.perluBaiki.jumlah, yr.rows.filter(r => r.status === 'fix').length);
   assert.ok(d.tindakan.tertunggak.senarai.length <= 8); assert.strictEqual(d.siri.reduce((a, x) => a + x.dijangka, 0), yr.rows.length);
-  assert.strictEqual(ok('adminDashboard', adm.token, { tahun: 2025 }).bulan, 0, 'tahun lain: lalai semua bulan');
+  assert.strictEqual(ok('adminDashboard', adm.token, { tahun: 2025 }).bulan, 0, 'tahun lain: semua bulan');
   assert.strictEqual(ok('adminDashboard', adm.token, { tahun: 2025 }).jumlahBaris, 0);
   bad('adminDashboard', adm.token, { bulan: 14 }, /Bulan tidak sah/);
 });
