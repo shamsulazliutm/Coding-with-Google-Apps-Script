@@ -4,7 +4,7 @@
 <base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Laporan Kewangan Bulanan Penyewa</title>
+<title>Laporan Pendapatan dan Perbelanjaan Usahawan Pelajar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -236,8 +236,8 @@ textarea.fi { min-height: 72px; resize: vertical; }
   /* ---------- kerangka ---------- */
   function header() {
     var admin = S.user.peranan === 'Admin';
-    return '<header class="top"><div class="brand"><img class="logo" src="' + LOGO + '" alt="UTM dan UTMXCITE"><div class="bt"><small>Student Mall &amp; SUB</small><strong>' +
-      (admin ? 'Pentadbiran Laporan Kewangan' : 'Laporan Kewangan Bulanan Penyewa') + '</strong></div></div>' +
+    return '<header class="top"><div class="brand"><img class="logo" src="' + LOGO + '" alt="UTM dan UTMXCITE" height="52" style="height:52px;width:auto;max-width:100%"><div class="bt"><small>Student Mall &amp; SUB</small><strong>' +
+      'Laporan Pendapatan dan Perbelanjaan Usahawan Pelajar' + '</strong></div></div>' +
       '<div class="who"><span><b>' + esc(S.user.email) + '</b></span><span class="role' + (admin ? '' : ' t') + '">' + esc(S.user.peranan) + '</span><button class="linkbtn" data-act="logout" type="button">Log keluar</button></div></header>';
   }
 
@@ -272,7 +272,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   /* ---------- log masuk ---------- */
   function loginHtml() {
     var L = S.login;
-    var h = '<div class="login"><img class="logo" src="' + LOGO + '" alt="UTM dan UTMXCITE"><h1>' + 'Laporan Kewangan Bulanan Penyewa' + '</h1>' +
+    var h = '<div class="login"><img class="logo" src="' + LOGO + '" alt="UTM dan UTMXCITE" height="52" style="height:52px;width:auto;max-width:100%"><h1>' + 'Laporan Pendapatan dan Perbelanjaan Usahawan Pelajar' + '</h1>' +
       '<p class="note">Student Mall &amp; Student Union Building (SUB), UTMXCITE</p><div class="card">';
     if (L.err) h += '<div class="errbox" role="alert">' + esc(L.err) + '</div>';
     if (L.step === 'email') {

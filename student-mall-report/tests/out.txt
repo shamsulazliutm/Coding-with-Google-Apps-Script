@@ -1,0 +1,2 @@
+E2E UI: semua langkah lulus, tiada ralat konsol
+done

@@ -9,7 +9,7 @@
  */
 
 var APP = {
-  NAME: 'Laporan Kewangan Bulanan Penyewa',
+  NAME: 'Laporan Pendapatan dan Perbelanjaan Usahawan Pelajar',
   SENDER: 'UTMXCITE',
   CONTACT_EMAIL: 'utmxcite@utm.my',
   DEFAULT_ADMIN: 'utmxcite@utm.my',   // admin lalai yang didaftarkan oleh setupSystem()
