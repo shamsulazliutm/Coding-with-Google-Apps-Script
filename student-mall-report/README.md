@@ -51,10 +51,10 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 - **Log masuk**: e-mel berdaftar dan OTP 6 digit (sah 5 minit, sekali guna, maksimum 5 percubaan). Tiada akaun Google diperlukan. Peranan (`Admin` atau `Penyewa`) dibaca daripada sheet **Pengguna**.
 - **Penyewa**: dua tab, *Maklumat Peniaga* dan *Laporan Kewangan*. Satu baris bagi setiap bulan dalam tempoh sewa penyewa itu, dari bulan mula sewa hingga bulan semasa. Laporan disimpan sebagai draf, dihantar, dan boleh diedit sehingga disahkan.
 - **Lampiran**: PDF sahaja, maksimum 10 MB (laporan kewangan, resit sewa, resit incubator jika menyewa peralatan UTMXCITE). Nama fail dijana: `StudentMall_Lot3_September_<Perniagaan>_FinancialReport.pdf`. Fail disimpan di Drive: `tahun / 09 September / <kod lot>`.
-- **Tarikh akhir**: hari ke-7 bulan berikutnya. Hantaran selepas tarikh itu ditanda *Lewat*.
+- **Tarikh akhir**: asalnya hari ke-7 bulan berikutnya. Apabila e-mel peringatan dihantar, tarikh akhir dalam e-mel itu ialah **tarikh e-mel dihantar + 7 hari** (contohnya e-mel 5 November memberi tarikh akhir 12 November). Tarikh akhir baharu itu juga dipaparkan dalam sistem dan menjadi had *Lewat*. Peringatan tidak pernah memendekkan tarikh akhir asal. Bilangan hari ditetapkan oleh `REMINDER_DEADLINE_DAYS` di bahagian atas `Code.gs`.
 - **Admin**: lihat semua lot mengikut bulan, semak laporan (Sahkan atau Minta pembetulan dengan komen), hantar peringatan manual, eksport CSV, urus lot dan pengguna.
 - **Status**: `Belum dihantar` (termasuk draf), `Dihantar`, `Perlu dibetulkan`, `Disahkan`. Laporan yang disahkan dikunci.
-- **Peringatan automatik**: pada 5hb setiap bulan (sekitar jam 9 pagi), e-mel dihantar kepada penyewa yang belum menghantar laporan bulan lepas. Setiap lot hanya diingatkan sekali.
+- **Peringatan automatik**: pada 5hb setiap bulan (sekitar jam 9 pagi), e-mel dihantar kepada penyewa yang belum menghantar laporan bulan lepas. Setiap lot hanya diingatkan sekali pada hari itu. Setiap peringatan (automatik atau manual dari dashboard) direkod dalam sheet **Peringatan** bersama tarikh akhirnya.
 
 ## Struktur sheet
 
@@ -70,7 +70,7 @@ Jangan ubah susunan lajur. Kod membaca lajur mengikut kedudukan. Anda boleh mena
 | Peniaga | ID penyewaan, Nama perniagaan, Jenis, No SSM, Nama pelajar, No KP, No matrik, Fakulti, No telefon, Dikemas kini |
 | Laporan | ID, Kod lot, Tahun, Bulan, Pendapatan, Perbelanjaan, Bayaran sewa, Sewa peralatan, 3 lajur fail, Status, Lewat, Komen admin, Disemak oleh, Tarikh disemak, Tarikh hantar, Akuan, Dikemas kini, ID penyewaan |
 | Log | Masa, E-mel, Tindakan, Butiran (audit semua tindakan penting) |
-| Peringatan | Rekod peringatan automatik yang telah dihantar |
+| Peringatan | Rekod setiap peringatan yang dihantar (kunci, masa, tarikh akhir) |
 
 Lot baharu ditambah melalui tab **Lot** dalam sistem (butang *+ Tambah lot*), atau terus dalam sheet **Lot**. Kod lot dijana daripada lokasi dan nombor, contohnya `StudentMall-Lot3`.
 
@@ -105,4 +105,4 @@ Versi lama menyimpan tarikh sewa pada sheet **Lot** dan memautkan peniaga dan pe
 
 ## Ujian
 
-Logik pelayan diuji dengan tiruan API Apps Script (66 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
+Logik pelayan diuji dengan tiruan API Apps Script (70 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.

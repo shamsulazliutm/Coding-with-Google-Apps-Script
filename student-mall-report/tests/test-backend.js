@@ -352,12 +352,39 @@ t('ralat tidak dijangka: mesej ada kod rujukan dan butiran dalam Log', () => {
 t('checkSystem melaporkan semua langkah OK', () => { const m = b.checkSystem(); assert.ok(!/GAGAL/.test(m), m); assert.match(m, /Kebenaran e-mel/); });
 
 console.log('Peringatan automatik & keselamatan');
+t('tarikh akhir dalam e-mel peringatan = tarikh e-mel dihantar + 7 hari (bukan hari ke-7 bulan berikutnya)', () => {
+  const rows = b.readTable_('Peringatan').filter(r => r.kunci.startsWith('SUB-Lot2|2026-09|'));
+  assert.ok(rows.length >= 1); assert.strictEqual(rows[rows.length - 1].akhir, '2026-10-21', 'hantar 14 Okt -> akhir 21 Okt');
+  const mail = b.outbox.filter(m => m.to === 'din@graduan.example' && /Peringatan/.test(m.subject)).pop();
+  assert.match(mail.htmlBody, /21 Oktober 2026/); assert.match(mail.htmlBody, /7 hari dari tarikh e-mel/); assert.ok(!/7 Oktober 2026/.test(mail.htmlBody));
+});
+t('tarikh akhir peringatan berkuat kuasa: paparan penyewa dan penentuan lewat', () => {
+  const din = login('din@graduan.example');
+  const row = ok('myReports', din.token, {}).rows.find(r => r.bulan === 9);
+  assert.strictEqual(row.tarikhAkhir, '2026-10-21'); assert.strictEqual(row.tarikhAkhirLabel, '21 Oktober 2026'); assert.strictEqual(row.kesempatanLewat, false, 'masih dalam tempoh peringatan');
+  assert.strictEqual(ok('adminReports', adm.token, { tahun: 2026, bulan: 9 }).rows.find(r => r.kodLot === 'SUB-Lot2').tarikhAkhir, '2026-10-21');
+  assert.strictEqual(submitFull(din.token, 2026, 9).lewat, false, 'dihantar 14 Okt sebelum 21 Okt: tidak lewat');
+});
+t('peringatan yang dihantar sebelum hari ke-7 tidak memendekkan tarikh akhir asal', () => {
+  ok('adminRemind', adm.token, { kodLot: 'SUB-Lot2', tahun: 2026, bulan: 10 });   // 14 Okt + 7 = 21 Okt, tetapi asal 7 Nov
+  const din = login('din@graduan.example');
+  assert.strictEqual(ok('myReports', din.token, {}).rows.find(r => r.bulan === 10).tarikhAkhir, '2026-11-07');
+});
+t('tarikh akhir merentasi hujung bulan dan tahun dikira betul', () => {
+  const f = b.ctx.addDays_;
+  assert.strictEqual(f('2026-10-14', 7), '2026-10-21'); assert.strictEqual(f('2026-10-28', 7), '2026-11-04'); assert.strictEqual(f('2026-12-28', 7), '2027-01-04');
+  assert.strictEqual(f('2028-02-25', 7), '2028-03-03', 'tahun lompat'); assert.strictEqual(f('2027-02-25', 7), '2027-03-04');
+  assert.strictEqual(b.ctx.dateLabelMs_('2027-01-04'), '4 Januari 2027');
+});
 t('dailyReminderJob hanya bertindak pada 5hb', () => { assert.match(b.dailyReminderJob(), /Bukan hari peringatan/); });
 t('5hb: lot belum hantar diingatkan sekali sahaja (tiada duplikasi)', () => {
   b.setNow(Date.parse('2026-11-05T01:00:00Z'));   // 5 Nov: bulan laporan = Oktober
   const n = b.outbox.length; const r1 = b.dailyReminderJob(); const n1 = b.outbox.length; const r2 = b.dailyReminderJob();
   assert.ok(n1 > n, r1); assert.strictEqual(b.outbox.length, n1, 'tidak boleh hantar dua kali: ' + r2);
   assert.ok(b.readTable_('Peringatan').length >= 1);
+  const autoRows = b.readTable_('Peringatan').filter(r => r.kunci.includes('|2026-10|2026-11-05|'));
+  assert.ok(autoRows.length >= 1); autoRows.forEach(r => assert.strictEqual(r.akhir, '2026-11-12', '5 Nov + 7 hari'));
+  assert.match(b.outbox[b.outbox.length - 1].htmlBody, /12 November 2026/);
   b.setNow(Date.parse('2026-10-14T01:30:00Z'));
 });
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {

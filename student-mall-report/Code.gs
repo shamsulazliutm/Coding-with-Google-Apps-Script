@@ -16,6 +16,7 @@ var APP = {
   TZ: 'Asia/Kuala_Lumpur',
   DUE_DAY: 7,              // tarikh akhir hantar: hari ke-7 bulan berikutnya
   REMINDER_DAY: 5,         // peringatan automatik pada 5hb setiap bulan
+  REMINDER_DEADLINE_DAYS: 7, // tarikh akhir dalam e-mel peringatan = tarikh e-mel dihantar + 7 hari
   REMINDER_HOUR: 9,        // trigger harian dijalankan sekitar jam 9 pagi
   OTP_TTL: 300,            // OTP sah 5 minit
   OTP_MAX_TRIES: 5,
@@ -70,7 +71,7 @@ COLS[SHEETS.LOG] = [
   ['masa', 'Masa', 'dt'], ['email', 'E-mel', 't'], ['tindakan', 'Tindakan', 't'], ['butiran', 'Butiran', 't']
 ];
 COLS[SHEETS.REMINDERS] = [
-  ['kunci', 'Kunci', 't'], ['masa', 'Masa', 'dt']
+  ['kunci', 'Kunci', 't'], ['masa', 'Masa', 'dt'], ['akhir', 'Tarikh akhir', 'd']
 ];
 
 /** Jenis fail lampiran: kunci -> sambungan nama fail dan lajur dalam sheet Laporan */
@@ -145,6 +146,41 @@ function dueDate_(y, m) {
 function dueLabel_(y, m) {
   var ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1;
   return APP.DUE_DAY + ' ' + MONTHS_MS[nm - 1] + ' ' + ny;
+}
+
+/** 'yyyy-MM-dd' + n hari -> 'yyyy-MM-dd'. */
+function addDays_(dateStr, n) {
+  var p = dateStr.split('-');
+  var d = new Date(Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2]) + n));
+  return d.getUTCFullYear() + '-' + pad2_(d.getUTCMonth() + 1) + '-' + pad2_(d.getUTCDate());
+}
+
+/** 'yyyy-MM-dd' -> '21 Oktober 2026'. */
+function dateLabelMs_(s) {
+  var p = s.split('-');
+  return Number(p[2]) + ' ' + MONTHS_MS[Number(p[1]) - 1] + ' ' + p[0];
+}
+
+/**
+ * Tarikh akhir sebenar bagi laporan satu lot untuk satu bulan: hari ke-7 bulan berikutnya,
+ * atau tarikh akhir dalam e-mel peringatan terkini (tarikh e-mel + 7 hari) jika lebih lewat.
+ * Data peringatan dibaca sekali bagi setiap permintaan.
+ */
+var REMINDER_DEADLINES_ = null;
+function reminderDeadlines_() {
+  if (REMINDER_DEADLINES_) return REMINDER_DEADLINES_;
+  var map = {};
+  readTable_(SHEETS.REMINDERS).forEach(function (r) {
+    if (!isDateStr_(r.akhir)) return;
+    var k = String(r.kunci).split('|').slice(0, 2).join('|');   // kodLot|yyyy-MM
+    if (!map[k] || r.akhir > map[k]) map[k] = r.akhir;
+  });
+  REMINDER_DEADLINES_ = map;
+  return map;
+}
+function effectiveDue_(kodLot, y, m) {
+  var base = dueDate_(y, m), ext = reminderDeadlines_()[kodLot + '|' + y + '-' + pad2_(m)];
+  return ext && ext > base ? ext : base;
 }
 
 function lotCode_(lokasi, noLot) {
@@ -380,17 +416,25 @@ function tenantEmailsForLot_(kodLot, y, m) {
     .map(function (u) { return u.email; });
 }
 
+/**
+ * Hantar peringatan. Tarikh akhir dalam e-mel = tarikh e-mel dihantar + REMINDER_DEADLINE_DAYS hari.
+ * Setiap penghantaran direkod dalam sheet Peringatan (bersama tarikh akhir itu).
+ */
 function sendReminderMail_(kodLot, y, m) {
   var to = tenantEmailsForLot_(kodLot, y, m);
   if (!to.length) return 0;
+  var today = todayStr_();
+  var deadline = addDays_(today, APP.REMINDER_DEADLINE_DAYS);
   var url = appUrl_();
   to.forEach(function (email) {
     sendMail_(email, 'Peringatan: Laporan kewangan ' + MONTHS_MS[m - 1] + ' ' + y,
       '<p>Salam,</p>' +
       '<p>Laporan kewangan bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> belum dihantar.</p>' +
-      '<p>Sila hantar sebelum atau pada <b>' + dueLabel_(y, m) + '</b>. Laporan selepas tarikh ini ditanda lewat.</p>' +
+      '<p>Tarikh akhir hantar: <b>' + dateLabelMs_(deadline) + '</b> (' + APP.REMINDER_DEADLINE_DAYS + ' hari dari tarikh e-mel ini). Laporan selepas tarikh ini ditanda lewat.</p>' +
       (url ? '<p><a href="' + url + '">Buka sistem</a></p>' : ''));
   });
+  appendObj_(SHEETS.REMINDERS, { kunci: kodLot + '|' + y + '-' + pad2_(m) + '|' + today + '|' + nowStr_().slice(11), masa: nowStr_(), akhir: deadline });
+  REMINDER_DEADLINES_ = null;   // tarikh akhir baharu berkuat kuasa serta-merta
   return to.length;
 }
 
@@ -568,7 +612,7 @@ function filesView_(rep) {
 function reportView_(rep, lot, y, m) {
   var key = statusKey_(rep);
   var today = todayStr_();
-  var due = dueDate_(y, m);
+  var due = effectiveDue_(lot.kodLot, y, m);
   var num = function (v) { return v === '' || v === undefined || v === null ? null : Number(v); };
   return {
     id: reportId_(lot.kodLot, y, m), kodLot: lot.kodLot, tahun: y, bulan: m, bulanNama: MONTHS_MS[m - 1],
@@ -585,7 +629,7 @@ function reportView_(rep, lot, y, m) {
     disemakOleh: rep ? rep.disemakOleh || '' : '',
     tarikhSemak: rep ? rep.tarikhSemak || '' : '',
     tarikhHantar: rep ? rep.tarikhHantar || '' : '',
-    tarikhAkhir: due, tarikhAkhirLabel: dueLabel_(y, m),
+    tarikhAkhir: due, tarikhAkhirLabel: dateLabelMs_(due),
     sewaBulanan: lot.sewa === '' ? null : Number(lot.sewa),
     boleh: key !== 'ok'
   };
@@ -752,7 +796,7 @@ function submitMyReport_(user, p) {
     var miss = missingFields_(rep);
     if (miss.length) fail_('Laporan belum lengkap: ' + miss.join(', ') + '.');
     var now = nowStr_();
-    if (!rep.tarikhHantar) rep.lewat = todayStr_() > dueDate_(y, m) ? 'Ya' : '';
+    if (!rep.tarikhHantar) rep.lewat = todayStr_() > effectiveDue_(lot.kodLot, y, m) ? 'Ya' : '';
     rep.status = STATUS.SENT;
     rep.tarikhHantar = now;
     rep.dikemaskini = now;
@@ -1102,11 +1146,12 @@ function dailyReminderJob() {
 
 /** Boleh dipanggil manual dari editor untuk ujian: runReminders_('2026-10-05'). */
 function runReminders_(today) {
+  REMINDER_DEADLINES_ = null;
   var t = ymFromStr_(today);
   var y = t.m === 1 ? t.y - 1 : t.y, m = t.m === 1 ? 12 : t.m - 1;   // bulan laporan = bulan lepas
   var lots = readTable_(SHEETS.LOTS).filter(function (l) { return l.status === 'Aktif'; });
   var map = reportMap_();
-  var done = {}; readTable_(SHEETS.REMINDERS).forEach(function (r) { done[r.kunci] = true; });
+  var done = {}; readTable_(SHEETS.REMINDERS).forEach(function (r) { done[String(r.kunci).split('|').slice(0, 3).join('|')] = true; });
   var sent = 0;
 
   lots.forEach(function (lot) {
@@ -1117,10 +1162,7 @@ function runReminders_(today) {
     var kunci = lot.kodLot + '|' + y + '-' + pad2_(m) + '|' + today;
     if (done[kunci]) return;
     try {
-      if (sendReminderMail_(lot.kodLot, y, m) > 0) {
-        appendObj_(SHEETS.REMINDERS, { kunci: kunci, masa: nowStr_() });
-        sent++;
-      }
+      if (sendReminderMail_(lot.kodLot, y, m) > 0) sent++;
     } catch (e) { logAction_('sistem', 'Ralat peringatan', lot.kodLot + ': ' + e); }
   });
   logAction_('sistem', 'Peringatan automatik', 'Bulan ' + y + '-' + pad2_(m) + ', lot diingatkan: ' + sent);
@@ -1303,6 +1345,7 @@ var ROUTES = {
 
 /** Dipanggil oleh pelayar melalui google.script.run.rpc(method, token, params). */
 function rpc(method, token, params) {
+  REMINDER_DEADLINES_ = null;
   try {
     var r = Object.prototype.hasOwnProperty.call(ROUTES, method) ? ROUTES[method] : null;
     if (!r) fail_('Permintaan tidak dikenali.');
