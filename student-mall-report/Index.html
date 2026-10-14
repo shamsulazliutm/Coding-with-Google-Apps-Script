@@ -273,8 +273,31 @@ textarea.fi { min-height: 72px; resize: vertical; }
     setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
   }
 
+  /** Paparkan PDF sahaja (tiada muat turun). Tab dibuka serta-merta semasa klik supaya tidak disekat; kandungan dimuatkan kemudian. */
+  function pdfUrl(f) {
+    var bin = atob(f.base64), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10 * 60 * 1000);
+    return url;
+  }
+
+  function showPdfDialog(name, url) {
+    var el = document.createElement('div');
+    el.innerHTML = '<div class="scrim" style="z-index:30"><div class="dlg" role="dialog" aria-modal="true" style="width:min(900px,100%)"><div class="dhead"><div><h2>Paparan fail</h2><p class="mono" style="word-break:break-all">' + esc(name) + '</p></div><button class="x" data-r="0" aria-label="Tutup" type="button">×</button></div>' +
+      '<div class="dbody"><iframe src="' + url + '" title="' + esc(name) + '" style="width:100%;height:70vh;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe>' +
+      '<a href="' + url + '" target="_blank" rel="noopener">Buka dalam tab baharu</a></div></div></div>';
+    document.body.appendChild(el);
+    el.addEventListener('click', function (e) { if (e.target.closest('[data-r]')) el.remove(); });
+  }
+
   function openFile(tahun, bulan, kind, kodLot) {
-    run(api('getFile', { tahun: tahun, bulan: bulan, kind: kind, kodLot: kodLot }).then(function (f) { download(f.name, f.mime, f.base64, true); }));
+    var w = null;
+    try { w = window.open('', '_blank'); } catch (e) { w = null; }
+    api('getFile', { tahun: tahun, bulan: bulan, kind: kind, kodLot: kodLot }).then(function (f) {
+      var url = pdfUrl(f);
+      if (w && !w.closed) w.location = url; else showPdfDialog(f.name, url);
+    }).catch(function (e) { if (w) { try { w.close(); } catch (x) { /* abaikan */ } } toast(e.message, true); });
   }
 
   /* ---------- kerangka ---------- */
@@ -722,7 +745,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       var f = r.files[k[0]];
       if (k[0] === 'incubator' && r.sewaPeralatan !== true) return '';
       return '<div class="file"><div class="meta"><b>' + k[1] + '</b><span class="fname">' + (f ? esc(f.name) : 'Tiada fail') + '</span></div>' +
-        (f ? '<button class="btn sm" data-act="admfile" data-kind="' + k[0] + '" type="button">Muat turun</button>' : '') + '</div>';
+        (f ? '<button class="btn sm" data-act="admfile" data-kind="' + k[0] + '" type="button">Lihat</button>' : '') + '</div>';
     }).join('');
     $('dlg-slot').innerHTML = '<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt" data-lot="' + esc(r.kodLot) + '" data-y="' + r.tahun + '" data-m="' + r.bulan + '">' +
       '<div class="dhead"><div><h2 id="dt">' + esc(r.lot.nama) + ' · ' + esc(r.bulanNama) + ' ' + r.tahun + '</h2><p>' + esc(b.nama || 'Maklumat peniaga belum diisi') + ' · ' + esc(b.pelajar) + (b.kp ? ' · ' + esc(b.kp) : '') + '</p></div><button class="x" data-act="closedlg" aria-label="Tutup" type="button">×</button></div>' +

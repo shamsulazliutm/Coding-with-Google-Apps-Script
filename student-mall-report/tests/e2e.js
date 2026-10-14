@@ -57,6 +57,7 @@ let browser;
   async function newPage(w = 1150, h = 800) {
     const p = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1.5 });
     p.setDefaultTimeout(15000); await p.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); p.on('pageerror', e => errs.push('pageerror: ' + e.message)); p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push('console: ' + m.text()); });
+    await p.addInitScript(() => { window.open = () => { window.__opened = { href: '' }; return { closed: false, close() {}, set location(v) { window.__opened.href = v; }, get location() { return window.__opened.href; } }; }; });
     await p.exposeFunction('__rpc', (m, t, params) => JSON.stringify(b.rpc(m, t, JSON.parse(params))));
     await p.addInitScript(() => {
       const make = (s, f) => ({ withSuccessHandler: fn => make(fn, f), withFailureHandler: fn => make(s, fn),
@@ -162,8 +163,10 @@ let browser;
   await a.click('[data-act=rv-fix]'); await a.waitForSelector('.dlg .errbox'); assert.match(await a.textContent('.dlg .errbox'), /komen/);
   await a.fill('#rv-komen', 'Sila lampirkan penyata bank.'); await a.click('[data-act=rv-fix]'); await a.waitForFunction(() => /pembetulan/i.test((document.querySelector('.toast') || {}).textContent || '')); await settle(a);
   assert.match(await a.textContent('#a-rows tr:has-text("Kopi Kampus")'), /Perlu dibetulkan/);
-  const [dl] = await Promise.all([a.waitForEvent('download'), (async () => { await a.click('#a-rows tr:has-text("Roti Gebu") [data-act=review]'); await a.waitForSelector('[data-act=admfile]'); await a.click('[data-act=admfile][data-kind=laporan]'); })()]);
-  assert.match(dl.suggestedFilename(), /FinancialReport\.pdf$/);
+  await a.click('#a-rows tr:has-text("Roti Gebu") [data-act=review]'); await a.waitForSelector('[data-act=admfile]');
+  assert.ok(!/Muat turun/.test(await a.textContent('.dlg')), 'tiada butang Muat turun'); assert.strictEqual(await a.locator('[data-act=admfile]').first().textContent(), 'Lihat');
+  await a.click('[data-act=admfile][data-kind=laporan]'); await a.waitForFunction(() => window.__opened && /^blob:/.test(window.__opened.href));
+  const viewed = await a.evaluate(() => window.__opened.href); assert.ok(/^blob:/.test(viewed), 'PDF dibuka untuk paparan (blob), bukan dimuat turun');
   await a.click('[data-act=rv-ok]'); await a.waitForFunction(() => /disahkan/i.test((document.querySelector('.toast') || {}).textContent || '')); await settle(a);
   assert.match(await a.textContent('#a-rows tr:has-text("Roti Gebu")'), /Disahkan/);
   await a.click('#a-rows tr:has-text("Tech Fixit") [data-act=remind]'); await a.waitForFunction(() => /Peringatan dihantar/.test((document.querySelector('.toast') || {}).textContent || ''));
