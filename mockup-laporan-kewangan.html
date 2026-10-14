@@ -206,7 +206,7 @@ td.act .btn + .btn { margin-left: 4px; }
       n++;
       var act;
       if (r.st === "ok") act = '<button class="btn sm" data-o="' + m + '">Lihat</button> <button class="btn sm del" disabled title="Laporan disahkan dikunci">Padam</button>';
-      else if (r.st === "none") act = '<button class="btn sm fill" data-o="' + m + '">Isi laporan</button>';
+      else if (r.st === "none") act = '<button class="btn sm fill" data-o="' + m + '">Hantar laporan</button>';
       else act = '<button class="btn sm" data-o="' + m + '">Edit</button> <button class="btn sm del" data-d="' + m + '">Padam</button>';
       h += "<tr><td class=\"nw\">" + id(m) + "</td><td class=\"nw\">2026-" + String(m + 1).padStart(2, "0") + "</td>" +
         "<td>" + BIZ + '<span class="help" style="display:block">' + LOT + "</span></td>" +
@@ -246,7 +246,7 @@ td.act .btn + .btn { margin-left: 4px; }
     if (r.st === "ok") banner = '<div class="banner s-ok"><b>Disahkan</b><p>Laporan ini dikunci dan tidak boleh diubah.</p></div>';
     var editable = ed || r.st === "sent";
     var h = '<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt">' +
-      '<div class="dhead"><div><h2 id="dt">' + (state.isNew ? "Laporan baharu" : r.st === "none" ? "Isi laporan" : r.st === "ok" ? "Lihat" : "Edit") + (state.isNew ? "" : " laporan " + MS[m] + " 2026") + '</h2><p>' + BIZ + " · " + LOT + " · tarikh akhir " + due(m) + '</p></div><button class="x" data-x aria-label="Tutup">×</button></div>' +
+      '<div class="dhead"><div><h2 id="dt">' + (state.isNew ? "Laporan baharu" : r.st === "none" ? "Hantar" : r.st === "ok" ? "Lihat" : "Edit") + (state.isNew ? "" : " laporan " + MS[m] + " 2026") + '</h2><p>' + BIZ + " · " + LOT + " · tarikh akhir " + due(m) + '</p></div><button class="x" data-x aria-label="Tutup">×</button></div>' +
       '<div class="dbody">' + (state.isNew ? monthPick(m) : "") + banner +
       '<div class="grid">' + money("f1", "Jumlah pendapatan bulanan", r.inc, editable) + money("f2", "Jumlah perbelanjaan bulanan", r.exp, editable) + money("f3", "Bayaran sewa bulan ini", r.rent, editable) + "</div>" +
       file("Laporan kewangan bulanan", FL + "_" + EN[m] + "_" + BIZ + "_FinancialReport.pdf", has) +
