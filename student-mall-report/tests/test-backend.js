@@ -179,6 +179,26 @@ t('eksport CSV: tiada No. KP, dengan BOM, sel formula dilindungi', () => {
   assert.ok(d.csv.startsWith('﻿')); assert.ok(!/010203/.test(d.csv)); assert.match(d.csv, /"'=HYPERLINK/); assert.strictEqual(d.name, 'Laporan_2026-09.csv');
 });
 
+console.log('Format tarikh');
+t('lajur tarikh disimpan sebagai tarikh sebenar (bukan teks) dan dibaca semula sebagai teks piawai', () => {
+  const lotRow = b.sheets['Lot'].data.find(r => r[0] === 'StudentMall-Lot3');
+  assert.ok(lotRow[4] instanceof Date, 'mula mesti Date'); assert.ok(lotRow[5] instanceof Date, 'akhir mesti Date');
+  assert.strictEqual(b.readTable_('Lot').find(l => l.kodLot === 'StudentMall-Lot3').mula, '2026-01-01');
+  const rep = b.sheets['Laporan'].data.find(r => String(r[0]).startsWith('StudentMall-Lot3_2026-09'));
+  assert.ok(rep[16] instanceof Date, 'tarikh hantar mesti Date');
+  assert.match(b.readTable_('Laporan').find(r => r.id === 'StudentMall-Lot3_2026-09').tarikhHantar, /^2026-10-14 09:30:00$/);
+});
+t('migrasi: teks lama dalam lajur tarikh ditukar kepada tarikh sebenar semasa setup', () => {
+  const row = b.sheets['Lot'].data.find(r => r[0] === 'SUB-Lot5'); row[4] = '2026-03-01'; row[5] = '2026-12-31';
+  b.setupSystem();
+  assert.ok(row[4] instanceof Date && row[5] instanceof Date);
+  assert.strictEqual(b.readTable_('Lot').find(l => l.kodLot === 'SUB-Lot5').mula, '2026-03-01');
+});
+t('tarikh yang ditaip admin sebagai Date dalam sheet dibaca betul', () => {
+  const row = b.sheets['Lot'].data.find(r => r[0] === 'SUB-Lot4'); row[4] = new Date(Date.UTC(2026, 5, 14, 16));   // 15 Jun 2026 00:00 MYT
+  assert.strictEqual(b.readTable_('Lot').find(l => l.kodLot === 'SUB-Lot4').mula, '2026-06-15');
+});
+
 console.log('Ralat dan diagnostik');
 t('jika e-mel OTP gagal dihantar: mesej jelas, OTP dibatalkan, ralat direkod dalam Log', () => {
   b.ctxFlags.failMail = true; delete b.cache['otpwait:rashid@utm.my'];

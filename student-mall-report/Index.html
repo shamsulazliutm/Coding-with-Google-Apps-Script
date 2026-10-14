@@ -307,6 +307,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function inp(id, label, val, req, ph) {
     return '<div class="field"><label for="' + id + '">' + label + (req ? ' <span class="req">*</span>' : '') + '</label><input class="fi" id="' + id + '" value="' + esc(val) + '"' + (ph ? ' placeholder="' + ph + '"' : '') + '></div>';
   }
+  function fmtDT(s) { var m = /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}))?/.exec(s || ''); return m ? m[3] + '/' + m[2] + '/' + m[1] + (m[4] ? ' ' + m[4] + ':' + m[5] : '') : (s || ''); }
   function dateLabel(s) { if (!s) return '-'; var p = s.split('-'); return Number(p[2]) + ' ' + MS[Number(p[1]) - 1] + ' ' + p[0]; }
 
   function bizHtml() {
@@ -397,7 +398,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     var old = slot.querySelector('.scrim'), top = old ? old.scrollTop : 0;
     var rep = D.rep, v = D.v, edit = rep.boleh;
     var banner = '';
-    if (rep.status === 'fix') banner = '<div class="banner s-bad"><b>Admin meminta pembetulan</b><p>' + esc(rep.komen) + '</p><span>' + esc(rep.disemakOleh) + ' · ' + esc(rep.tarikhSemak) + '</span></div>';
+    if (rep.status === 'fix') banner = '<div class="banner s-bad"><b>Admin meminta pembetulan</b><p>' + esc(rep.komen) + '</p><span>' + esc(rep.disemakOleh) + ' · ' + esc(fmtDT(rep.tarikhSemak)) + '</span></div>';
     if (rep.status === 'sent') banner = '<div class="banner s-info"><b>Menunggu semakan admin</b><p>Anda masih boleh mengedit sehingga admin menyemak.</p></div>';
     if (rep.status === 'ok') banner = '<div class="banner s-ok"><b>Disahkan</b><p>Laporan ini dikunci dan tidak boleh diubah.</p></div>';
     var month = '';
@@ -547,8 +548,8 @@ textarea.fi { min-height: 72px; resize: vertical; }
     $('dlg-slot').innerHTML = '<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt" data-lot="' + esc(r.kodLot) + '" data-y="' + r.tahun + '" data-m="' + r.bulan + '">' +
       '<div class="dhead"><div><h2 id="dt">' + esc(r.lot.nama) + ' · ' + esc(r.bulanNama) + ' ' + r.tahun + '</h2><p>' + esc(b.nama || 'Maklumat peniaga belum diisi') + ' · ' + esc(b.pelajar) + (b.kp ? ' · ' + esc(b.kp) : '') + '</p></div><button class="x" data-act="closedlg" aria-label="Tutup" type="button">×</button></div>' +
       '<div class="dbody">' + (err ? '<div class="errbox" role="alert">' + esc(err) + '</div>' : '') +
-      '<div>' + pill(r.status) + (r.lewat ? '<span class="late">Dihantar lewat</span>' : '') + (r.tarikhHantar ? ' <span class="help">Tarikh hantar ' + esc(r.tarikhHantar) + '</span>' : '') + '</div>' +
-      (r.status === 'fix' || r.status === 'ok' ? '<div class="banner ' + (r.status === 'ok' ? 's-ok' : 's-bad') + '"><b>' + (r.status === 'ok' ? 'Disahkan' : 'Pembetulan diminta') + '</b>' + (r.komen ? '<p>' + esc(r.komen) + '</p>' : '') + '<span>' + esc(r.disemakOleh) + ' · ' + esc(r.tarikhSemak) + '</span></div>' : '') +
+      '<div>' + pill(r.status) + (r.lewat ? '<span class="late">Dihantar lewat</span>' : '') + (r.tarikhHantar ? ' <span class="help">Tarikh hantar ' + esc(fmtDT(r.tarikhHantar)) + '</span>' : '') + '</div>' +
+      (r.status === 'fix' || r.status === 'ok' ? '<div class="banner ' + (r.status === 'ok' ? 's-ok' : 's-bad') + '"><b>' + (r.status === 'ok' ? 'Disahkan' : 'Pembetulan diminta') + '</b>' + (r.komen ? '<p>' + esc(r.komen) + '</p>' : '') + '<span>' + esc(r.disemakOleh) + ' · ' + esc(fmtDT(r.tarikhSemak)) + '</span></div>' : '') +
       '<div class="calc"><div><small>Pendapatan</small><strong>RM ' + fmt(r.pendapatan) + '</strong></div><div><small>Perbelanjaan</small><strong>RM ' + fmt(r.perbelanjaan) + '</strong></div>' +
       '<div><small>' + (net !== null && net < 0 ? 'Rugi' : 'Untung') + '</small><strong class="' + (net !== null && net < 0 ? 'neg' : 'pos') + '">' + (net === null ? '-' : 'RM ' + fmt(Math.abs(net))) + '</strong></div>' +
       '<div><small>Bayaran sewa</small><strong>RM ' + fmt(r.sewa) + '</strong></div><div><small>Sewa peralatan</small><strong>' + (r.sewaPeralatan === null ? '-' : r.sewaPeralatan ? 'Ya' : 'Tidak') + '</strong></div></div>' +

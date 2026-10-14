@@ -16,7 +16,7 @@ function createBackend(opts = {}) {
     return {
       getValues() { const out = []; for (let i = 0; i < nr; i++) { const row = []; for (let j = 0; j < nc; j++) { const v = (sh.data[r - 1 + i] || [])[c - 1 + j]; row.push(v === undefined ? '' : v); } out.push(row); } return out; },
       setValues(vals) { for (let i = 0; i < nr; i++) { sh.data[r - 1 + i] = sh.data[r - 1 + i] || []; for (let j = 0; j < nc; j++) sh.data[r - 1 + i][c - 1 + j] = vals[i][j]; } return this; },
-      setNumberFormat() { return this; }, setFontWeight() { return this; }, setBackground() { return this; }
+      setNumberFormat() { return this; }, setDataValidation() { return this; }, setFontWeight() { return this; }, setBackground() { return this; }
     };
   }
   function makeSheet(name) {
@@ -43,7 +43,7 @@ function createBackend(opts = {}) {
   const ctx = {
     console, Date: FakeDate, Math, JSON, Object, Array, String, Number, isFinite, isNaN, parseInt, Error, RegExp,
     Logger: { log() {} },
-    SpreadsheetApp: { getActiveSpreadsheet: () => ss, openById: () => ss },
+    SpreadsheetApp: { getActiveSpreadsheet: () => ss, openById: () => ss, newDataValidation: () => { const o = { requireDate() { return o; }, setAllowInvalid() { return o; }, setHelpText() { return o; }, build() { return {}; } }; return o; } },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; } }) },
     CacheService: { getScriptCache: () => ({ get: k => (k in cache ? cache[k] : null), put: (k, v) => { cache[k] = v; }, remove: k => { delete cache[k]; } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
@@ -52,7 +52,8 @@ function createBackend(opts = {}) {
     ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }), getProjectTriggers: () => [], newTrigger: () => ({ timeBased() { return this; }, everyDays() { return this; }, atHour() { return this; }, create() {} }), deleteTrigger() {} },
     HtmlService: { createHtmlOutputFromFile: n => ({ html: fs.readFileSync(CODE.replace('Code.gs', n + '.html'), 'utf8'), setTitle() { return this; }, addMetaTag() { return this; } }) },
     Utilities: {
-      formatDate: fmtDate, getUuid: () => crypto.randomUUID(),
+      formatDate: fmtDate,
+      parseDate: (str, tz, f) => { const m = str.match(/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2}))?$/); if (!m) throw new Error('parseDate: ' + str); return new FakeDate(Date.UTC(+m[1], +m[2] - 1, +m[3], (+m[4] || 0) - 8, +m[5] || 0, +m[6] || 0)); }, getUuid: () => crypto.randomUUID(),
       DigestAlgorithm: { SHA_256: 'SHA256' }, computeDigest: (a, s) => signed(crypto.createHash('sha256').update(s).digest()),
       base64Decode: s => { if (/[^A-Za-z0-9+/=]/.test(s)) throw new Error('bad b64'); return signed(Buffer.from(s, 'base64')); },
       base64Encode: bytes => Buffer.from(bytes.map(b => (b < 0 ? b + 256 : b))).toString('base64'),

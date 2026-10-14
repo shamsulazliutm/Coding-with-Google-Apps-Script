@@ -40,33 +40,33 @@ var STATUS = { DRAFT: 'Draf', SENT: 'Dihantar', FIX: 'Perlu dibetulkan', OK: 'Di
 var MONTHS_MS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 var MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-/** [kunci, tajuk lajur, jenis]  jenis: t = teks (tidak ditukar ke tarikh), n = nombor */
+/** [kunci, tajuk lajur, jenis]  jenis: t = teks, n = nombor, d = tarikh, dt = tarikh dan masa */
 var COLS = {};
 COLS[SHEETS.USERS] = [
   ['email', 'E-mel', 't'], ['nama', 'Nama', 't'], ['peranan', 'Peranan', 't'], ['kodLot', 'Kod lot', 't'], ['status', 'Status', 't']
 ];
 COLS[SHEETS.LOTS] = [
   ['kodLot', 'Kod lot', 't'], ['lokasi', 'Lokasi', 't'], ['noLot', 'No lot', 'n'], ['status', 'Status', 't'],
-  ['mula', 'Tarikh mula sewa', 't'], ['akhir', 'Tarikh akhir sewa', 't'], ['sewa', 'Sewa bulanan (RM)', 'n']
+  ['mula', 'Tarikh mula sewa', 'd'], ['akhir', 'Tarikh akhir sewa', 'd'], ['sewa', 'Sewa bulanan (RM)', 'n']
 ];
 COLS[SHEETS.BIZ] = [
   ['kodLot', 'Kod lot', 't'], ['nama', 'Nama perniagaan', 't'], ['jenis', 'Jenis perniagaan', 't'], ['ssm', 'No SSM', 't'],
   ['pelajar', 'Nama pelajar', 't'], ['kp', 'No KP', 't'], ['matrik', 'No matrik', 't'], ['fakulti', 'Fakulti', 't'],
-  ['telefon', 'No telefon', 't'], ['dikemaskini', 'Dikemas kini', 't']
+  ['telefon', 'No telefon', 't'], ['dikemaskini', 'Dikemas kini', 'dt']
 ];
 COLS[SHEETS.REPORTS] = [
   ['id', 'ID', 't'], ['kodLot', 'Kod lot', 't'], ['tahun', 'Tahun', 'n'], ['bulan', 'Bulan', 'n'],
   ['pendapatan', 'Pendapatan (RM)', 'n'], ['perbelanjaan', 'Perbelanjaan (RM)', 'n'], ['sewa', 'Bayaran sewa (RM)', 'n'],
   ['sewaPeralatan', 'Sewa peralatan', 't'], ['fLaporan', 'Fail laporan', 't'], ['fSewa', 'Fail resit sewa', 't'],
   ['fIncubator', 'Fail resit incubator', 't'], ['status', 'Status', 't'], ['lewat', 'Lewat', 't'], ['komen', 'Komen admin', 't'],
-  ['disemakOleh', 'Disemak oleh', 't'], ['tarikhSemak', 'Tarikh disemak', 't'], ['tarikhHantar', 'Tarikh hantar', 't'],
-  ['akuan', 'Akuan', 't'], ['dikemaskini', 'Dikemas kini', 't']
+  ['disemakOleh', 'Disemak oleh', 't'], ['tarikhSemak', 'Tarikh disemak', 'dt'], ['tarikhHantar', 'Tarikh hantar', 'dt'],
+  ['akuan', 'Akuan', 't'], ['dikemaskini', 'Dikemas kini', 'dt']
 ];
 COLS[SHEETS.LOG] = [
-  ['masa', 'Masa', 't'], ['email', 'E-mel', 't'], ['tindakan', 'Tindakan', 't'], ['butiran', 'Butiran', 't']
+  ['masa', 'Masa', 'dt'], ['email', 'E-mel', 't'], ['tindakan', 'Tindakan', 't'], ['butiran', 'Butiran', 't']
 ];
 COLS[SHEETS.REMINDERS] = [
-  ['kunci', 'Kunci', 't'], ['masa', 'Masa', 't']
+  ['kunci', 'Kunci', 't'], ['masa', 'Masa', 'dt']
 ];
 
 /** Jenis fail lampiran: kunci -> sambungan nama fail dan lajur dalam sheet Laporan */
@@ -113,9 +113,17 @@ function escHtml_(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** Sel tarikh daripada sheet (Date) -> yyyy-MM-dd. Nilai lain dikembalikan sebagai teks. */
-function cell_(v) {
-  if (v instanceof Date) return Utilities.formatDate(v, APP.TZ, 'yyyy-MM-dd');
+/** Sel tarikh daripada sheet (Date) -> 'yyyy-MM-dd' (jenis d) atau 'yyyy-MM-dd HH:mm:ss' (jenis dt). Nilai lain dikembalikan sebagai ada. */
+function cell_(v, type) {
+  if (Object.prototype.toString.call(v) === '[object Date]') return Utilities.formatDate(v, APP.TZ, type === 'dt' ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd');
+  return v;
+}
+
+/** Teks 'yyyy-MM-dd' atau 'yyyy-MM-dd HH:mm:ss' -> objek Date (zon masa APP.TZ). Selain itu dikembalikan sebagaimana ada. */
+function toDate_(v) {
+  if (typeof v !== 'string') return v;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return Utilities.parseDate(v, APP.TZ, 'yyyy-MM-dd');
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(v)) return Utilities.parseDate(v, APP.TZ, 'yyyy-MM-dd HH:mm:ss');
   return v;
 }
 
@@ -193,7 +201,7 @@ function readTable_(name) {
     var empty = true;
     var o = { _row: i + 2 };
     for (var j = 0; j < cols.length; j++) {
-      var v = cell_(vals[i][j]);
+      var v = cell_(vals[i][j], cols[j][2]);
       if (v !== '' && v !== null) empty = false;
       o[cols[j][0]] = v;
     }
@@ -203,7 +211,11 @@ function readTable_(name) {
 }
 
 function toRow_(name, obj) {
-  return COLS[name].map(function (c) { var v = obj[c[0]]; return v === undefined || v === null ? '' : v; });
+  return COLS[name].map(function (c) {
+    var v = obj[c[0]];
+    if (v === undefined || v === null) return '';
+    return c[2] === 'd' || c[2] === 'dt' ? toDate_(v) : v;   // simpan sebagai tarikh sebenar, bukan teks
+  });
 }
 
 function appendObj_(name, obj) {
@@ -980,9 +992,35 @@ function ensureSheet_(ss, name) {
   sh.setFrozenRows(1);
   var rows = Math.max(sh.getMaxRows() - 1, 1);
   cols.forEach(function (c, i) {
-    if (c[2] === 't') sh.getRange(2, i + 1, rows, 1).setNumberFormat('@');   // teks: elak tarikh ditukar automatik
+    var col = sh.getRange(2, i + 1, rows, 1);
+    if (c[2] === 't') {
+      col.setNumberFormat('@');                                  // teks: elak ditukar kepada tarikh/nombor
+    } else if (c[2] === 'd') {
+      col.setNumberFormat('dd/mm/yyyy');                         // format tarikh
+      col.setDataValidation(SpreadsheetApp.newDataValidation().requireDate()
+        .setAllowInvalid(false).setHelpText('Pilih atau taip tarikh yang sah, contoh 01/01/2026').build());
+    } else if (c[2] === 'dt') {
+      col.setNumberFormat('dd/mm/yyyy hh:mm:ss');                // format tarikh dan masa
+    }
   });
+  migrateDateColumns_(sh, cols);
   return sh;
+}
+
+/** Tukar nilai teks lama 'yyyy-MM-dd' dalam lajur tarikh kepada tarikh sebenar. Selamat dijalankan berulang kali. */
+function migrateDateColumns_(sh, cols) {
+  var last = sh.getLastRow();
+  if (last < 2) return;
+  cols.forEach(function (c, i) {
+    if (c[2] !== 'd' && c[2] !== 'dt') return;
+    var rng = sh.getRange(2, i + 1, last - 1, 1);
+    var vals = rng.getValues(), changed = false;
+    vals.forEach(function (r) {
+      var d = toDate_(r[0]);
+      if (d !== r[0]) { r[0] = d; changed = true; }
+    });
+    if (changed) rng.setValues(vals);
+  });
 }
 
 function seedLotsIfEmpty_() {

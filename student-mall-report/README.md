@@ -58,6 +58,8 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 
 ## Struktur sheet
 
+Lajur tarikh (Tarikh mula sewa, Tarikh akhir sewa, Tarikh hantar, Tarikh disemak, Dikemas kini, Masa) menggunakan format tarikh sebenar `dd/mm/yyyy`. Pada sheet **Lot**, sel tarikh mempunyai pemilih tarikh (klik dua kali sel) dan menolak teks yang bukan tarikh. Jika anda mengemas kini daripada versi lama, jalankan `setupSystem` semula untuk menukar tarikh teks lama kepada format tarikh.
+
 Jangan ubah susunan lajur. Kod membaca lajur mengikut kedudukan. Anda boleh menambah lajur di sebelah kanan, mewarna, atau menapis.
 
 | Sheet | Lajur |
