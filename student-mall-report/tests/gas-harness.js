@@ -64,17 +64,18 @@ function createBackend(opts = {}) {
       getFileById: id => { if (!driveFiles[id]) throw new Error('no file'); return driveFiles[id]; }
     }
   };
-  function makeFolder(name) {
-    const id = 'F' + (++fid); const kids = {};
+  function makeFolder(name, forcedId) {
+    const id = forcedId || 'F' + (++fid); const kids = {};
     const f = { id, name, kids, getId: () => id, getName: () => name,
       getFoldersByName(n) { const k = kids[n]; let used = false; return { hasNext: () => !!k && !used, next: () => { used = true; return k; } }; },
       createFolder(n) { const c = makeFolder(n); kids[n] = c; return c; },
       createFile(blob) { const fl = { id: 'D' + (++fid), name: blob.name, blob, trashed: false, getId() { return this.id; }, getName() { return this.name; }, getSize() { return this.blob.bytes.length; }, setTrashed(v) { this.trashed = v; }, getBlob() { return this.blob; } }; driveFiles[fl.id] = fl; return fl; } };
     folders[id] = f; return f;
   }
+  if (opts.configuredFolder !== false) makeFolder('Folder simpanan (dikongsi pengguna)', '1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE');
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(CODE, 'utf8') + '\n;this.__exports = { rpc, setupSystem, checkSystem, runReminders_, dailyReminderJob, readTable_, COLS, SHEETS };', ctx, { filename: 'Code.gs' });
   const ex = ctx.__exports;
-  return { ...ex, outbox, ctxFlags, props, cache, sheets, driveFiles, ctx, setNow: t => { NOW = t; }, ss };
+  return { ...ex, outbox, ctxFlags, folders, props, cache, sheets, driveFiles, ctx, setNow: t => { NOW = t; }, ss };
 }
 module.exports = { createBackend };

@@ -24,6 +24,9 @@ var APP = {
   OTP_RESEND_WAIT: 60,     // minta OTP baharu paling cepat 1 minit
   SESSION_TTL: 7200,       // sesi 2 jam (dilanjutkan setiap tindakan)
   MAX_FILE_BYTES: 10 * 1024 * 1024,
+  // Folder Drive untuk menyimpan semua PDF. Kosongkan ('') untuk mencipta folder baharu secara automatik.
+  // Pemilik skrip mesti mempunyai akses Editor pada folder ini. Disyorkan kongsi "Restricted" (bukan sesiapa dengan pautan).
+  ROOT_FOLDER_ID: '1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE',
   ROOT_FOLDER_NAME: 'Laporan Kewangan Penyewa'
 };
 
@@ -725,10 +728,19 @@ function saveMyReport_(user, p) {
 }
 
 function rootFolder_() {
-  var id = PropertiesService.getScriptProperties().getProperty('ROOT_FOLDER_ID');
+  var props = PropertiesService.getScriptProperties();
+  if (APP.ROOT_FOLDER_ID) {
+    try {
+      return DriveApp.getFolderById(APP.ROOT_FOLDER_ID);
+    } catch (e) {
+      logAction_('sistem', 'Ralat folder simpanan', String(e && e.message ? e.message : e));
+      fail_('Folder simpanan Drive tidak dapat diakses. Pastikan akaun pemilik skrip mempunyai akses Editor pada folder itu, atau hubungi ' + APP.CONTACT_EMAIL + '.', 'DRIVE');
+    }
+  }
+  var id = props.getProperty('ROOT_FOLDER_ID');
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* cipta semula */ } }
   var f = DriveApp.createFolder(APP.ROOT_FOLDER_NAME);
-  PropertiesService.getScriptProperties().setProperty('ROOT_FOLDER_ID', f.getId());
+  props.setProperty('ROOT_FOLDER_ID', f.getId());
   return f;
 }
 

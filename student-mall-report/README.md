@@ -21,7 +21,7 @@ Dibina dengan Google Apps Script (Web App) dan Google Sheets sebagai pangkalan d
    - mencipta sheet `Pengguna`, `Lot`, `Peniaga`, `Laporan`, `Log` dan `Peringatan`;
    - mengisi 15 lot (Student Mall 1 hingga 10, SUB 1 hingga 5);
    - mendaftarkan `utmxcite@utm.my` sebagai admin lalai (ubah `APP.DEFAULT_ADMIN` dalam `Config` di bahagian atas `Code.gs` jika perlu);
-   - mencipta folder Drive "Laporan Kewangan Penyewa" untuk fail PDF;
+   - mengesahkan akses kepada folder simpanan PDF (lihat bahagian di bawah);
    - memasang trigger harian untuk peringatan.
 6. Dalam sistem (tab **Penyewaan**), tambah penyewaan bagi setiap lot: pilih lot, bulan mula, bulan tamat (jika ada) dan sewa bulanan. Lot tanpa penyewaan tidak mempunyai bulan laporan.
 7. **Deploy > New deployment > Web app**:
@@ -33,6 +33,15 @@ Dibina dengan Google Apps Script (Web App) dan Google Sheets sebagai pangkalan d
 
 Setiap kali kod diubah, buat **New version** pada deployment yang sama supaya URL kekal.
 
+## Folder simpanan PDF
+
+Semua PDF disimpan dalam folder Drive yang ditetapkan oleh `ROOT_FOLDER_ID` di bahagian atas `Code.gs`
+(kini `1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE`, iaitu pautan `https://drive.google.com/drive/folders/1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE`).
+
+- Akaun yang menjalankan skrip (pemilik deployment) mesti mempunyai akses **Editor** pada folder itu. Jika tidak, `setupSystem` dan muat naik PDF memaparkan mesej "Folder simpanan Drive tidak dapat diakses", dan sistem tidak mencipta folder lain secara diam-diam.
+- Folder ini sepatutnya dikongsi sebagai **Restricted** (hanya orang tertentu). Fail PDF mewarisi tetapan kongsi folder, jadi jangan gunakan "Anyone with the link" kerana laporan kewangan penyewa akan boleh dibuka oleh sesiapa yang mempunyai pautan. Penyewa dan admin membuka fail melalui sistem, bukan terus dari Drive.
+- Untuk menukar folder, ubah `ROOT_FOLDER_ID`. Fail yang sudah dimuat naik kekal di tempat asal dan masih boleh dibuka melalui sistem. Kosongkan `ROOT_FOLDER_ID` (`''`) untuk membiarkan sistem mencipta folder baharu sendiri.
+
 ## Penyelesaian masalah
 
 Jika skrin menunjukkan **"Ralat sistem (rujukan XXXXXX)"**, buka sheet **Log**. Baris dengan tindakan `Ralat sistem XXXXXX` mengandungi punca sebenar. Sebab paling biasa:
@@ -42,6 +51,7 @@ Jika skrin menunjukkan **"Ralat sistem (rujukan XXXXXX)"**, buka sheet **Log**. 
 | Kebenaran e-mel belum diberi (`MailApp.sendEmail` tiada permission) | Jalankan `setupSystem` atau `checkSystem` dari editor, tekan **Review permissions**, dan luluskan semua. |
 | Web app masih guna versi kod lama | **Deploy > Manage deployments > ikon pensel > Version: New version > Deploy**. Kod yang disimpan dalam editor tidak digunakan sehingga versi baharu dibuat. |
 | Sheet belum disediakan | Jalankan `setupSystem`. |
+| Folder simpanan tidak boleh diakses | Berikan akaun pemilik skrip akses Editor pada folder Drive, kemudian jalankan `checkSystem`. |
 | Fail HTML tersalah nama | Nama fail mesti tepat `Index` (tanpa `.html` dalam editor). |
 
 Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, admin, kebenaran e-mel, folder Drive, trigger). Hasilnya ada dalam Execution log.
@@ -50,7 +60,7 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 
 - **Log masuk**: e-mel berdaftar dan OTP 6 digit (sah 5 minit, sekali guna, maksimum 5 percubaan). Tiada akaun Google diperlukan. Peranan (`Admin` atau `Penyewa`) dibaca daripada sheet **Pengguna**.
 - **Penyewa**: dua tab, *Maklumat Peniaga* dan *Laporan Kewangan*. Satu baris bagi setiap bulan dalam tempoh sewa penyewa itu, dari bulan mula sewa hingga bulan semasa. Laporan disimpan sebagai draf, dihantar, dan boleh diedit sehingga disahkan.
-- **Lampiran**: PDF sahaja, maksimum 10 MB (laporan kewangan, resit sewa, resit incubator jika menyewa peralatan UTMXCITE). Nama fail dijana: `StudentMall_Lot3_September_<Perniagaan>_FinancialReport.pdf`. Fail disimpan di Drive: `tahun / 09 September / <kod lot>`.
+- **Lampiran**: PDF sahaja, maksimum 10 MB (laporan kewangan, resit sewa, resit incubator jika menyewa peralatan UTMXCITE). Nama fail dijana: `StudentMall_Lot3_September_<Perniagaan>_FinancialReport.pdf`. Fail disimpan di folder simpanan Drive: `tahun / 09 September / <kod lot>`.
 - **Tarikh akhir**: asalnya hari ke-7 bulan berikutnya. Apabila e-mel peringatan dihantar, tarikh akhir dalam e-mel itu ialah **tarikh e-mel dihantar + 7 hari** (contohnya e-mel 5 November memberi tarikh akhir 12 November). Tarikh akhir baharu itu juga dipaparkan dalam sistem dan menjadi had *Lewat*. Peringatan tidak pernah memendekkan tarikh akhir asal. Bilangan hari ditetapkan oleh `REMINDER_DEADLINE_DAYS` di bahagian atas `Code.gs`.
 - **Admin**: lihat semua lot mengikut bulan, semak laporan (Sahkan atau Minta pembetulan dengan komen), hantar peringatan manual, eksport CSV, urus lot dan pengguna.
 - **Status**: `Belum dihantar` (termasuk draf), `Dihantar`, `Perlu dibetulkan`, `Disahkan`. Laporan yang disahkan dikunci.
@@ -105,4 +115,4 @@ Versi lama menyimpan tarikh sewa pada sheet **Lot** dan memautkan peniaga dan pe
 
 ## Ujian
 
-Logik pelayan diuji dengan tiruan API Apps Script (71 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
+Logik pelayan diuji dengan tiruan API Apps Script (73 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.

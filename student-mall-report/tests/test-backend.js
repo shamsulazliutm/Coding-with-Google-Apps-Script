@@ -117,6 +117,13 @@ t('muat naik 3 PDF; fail dinamakan mengikut format dan disimpan dalam folder tah
   const names = Object.values(b.driveFiles).map(f => f.name).sort();
   assert.deepStrictEqual(names, ['StudentMall_Lot3_September_IncubatorReceipt.pdf', 'StudentMall_Lot3_September_Kopi Kampus Enterprise_FinancialReport.pdf', 'StudentMall_Lot3_September_RentReceipt.pdf']);
 });
+t('fail disimpan dalam folder Drive yang ditetapkan (ID konfigurasi), disusun tahun / bulan / kod lot; tiada folder baharu dicipta di luar', () => {
+  const root = b.folders['1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE'];
+  const lotFolder = root.kids['2026'].kids['09 September'].kids['StudentMall-Lot3'];
+  assert.ok(lotFolder, 'folder lot'); assert.strictEqual(Object.keys(root.kids).join(','), '2026');
+  assert.strictEqual(Object.values(b.folders).filter(f => f.name === 'Laporan Kewangan Penyewa').length, 0, 'tiada folder automatik');
+  assert.ok(!b.props.ROOT_FOLDER_ID, 'tidak menyimpan ID folder automatik');
+});
 t('ganti fail: fail lama dipadam (trash)', () => {
   const before = Object.values(b.driveFiles).filter(f => f.name.endsWith('RentReceipt.pdf')).length;
   ok('uploadFile', ten.token, { tahun: 2026, bulan: 9, kind: 'sewa', base64: pdf });
@@ -336,6 +343,12 @@ t('tarikh yang ditaip admin sebagai Date dalam sheet dibaca betul', () => {
   row[2] = new b.ctx.Date(Date.UTC(2026, 2, 1) - 8 * 3600e3);
 });
 
+t('folder simpanan tidak boleh diakses: mesej jelas, tiada folder lain dicipta secara diam-diam, ralat direkod', () => {
+  const o = createBackend({ configuredFolder: false });
+  assert.throws(() => o.setupSystem(), /Folder simpanan Drive tidak dapat diakses/);
+  assert.strictEqual(Object.values(o.folders).length, 0, 'tiada folder dicipta');
+  assert.ok(o.readTable_('Log').some(l => l.tindakan === 'Ralat folder simpanan'));
+});
 console.log('Ralat dan diagnostik');
 t('jika e-mel OTP gagal dihantar: mesej jelas, OTP dibatalkan, ralat direkod dalam Log', () => {
   b.ctxFlags.failMail = true; delete b.cache['otpwait:rashid@utm.my'];
