@@ -19,7 +19,7 @@ t('setupSystem mencipta sheet, 15 lot dan admin pertama', () => {
   b.setupSystem();
   assert.strictEqual(b.readTable_('Lot').length, 15);
   const users = b.readTable_('Pengguna'); assert.strictEqual(users.length, 1);
-  assert.strictEqual(users[0].email, 'pn.salmah@utm.my'); assert.strictEqual(users[0].peranan, 'Admin');
+  assert.strictEqual(users[0].email, 'utmxcite@utm.my'); assert.strictEqual(users[0].peranan, 'Admin');
   ['Pengguna', 'Lot', 'Peniaga', 'Laporan', 'Log', 'Peringatan'].forEach(n => assert.ok(b.sheets[n], n));
 });
 t('setupSystem boleh dijalankan semula tanpa menduplikasi', () => { b.setupSystem(); assert.strictEqual(b.readTable_('Lot').length, 15); assert.strictEqual(b.readTable_('Pengguna').length, 1); });
@@ -30,18 +30,18 @@ t('e-mel tidak berdaftar: mesej sama, tiada e-mel dihantar', () => {
   const n = b.outbox.length; const r = ok('requestOtp', null, { email: 'orang@luar.com' });
   assert.match(r.message, /Jika e-mel anda berdaftar/); assert.strictEqual(b.outbox.length, n);
 });
-t('e-mel sah menghantar OTP 6 digit', () => { const n = b.outbox.length; ok('requestOtp', null, { email: 'pn.salmah@utm.my' }); assert.strictEqual(b.outbox.length, n + 1); assert.match(otpFrom(lastMail()), /^\d{6}$/); });
-t('minta OTP semula serta-merta ditolak (had kadar)', () => bad('requestOtp', null, { email: 'pn.salmah@utm.my' }, /seminit/));
-t('OTP salah ditolak dan baki percubaan berkurang', () => bad('verifyOtp', null, { email: 'pn.salmah@utm.my', code: '000000' }, /Baki percubaan: 4/));
+t('e-mel sah menghantar OTP 6 digit', () => { const n = b.outbox.length; ok('requestOtp', null, { email: 'utmxcite@utm.my' }); assert.strictEqual(b.outbox.length, n + 1); assert.match(otpFrom(lastMail()), /^\d{6}$/); });
+t('minta OTP semula serta-merta ditolak (had kadar)', () => bad('requestOtp', null, { email: 'utmxcite@utm.my' }, /seminit/));
+t('OTP salah ditolak dan baki percubaan berkurang', () => bad('verifyOtp', null, { email: 'utmxcite@utm.my', code: '000000' }, /Baki percubaan: 4/));
 t('terlalu banyak percubaan mengunci OTP', () => {
   const code = otpFrom(lastMail());
-  for (let i = 0; i < 4; i++) bad('verifyOtp', null, { email: 'pn.salmah@utm.my', code: '111111' });
-  bad('verifyOtp', null, { email: 'pn.salmah@utm.my', code: '222222' }, /Terlalu banyak/);
-  bad('verifyOtp', null, { email: 'pn.salmah@utm.my', code }, /tamat tempoh|tidak sah/);
+  for (let i = 0; i < 4; i++) bad('verifyOtp', null, { email: 'utmxcite@utm.my', code: '111111' });
+  bad('verifyOtp', null, { email: 'utmxcite@utm.my', code: '222222' }, /Terlalu banyak/);
+  bad('verifyOtp', null, { email: 'utmxcite@utm.my', code }, /tamat tempoh|tidak sah/);
 });
 t('admin log masuk dengan OTP betul; OTP hanya sekali guna', () => {
-  adm = login('pn.salmah@utm.my'); assert.strictEqual(adm.user.peranan, 'Admin'); assert.ok(adm.token.length >= 60);
-  bad('verifyOtp', null, { email: 'pn.salmah@utm.my', code: otpFrom(lastMail()) });
+  adm = login('utmxcite@utm.my'); assert.strictEqual(adm.user.peranan, 'Admin'); assert.ok(adm.token.length >= 60);
+  bad('verifyOtp', null, { email: 'utmxcite@utm.my', code: otpFrom(lastMail()) });
 });
 t('token palsu / tiada ditolak (SESSION)', () => { assert.strictEqual(bad('me', 'palsu').code, 'SESSION'); assert.strictEqual(bad('me', null).code, 'SESSION'); });
 t('kaedah tidak wujud ditolak (termasuk nama prototaip)', () => { bad('nope', adm.token); bad('constructor', adm.token); bad('__proto__', adm.token); });
@@ -66,7 +66,7 @@ t('tambah penyewa (lot sah) dan admin kedua', () => {
 });
 t('penyewa tanpa lot sah ditolak; admin tak boleh nyahaktif diri sendiri', () => {
   bad('adminSaveUser', adm.token, { user: { email: 'x@y.com', nama: 'X', peranan: 'Penyewa', kodLot: 'TIADA' } }, /lot yang sah/);
-  bad('adminSaveUser', adm.token, { user: { email: 'pn.salmah@utm.my', nama: 'A', peranan: 'Admin', status: 'Tidak aktif' } }, /sendiri/);
+  bad('adminSaveUser', adm.token, { user: { email: 'utmxcite@utm.my', nama: 'A', peranan: 'Admin', status: 'Tidak aktif' } }, /sendiri/);
 });
 
 console.log('Penyewa');
@@ -210,7 +210,7 @@ t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
 });
 t('admin terakhir tidak boleh diturunkan', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'rashid@utm.my', nama: 'En. Rashid', peranan: 'Penyewa', kodLot: 'SUB-Lot2', status: 'Aktif' } });
-  bad('adminSaveUser', adm.token, { user: { email: 'pn.salmah@utm.my', nama: 'A', peranan: 'Penyewa', kodLot: 'SUB-Lot2', status: 'Aktif' } }, /sendiri/);
+  bad('adminSaveUser', adm.token, { user: { email: 'utmxcite@utm.my', nama: 'A', peranan: 'Penyewa', kodLot: 'SUB-Lot2', status: 'Aktif' } }, /sendiri/);
 });
 t('logout membatalkan sesi', () => { ok('logout', adm.token, {}); assert.strictEqual(bad('me', adm.token).code, 'SESSION'); });
 t('log audit direkod', () => { const log = b.readTable_('Log'); assert.ok(log.length > 20); assert.ok(log.some(l => l.tindakan === 'Sahkan laporan')); });

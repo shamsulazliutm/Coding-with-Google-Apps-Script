@@ -12,6 +12,7 @@ var APP = {
   NAME: 'Laporan Kewangan Bulanan Penyewa',
   SENDER: 'UTMXCITE',
   CONTACT_EMAIL: 'utmxcite@utm.my',
+  DEFAULT_ADMIN: 'utmxcite@utm.my',   // admin lalai yang didaftarkan oleh setupSystem()
   TZ: 'Asia/Kuala_Lumpur',
   DUE_DAY: 7,              // tarikh akhir hantar: hari ke-7 bulan berikutnya
   REMINDER_DAY: 5,         // peringatan automatik pada 5hb setiap bulan
@@ -960,13 +961,12 @@ function setupSystem() {
 
   Object.keys(COLS).forEach(function (name) { ensureSheet_(ss, name); });
   seedLotsIfEmpty_();
-  seedFirstAdminIfEmpty_();
+  seedDefaultAdmin_();
   rootFolder_();
   installTriggers();
   MailApp.getRemainingDailyQuota();   // meminta kebenaran e-mel semasa setup
 
-  var admin = readTable_(SHEETS.USERS)[0];
-  var msg = 'Siap. Admin pertama: ' + (admin ? admin.email : '(tiada)') +
+  var msg = 'Siap. Admin lalai: ' + APP.DEFAULT_ADMIN +
     '. Seterusnya: isi Tarikh mula sewa dalam sheet Lot, tambah pengguna dalam sheet Pengguna, kemudian Deploy > New deployment > Web app.';
   Logger.log(msg);
   return msg;
@@ -992,10 +992,16 @@ function seedLotsIfEmpty_() {
   for (i = 1; i <= 5; i++) appendObj_(SHEETS.LOTS, { kodLot: lotCode_('SUB', i), lokasi: 'SUB', noLot: i, status: 'Aktif', mula: '', akhir: '', sewa: '' });
 }
 
-function seedFirstAdminIfEmpty_() {
-  if (readTable_(SHEETS.USERS).length) return;
-  var email = normEmail_(Session.getEffectiveUser().getEmail());
-  if (email) appendObj_(SHEETS.USERS, { email: email, nama: 'Admin UTMXCITE', peranan: ROLE.ADMIN, kodLot: '', status: 'Aktif' });
+/** Pastikan admin lalai (APP.DEFAULT_ADMIN) wujud dan aktif. Pengguna lain tidak diubah. */
+function seedDefaultAdmin_() {
+  var email = normEmail_(APP.DEFAULT_ADMIN);
+  var cur = findBy_(readTable_(SHEETS.USERS), 'email', email);
+  if (!cur) {
+    appendObj_(SHEETS.USERS, { email: email, nama: 'Admin UTMXCITE', peranan: ROLE.ADMIN, kodLot: '', status: 'Aktif' });
+  } else if (cur.peranan !== ROLE.ADMIN || cur.status !== 'Aktif') {
+    cur.peranan = ROLE.ADMIN; cur.status = 'Aktif'; cur.kodLot = '';
+    updateObj_(SHEETS.USERS, cur);
+  }
 }
 
 // ============================================================

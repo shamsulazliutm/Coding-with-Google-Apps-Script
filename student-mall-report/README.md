@@ -20,7 +20,7 @@ Dibina dengan Google Apps Script (Web App) dan Google Sheets sebagai pangkalan d
 5. Pilih fungsi **`setupSystem`** dan tekan **Run**. Luluskan kebenaran yang diminta. Fungsi ini:
    - mencipta sheet `Pengguna`, `Lot`, `Peniaga`, `Laporan`, `Log` dan `Peringatan`;
    - mengisi 15 lot (Student Mall 1 hingga 10, SUB 1 hingga 5);
-   - mendaftarkan akaun anda sebagai admin pertama;
+   - mendaftarkan `utmxcite@utm.my` sebagai admin lalai (ubah `APP.DEFAULT_ADMIN` dalam `Config` di bahagian atas `Code.gs` jika perlu);
    - mencipta folder Drive "Laporan Kewangan Penyewa" untuk fail PDF;
    - memasang trigger harian untuk peringatan.
 6. Dalam sheet **Lot**, isi **Tarikh mula sewa** (format `2026-01-01`), **Tarikh akhir sewa** dan **Sewa bulanan** bagi setiap lot. Lot tanpa tarikh mula tidak mempunyai bulan laporan.

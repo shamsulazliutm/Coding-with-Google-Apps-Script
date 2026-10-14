@@ -11,7 +11,7 @@ const login = email => { delete b.cache['otpwait:' + email]; ok('requestOtp', nu
 
 // ---- benih data ----
 b.setupSystem();
-let adm = login('pn.salmah@utm.my');
+let adm = login('utmxcite@utm.my');
 const lots = [['Student Mall', 1, 'Ayu Rahimah', 'Warung Ayu', 'ok'], ['Student Mall', 2, 'Hafiz Zainal', 'Print Siswa', 'ok'], ['Student Mall', 3, 'Aina Sofea', 'Kopi Kampus Enterprise', 'fix'],
   ['Student Mall', 4, 'Nurul Izzati', 'Roti Gebu', 'sent'], ['Student Mall', 5, 'Farah Najwa', 'Batik Muda', 'ok'], ['Student Mall', 6, 'M. Safihakimi', 'Whiskers & Bean', 'sent'],
   ['Student Mall', 7, 'Adam Harith', 'Tech Fixit', 'none'], ['SUB', 1, 'Hakim Roslan', 'Minuman Segar', 'ok'], ['SUB', 2, 'Din Ismail', 'Nasi Lemak Pak Din', 'none']];
@@ -114,7 +114,7 @@ let browser;
   await m.close();
 
   // ===== admin =====
-  const a = await newPage(); await uiLogin(a, 'pn.salmah@utm.my'); await a.waitForSelector('#a-rows tr'); await settle(a);
+  const a = await newPage(); await uiLogin(a, 'utmxcite@utm.my'); await a.waitForSelector('#a-rows tr'); await settle(a);
   assert.match(await a.textContent('.who'), /Admin/); await shot(a, '10-admin', true);
   assert.ok((await a.locator('#a-rows tr').count()) >= 9);
   await a.selectOption('#a-status', 'sent'); const sentRows = await a.locator('#a-rows tr').count(); assert.ok(sentRows >= 3); await a.selectOption('#a-status', '');
