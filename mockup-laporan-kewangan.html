@@ -100,6 +100,7 @@ td.act .btn + .btn { margin-left: 4px; }
 .banner b { display: block; } .banner p { margin: 2px 0 0; color: var(--fg); } .banner span { font-size: 12px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.pm { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; align-self: flex-start; min-width: 200px; }
 .field > label, .field > .lbl { font-size: 13px; font-weight: 600; }
 .req { color: var(--bad); }
 .money { display: flex; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); overflow: hidden; }
@@ -141,6 +142,7 @@ td.act .btn + .btn { margin-left: 4px; }
       <option value="">Status: Semua</option><option value="fix">Perlu dibetulkan</option><option value="none">Belum dihantar</option>
       <option value="sent">Dihantar</option><option value="ok">Disahkan</option>
     </select>
+    <button class="btn primary" type="button" data-new>+ Laporan baharu</button>
   </div>
 
   <div class="tbl-wrap">
@@ -177,7 +179,7 @@ td.act .btn + .btn { margin-left: 4px; }
     { st:"none",inc:"",   exp:"",   rent:"",  eq:null,  late:false }
   ];
   var ST = { ok:["s-ok","Disahkan"], sent:["s-info","Dihantar"], fix:["s-bad","Perlu dibetulkan"], none:["s-warn","Belum dihantar"] };
-  var state = { open:null, eq:null, ack:false, q:"", fs:"" };
+  var state = { isNew:false, open:null, eq:null, ack:false, q:"", fs:"" };
 
   function fmt(n) { return n === "" ? "-" : Number(n).toLocaleString("en-MY", { minimumFractionDigits:2 }); }
   function id(m) { return "PP-" + String(m + 1).padStart(3, "0"); }
@@ -225,6 +227,13 @@ td.act .btn + .btn { margin-left: 4px; }
       '<button class="btn sm" type="button">' + (show ? "Ganti fail" : "Pilih fail PDF") + "</button></div>";
   }
 
+  function monthPick(cur) {
+    var o = "";
+    D.forEach(function (r, i) { if (r.st === "none") o += '<option value="' + i + '"' + (i === cur ? " selected" : "") + ">" + MS[i] + " 2026</option>"; });
+    return '<div class="field"><label for="pm">Bulan laporan <span class="req">*</span></label><select id="pm" class="pm">' + o + '</select><span class="help">Hanya bulan yang belum dihantar dipaparkan.</span></div>';
+  }
+  function firstNone() { for (var i = 0; i < D.length; i++) if (D[i].st === "none") return i; return -1; }
+
   function dialog() {
     var slot = document.getElementById("dlg-slot");
     if (state.open === null) { slot.innerHTML = ""; return; }
@@ -237,8 +246,8 @@ td.act .btn + .btn { margin-left: 4px; }
     if (r.st === "ok") banner = '<div class="banner s-ok"><b>Disahkan</b><p>Laporan ini dikunci dan tidak boleh diubah.</p></div>';
     var editable = ed || r.st === "sent";
     var h = '<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt">' +
-      '<div class="dhead"><div><h2 id="dt">' + (r.st === "none" ? "Isi" : r.st === "ok" ? "Lihat" : "Edit") + " laporan " + MS[m] + ' 2026</h2><p>' + BIZ + " · " + LOT + " · tarikh akhir " + due(m) + '</p></div><button class="x" data-x aria-label="Tutup">×</button></div>' +
-      '<div class="dbody">' + banner +
+      '<div class="dhead"><div><h2 id="dt">' + (state.isNew ? "Laporan baharu" : r.st === "none" ? "Isi laporan" : r.st === "ok" ? "Lihat" : "Edit") + (state.isNew ? "" : " laporan " + MS[m] + " 2026") + '</h2><p>' + BIZ + " · " + LOT + " · tarikh akhir " + due(m) + '</p></div><button class="x" data-x aria-label="Tutup">×</button></div>' +
+      '<div class="dbody">' + (state.isNew ? monthPick(m) : "") + banner +
       '<div class="grid">' + money("f1", "Jumlah pendapatan bulanan", r.inc, editable) + money("f2", "Jumlah perbelanjaan bulanan", r.exp, editable) + money("f3", "Bayaran sewa bulan ini", r.rent, editable) + "</div>" +
       file("Laporan kewangan bulanan", FL + "_" + EN[m] + "_" + BIZ + "_FinancialReport.pdf", has) +
       file("Resit bayaran sewa", FL + "_" + EN[m] + "_RentReceipt.pdf", has) +
@@ -262,15 +271,17 @@ td.act .btn + .btn { margin-left: 4px; }
 
   document.addEventListener("click", function (e) {
     var t = e.target.closest("button"); if (!t) return;
-    if (t.dataset.o !== undefined) { state.open = +t.dataset.o; state.eq = null; state.ack = false; render(); }
-    else if (t.hasAttribute("data-x")) { state.open = null; render(); }
+    if (t.hasAttribute("data-new")) { var f = firstNone(); if (f < 0) { toast("Semua bulan sudah dihantar"); return; } state.isNew = true; state.open = f; state.eq = null; state.ack = false; render(); }
+    else if (t.dataset.o !== undefined) { state.isNew = false; state.open = +t.dataset.o; state.eq = null; state.ack = false; render(); }
+    else if (t.hasAttribute("data-x")) { state.isNew = false; state.open = null; render(); }
     else if (t.dataset.eq !== undefined) { state.eq = t.dataset.eq === "1"; render(); }
     else if (t.hasAttribute("data-draft")) { toast("Draf disimpan"); }
-    else if (t.hasAttribute("data-send")) { var r = D[state.open]; if (r.st !== "sent") { r.st = "sent"; r.late = r.late && false; } state.open = null; render(); toast("Laporan dihantar untuk semakan"); }
+    else if (t.hasAttribute("data-send")) { var r = D[state.open]; if (r.st !== "sent") { r.st = "sent"; r.late = r.late && false; } state.isNew = false; state.open = null; render(); toast("Laporan dihantar untuk semakan"); }
     else if (t.dataset.d !== undefined) { toast("Pengesahan padam dipaparkan di sini"); }
   });
   document.addEventListener("change", function (e) {
     if (e.target.id === "ack") { state.ack = e.target.checked; render(); var a = document.getElementById("ack"); if (a) a.focus(); }
+    if (e.target.id === "pm") { state.open = +e.target.value; render(); }
     if (e.target.id === "fs") { state.fs = e.target.value; rows(); }
   });
   document.getElementById("q").addEventListener("input", function (e) { state.q = e.target.value; rows(); });
