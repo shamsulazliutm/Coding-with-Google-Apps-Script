@@ -341,11 +341,11 @@ td.act .btn + .btn { margin-left: 4px; }
   function viewInfo() {
     return '<div class="card"><div class="ch"><div><h2>Maklumat Peniaga</h2><p>Dikemas kini sekali, digunakan untuk semua laporan bulanan.</p></div>' + pill("ok").replace("Disahkan", "Aktif") + "</div>" +
       '<div class="cb"><section><h3 class="sech">Perniagaan</h3><div class="grid">' +
-      field("Nama perniagaan / syarikat", BIZ, false, true) + field("Jenis perniagaan", "Makanan dan minuman", false, true) + field("No. pendaftaran (SSM)", "003412345-K", false) + field("Lot sewaan", LOT, true) + field("Tarikh mula sewa", "1 Januari 2026", true) + field("Sewa bulanan (RM)", "600.00", true) +
+      field("Nama perniagaan / syarikat", BIZ, false, true) + field("Jenis perniagaan", "Makanan dan minuman", false, true) + field("No. pendaftaran (SSM)", "003412345-K", false) + field("Lot sewaan", LOT, true) + field("Tarikh mula sewa", "1 Januari 2026", true) + field("Tarikh akhir sewa", "31 Disember 2026", true) + field("Sewa bulanan (RM)", "600.00", true) +
       '</div></section><section><h3 class="sech">Pelajar / pemilik</h3><div class="grid">' +
-      field("Nama pelajar", "AINA SOFEA BINTI ALI", false, true) + field("No. matrik", "A22EA0123", false, true) + field("Fakulti", "FKA", false, true) + field("No. telefon", "012-345 6789", false, true) +
+      field("Nama pelajar", "AINA SOFEA BINTI ALI", false, true) + field("No. kad pengenalan (No. KP)", "010203-01-1234", false, true) + field("No. matrik", "A22EA0123", false, true) + field("Fakulti", "FKA", false, true) + field("No. telefon", "012-345 6789", false, true) +
       '</div></section><section><h3 class="sech">Akaun log masuk</h3><div class="grid">' + field("E-mel (untuk OTP)", "aina@graduan.example", true) + field("Peranan", "Penyewa", true) +
-      '</div><p class="lock" style="margin:10px 0 0">E-mel, lot dan sewa hanya boleh diubah oleh admin UTMXCITE. Hubungi utmxcite@utm.my.</p></section>' +
+      '</div><p class="lock" style="margin:10px 0 0">E-mel, lot, tarikh sewa dan sewa bulanan hanya boleh diubah oleh admin UTMXCITE. Hubungi utmxcite@utm.my.</p></section>' +
       '<div style="display:flex;justify-content:flex-end;gap:10px"><button class="btn" type="button">Batal</button><button class="btn primary" type="button">Simpan maklumat</button></div></div></div>';
   }
 
