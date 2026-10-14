@@ -33,6 +33,19 @@ Dibina dengan Google Apps Script (Web App) dan Google Sheets sebagai pangkalan d
 
 Setiap kali kod diubah, buat **New version** pada deployment yang sama supaya URL kekal.
 
+## Penyelesaian masalah
+
+Jika skrin menunjukkan **"Ralat sistem (rujukan XXXXXX)"**, buka sheet **Log**. Baris dengan tindakan `Ralat sistem XXXXXX` mengandungi punca sebenar. Sebab paling biasa:
+
+| Punca | Penyelesaian |
+|---|---|
+| Kebenaran e-mel belum diberi (`MailApp.sendEmail` tiada permission) | Jalankan `setupSystem` atau `checkSystem` dari editor, tekan **Review permissions**, dan luluskan semua. |
+| Web app masih guna versi kod lama | **Deploy > Manage deployments > ikon pensel > Version: New version > Deploy**. Kod yang disimpan dalam editor tidak digunakan sehingga versi baharu dibuat. |
+| Sheet belum disediakan | Jalankan `setupSystem`. |
+| Fail HTML tersalah nama | Nama fail mesti tepat `Index` (tanpa `.html` dalam editor). |
+
+Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, admin, kebenaran e-mel, folder Drive, trigger). Hasilnya ada dalam Execution log.
+
 ## Cara ia berfungsi
 
 - **Log masuk**: e-mel berdaftar dan OTP 6 digit (sah 5 minit, sekali guna, maksimum 5 percubaan). Tiada akaun Google diperlukan. Peranan (`Admin` atau `Penyewa`) dibaca daripada sheet **Pengguna**.

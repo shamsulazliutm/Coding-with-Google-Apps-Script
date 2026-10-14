@@ -179,6 +179,21 @@ t('eksport CSV: tiada No. KP, dengan BOM, sel formula dilindungi', () => {
   assert.ok(d.csv.startsWith('﻿')); assert.ok(!/010203/.test(d.csv)); assert.match(d.csv, /"'=HYPERLINK/); assert.strictEqual(d.name, 'Laporan_2026-09.csv');
 });
 
+console.log('Ralat dan diagnostik');
+t('jika e-mel OTP gagal dihantar: mesej jelas, OTP dibatalkan, ralat direkod dalam Log', () => {
+  b.ctxFlags.failMail = true; delete b.cache['otpwait:rashid@utm.my'];
+  bad('requestOtp', null, { email: 'rashid@utm.my' }, /tidak dapat dihantar/);
+  assert.ok(!b.cache['otp:rashid@utm.my']);
+  assert.ok(b.readTable_('Log').some(l => l.tindakan === 'Ralat e-mel OTP' && /MailApp/.test(l.butiran)));
+  b.ctxFlags.failMail = false;
+});
+t('ralat tidak dijangka: mesej ada kod rujukan dan butiran dalam Log', () => {
+  const orig = b.sheets['Pengguna'].getLastRow; b.sheets['Pengguna'].getLastRow = () => { throw new Error('Simulasi ralat Sheets'); };
+  const r = bad('requestOtp', null, { email: 'x@y.com' }, /rujukan [A-F0-9]{6}/); b.sheets['Pengguna'].getLastRow = orig;
+  assert.ok(b.readTable_('Log').some(l => /^Ralat sistem [A-F0-9]{6}$/.test(l.tindakan) && /Simulasi ralat Sheets/.test(l.butiran)));
+});
+t('checkSystem melaporkan semua langkah OK', () => { const m = b.checkSystem(); assert.ok(!/GAGAL/.test(m), m); assert.match(m, /Kebenaran e-mel/); });
+
 console.log('Peringatan automatik & keselamatan');
 t('dailyReminderJob hanya bertindak pada 5hb', () => { assert.match(b.dailyReminderJob(), /Bukan hari peringatan/); });
 t('5hb: lot belum hantar diingatkan sekali sahaja (tiada duplikasi)', () => {

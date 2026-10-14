@@ -5,7 +5,7 @@ const CODE = path.join(__dirname, '..', 'Code.gs');
 
 function createBackend(opts = {}) {
   let NOW = opts.now || Date.parse('2026-10-14T01:30:00Z');   // 09:30 MYT
-  const outbox = [];
+  const outbox = []; const ctxFlags = { failMail: false };
   const props = {}, cache = {};
   const sheets = {}; const driveFiles = {}; const folders = {};
   let fid = 0;
@@ -28,7 +28,7 @@ function createBackend(opts = {}) {
     return sh;
   }
   const ss = {
-    getId() { return 'SS1'; }, setSpreadsheetTimeZone() {},
+    getId() { return 'SS1'; }, getName() { return 'Laporan Kewangan Penyewa'; }, setSpreadsheetTimeZone() {},
     getSheetByName(n) { return sheets[n] || null; },
     insertSheet(n) { sheets[n] = makeSheet(n); return sheets[n]; }
   };
@@ -48,7 +48,7 @@ function createBackend(opts = {}) {
     CacheService: { getScriptCache: () => ({ get: k => (k in cache ? cache[k] : null), put: (k, v) => { cache[k] = v; }, remove: k => { delete cache[k]; } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => 'Pn.Salmah@utm.my' }) },
-    MailApp: { sendEmail: m => outbox.push(m) },
+    MailApp: { sendEmail: m => { if (ctxFlags.failMail) throw new Error('You do not have permission to call MailApp.sendEmail'); outbox.push(m); }, getRemainingDailyQuota: () => 100 },
     ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }), getProjectTriggers: () => [], newTrigger: () => ({ timeBased() { return this; }, everyDays() { return this; }, atHour() { return this; }, create() {} }), deleteTrigger() {} },
     HtmlService: { createHtmlOutputFromFile: n => ({ html: fs.readFileSync(CODE.replace('Code.gs', n + '.html'), 'utf8'), setTitle() { return this; }, addMetaTag() { return this; } }) },
     Utilities: {
@@ -65,15 +65,15 @@ function createBackend(opts = {}) {
   };
   function makeFolder(name) {
     const id = 'F' + (++fid); const kids = {};
-    const f = { id, name, kids, getId: () => id,
+    const f = { id, name, kids, getId: () => id, getName: () => name,
       getFoldersByName(n) { const k = kids[n]; let used = false; return { hasNext: () => !!k && !used, next: () => { used = true; return k; } }; },
       createFolder(n) { const c = makeFolder(n); kids[n] = c; return c; },
       createFile(blob) { const fl = { id: 'D' + (++fid), name: blob.name, blob, trashed: false, getId() { return this.id; }, getName() { return this.name; }, getSize() { return this.blob.bytes.length; }, setTrashed(v) { this.trashed = v; }, getBlob() { return this.blob; } }; driveFiles[fl.id] = fl; return fl; } };
     folders[id] = f; return f;
   }
   vm.createContext(ctx);
-  vm.runInContext(fs.readFileSync(CODE, 'utf8') + '\n;this.__exports = { rpc, setupSystem, runReminders_, dailyReminderJob, readTable_, COLS, SHEETS };', ctx, { filename: 'Code.gs' });
+  vm.runInContext(fs.readFileSync(CODE, 'utf8') + '\n;this.__exports = { rpc, setupSystem, checkSystem, runReminders_, dailyReminderJob, readTable_, COLS, SHEETS };', ctx, { filename: 'Code.gs' });
   const ex = ctx.__exports;
-  return { ...ex, outbox, props, cache, sheets, driveFiles, ctx, setNow: t => { NOW = t; }, ss };
+  return { ...ex, outbox, ctxFlags, props, cache, sheets, driveFiles, ctx, setNow: t => { NOW = t; }, ss };
 }
 module.exports = { createBackend };

@@ -273,7 +273,14 @@ function requestOtp_(user, p) {
   if (u && u.status === 'Aktif' && (u.peranan === ROLE.ADMIN || u.peranan === ROLE.TENANT)) {
     var code = genOtp_();
     cache.put('otp:' + email, JSON.stringify({ h: hashOtp_(email, code), t: 0 }), APP.OTP_TTL);
-    sendOtpMail_(email, u.nama, code);
+    try {
+      sendOtpMail_(email, u.nama, code);
+    } catch (e) {
+      cache.remove('otp:' + email);
+      cache.remove('otpwait:' + email);
+      logAction_(email, 'Ralat e-mel OTP', String(e && e.message ? e.message : e));
+      fail_('Kod OTP tidak dapat dihantar sekarang. Cuba lagi sebentar atau hubungi ' + APP.CONTACT_EMAIL + '.', 'MAIL');
+    }
     logAction_(email, 'OTP dihantar', '');
   }
   return { message: 'Jika e-mel anda berdaftar, kod OTP telah dihantar. Kod sah selama 5 minit.' };
@@ -956,6 +963,7 @@ function setupSystem() {
   seedFirstAdminIfEmpty_();
   rootFolder_();
   installTriggers();
+  MailApp.getRemainingDailyQuota();   // meminta kebenaran e-mel semasa setup
 
   var admin = readTable_(SHEETS.USERS)[0];
   var msg = 'Siap. Admin pertama: ' + (admin ? admin.email : '(tiada)') +
@@ -1041,8 +1049,33 @@ function rpc(method, token, params) {
     return { ok: true, data: r.fn(user, params || {}, token) };
   } catch (e) {
     if (e && e.user) return { ok: false, error: e.message, code: e.code };
-    console.error(method + ': ' + (e && e.stack ? e.stack : e));
-    return { ok: false, error: 'Ralat sistem. Cuba lagi sebentar.', code: 'SERVER' };
+    var ref = Utilities.getUuid().slice(0, 6).toUpperCase();
+    var detail = (e && e.message ? e.message : String(e));
+    console.error(method + ' [' + ref + ']: ' + (e && e.stack ? e.stack : e));
+    try { appendObj_(SHEETS.LOG, { masa: nowStr_(), email: '', tindakan: 'Ralat sistem ' + ref, butiran: method + ': ' + detail }); } catch (x) { /* sheet mungkin belum disediakan */ }
+    return { ok: false, error: 'Ralat sistem (rujukan ' + ref + '). Cuba lagi sebentar atau hubungi ' + APP.CONTACT_EMAIL + '.', code: 'SERVER' };
   }
 }
 
+
+
+/**
+ * Semakan diagnostik. Jalankan checkSystem() dari editor, kemudian lihat View > Logs
+ * (atau Execution log) untuk mengetahui apa yang belum betul.
+ */
+function checkSystem() {
+  var out = [];
+  var step = function (name, fn) {
+    try { out.push('OK    ' + name + ': ' + fn()); } catch (e) { out.push('GAGAL ' + name + ': ' + (e && e.message ? e.message : e)); }
+  };
+  step('Spreadsheet', function () { return ss_().getName(); });
+  Object.keys(COLS).forEach(function (n) { step('Sheet ' + n, function () { return readTable_(n).length + ' baris'; }); });
+  step('Pengguna aktif (Admin)', function () { return readTable_(SHEETS.USERS).filter(function (u) { return u.peranan === ROLE.ADMIN && u.status === 'Aktif'; }).map(function (u) { return u.email; }).join(', ') || 'TIADA'; });
+  step('Kebenaran e-mel (MailApp)', function () { return 'baki kuota harian ' + MailApp.getRemainingDailyQuota(); });
+  step('Folder Drive', function () { return rootFolder_().getName(); });
+  step('Trigger peringatan', function () { return ScriptApp.getProjectTriggers().filter(function (t) { return t.getHandlerFunction() === 'dailyReminderJob'; }).length + ' trigger'; });
+  step('URL web app', function () { return appUrl_() || '(belum di-deploy)'; });
+  var msg = out.join('\n');
+  Logger.log(msg);
+  return msg;
+}
