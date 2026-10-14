@@ -1150,6 +1150,115 @@ function adminExport_(user, p) {
 }
 
 // ============================================================
+// Dashboard
+// ============================================================
+
+function counted_(r) { return (r.status === 'sent' || r.status === 'ok') && typeof r.pendapatan === 'number' && typeof r.perbelanjaan === 'number'; }
+function shortMonth_(m) { return MONTHS_MS[m - 1].slice(0, 3); }
+
+/** Dashboard penyewa: ringkasan kewangan setahun, kepatuhan penghantaran dan tindakan yang perlu dibuat. */
+function myDashboard_(user, p) {
+  var d = myReports_(user, p);
+  var byMonth = {};
+  d.rows.forEach(function (r) { byMonth[r.bulan] = r; });
+  var siri = [], jum = { pendapatan: 0, perbelanjaan: 0, sewa: 0, bulan: 0 };
+  var best = null;
+  for (var m = 1; m <= 12; m++) {
+    var r = byMonth[m], item = { bulan: m, bulanNama: shortMonth_(m), ada: !!r, status: r ? r.status : null, pendapatan: null, perbelanjaan: null, untung: null };
+    if (r && counted_(r)) {
+      item.pendapatan = r.pendapatan; item.perbelanjaan = r.perbelanjaan; item.untung = round2_(r.pendapatan - r.perbelanjaan);
+      jum.pendapatan += r.pendapatan; jum.perbelanjaan += r.perbelanjaan; jum.sewa += typeof r.sewa === 'number' ? r.sewa : 0; jum.bulan++;
+      if (!best || item.untung > best.untung) best = { bulan: m, bulanNama: MONTHS_MS[m - 1], untung: item.untung };
+    }
+    siri.push(item);
+  }
+  var hantar = 0, tepat = 0, tertunggak = 0, perluBaiki = 0, tindakan = [], komen = null;
+  d.rows.slice().sort(function (a, b) { return a.bulan - b.bulan; }).forEach(function (r) {
+    if (r.status === 'sent' || r.status === 'ok') { hantar++; if (!r.lewat) tepat++; }
+    if (r.status === 'none' || r.status === 'fix') {
+      if (r.status === 'fix') perluBaiki++; else if (r.kesempatanLewat) tertunggak++;
+      tindakan.push({ bulan: r.bulan, bulanNama: r.bulanNama, tahun: r.tahun, status: r.status, tarikhAkhirLabel: r.tarikhAkhirLabel, lewat: !!r.kesempatanLewat, komen: r.komen || '' });
+    }
+    if (r.status === 'fix' && r.komen) komen = { bulanNama: r.bulanNama, tahun: r.tahun, komen: r.komen, oleh: r.disemakOleh };
+  });
+  var fokus = tindakan.length ? tindakan[0] : (d.rows.length ? (function (r) { return { bulan: r.bulan, bulanNama: r.bulanNama, tahun: r.tahun, status: r.status, tarikhAkhirLabel: r.tarikhAkhirLabel, lewat: !!r.lewat, komen: r.komen || '' }; })(d.rows[0]) : null);
+  return {
+    lot: d.lot, perniagaan: d.perniagaan, tahun: d.tahun, tahunList: d.tahunList, bulanDibenarkan: d.bulanDibenarkan,
+    counts: d.counts, jumlahBulan: d.jumlahBulan, siri: siri,
+    jumlah: { pendapatan: round2_(jum.pendapatan), perbelanjaan: round2_(jum.perbelanjaan), untung: round2_(jum.pendapatan - jum.perbelanjaan), sewa: round2_(jum.sewa),
+              purataPendapatan: jum.bulan ? round2_(jum.pendapatan / jum.bulan) : null, bulanDikira: jum.bulan, bulanTerbaik: best },
+    kepatuhan: { hantar: hantar, tepatMasa: tepat, tertunggak: tertunggak, perluBaiki: perluBaiki, wajib: d.rows.length },
+    tindakan: tindakan, fokus: fokus, komenTerkini: komen
+  };
+}
+
+/** Dashboard admin: p.tahun, p.bulan (0 = semua bulan dalam tahun itu; lalai = bulan lepas bagi tahun semasa). */
+function adminDashboard_(user, p) {
+  var today = todayStr_(), t = ymFromStr_(today);
+  var y = Number(p.tahun) || t.y;
+  var m;
+  if (p.bulan === undefined || p.bulan === null || p.bulan === '') m = y === t.y ? (t.m === 1 ? 1 : t.m - 1) : 0;
+  else m = Number(p.bulan);
+  if (!isFinite(m) || m < 0 || m > 12) fail_('Bulan tidak sah.');
+  var all = adminReports_(user, { tahun: y, bulan: 0 });
+  var sel = all.rows.filter(function (r) { return m === 0 || r.bulan === m; });
+
+  var counts = { ok: 0, sent: 0, fix: 0, none: 0 }, jum = { pendapatan: 0, perbelanjaan: 0, sewa: 0, dikira: 0 }, lewat = 0;
+  sel.forEach(function (r) {
+    counts[r.status]++;
+    if (r.lewat) lewat++;
+    if (counted_(r)) { jum.pendapatan += r.pendapatan; jum.perbelanjaan += r.perbelanjaan; jum.sewa += typeof r.sewa === 'number' ? r.sewa : 0; jum.dikira++; }
+  });
+  var hantar = counts.ok + counts.sent;
+
+  var siri = [];
+  for (var k = 1; k <= 12; k++) {
+    var rows = all.rows.filter(function (r) { return r.bulan === k; });
+    var it = { bulan: k, bulanNama: shortMonth_(k), dijangka: rows.length, dihantar: 0, tepatMasa: 0, disahkan: 0, pendapatan: 0, perbelanjaan: 0 };
+    rows.forEach(function (r) {
+      if (r.status === 'sent' || r.status === 'ok') { it.dihantar++; if (!r.lewat) it.tepatMasa++; }
+      if (r.status === 'ok') it.disahkan++;
+      if (counted_(r)) { it.pendapatan += r.pendapatan; it.perbelanjaan += r.perbelanjaan; }
+    });
+    it.pendapatan = round2_(it.pendapatan); it.perbelanjaan = round2_(it.perbelanjaan);
+    siri.push(it);
+  }
+
+  var lokMap = {}, lokasi = [];
+  sel.forEach(function (r) {
+    var o = lokMap[r.lokasi];
+    if (!o) { o = lokMap[r.lokasi] = { lokasi: r.lokasi, dijangka: 0, dihantar: 0, pendapatan: 0, perbelanjaan: 0 }; lokasi.push(o); }
+    o.dijangka++;
+    if (r.status === 'sent' || r.status === 'ok') o.dihantar++;
+    if (counted_(r)) { o.pendapatan += r.pendapatan; o.perbelanjaan += r.perbelanjaan; }
+  });
+  lokasi.forEach(function (o) { o.pendapatan = round2_(o.pendapatan); o.perbelanjaan = round2_(o.perbelanjaan); });
+
+  var slim = function (r) { return { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, tahun: r.tahun, bulan: r.bulan, bulanNama: r.bulanNama,
+    pendapatan: r.pendapatan, perbelanjaan: r.perbelanjaan, untungRugi: r.untungRugi, lewat: !!r.lewat, tarikhAkhirLabel: r.tarikhAkhirLabel }; };
+  var cnt = counted_;
+  var teratas = sel.filter(cnt).sort(function (a, b) { return b.pendapatan - a.pendapatan; }).slice(0, 5).map(slim);
+  var rugi = sel.filter(function (r) { return cnt(r) && r.untungRugi < 0; }).sort(function (a, b) { return a.untungRugi - b.untungRugi; }).slice(0, 5).map(slim);
+
+  var menunggu = all.rows.filter(function (r) { return r.status === 'sent'; });
+  var tertunggak = all.rows.filter(function (r) { return r.status === 'none' && r.kesempatanLewat; });
+  var perluBaiki = all.rows.filter(function (r) { return r.status === 'fix'; });
+  var oldest = function (a, b) { return a.bulan - b.bulan; };
+  return {
+    tahun: y, bulan: m, lotAktif: all.lotAktif, tanpaTarikh: all.tanpaTarikh,
+    counts: counts, jumlahBaris: sel.length, lewat: lewat,
+    kadar: { hantar: hantar, dijangka: sel.length, peratus: sel.length ? Math.round(hantar * 100 / sel.length) : null },
+    jumlah: { pendapatan: round2_(jum.pendapatan), perbelanjaan: round2_(jum.perbelanjaan), untung: round2_(jum.pendapatan - jum.perbelanjaan), sewa: round2_(jum.sewa), bilLaporan: jum.dikira },
+    siri: siri, lokasi: lokasi, teratas: teratas, rugi: rugi,
+    tindakan: {
+      menunggu: { jumlah: menunggu.length, senarai: menunggu.sort(oldest).slice(0, 8).map(slim) },
+      tertunggak: { jumlah: tertunggak.length, senarai: tertunggak.sort(oldest).slice(0, 8).map(slim) },
+      perluBaiki: { jumlah: perluBaiki.length, senarai: perluBaiki.sort(oldest).slice(0, 8).map(slim) }
+    }
+  };
+}
+
+// ============================================================
 // Reminders
 // ============================================================
 /**
@@ -1348,6 +1457,8 @@ var ROUTES = {
   submitReport:  { auth: true, role: ROLE.TENANT, fn: submitMyReport_ },
   deleteReport:  { auth: true, role: ROLE.TENANT, fn: deleteMyReport_ },
   getFile:       { auth: true, fn: getFile_ },
+  myDashboard:   { auth: true, role: ROLE.TENANT, fn: myDashboard_ },
+  adminDashboard: { auth: true, role: ROLE.ADMIN, fn: adminDashboard_ },
 
   adminReports:  { auth: true, role: ROLE.ADMIN, fn: adminReports_ },
   adminReport:   { auth: true, role: ROLE.ADMIN, fn: adminGetReport_ },

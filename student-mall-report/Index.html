@@ -15,6 +15,7 @@
   --ok: #1f7a4d; --ok-soft: #e2f3ea; --warn: #9a5b00; --warn-soft: #fbefd5;
   --bad: #b3261e; --bad-soft: #fbe4e2; --info: #2c5d8f; --info-soft: #e3edf8;
   --idle: #6f6467; --idle-soft: #ece8e7; --scrim: rgba(30,15,20,.45);
+  --c1: #5b1a33; --c2: #d1a145; --grid: #ebe4e5;
   --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
@@ -24,7 +25,7 @@
     --accent: #e0707f; --accent-fg: #1b0f11; --accent-soft: #3a2327;
     --ok: #62c58f; --ok-soft: #1b3326; --warn: #e6b45a; --warn-soft: #3a2d14;
     --bad: #f08a83; --bad-soft: #3d1f1d; --info: #86b4e6; --info-soft: #1e2d40;
-    --idle: #a79ea0; --idle-soft: #2e2829; --scrim: rgba(0,0,0,.6); color-scheme: dark;
+    --idle: #a79ea0; --idle-soft: #2e2829; --scrim: rgba(0,0,0,.6); --c1: #e0707f; --c2: #e6b45a; --grid: #342d2f; color-scheme: dark;
   }
 }
 * { box-sizing: border-box; }
@@ -154,6 +155,49 @@ textarea.fi { min-height: 72px; resize: vertical; }
 .login h1 { margin: 0; font-size: 20px; }
 .login .card { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
 .otp { font-family: var(--font-mono); font-size: 24px; letter-spacing: 8px; text-align: center; }
+
+/* ---------- dashboard ---------- */
+.dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.dgrid > * { min-width: 0; }
+.dcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.dcard h3 { margin: 0; font-size: 14px; font-weight: 700; }
+.dcard .hint { font-size: 12px; color: var(--muted); margin: -6px 0 0; }
+.hero { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; justify-content: space-between; }
+.hero h2 { margin: 0; font-size: 20px; text-wrap: balance; } .hero p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.kpi small { display: block; color: var(--muted); font-size: 12px; }
+.kpi .v { font-family: var(--font-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: 2px; overflow-wrap: anywhere; }
+.kpi .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.kpi.accent { border-color: var(--accent); }
+.dcard.focus { flex-direction: row; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.hero > select { color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
+.focus h3 { font-size: 16px; } .focus p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { display: block; width: 100%; height: auto; min-width: 360px; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+.chart .ax { stroke: var(--grid); stroke-width: 1; }
+.chart .zero { stroke: var(--line); stroke-width: 1; }
+.stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--idle-soft); }
+.stack span { display: block; height: 100%; }
+.stack-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; }
+.stack-legend b { font-family: var(--font-mono); font-weight: 500; margin-left: 4px; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.bg-ok { background: var(--ok); } .bg-sent { background: var(--info); } .bg-fix { background: var(--bad); } .bg-none { background: var(--warn); }
+.prog { height: 8px; background: var(--idle-soft); border-radius: 4px; overflow: hidden; }
+.prog span { display: block; height: 100%; background: var(--c1); border-radius: 4px; }
+.todo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.todo li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--line); }
+.todo li:first-child { border-top: 0; }
+.todo .t1 { font-weight: 600; font-size: 13px; } .todo .t2 { font-size: 12px; color: var(--muted); display: block; }
+.todo .none { color: var(--muted); font-size: 13px; padding: 6px 0; }
+.mini { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 0; }
+.mini td, .mini th { padding: 6px 4px; border-top: 1px solid var(--line); text-align: left; } .mini th { border-top: 0; color: var(--muted); font-weight: 600; font-size: 12px; }
+.mini td.num, .mini th.num { text-align: right; }
+.kmsg { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+.kmsg p { color: var(--fg); margin: 2px 0 0; white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -173,7 +217,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   var S = { token: null, user: null, tab: null, login: { step: 'email', email: '', msg: '', err: '' },
             fin: null, finQ: '', finStatus: '', biz: null,
-            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null, tns: null, tnOpts: null, tnQ: '' };
+            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null, tns: null, tnOpts: null, tnQ: '', dash: null, dashY: null, dashM: null, openAfter: null };
   var D = null;   // dialog laporan penyewa
   var pending = 0;
 
@@ -211,7 +255,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function endSession(msg) {
     S.token = null; S.user = null; store('tok', null); D = null; $('dlg-slot').innerHTML = '';
     S.login = { step: 'email', email: S.login.email || '', msg: '', err: msg || '' };
-    S.fin = S.adm = S.biz = S.lots = S.users = null;
+    S.fin = S.adm = S.biz = S.lots = S.users = S.dash = S.tns = null; S.dashY = S.dashM = null; S.openAfter = null;
     render();
   }
 
@@ -251,7 +295,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     var app = $('app');
     if (!S.token) { app.innerHTML = loginHtml(); return; }
     var admin = S.user.peranan === 'Admin';
-    var tabs = admin ? [['adm', 'Semua Laporan'], ['tn', 'Penyewaan'], ['lots', 'Lot'], ['users', 'Pengguna']] : [['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
+    var tabs = admin ? [['dash', 'Dashboard'], ['adm', 'Semua Laporan'], ['tn', 'Penyewaan'], ['lots', 'Lot'], ['users', 'Pengguna']] : [['dash', 'Dashboard'], ['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
     if (!S.tab) S.tab = tabs[0][0];
     app.innerHTML = '<div class="wrap">' + header() + tabsHtml(tabs) + '<div id="view" class="wrap"></div></div>';
     loadTab();
@@ -260,8 +304,9 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function loadTab() {
     var v = $('view');
     v.innerHTML = '<p class="note">Memuatkan…</p>';
-    if (S.tab === 'info') run(api('getBusiness').then(function (d) { S.biz = d; v.innerHTML = bizHtml(); }));
-    else if (S.tab === 'fin') run(api('myReports', { tahun: S.fin && S.fin.tahun }).then(function (d) { S.fin = d; v.innerHTML = finHtml(); }));
+    if (S.tab === 'dash') loadDash();
+    else if (S.tab === 'info') run(api('getBusiness').then(function (d) { S.biz = d; v.innerHTML = bizHtml(); }));
+    else if (S.tab === 'fin') run(api('myReports', { tahun: S.fin && S.fin.tahun }).then(function (d) { S.fin = d; v.innerHTML = finHtml(); if (S.openAfter) { var o = S.openAfter; S.openAfter = null; openReport(o.y, o.m, false); } }));
     else if (S.tab === 'adm') loadAdm();
     else if (S.tab === 'tn') run(api('adminTenancies').then(function (d) { S.tns = d.tenancies; S.lots = d.lots; v.innerHTML = tnHtml(); }));
     else if (S.tab === 'lots') run(api('adminLots').then(function (d) { S.lots = d.lots; v.innerHTML = lotsHtml(); }));
@@ -483,6 +528,139 @@ textarea.fi { min-height: 72px; resize: vertical; }
     });
   }
 
+
+  /* ---------- dashboard ---------- */
+  function rmShort(n) {
+    if (n === null || n === undefined) return '-';
+    var a = Math.abs(n), s = a >= 1e6 ? (a / 1e6).toFixed(1).replace(/\.0$/, '') + 'J' : a >= 1e3 ? (a / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : String(Math.round(a));
+    return (n < 0 ? '-' : '') + s;
+  }
+  function rmFull(n) { return n === null || n === undefined ? '-' : (n < 0 ? '-' : '') + 'RM ' + fmt(Math.abs(n)); }
+  function niceMax(v) {
+    if (!(v > 0)) return 100;
+    var p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  }
+
+  /** Carta bar berkumpulan. data: [{label, a, b}], a/b boleh null. */
+  function barChart(data, o) {
+    var W = 640, H = 250, L = o.pct ? 36 : 46, R = 8, T = 10, B = 26, iw = W - L - R, ih = H - T - B;
+    var max = o.pct ? 100 : niceMax(Math.max.apply(null, data.map(function (d) { return Math.max(d.a || 0, d.b || 0); })));
+    var any = data.some(function (d) { return d.a !== null && d.a !== undefined || d.b !== null && d.b !== undefined; });
+    if (!any) return '<p class="hint" style="margin:8px 0">' + esc(o.empty || 'Belum ada data.') + '</p>';
+    var y = function (v) { return T + ih - (v / max) * ih; };
+    var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label) + '">';
+    for (var i = 0; i <= 4; i++) {
+      var v = max * i / 4, yy = y(v);
+      g += '<line class="' + (i === 0 ? 'zero' : 'ax') + '" x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '"/><text x="' + (L - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + (o.pct ? Math.round(v) + '%' : rmShort(v)) + '</text>';
+    }
+    var gw = iw / data.length, bw = Math.min(18, gw * 0.34);
+    data.forEach(function (d, k) {
+      var cx = L + gw * k + gw / 2, tip = esc(d.label) + (o.pct ? ': ' + (d.a === null ? '-' : Math.round(d.a) + '% dihantar') + (d.b === null || d.b === undefined ? '' : ', ' + Math.round(d.b) + '% tepat masa') : ': ' + o.names[0] + ' ' + rmFull(d.a) + ', ' + o.names[1] + ' ' + rmFull(d.b));
+      g += '<g><title>' + tip + '</title><rect x="' + L + gw * k + '" y="' + T + '" width="' + gw + '" height="' + ih + '" fill="transparent"/>';
+      if (o.pct) {
+        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw) + '" y="' + y(d.a) + '" width="' + bw * 2 + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)" opacity=".3"/>';
+        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx - bw * 0.55) + '" y="' + y(d.b) + '" width="' + bw * 1.1 + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c1)"/>';
+      } else {
+        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw - 1) + '" y="' + y(d.a) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)"/>';
+        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx + 1) + '" y="' + y(d.b) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c2)"/>';
+      }
+      g += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(d.label) + '</text></g>';
+    });
+    return g + '</svg>';
+  }
+
+  function legend(items) { return '<div class="legend">' + items.map(function (i) { return '<span><i style="background:' + i[1] + (i[2] ? ';opacity:' + i[2] : '') + '"></i>' + esc(i[0]) + '</span>'; }).join('') + '</div>'; }
+
+  function statusStack(c) {
+    var total = c.ok + c.sent + c.fix + c.none;
+    var seg = [['ok', 'Disahkan'], ['sent', 'Menunggu semakan'], ['fix', 'Perlu dibetulkan'], ['none', 'Belum dihantar']];
+    var bar = total ? '<div class="stack" role="img" aria-label="Taburan status">' + seg.map(function (x) { return c[x[0]] ? '<span class="bg-' + x[0] + '" style="width:' + (c[x[0]] * 100 / total) + '%" title="' + x[1] + ': ' + c[x[0]] + '"></span>' : ''; }).join('') + '</div>' : '<div class="stack"></div>';
+    return bar + '<div class="stack-legend">' + seg.map(function (x) { return '<span><i class="sw bg-' + x[0] + '"></i>' + x[1] + '<b>' + c[x[0]] + '</b></span>'; }).join('') + '</div>';
+  }
+
+  function kpi(label, val, sub, cls) { return '<div class="kpi' + (cls ? ' ' + cls : '') + '"><small>' + esc(label) + '</small><div class="v' + (val && String(val).charAt(0) === '-' ? ' neg' : '') + '">' + esc(val) + '</div>' + (sub ? '<div class="s">' + esc(sub) + '</div>' : '') + '</div>'; }
+
+  function loadDash() {
+    var v = $('view'); v.innerHTML = '<p class="note">Memuatkan…</p>';
+    if (S.user.peranan === 'Admin') {
+      run(api('adminDashboard', S.dashY ? { tahun: S.dashY, bulan: S.dashM === null ? undefined : S.dashM } : {}).then(function (d) { S.dash = d; S.dashY = d.tahun; S.dashM = d.bulan; v.innerHTML = dashAdminHtml(d); }));
+    } else {
+      run(api('myDashboard', S.dashY ? { tahun: S.dashY } : {}).then(function (d) { S.dash = d; S.dashY = d.tahun; v.innerHTML = dashTenantHtml(d); }));
+    }
+  }
+
+  function dashTenantHtml(d) {
+    var j = d.jumlah, k = d.kepatuhan, f = d.fokus, c = d.counts;
+    var h = '<div class="hero"><div><h2>' + esc(d.perniagaan || 'Selamat datang') + '</h2><p>' + esc(d.lot.nama) + ' · Tempoh sewa ' + esc(dateLabel(d.lot.mula)) + ' hingga ' + (d.lot.akhir ? esc(dateLabel(d.lot.akhir)) : 'kini') + '</p></div>' +
+      '<select id="ds-year" aria-label="Tahun">' + d.tahunList.map(function (y) { return '<option' + (y === d.tahun ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select></div>';
+    if (!d.bulanDibenarkan) return h + '<div class="dcard"><p style="margin:0">Tempoh sewa anda belum ditetapkan. Hubungi utmxcite@utm.my.</p></div>';
+    if (f) {
+      var label = f.status === 'none' ? (f.lewat ? 'Belum dihantar, sudah lewat' : 'Belum dihantar') : ST[f.status][1];
+      var cta = f.status === 'none' ? 'Hantar laporan' : f.status === 'fix' ? 'Betulkan laporan' : f.status === 'sent' ? 'Lihat / edit' : 'Lihat';
+      h += '<div class="dcard focus"><div><small class="note">' + (d.tindakan.length ? 'Perlu tindakan anda' : 'Laporan terkini') + '</small><h3>Laporan ' + esc(f.bulanNama) + ' ' + f.tahun + '</h3>' +
+        '<p>' + pill(f.status === 'none' ? 'none' : f.status) + ' ' + (f.status === 'none' || f.status === 'fix' ? 'Tarikh akhir ' + esc(f.tarikhAkhirLabel) + (f.lewat ? ' (lewat)' : '') : '') + '</p>' + '</div>' +
+        '<button class="btn primary" data-act="dash-open" data-y="' + f.tahun + '" data-m="' + f.bulan + '" type="button">' + cta + '</button></div>';
+    }
+    if (d.komenTerkini) h += '<div class="kmsg"><b>Komen admin untuk ' + esc(d.komenTerkini.bulanNama) + ' ' + d.komenTerkini.tahun + '</b><p>' + esc(d.komenTerkini.komen) + '</p></div>';
+    h += '<div class="kpis">' +
+      kpi('Jumlah pendapatan ' + d.tahun, rmFull(j.pendapatan), j.bulanDikira ? j.bulanDikira + ' bulan dihantar' : 'Belum ada laporan dihantar') +
+      kpi('Jumlah perbelanjaan', rmFull(j.perbelanjaan), 'Bayaran sewa direkod: ' + rmFull(j.sewa)) +
+      kpi(j.untung < 0 ? 'Rugi bersih' : 'Untung bersih', rmFull(j.untung), j.bulanDikira ? 'Pendapatan tolak perbelanjaan' : '', 'accent') +
+      kpi('Purata pendapatan sebulan', rmFull(j.purataPendapatan), j.bulanTerbaik ? 'Terbaik: ' + j.bulanTerbaik.bulanNama + ' (' + rmFull(j.bulanTerbaik.untung) + ')' : '') + '</div>';
+    h += '<div class="dgrid"><div class="dcard"><h3>Pendapatan dan perbelanjaan bulanan</h3><p class="hint">Hanya laporan yang sudah dihantar dikira.</p>' +
+      legend([['Pendapatan', 'var(--c1)'], ['Perbelanjaan', 'var(--c2)']]) +
+      '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.pendapatan, b: x.perbelanjaan }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan bulanan', empty: 'Belum ada laporan dihantar untuk tahun ini.' }) + '</div></div>' +
+      '<div class="dcard"><h3>Kepatuhan penghantaran</h3>' +
+      '<div><div class="prog" role="img" aria-label="' + k.hantar + ' daripada ' + k.wajib + ' laporan dihantar"><span style="width:' + (k.wajib ? k.hantar * 100 / k.wajib : 0) + '%"></span></div>' +
+      '<p class="hint" style="margin:6px 0 0">' + k.hantar + ' daripada ' + k.wajib + ' laporan dihantar · ' + k.tepatMasa + ' tepat masa</p></div>' + statusStack(c) +
+      '<h3 style="margin-top:4px">Tindakan diperlukan</h3><ul class="todo">' + (d.tindakan.length ? d.tindakan.map(function (t) {
+        return '<li><span><span class="t1">' + esc(t.bulanNama) + ' ' + t.tahun + '</span><span class="t2">' + (t.status === 'fix' ? 'Perlu dibetulkan' : 'Belum dihantar') + ' · akhir ' + esc(t.tarikhAkhirLabel) + (t.lewat ? ' · lewat' : '') + '</span></span><button class="btn sm' + (t.status === 'none' ? ' fill' : '') + '" data-act="dash-open" data-y="' + t.tahun + '" data-m="' + t.bulan + '" type="button">' + (t.status === 'fix' ? 'Betulkan' : 'Hantar') + '</button></li>';
+      }).join('') : '<li class="none">Tiada. Semua laporan sudah dihantar.</li>') + '</ul></div></div>';
+    return h;
+  }
+
+  function todoList(title, group, btn, act) {
+    return '<div class="dcard"><h3>' + esc(title) + ' <span class="pill ' + (group.jumlah ? 's-warn' : 's-ok') + '" style="margin-left:6px">' + group.jumlah + '</span></h3><ul class="todo">' +
+      (group.senarai.length ? group.senarai.map(function (r) {
+        return '<li><span><span class="t1">' + esc(r.lotNama) + ' · ' + esc(r.bulanNama) + ' ' + r.tahun + '</span><span class="t2">' + esc(r.perniagaan || r.pelajar || 'Maklumat belum diisi') + (r.lewat ? ' · dihantar lewat' : '') + '</span></span>' +
+          '<button class="btn sm' + (act === 'review' && btn === 'Semak' ? ' fill' : '') + '" data-act="' + act + '" data-lot="' + esc(r.kodLot) + '" data-y="' + r.tahun + '" data-m="' + r.bulan + '" type="button">' + btn + '</button></li>';
+      }).join('') + (group.jumlah > group.senarai.length ? '<li class="none">… dan ' + (group.jumlah - group.senarai.length) + ' lagi di tab Semua Laporan.</li>' : '') : '<li class="none">Tiada.</li>') + '</ul></div>';
+  }
+
+  function rankTable(rows, empty) {
+    if (!rows.length) return '<p class="hint" style="margin:0">' + empty + '</p>';
+    return '<table class="mini"><tbody>' + rows.map(function (r, i) {
+      return '<tr><td>' + (i + 1) + '</td><td>' + esc(r.lotNama) + '<span class="sub">' + esc(r.perniagaan || r.pelajar) + (S.dash.bulan === 0 ? ' · ' + esc(r.bulanNama) : '') + '</span></td><td class="num mono">' + rmFull(r.untungRugi !== null && r.untungRugi < 0 ? r.untungRugi : r.pendapatan) + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+
+  function dashAdminHtml(d) {
+    var j = d.jumlah, c = d.counts, cy = new Date().getFullYear(), yrs = [cy + 1, cy, cy - 1, cy - 2];
+    var per = d.bulan === 0 ? 'sepanjang ' + d.tahun : MS[d.bulan - 1] + ' ' + d.tahun;
+    var h = '<div class="hero"><div><h2>Ringkasan ' + esc(per) + '</h2><p>' + d.lotAktif + ' lot aktif · ' + d.jumlahBaris + ' laporan dijangka' + (d.tanpaTarikh ? ' · ' + d.tanpaTarikh + ' lot belum ada penyewaan' : '') + '</p></div>' +
+      '<div class="bar"><select id="ds-month" aria-label="Bulan"><option value="0"' + (d.bulan === 0 ? ' selected' : '') + '>Bulan: Semua</option>' + MS.map(function (n, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === d.bulan ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
+      '<select id="ds-year" aria-label="Tahun">' + yrs.map(function (y) { return '<option' + (y === d.tahun ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select></div></div>';
+    h += '<div class="kpis">' +
+      kpi('Kadar penghantaran', d.kadar.peratus === null ? '-' : d.kadar.peratus + '%', d.kadar.hantar + ' daripada ' + d.kadar.dijangka + ' laporan', 'accent') +
+      kpi('Jumlah pendapatan', rmFull(j.pendapatan), j.bilLaporan + ' laporan dihantar') +
+      kpi('Jumlah perbelanjaan', rmFull(j.perbelanjaan), 'Sewa direkod: ' + rmFull(j.sewa)) +
+      kpi(j.untung < 0 ? 'Rugi bersih' : 'Untung bersih', rmFull(j.untung), '') +
+      kpi('Dihantar lewat', String(d.lewat), 'daripada ' + d.jumlahBaris + ' laporan') + '</div>';
+    h += '<div class="dgrid">' + todoList('Menunggu semakan', d.tindakan.menunggu, 'Semak', 'review') + todoList('Perlu dibetulkan oleh penyewa', d.tindakan.perluBaiki, 'Lihat', 'review') + todoList('Belum dihantar dan sudah lewat', d.tindakan.tertunggak, 'Ingatkan', 'remind') + '</div>';
+    h += '<div class="dgrid"><div class="dcard"><h3>Status laporan</h3>' + statusStack(c) +
+      (d.lokasi.length ? '<h3 style="margin-top:4px">Mengikut lokasi</h3><table class="mini"><thead><tr><th>Lokasi</th><th class="num">Dihantar</th><th class="num">Pendapatan</th><th class="num">Perbelanjaan</th></tr></thead><tbody>' +
+        d.lokasi.map(function (o) { return '<tr><td>' + esc(o.lokasi) + '</td><td class="num mono">' + o.dihantar + '/' + o.dijangka + '</td><td class="num mono">' + rmShort(o.pendapatan) + '</td><td class="num mono">' + rmShort(o.perbelanjaan) + '</td></tr>'; }).join('') + '</tbody></table>' : '') + '</div>' +
+      '<div class="dcard"><h3>Kadar penghantaran mengikut bulan</h3><p class="hint">Peratus laporan yang dihantar, dan yang dihantar tepat masa.</p>' + legend([['Dihantar', 'var(--c1)', '.3'], ['Tepat masa', 'var(--c1)']]) +
+      '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.dihantar * 100 / x.dijangka : null, b: x.dijangka ? x.tepatMasa * 100 / x.dijangka : null }; }), { pct: true, label: 'Kadar penghantaran bulanan', empty: 'Belum ada data.' }) + '</div></div>' +
+      '<div class="dcard"><h3>Pendapatan dan perbelanjaan semua lot</h3><p class="hint">Jumlah laporan yang sudah dihantar, setiap bulan ' + d.tahun + '.</p>' + legend([['Pendapatan', 'var(--c1)'], ['Perbelanjaan', 'var(--c2)']]) +
+      '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka && x.dihantar ? x.pendapatan : null, b: x.dijangka && x.dihantar ? x.perbelanjaan : null }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan semua lot', empty: 'Belum ada laporan dihantar.' }) + '</div></div>' +
+      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>';
+    return h;
+  }
+
+  function goReport(y, m) { S.openAfter = { y: y, m: m }; S.fin = { tahun: y }; S.tab = 'fin'; render(); }
+
   /* ---------- admin: semua laporan ---------- */
   function admDefaults() {
     if (!S.admY) { S.admY = new Date().getFullYear(); S.admM = 0; }   // 0 = semua bulan
@@ -563,7 +741,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function doReview(decision) {
     var dlg = document.querySelector('.dlg[data-lot]'); if (!dlg) return;
     var p = { kodLot: dlg.dataset.lot, tahun: Number(dlg.dataset.y), bulan: Number(dlg.dataset.m), decision: decision, komen: ($('rv-komen') || {}).value || '' };
-    api('adminReview', p).then(function (r) { toast(decision === 'ok' ? 'Laporan disahkan' : 'Pembetulan diminta, e-mel dihantar'); $('dlg-slot').innerHTML = ''; loadAdm(); })
+    api('adminReview', p).then(function (r) { toast(decision === 'ok' ? 'Laporan disahkan' : 'Pembetulan diminta, e-mel dihantar'); $('dlg-slot').innerHTML = ''; if (S.tab === 'dash') loadDash(); else loadAdm(); })
       .catch(function (e) { api('adminReport', p).then(function (r) { drawReview(r, e.message); }).catch(function () { toast(e.message, true); }); });
   }
 
@@ -709,6 +887,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       case 'savedraft': persist(false); break;
       case 'submitreport': persist(true); break;
       case 'review': openReview(t.dataset.lot, Number(t.dataset.y), Number(t.dataset.m)); break;
+      case 'dash-open': goReport(Number(t.dataset.y), Number(t.dataset.m)); break;
       case 'admfile': var d2 = document.querySelector('.dlg[data-lot]'); openFile(Number(d2.dataset.y), Number(d2.dataset.m), t.dataset.kind, d2.dataset.lot); break;
       case 'rv-ok': doReview('ok'); break;
       case 'rv-fix': doReview('fix'); break;
@@ -739,6 +918,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     else if (id === 'd-month') { readDlgInputs(); openReport(D.year, Number(e.target.value), true); }
     else if (id === 'f-year') { S.fin.tahun = Number(e.target.value); loadTab(); }
     else if (id === 'f-status') { S.finStatus = e.target.value; $('f-rows').innerHTML = finRows(); }
+    else if (id === 'ds-year' || id === 'ds-month') { S.dashY = Number($('ds-year').value); S.dashM = $('ds-month') ? Number($('ds-month').value) : null; loadDash(); }
     else if (id === 'a-month' || id === 'a-year') { S.admM = Number($('a-month').value); S.admY = Number($('a-year').value); loadAdm(); }
     else if (id === 'a-lokasi') { S.admLokasi = e.target.value; $('a-rows').innerHTML = admRows(); }
     else if (id === 'a-status') { S.admStatus = e.target.value; $('a-rows').innerHTML = admRows(); }

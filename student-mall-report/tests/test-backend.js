@@ -326,6 +326,58 @@ t('setupSystem menukar data lama kepada penyewaan: lot, peniaga, pengguna dan la
   assert.strictEqual(mr.rows.find(r => r.bulan === 2).status, 'ok');
 });
 
+console.log('Dashboard');
+t('dashboard penyewa: jumlah kewangan, kepatuhan dan tindakan dikira betul', () => {
+  const d = ok('myDashboard', ten.token, {});
+  assert.strictEqual(d.tahun, 2026); assert.strictEqual(d.siri.length, 12);
+  assert.strictEqual(d.jumlah.pendapatan, 16750); assert.strictEqual(d.jumlah.perbelanjaan, 9800); assert.strictEqual(d.jumlah.untung, 6950);
+  assert.strictEqual(d.jumlah.bulanDikira, 2); assert.strictEqual(d.jumlah.purataPendapatan, 8375); assert.strictEqual(d.jumlah.bulanTerbaik.bulanNama, 'September'); assert.strictEqual(d.jumlah.sewa, 1200);
+  assert.strictEqual(d.siri[8].pendapatan, 8650); assert.strictEqual(d.siri[8].untung, 4090); assert.strictEqual(d.siri[0].pendapatan, null, 'bulan belum hantar tidak dikira');
+  assert.strictEqual(d.kepatuhan.hantar, 2); assert.strictEqual(d.kepatuhan.tepatMasa, 0); assert.strictEqual(d.kepatuhan.wajib, 10);
+  assert.strictEqual(d.kepatuhan.tertunggak, 7, 'Jan-Jul belum dihantar dan sudah lepas tarikh akhir');
+  assert.strictEqual(d.tindakan.length, 8); assert.strictEqual(d.tindakan[0].bulan, 1, 'bulan tertua dahulu'); assert.strictEqual(d.fokus.bulan, 1);
+  assert.strictEqual(d.perniagaan, '=HYPERLINK("x")', 'nama perniagaan terkini'); assert.strictEqual(d.lot.nama, 'Student Mall · Lot 3');
+});
+t('dashboard penyewa: komen pembetulan admin dipaparkan', () => {
+  ok('saveReport', ten.token, { tahun: 2026, bulan: 8, data: { pendapatan: 8100, perbelanjaan: 5240, sewa: 600, sewaPeralatan: false, akuan: true } });
+  ok('adminReview', adm.token, { kodLot: 'StudentMall-Lot3', tahun: 2026, bulan: 8, decision: 'fix', komen: 'Sila lampirkan penyata bank.' });
+  const d = ok('myDashboard', ten.token, {});
+  assert.strictEqual(d.komenTerkini.komen, 'Sila lampirkan penyata bank.'); assert.strictEqual(d.kepatuhan.perluBaiki, 1);
+  assert.strictEqual(d.jumlah.bulanDikira, 1, 'laporan yang perlu dibetulkan tidak dikira dalam jumlah');
+  submitFull(ten.token, 2026, 8, { pendapatan: 8100, perbelanjaan: 5240 });
+  assert.strictEqual(ok('myDashboard', ten.token, {}).jumlah.bulanDikira, 2);
+});
+t('dashboard admin: lalai bulan lepas; ringkasan sepadan dengan senarai laporan', () => {
+  const d = ok('adminDashboard', adm.token, {});
+  const list = ok('adminReports', adm.token, { tahun: 2026, bulan: 9 });
+  assert.strictEqual(d.tahun, 2026); assert.strictEqual(d.bulan, 9);
+  assert.strictEqual(d.jumlahBaris, list.rows.length); assert.strictEqual(JSON.stringify(d.counts), JSON.stringify(list.counts));
+  const counted = list.rows.filter(r => (r.status === 'sent' || r.status === 'ok') && typeof r.pendapatan === 'number' && typeof r.perbelanjaan === 'number');
+  assert.strictEqual(d.jumlah.pendapatan, Math.round(counted.reduce((a, r) => a + r.pendapatan, 0) * 100) / 100);
+  assert.strictEqual(d.jumlah.bilLaporan, counted.length);
+  assert.strictEqual(d.kadar.hantar, d.counts.ok + d.counts.sent); assert.strictEqual(d.kadar.peratus, Math.round(d.kadar.hantar * 100 / d.kadar.dijangka));
+  assert.strictEqual(d.siri.length, 12); assert.strictEqual(d.siri[8].dijangka, list.rows.length); assert.strictEqual(d.siri[8].dihantar, d.kadar.hantar);
+  assert.strictEqual(d.lokasi.reduce((a, o) => a + o.dijangka, 0), list.rows.length);
+  for (let i = 1; i < d.teratas.length; i++) assert.ok(d.teratas[i - 1].pendapatan >= d.teratas[i].pendapatan, 'teratas disusun menurun');
+  assert.ok(d.teratas.some(r => r.kodLot === 'StudentMall-Lot3'));
+});
+t('dashboard admin: bulan = 0 (semua) dan tindakan mengikut keseluruhan tahun', () => {
+  const d = ok('adminDashboard', adm.token, { tahun: 2026, bulan: 0 });
+  const yr = ok('adminReports', adm.token, { tahun: 2026, bulan: 0 });
+  assert.strictEqual(d.jumlahBaris, yr.rows.length);
+  assert.strictEqual(d.tindakan.menunggu.jumlah, yr.rows.filter(r => r.status === 'sent').length);
+  assert.strictEqual(d.tindakan.tertunggak.jumlah, yr.rows.filter(r => r.status === 'none' && r.kesempatanLewat).length);
+  assert.strictEqual(d.tindakan.perluBaiki.jumlah, yr.rows.filter(r => r.status === 'fix').length);
+  assert.ok(d.tindakan.tertunggak.senarai.length <= 8); assert.strictEqual(d.siri.reduce((a, x) => a + x.dijangka, 0), yr.rows.length);
+  assert.strictEqual(ok('adminDashboard', adm.token, { tahun: 2025 }).bulan, 0, 'tahun lain: lalai semua bulan');
+  assert.strictEqual(ok('adminDashboard', adm.token, { tahun: 2025 }).jumlahBaris, 0);
+  bad('adminDashboard', adm.token, { bulan: 14 }, /Bulan tidak sah/);
+});
+t('dashboard: akses mengikut peranan dan tiada No. KP dalam data admin', () => {
+  assert.strictEqual(bad('adminDashboard', ten.token, {}).code, 'FORBIDDEN'); assert.strictEqual(bad('myDashboard', adm.token, {}).code, 'FORBIDDEN');
+  const j = JSON.stringify(ok('adminDashboard', adm.token, { tahun: 2026, bulan: 0 })); assert.ok(!/010203/.test(j) && !/"kp"/.test(j));
+});
+
 console.log('Format tarikh');
 t('lajur tarikh disimpan sebagai tarikh sebenar (bukan teks) dan dibaca semula sebagai teks piawai', () => {
   const tnRow = b.sheets['Penyewaan'].data.find(r => r[0] === T3);

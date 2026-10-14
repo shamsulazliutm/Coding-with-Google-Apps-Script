@@ -83,6 +83,15 @@ let browser;
   delete b.cache['otpwait:aina@graduan.example']; p.close();
   p = await newPage(); await uiLogin(p, 'aina@graduan.example');
   assert.match(await p.textContent('.who'), /Penyewa/);
+  // ===== dashboard penyewa =====
+  await p.waitForSelector('.kpis'); await settle(p);
+  assert.match(await p.textContent('.hero'), /Kopi Kampus Enterprise/); assert.match(await p.textContent('.kpis'), /Jumlah pendapatan 2026/);
+  assert.ok(await p.locator('.chart svg rect[fill="var(--c1)"]').count() >= 8, 'carta mempunyai bar pendapatan');
+  assert.match(await p.textContent('.focus'), /Laporan September 2026/); assert.match(await p.textContent('.kmsg'), /dua kali/);
+  await shot(p, '20-dash-penyewa', true);
+  await p.click('.focus [data-act=dash-open]'); await p.waitForSelector('#d-inc'); await settle(p);
+  assert.match(await p.textContent('#dt'), /September 2026/); await p.click('[data-act=closedlg]');
+  await p.click('[data-tab=dash]'); await p.waitForSelector('.kpis');
   await p.click('[data-tab=info]'); await p.waitForSelector('#b-nama'); await settle(p); await shot(p, '03-maklumat', true);
   await p.fill('#b-kp', '123'); await p.click('[data-act=savebiz]'); await p.waitForSelector('.toast.err'); assert.match(await p.textContent('.toast'), /12 digit/);
   await p.fill('#b-kp', '010203011234'); await p.click('[data-act=savebiz]'); await p.waitForFunction(() => /disimpan/.test((document.querySelector('.toast') || {}).textContent || ''));
@@ -127,7 +136,15 @@ let browser;
   await m.close();
 
   // ===== admin =====
-  const a = await newPage(); await uiLogin(a, 'utmxcite@utm.my'); await a.waitForSelector('#a-rows tr'); await settle(a);
+  const a = await newPage(); await uiLogin(a, 'utmxcite@utm.my'); await a.waitForSelector('.kpis'); await settle(a);
+  // ===== dashboard admin =====
+  assert.match(await a.textContent('.hero'), /Ringkasan September 2026/, 'lalai: bulan lepas');
+  assert.match(await a.textContent('.kpis'), /Kadar penghantaran/); assert.ok(await a.locator('.chart svg').count() >= 2);
+  assert.ok(await a.locator('.todo [data-act=review]').count() >= 3, 'senarai menunggu semakan'); await shot(a, '21-dash-admin', true);
+  await a.selectOption('#ds-month', '0'); await a.waitForFunction(() => /sepanjang 2026/.test(document.querySelector('.hero').textContent)); await settle(a);
+  assert.match(await a.textContent('.hero'), /laporan dijangka/); await a.selectOption('#ds-month', '9'); await a.waitForFunction(() => /September 2026/.test(document.querySelector('.hero').textContent)); await settle(a);
+  await a.click('.todo [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await a.click('[data-act=closedlg]');
+  await a.click('[data-tab=adm]'); await a.waitForSelector('#a-rows tr'); await settle(a);
   assert.match(await a.textContent('.who'), /Admin/); await shot(a, '10-admin', true);
   assert.strictEqual(await a.inputValue('#a-month'), '0', 'lalai: Bulan Semua');
   assert.ok((await a.locator('#a-rows tr').count()) >= 90, 'semua bulan semua lot');
