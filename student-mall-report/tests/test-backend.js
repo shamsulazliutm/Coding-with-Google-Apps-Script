@@ -626,6 +626,16 @@ t('dashboard admin: kutipan sewa mengikut peniaga', () => {
   const sd = d.siri.reduce((x, m) => x + m.sewaDiterima, 0), st = d.siri.reduce((x, m) => x + m.sewaTertunggak, 0);
   assert.ok(Math.abs(sd - d.sewaJumlah.diterima) < 0.01 && Math.abs(st - d.sewaJumlah.tertunggak) < 0.01, 'siri bulanan sepadan dengan jumlah sewa');
 });
+t('susunan lot: ikut lokasi kemudian nombor lot (Lot 10 selepas Lot 9), walaupun sheet Lot tidak tersusun', () => {
+  const o = createBackend(); o.setupSystem();
+  const sh = o.sheets['Lot']; const body = sh.data.slice(1).filter(Boolean);
+  const j = sh.data[0].indexOf('No lot'), k = sh.data[0].indexOf('Lokasi');
+  const mixed = body.slice().reverse(); sh.data = [sh.data[0]].concat(mixed);
+  const adm2 = (() => { o.rpc('requestOtp', null, { email: 'utmxcite@utm.my' }); const c = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1]; return o.rpc('verifyOtp', null, { email: 'utmxcite@utm.my', code: c }).data; })();
+  const lots = o.rpc('adminLots', adm2.token, {}).data.lots;
+  for (let i = 1; i < lots.length; i++) { const p = lots[i - 1], c = lots[i]; assert.ok(p.lokasi === c.lokasi ? p.noLot < c.noLot : true, p.nama + ' sebelum ' + c.nama); }
+  assert.strictEqual(new Set(lots.map(l => l.lokasi)).size, 2); assert.strictEqual(lots.findIndex(l => l.lokasi !== lots[0].lokasi) , lots.filter(l => l.lokasi === lots[0].lokasi).length, 'lokasi dikumpulkan');
+});
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Tidak aktif' } });
   assert.strictEqual(bad('myReports', ten.token, {}).code, 'SESSION');

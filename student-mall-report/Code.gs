@@ -1007,14 +1007,14 @@ function adminReports_(user, p) {
   var y = Number(p.tahun) || t.y;
   var m = p.bulan === undefined || p.bulan === null || p.bulan === '' ? 0 : Number(p.bulan);
   if (!isFinite(m) || m < 0 || m > 12) fail_('Bulan tidak sah.');
-  var lots = readTable_(SHEETS.LOTS).filter(function (l) { return l.status === 'Aktif'; });
+  var lots = sortLots_(readTable_(SHEETS.LOTS).filter(function (l) { return l.status === 'Aktif'; }));
   var tns = readTable_(SHEETS.TENANCIES);
   var bizMap = {}; readTable_(SHEETS.BIZ).forEach(function (b) { bizMap[b.idSewa] = b; });
   var map = reportMap_();
   var counts = { ok: 0, sent: 0, fix: 0, none: 0 }, rows = [], tanpaTarikh = 0;
 
   lots.forEach(function (lot) {
-    var lotTns = tns.filter(function (x) { return x.kodLot === lot.kodLot && isDateStr_(x.mula); });
+    var lotTns = tns.filter(function (x) { return x.kodLot === lot.kodLot && isDateStr_(x.mula); }).sort(function (a, b) { return a.mula < b.mula ? -1 : a.mula > b.mula ? 1 : 0; });
     if (!lotTns.length) tanpaTarikh++;
     lotTns.forEach(function (tn) {
       var ctx = mergeTn_(lot, tn);
@@ -1035,6 +1035,13 @@ function adminReports_(user, p) {
   rows.sort(function (a, b) { return b.bulan - a.bulan; });   // bulan terkini dahulu; susunan lot dikekalkan (sort stabil)
   return { tahun: y, bulan: m, counts: counts, lotAktif: lots.length, jumlahLot: rows.length, tanpaTarikh: tanpaTarikh,
            rows: rows, lokasiList: uniq_(lots.map(function (l) { return l.lokasi; })) };
+}
+
+/** Susun lot mengikut lokasi (ikut susunan lokasi pertama muncul dalam sheet Lot), kemudian nombor lot menaik. */
+function sortLots_(lots) {
+  var rank = {}, n = 0;
+  lots.forEach(function (l) { if (rank[l.lokasi] === undefined) rank[l.lokasi] = n++; });
+  return lots.slice().sort(function (a, b) { return rank[a.lokasi] - rank[b.lokasi] || Number(a.noLot) - Number(b.noLot); });
 }
 
 function uniq_(arr) { var s = {}; return arr.filter(function (x) { if (s[x]) return false; s[x] = 1; return true; }); }
@@ -1096,6 +1103,7 @@ function tenancyList_() {
   var lots = {}; readTable_(SHEETS.LOTS).forEach(function (l) { lots[l.kodLot] = l; });
   var biz = {}; readTable_(SHEETS.BIZ).forEach(function (b) { biz[b.idSewa] = b; });
   var users = readTable_(SHEETS.USERS);
+  var order = {}; sortLots_(readTable_(SHEETS.LOTS)).forEach(function (l, i) { order[l.kodLot] = i; });
   var today = todayStr_(), t = ymFromStr_(today);
   return readTable_(SHEETS.TENANCIES).map(function (tn) {
     var l = lots[tn.kodLot], b = biz[tn.id] || {};
@@ -1108,7 +1116,7 @@ function tenancyList_() {
       semasa: tnCovers_(tn, t.y, t.m),
       label: lotNama + ' · ' + (b.nama || 'maklumat belum diisi') + ' (' + tnRangeLabel_(tn) + ')'
     };
-  }).sort(function (a, b) { return a.lotNama < b.lotNama ? -1 : a.lotNama > b.lotNama ? 1 : (a.mula < b.mula ? -1 : 1); });
+  }).sort(function (a, b) { return (order[a.kodLot] === undefined ? 1e6 : order[a.kodLot]) - (order[b.kodLot] === undefined ? 1e6 : order[b.kodLot]) || (a.mula < b.mula ? -1 : a.mula > b.mula ? 1 : 0); });
 }
 
 function adminTenancies_() {
@@ -1225,7 +1233,7 @@ function adminLots_() {
   var biz = {}; readTable_(SHEETS.BIZ).forEach(function (b) { biz[b.idSewa] = b; });
   var tns = readTable_(SHEETS.TENANCIES);
   return {
-    lots: readTable_(SHEETS.LOTS).map(function (l) {
+    lots: sortLots_(readTable_(SHEETS.LOTS)).map(function (l) {
       var mine = tns.filter(function (x) { return x.kodLot === l.kodLot; });
       var now = mine.filter(function (x) { return tnCovers_(x, t.y, t.m); })[0];
       return { kodLot: l.kodLot, lokasi: l.lokasi, noLot: l.noLot, nama: l.lokasi + ' · Lot ' + l.noLot, status: l.status,
