@@ -706,15 +706,22 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   /** Jadual rumusan mengikut peniaga bagi tempoh dashboard. */
   function peniagaTable(d) {
+    var isN = function (v) { return typeof v === 'number' && isFinite(v); };
+    var money = function (v) { return isN(v) ? (v < 0 ? '-' : '') + fmt(Math.abs(v)) : '-'; };
     var tp = 0, tb = 0, any = false;
     var body = d.peniaga.map(function (o) {
-      if (o.pendapatan !== null) { tp += o.pendapatan; tb += o.perbelanjaan; any = true; }
+      var p = isN(o.pendapatan) ? o.pendapatan : null, b = isN(o.perbelanjaan) ? o.perbelanjaan : null;
+      var net = p === null && b === null ? null : Math.round(((p || 0) - (b || 0)) * 100) / 100;
+      if (p !== null) tp += p;
+      if (b !== null) tb += b;
+      if (p !== null || b !== null) any = true;
       return '<tr><td class="nw"><b>' + esc(o.lotNama) + '</b></td><td>' + esc(o.perniagaan || '-') + '<span class="sub">' + esc(o.pelajar || '') + '</span></td>' +
-        '<td class="num mono">' + fmt(o.pendapatan) + '</td><td class="num mono">' + fmt(o.perbelanjaan) + '</td>' +
-        '<td class="num mono ' + (o.untungRugi !== null && o.untungRugi < 0 ? 'neg' : '') + '">' + (o.untungRugi === null ? '-' : (o.untungRugi < 0 ? '-' : '') + fmt(Math.abs(o.untungRugi))) + '</td></tr>';
+        '<td class="num mono">' + money(p) + '</td><td class="num mono">' + money(b) + '</td>' +
+        '<td class="num mono ' + (net !== null && net < 0 ? 'neg' : '') + '">' + money(net) + '</td></tr>';
     }).join('');
+    tp = Math.round(tp * 100) / 100; tb = Math.round(tb * 100) / 100;
     var net = Math.round((tp - tb) * 100) / 100;
-    var foot = any ? '<tr class="tot"><td colspan="2">Jumlah</td><td class="num mono">' + fmt(tp) + '</td><td class="num mono">' + fmt(tb) + '</td><td class="num mono ' + (net < 0 ? 'neg' : '') + '">' + (net < 0 ? '-' : '') + fmt(Math.abs(net)) + '</td></tr>' : '';
+    var foot = any ? '<tr class="tot"><td colspan="2">Jumlah</td><td class="num mono">' + money(tp) + '</td><td class="num mono">' + money(tb) + '</td><td class="num mono ' + (net < 0 ? 'neg' : '') + '">' + money(net) + '</td></tr>' : '';
     return '<div class="dgrid" style="grid-template-columns:1fr"><div class="dcard"><h3>Rumusan mengikut peniaga</h3><p class="hint">Jumlah laporan yang sudah dihantar bagi tempoh yang dipilih.</p>' +
       (d.peniaga.length ? '<div class="tbl-wrap" style="box-shadow:none"><table class="mini" style="min-width:560px"><thead><tr><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Untung/Rugi (RM)</th></tr></thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table></div>' : '<p class="hint" style="margin:0">Tiada penyewaan dalam tempoh ini.</p>') + '</div></div>';
   }
