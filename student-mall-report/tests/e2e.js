@@ -105,6 +105,15 @@ let browser;
   // edit september (perlu dibetulkan)
   await p.click('#f-rows tr:has-text("September") [data-act=open]'); await p.waitForSelector('#d-inc'); await settle(p);
   assert.match(await p.textContent('.banner'), /dua kali/); await shot(p, '05-dialog-edit');
+  // templat laporan: di bawah fail laporan, muat turun sebagai xlsx sah
+  assert.match(await p.textContent('.tpl'), /Tiada format laporan/);
+  assert.strictEqual(await p.evaluate(() => document.querySelector('.tpl').previousElementSibling.textContent.includes('Laporan kewangan bulanan')), true, 'kotak templat betul-betul di bawah baris laporan kewangan');
+  assert.strictEqual(await p.evaluate(() => document.querySelector('.tpl').nextElementSibling.textContent.includes('Resit bayaran sewa')), true);
+  await p.evaluate(() => document.querySelector('.scrim').scrollTo(0, 400)); await shot(p, '05b-dialog-templat');
+  const [tdl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=template]')]);
+  assert.strictEqual(tdl.suggestedFilename(), 'Templat_Laporan_Kewangan.xlsx');
+  const tbuf = require('fs').readFileSync(await tdl.path()); assert.strictEqual(tbuf.slice(0, 2).toString(), 'PK', 'fail xlsx (zip) sah'); assert.ok(tbuf.length > 5000 && tbuf.length < 20000);
+  assert.ok(tbuf.includes(Buffer.from('xl/worksheets/sheet1.xml')), 'mengandungi helaian'); assert.ok(!tbuf.includes(Buffer.from('xl/worksheets/sheet2.xml')), 'hanya 1 helaian');
   assert.strictEqual(await p.isDisabled('[data-act=submitreport]'), true);
   await p.fill('#d-exp', '4560'); await p.check('#d-ack'); assert.strictEqual(await p.isDisabled('[data-act=submitreport]'), false);
   // fail bukan PDF
@@ -129,7 +138,7 @@ let browser;
   await p.click('[data-r="1"]'); await p.waitForFunction(() => /dipadam/.test((document.querySelector('.toast') || {}).textContent || '')); await settle(p);
   assert.match(await p.textContent('#f-rows tr:has-text("Oktober")'), /Belum dihantar/);
   // laporan disahkan: baca sahaja
-  await p.click('#f-rows tr:has-text("Januari") [data-act=open]'); await p.waitForSelector('#d-inc'); assert.strictEqual(await p.isDisabled('#d-inc'), true); assert.strictEqual(await p.locator('[data-act=submitreport]').count(), 0);
+  await p.click('#f-rows tr:has-text("Januari") [data-act=open]'); await p.waitForSelector('#d-inc'); assert.strictEqual(await p.isDisabled('#d-inc'), true); assert.strictEqual(await p.locator('.tpl').count(), 0, 'templat tidak dipaparkan untuk laporan yang dikunci'); assert.strictEqual(await p.locator('[data-act=submitreport]').count(), 0);
   await p.click('[data-act=closedlg]');
   await p.click('[data-act=logout]'); await p.waitForSelector('#lg-email');
   // telefon
