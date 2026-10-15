@@ -608,4 +608,11 @@ t('admin terakhir tidak boleh diturunkan', () => {
 });
 t('logout membatalkan sesi', () => { ok('logout', adm.token, {}); assert.strictEqual(bad('me', adm.token).code, 'SESSION'); });
 t('log audit direkod', () => { const log = b.readTable_('Log'); assert.ok(log.length > 20); assert.ok(log.some(l => l.tindakan === 'Sahkan laporan')); });
+if (process.env.DUMP_MAIL) {
+  const fs = require('fs'); fs.mkdirSync(process.env.DUMP_MAIL, { recursive: true });
+  [['otp', /^Kod OTP/], ['disahkan', /^Laporan disahkan/], ['pembetulan', /^Pembetulan diminta/], ['peringatan', /^Peringatan/], ['maklumat', /Maklumat peniaga anda/]].forEach(([k, re]) => {
+    const m = b.outbox.filter(x => re.test(x.subject)).pop(); assert.ok(m, 'e-mel ' + k);
+    fs.writeFileSync(process.env.DUMP_MAIL + '/' + k + '.json', JSON.stringify({ subject: m.subject, to: m.to, html: m.htmlBody }));
+  });
+}
 console.log('\n' + pass + ' ujian lulus' + (process.exitCode ? ', ADA YANG GAGAL' : ''));

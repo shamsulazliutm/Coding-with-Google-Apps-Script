@@ -449,20 +449,33 @@ function auth_(token) {
 // ============================================================
 /** E-mel sistem: OTP, peringatan, keputusan semakan. */
 
-function sendMail_(to, subject, bodyHtml, opts) {
-  var footer = opts && opts.noFooter ? '' :
-    '<hr style="border:none;border-top:1px solid #ddd;margin:20px 0">' +
-    '<p style="font-size:12px;color:#777">UTMXCITE, Jabatan Hal Ehwal Pelajar dan Alumni, UTM. ' + APP.CONTACT_EMAIL + '</p>';
-  var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#222;max-width:520px">' + bodyHtml + footer + '</div>';
+/**
+ * Format e-mel seragam: TAJUK, salam, isi, terima kasih dan tandatangan UTMXCITE.
+ * Semua e-mel sistem dibina melalui fungsi ini.
+ */
+function mailBody_(tajuk, isi) {
+  return '<h2 style="font-size:16px;letter-spacing:.5px;margin:0 0 16px;color:#5b1a33">' + escHtml_(String(tajuk).toUpperCase()) + '</h2>' +
+    '<p>Assalamualaikum dan salam sejahtera.</p>' + isi +
+    '<p>Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
+    '<p style="margin-top:20px"><b>UTMXCITE</b><br>' +
+    '\uD83D\uDCE7 ' + APP.CONTACT_EMAIL + '<br>' +
+    '\uD83D\uDCDE ' + APP.CONTACT_PHONE + '</p>';
+}
+
+function mailButton_(url) {
+  return url ? '<p style="margin:20px 0"><a href="' + url + '" style="background:#5b1a33;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:bold">\uD83D\uDD17 Buka Sistem</a></p>' : '';
+}
+
+function sendMail_(to, subject, bodyHtml) {
+  var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#222;max-width:520px">' + bodyHtml + '</div>';
   MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: APP.SENDER });
 }
 
 function sendOtpMail_(email, nama, code) {
-  sendMail_(email, 'Kod OTP anda: ' + code,
-    '<p>Salam ' + escHtml_(nama) + ',</p>' +
-    '<p>Kod OTP untuk log masuk ke sistem laporan kewangan:</p>' +
+  sendMail_(email, 'Kod OTP anda: ' + code, mailBody_('Kod OTP log masuk',
+    '<p>Kod OTP untuk log masuk ke sistem laporan kewangan' + (nama ? ' (' + escHtml_(nama) + ')' : '') + ':</p>' +
     '<p style="font-size:28px;letter-spacing:6px;font-weight:bold;margin:12px 0">' + code + '</p>' +
-    '<p>Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. Jangan kongsi kod ini dengan sesiapa.</p>');
+    '<p>Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. Jangan kongsi kod ini dengan sesiapa.</p>'));
 }
 
 /** E-mel penyewa yang memegang lot pada bulan itu. */
@@ -485,18 +498,11 @@ function sendReminderMail_(kodLot, y, m) {
   var deadline = addDays_(today, APP.REMINDER_DEADLINE_DAYS);
   var url = appUrl_();
   var subject = 'Peringatan Penghantaran Laporan Kewangan: ' + MONTHS_MS[m - 1] + ' ' + y;
-  var body =
-    '<h2 style="font-size:16px;letter-spacing:.5px;margin:0 0 16px;color:#5b1a33">PERINGATAN PENGHANTARAN LAPORAN KEWANGAN</h2>' +
-    '<p>Assalamualaikum dan salam sejahtera.</p>' +
+  var body = mailBody_('Peringatan penghantaran laporan kewangan',
     '<p>Dimaklumkan bahawa laporan kewangan bagi bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> masih belum diterima.</p>' +
     '<p>Sehubungan itu, mohon kerjasama pihak tuan/puan untuk mengemukakan laporan tersebut selewat-lewatnya pada <b>' + dateLabelMs_(deadline) + '</b>.</p>' +
-    '<p>Laporan yang diterima selepas tarikh berkenaan akan direkodkan sebagai penghantaran lewat.</p>' +
-    (url ? '<p style="margin:20px 0"><a href="' + url + '" style="background:#5b1a33;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:bold">\uD83D\uDD17 Buka Sistem</a></p>' : '') +
-    '<p>Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
-    '<p style="margin-top:20px"><b>UTMXCITE</b><br>' +
-    '\uD83D\uDCE7 ' + APP.CONTACT_EMAIL + '<br>' +
-    '\uD83D\uDCDE ' + APP.CONTACT_PHONE + '</p>';
-  to.forEach(function (email) { sendMail_(email, subject, body, { noFooter: true }); });
+    '<p>Laporan yang diterima selepas tarikh berkenaan akan direkodkan sebagai penghantaran lewat.</p>' + mailButton_(url));
+  to.forEach(function (email) { sendMail_(email, subject, body); });
   appendObj_(SHEETS.REMINDERS, { kunci: kodLot + '|' + y + '-' + pad2_(m) + '|' + today + '|' + nowStr_().slice(11), masa: nowStr_(), akhir: deadline });
   REMINDER_DEADLINES_ = null;   // tarikh akhir baharu berkuat kuasa serta-merta
   return to.length;
@@ -507,11 +513,11 @@ function sendReviewMail_(kodLot, y, m, decision, komen, by) {
   var ok = decision === 'ok';
   to.forEach(function (email) {
     sendMail_(email, (ok ? 'Laporan disahkan: ' : 'Pembetulan diminta: ') + MONTHS_MS[m - 1] + ' ' + y,
-      '<p>Salam,</p>' +
-      '<p>Laporan kewangan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> (' + escHtml_(kodLot) + ') ' + (ok ? 'telah <b>disahkan</b>.' : '<b>perlu dibetulkan</b>.') + '</p>' +
-      (komen ? '<p style="background:#f6f6f6;padding:10px;border-radius:6px"><b>Komen admin:</b><br>' + escHtml_(komen).replace(/\n/g, '<br>') + '</p>' : '') +
-      (ok ? '' : '<p>Sila kemas kini laporan dan hantar semula melalui sistem.</p>') +
-      '<p style="font-size:12px;color:#777">Disemak oleh ' + escHtml_(by) + '</p>');
+      mailBody_(ok ? 'Laporan kewangan disahkan' : 'Pembetulan laporan kewangan diminta',
+        '<p>Laporan kewangan bagi bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> ' + (ok ? 'telah <b>disahkan</b>.' : 'memerlukan <b>pembetulan</b>.') + '</p>' +
+        (komen ? '<p style="background:#f6f6f6;padding:10px;border-radius:6px"><b>Komen admin:</b><br>' + escHtml_(komen).replace(/\n/g, '<br>') + '</p>' : '') +
+        (ok ? '' : '<p>Sila kemas kini laporan dan hantar semula melalui sistem.</p>' + mailButton_(appUrl_())) +
+        '<p style="font-size:12px;color:#777">Disemak oleh ' + escHtml_(by) + '</p>'));
   });
 }
 
@@ -678,9 +684,9 @@ function adminSaveBusiness_(user, p) {
     try {
       var to = readTable_(SHEETS.USERS).filter(function (u) { return u.idSewa === tn.id && u.peranan === ROLE.TENANT && u.status === 'Aktif'; }).map(function (u) { return u.email; });
       to.forEach(function (email) {
-        sendMail_(email, 'Maklumat peniaga anda telah dikemas kini',
-          '<p>Salam,</p><p>Maklumat peniaga untuk <b>' + escHtml_(tn.kodLot) + '</b> telah dikemas kini oleh pentadbir UTMXCITE.</p>' +
-          '<p>Medan yang diubah: ' + escHtml_(changed.join(', ')) + '.</p><p>Sila semak di tab <b>Maklumat Peniaga</b> dan hubungi ' + APP.CONTACT_EMAIL + ' jika terdapat kesilapan.</p>');
+        sendMail_(email, 'Maklumat peniaga anda telah dikemas kini', mailBody_('Maklumat peniaga dikemas kini',
+          '<p>Maklumat peniaga untuk <b>' + escHtml_(tn.kodLot) + '</b> telah dikemas kini oleh pentadbir UTMXCITE.</p>' +
+          '<p>Medan yang diubah: ' + escHtml_(changed.join(', ')) + '.</p><p>Sila semak di tab <b>Maklumat Peniaga</b> dan hubungi kami jika terdapat kesilapan.</p>' + mailButton_(appUrl_())));
       });
     } catch (e) { logAction_(user.email, 'Ralat e-mel', String(e)); }
   }
