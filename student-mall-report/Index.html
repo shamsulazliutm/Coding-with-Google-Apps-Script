@@ -83,6 +83,16 @@ body.busy #progress { opacity: 1; animation: load 1.4s ease-in-out infinite; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 body.busy .btn { pointer-events: none; }
 
+.fit .note { margin: 0; }
+@media (min-width: 821px) {
+  .fit .tbl-wrap { overflow-x: hidden; overflow-y: auto; }
+  .fit table { min-width: 0 !important; table-layout: fixed; }
+  .fit thead th, .fit tbody td { padding: 0 8px; height: var(--rowh, 34px); font-size: var(--fs, 13px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+  .fit .sub { display: inline; margin-left: 6px; font-size: inherit; }
+  .fit td.act { overflow: visible; padding-right: 6px; }
+  .fit .btn.sm { padding: 3px 8px; font-size: 12px; min-height: 0; }
+  .fit .pill { padding: 2px 8px; font-size: 11.5px; }
+}
 .tbl-wrap { background: var(--surface); border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 820px; }
 thead th { background: var(--head); text-align: left; font-size: 13px; font-weight: 700; padding: 11px 12px; white-space: nowrap; }
@@ -365,12 +375,22 @@ textarea.fi { min-height: 72px; resize: vertical; }
     else if (S.tab === 'info') run(api('getBusiness').then(function (d) { S.biz = d; v.innerHTML = bizHtml(); }));
     else if (S.tab === 'fin') run(api('myReports', { tahun: S.fin && S.fin.tahun }).then(function (d) { S.fin = d; v.innerHTML = finHtml(); if (S.openAfter) { var o = S.openAfter; S.openAfter = null; openReport(o.y, o.m, false); } }));
     else if (S.tab === 'adm') loadAdm();
-    else if (S.tab === 'tn') run(api('adminTenancies').then(function (d) { S.tns = d.tenancies; S.lots = d.lots; v.innerHTML = tnHtml(); }));
+    else if (S.tab === 'tn') run(api('adminTenancies').then(function (d) { S.tns = d.tenancies; S.lots = d.lots; v.innerHTML = tnHtml(); fitTable(); }));
     else if (S.tab === 'lots') run(api('adminLots').then(function (d) { S.lots = d.lots; v.innerHTML = lotsHtml(); }));
     else if (S.tab === 'users') run(api('adminUsers').then(function (d) { S.users = d.users; S.tnOpts = d.penyewaan; v.innerHTML = usersHtml(); }));
   }
 
-  function refreshView(html) { var v = $('view'); if (v) v.innerHTML = html; }
+  function refreshView(html) { var v = $('view'); if (v) v.innerHTML = html; fitTable(); }
+  /** Penyewaan: muatkan semua baris dalam satu skrin (tinggi baris dikira daripada ruang yang ada). */
+  function fitTable() {
+    var w = document.querySelector('.fit .tbl-wrap'); if (!w || window.innerWidth < 821) return;
+    var rows = w.querySelectorAll('tbody tr').length + 1;
+    var avail = window.innerHeight - w.getBoundingClientRect().top - 64;
+    var h = Math.max(24, Math.min(46, Math.floor(avail / rows)));
+    w.style.setProperty('--rowh', h + 'px'); w.style.setProperty('--fs', (h < 28 ? 11.5 : h < 32 ? 12.5 : 13) + 'px');
+    w.style.maxHeight = Math.max(avail, 120) + 'px';
+  }
+  window.addEventListener('resize', function () { fitTable(); });
 
   /* ---------- log masuk ---------- */
   function loginHtml() {
@@ -881,19 +901,20 @@ textarea.fi { min-height: 72px; resize: vertical; }
     var rows = S.tns.map(function (t, i) { return [t, i]; }).filter(function (x) {
       return !q || (x[0].lotNama + ' ' + x[0].perniagaan + ' ' + x[0].pelajar + ' ' + x[0].id).toLowerCase().indexOf(q) >= 0;
     });
-    return '<div class="bar"><div class="grow"><input id="t-q" type="search" placeholder="Cari lot, syarikat atau pelajar" value="' + esc(S.tnQ) + '"></div><button class="btn primary" data-act="newtn" type="button">+ Tambah penyewaan</button></div>' +
+    return '<div class="fit"><div class="bar"><div class="grow"><input id="t-q" type="search" placeholder="Cari lot, syarikat atau pelajar" value="' + esc(S.tnQ) + '"></div><button class="btn primary" data-act="newtn" type="button">+ Tambah penyewaan</button></div>' +
       '<p class="note">Satu baris bagi setiap tempoh sewa. Jika penyewa bertukar, tamatkan penyewaan lama pada hari terakhir bulan dan tambah penyewaan baharu bermula bulan berikutnya.</p>' +
-      '<div class="tbl-wrap"><table style="min-width:860px"><thead><tr><th>Lot</th><th>Syarikat · Pelajar</th><th>Tempoh sewa</th><th class="num">Sewa (RM)</th><th>Pengguna</th><th>Status</th><th></th></tr></thead><tbody id="t-rows">' + tnRows(rows) + '</tbody></table></div>';
+      '<div class="tbl-wrap"><table><colgroup><col style="width:15%"><col style="width:21%"><col style="width:14%"><col style="width:8%"><col style="width:14%"><col style="width:9%"><col style="width:19%"></colgroup><thead><tr><th>Lot</th><th>Syarikat · Pelajar</th><th>Tempoh sewa</th><th class="num">Sewa (RM)</th><th>Pengguna</th><th>Status</th><th></th></tr></thead><tbody id="t-rows">' + tnRows(rows) + '</tbody></table></div></div>';
   }
   function tnRows(rows) {
     if (!rows.length) return '<tr><td class="empty" colspan="7">Tiada penyewaan. Tambah penyewaan untuk setiap lot.</td></tr>';
     return rows.map(function (x) {
       var t = x[0];
-      return '<tr><td class="nw"><b>' + esc(t.lotNama) + '</b><span class="sub mono">' + esc(t.id) + '</span></td>' +
-        '<td>' + esc(t.perniagaan || 'Maklumat belum diisi') + '<span class="sub">' + esc(t.pelajar) + '</span></td>' +
-        '<td class="nw">' + esc(t.tempoh) + '</td><td class="num mono">' + fmt(t.sewa) + '</td>' +
-        '<td>' + (t.pengguna.length ? t.pengguna.map(esc).join('<br>') : '<span class="sub">Tiada pengguna</span>') + '</td>' +
-        '<td>' + (t.semasa ? '<span class="pill s-ok">Semasa</span>' : '<span class="pill s-idle">Bukan semasa</span>') + '</td>' +
+      var nm = esc(t.perniagaan || 'Maklumat belum diisi'), usr = t.pengguna.length ? esc(t.pengguna[0]) + (t.pengguna.length > 1 ? ' +' + (t.pengguna.length - 1) : '') : '<span class="sub">Tiada pengguna</span>';
+      return '<tr title="' + esc(t.id) + '"><td class="nw"><b>' + esc(t.lotNama) + '</b></td>' +
+        '<td title="' + esc((t.perniagaan || '') + ' · ' + (t.pelajar || '')) + '">' + nm + '<span class="sub">' + esc(t.pelajar) + '</span></td>' +
+        '<td class="nw">' + esc(String(t.tempoh).replace(' hingga ', ' – ')) + '</td><td class="num mono">' + fmt(t.sewa) + '</td>' +
+        '<td title="' + esc(t.pengguna.join(', ')) + '">' + usr + '</td>' +
+        '<td>' + (t.semasa ? '<span class="pill s-ok">Semasa</span>' : '<span class="pill s-idle">Lain</span>') + '</td>' +
         '<td class="act">' + (S.user.adminEditBiz ? '<button class="btn sm" data-act="editbiz" data-i="' + x[1] + '" type="button" title="Kemas kini maklumat peniaga">Maklumat</button> ' : '') + '<button class="btn sm" data-act="edittn" data-i="' + x[1] + '" type="button">Edit</button> <button class="btn sm del" data-act="deltn" data-i="' + x[1] + '" type="button">Padam</button></td></tr>';
     }).join('');
   }
@@ -1088,7 +1109,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     if (id === 'f-q') { S.finQ = e.target.value; $('f-rows').innerHTML = finRows(); }
     else if (id === 'a-q') { S.admQ = e.target.value; $('a-rows').innerHTML = admRows(); }
     else if (id === 'u-q') { $('u-rows').innerHTML = userRows(e.target.value); }
-    else if (id === 't-q') { S.tnQ = e.target.value; $('t-rows').innerHTML = tnRows(S.tns.map(function (t, i) { return [t, i]; }).filter(function (x) { var q = S.tnQ.toLowerCase(); return !q || (x[0].lotNama + ' ' + x[0].perniagaan + ' ' + x[0].pelajar + ' ' + x[0].id).toLowerCase().indexOf(q) >= 0; })); }
+    else if (id === 't-q') { S.tnQ = e.target.value; $('t-rows').innerHTML = tnRows(S.tns.map(function (t, i) { return [t, i]; }).filter(function (x) { var q = S.tnQ.toLowerCase(); return !q || (x[0].lotNama + ' ' + x[0].perniagaan + ' ' + x[0].pelajar + ' ' + x[0].id).toLowerCase().indexOf(q) >= 0; })); fitTable(); }
   });
 
   document.addEventListener('keydown', function (e) {

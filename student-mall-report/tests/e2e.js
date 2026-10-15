@@ -205,6 +205,12 @@ let browser;
   await a.click('[data-act=newlot]'); await a.fill('#l-lokasi', 'SUB'); await a.fill('#l-no', '6'); await a.click('[data-act=savelot]'); await a.waitForFunction(() => /Lot disimpan/.test((document.querySelector('.toast') || {}).textContent || ''));
   assert.ok(await a.locator('td.mono:text-is("SUB-Lot6")').count());
   await a.click('[data-tab=tn]'); await a.waitForSelector('#t-rows tr'); await settle(a); await shot(a, '12b-penyewaan', true);
+  for (const vp of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
+    await a.setViewportSize(vp); await settle(a); await shot(a, '12b-penyewaan-' + vp.height);
+    const m = await a.evaluate(() => { const w = document.querySelector('.fit .tbl-wrap'); return { sw: w.scrollWidth - w.clientWidth, sh: w.scrollHeight - w.clientHeight, page: document.documentElement.scrollHeight - window.innerHeight, rows: w.querySelectorAll('tbody tr').length }; });
+    assert.ok(m.sw <= 1 && m.sh <= 1 && m.page <= 1, 'Penyewaan muat satu skrin ' + vp.width + 'x' + vp.height + ': ' + JSON.stringify(m));
+  }
+  await a.setViewportSize({ width: 1440, height: 900 }); await settle(a); await shot(a, '12b-penyewaan', true);
   assert.match(await a.textContent('#t-rows'), /Cafe A/); assert.match(await a.textContent('#t-rows'), /Cafe B/);
   // admin mengemas kini maklumat peniaga
   await a.click('#t-rows tr:has-text("Cafe A") [data-act=editbiz]'); await a.waitForSelector('#ab-nama'); await settle(a); await shot(a, '12e-maklumat-peniaga');
@@ -217,7 +223,7 @@ let browser;
   await a.waitForSelector('.dlg .errbox'); assert.match(await a.textContent('.dlg .errbox'), /selepas tarikh mula/);
   await a.fill('#n-akhir', '2026-12'); await shot(a, '12c-tambah-penyewaan'); await a.click('[data-act=savetn]');
   await a.waitForFunction(() => /Penyewaan disimpan/.test((document.querySelector('.toast') || {}).textContent || ''));
-  assert.match(await a.textContent('#t-rows tr:has-text("SUB · Lot 6")'), /Jul 2026 hingga Dis 2026/);
+  assert.match(await a.textContent('#t-rows tr:has-text("SUB · Lot 6")'), /Jul 2026 – Dis 2026/);
   const link = a.locator('a.tab.ext'); assert.strictEqual(await link.count(), 1);
   assert.strictEqual(await link.getAttribute('href'), 'https://docs.google.com/spreadsheets/d/1X8LexdkStIb4-93sZz4ZmAD5ZbzD1BS3RWz4JZBgJ50/edit');
   assert.strictEqual(await link.getAttribute('target'), '_blank', 'dibuka dalam tab baharu'); assert.match(await link.textContent(), /Pangkalan Data/);
