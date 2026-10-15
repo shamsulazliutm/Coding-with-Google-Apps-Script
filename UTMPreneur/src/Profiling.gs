@@ -1,5 +1,5 @@
 /**
- * SHAMS: Profiling pelajar (peringkat 2).
+ * UTMPreneur: Profiling pelajar (peringkat 2).
  * - Data rasmi daripada PELAJAR dipaparkan (auto-isi); hanya medan semester dan hubungan boleh dikemas kini pelajar.
  * - Satu baris Profil bagi setiap pelajar bagi setiap sesi (sejarah disimpan).
  * - "Lengkap" = ada sekurang-kurangnya satu Profil yang sah. Sesi baharu hanya mencetuskan peringatan, bukan sekatan.

@@ -1,5 +1,5 @@
 /**
- * SHAMS: capaian tab Rujukan (senarai pilihan), dicache 2 minit.
+ * UTMPreneur: capaian tab Rujukan (senarai pilihan), dicache 2 minit.
  */
 
 var Ref = {

@@ -159,7 +159,7 @@ function createEnv(opts) {
     const sheets = [makeSheet('Sheet1')];
     const ss = {
       id, name,
-      getId() { return id; }, getName() { return ss.name; }, rename(n) { ss.name = n; return ss; },
+      getId() { return id; }, getName() { return ss.name; },
       getUrl() { return 'https://docs.google.com/spreadsheets/d/' + id + '/edit'; },
       getSheetByName(n) { return sheets.find((s) => s.name === n) || null; },
       getSheets() { return sheets.slice(); },
@@ -222,7 +222,7 @@ function createEnv(opts) {
     const id = newId('FD');
     const f = {
       id, name, children: [],
-      getName() { return f.name; }, getId() { return id; }, setName(n) { f.name = n; return f; },
+      getName() { return name; }, getId() { return id; },
       getUrl() { return 'https://drive.google.com/drive/folders/' + id; },
       getFoldersByName(n) {
         const m = f.children.filter((c) => c.name === n && !c.file);
@@ -342,8 +342,8 @@ function createEnv(opts) {
     },
     /** Sediakan Induk kosong dalam folder, tetapkan properties dan jalankan Setup.run(). */
     setup(mode) {
-      const folder = state.folders.root.createFolder('Folder SHAMS');
-      const ind = SpreadsheetApp.create('SHAMS - Induk');
+      const folder = state.folders.root.createFolder('Folder UTMPreneur');
+      const ind = SpreadsheetApp.create('UTMPreneur - Induk');
       state.files[ind.id].parents = [folder];
       state.created.length = 0;
       state.props[PROPS_INDUK()] = ind.getUrl();

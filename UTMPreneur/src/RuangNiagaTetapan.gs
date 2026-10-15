@@ -1,5 +1,5 @@
 /**
- * SHAMS: Tetapan khusus modul Ruang Niaga (digabungkan ke Seed.tetapan()).
+ * UTMPreneur: Tetapan khusus modul Ruang Niaga (digabungkan ke Seed.tetapan()).
  * Setiap baris: [Kunci, Nilai lalai, Penerangan]. Nilai boleh diubah urusetia dalam tab Tetapan.
  * Nama dan jawatan penandatangan ialah DATA (bukan kod); nilai lalai di bawah diambil daripada contoh surat/perjanjian
  * dan mesti disemak sebelum pelancaran.

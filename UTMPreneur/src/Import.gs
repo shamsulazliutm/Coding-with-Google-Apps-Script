@@ -1,5 +1,5 @@
 /**
- * SHAMS: import data rasmi pelajar ke tab PELAJAR (CSV, oleh Admin Penuh).
+ * UTMPreneur: import data rasmi pelajar ke tab PELAJAR (CSV, oleh Admin Penuh).
  * Semakan dibuat dahulu (dryRun). Jika ada ralat, tiada apa-apa ditulis.
  */
 

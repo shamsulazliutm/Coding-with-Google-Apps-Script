@@ -1,5 +1,5 @@
 /**
- * SHAMS: fungsi pembantu. Kebanyakannya fungsi tulen supaya boleh diuji dengan Node.
+ * UTMPreneur: fungsi pembantu. Kebanyakannya fungsi tulen supaya boleh diuji dengan Node.
  */
 
 /** Ralat aplikasi dengan mesej dwibahasa yang selamat dipaparkan kepada pengguna. */

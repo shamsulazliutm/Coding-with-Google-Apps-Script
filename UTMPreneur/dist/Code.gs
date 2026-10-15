@@ -2,7 +2,7 @@
 
 // ===== Admin.gs =====
 /**
- * SHAMS: tindakan pentadbir peringkat 1 (status sistem, urus admin, import PELAJAR).
+ * UTMPreneur: tindakan pentadbir peringkat 1 (status sistem, urus admin, import PELAJAR).
  */
 
 var AdminApi = {
@@ -73,7 +73,7 @@ var AdminApi = {
 
 // ===== Auth.gs =====
 /**
- * SHAMS: log masuk emel + OTP, sesi dan peranan.
+ * UTMPreneur: log masuk emel + OTP, sesi dan peranan.
  * OTP disimpan sebagai hash dalam CacheService (tidak pernah teks biasa).
  * Sesi disimpan dalam CacheService (maksimum 6 jam, had CacheService).
  */
@@ -348,7 +348,7 @@ var Auth = (function () {
 
 // ===== Bantu.gs =====
 /**
- * SHAMS: admin bertindak bagi pihak pelajar ("Bantu pelajar").
+ * UTMPreneur: admin bertindak bagi pihak pelajar ("Bantu pelajar").
  * Admin Penuh, atau Pegawai Modul yang modulnya kosong / Semua / mengandungi SSU atau Profiling, boleh
  * mengisi profiling dan memohon SSU untuk mana-mana pelajar dalam PELAJAR (pelajar tidak perlu sudah log masuk).
  * Semua tindakan menggunakan peraturan pengesahan yang sama seperti pelajar dan direkod dalam Audit dengan
@@ -398,7 +398,7 @@ var Bantu = (function () {
 
 // ===== Code.gs =====
 /**
- * SHAMS: titik masuk web app dan penghantar RPC.
+ * UTMPreneur: titik masuk web app dan penghantar RPC.
  * Semua panggilan antara muka melalui rpc(kaedah, token, muatan). Peranan disemak di sini (server),
  * bukan di antara muka.
  */
@@ -407,13 +407,13 @@ function doGet(e) {
   var t;
   try {
     if (!PropertiesService.getScriptProperties().getProperty(PROPS.INDUK_ID)) {
-      return HtmlService.createHtmlOutput('<p style="font-family:sans-serif;padding:24px">SHAMS belum disediakan. Tetapkan INDUK_ID dan jalankan setup().<br><i>SHAMS is not set up yet.</i></p>')
-        .setTitle('SHAMS');
+      return HtmlService.createHtmlOutput('<p style="font-family:sans-serif;padding:24px">UTMPreneur belum disediakan. Tetapkan INDUK_ID dan jalankan setup().<br><i>UTMPreneur is not set up yet.</i></p>')
+        .setTitle('UTMPreneur');
     }
     t = HtmlService.createTemplateFromFile('Index');
     t.versi = APP.VERSI;
     return t.evaluate()
-      .setTitle('SHAMS · UTMXCITE')
+      .setTitle('UTMPreneur · UTMXCITE')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   } catch (err) {
     console.error('doGet gagal: ' + err);
@@ -507,12 +507,12 @@ function rpc(method, token, payload) {
 
 // ===== Config.gs =====
 /**
- * SHAMS: konfigurasi tetap dan skema spreadsheet.
+ * UTMPreneur: konfigurasi tetap dan skema spreadsheet.
  * Skema ini ialah satu-satunya sumber nama tab dan tajuk lajur. Skrip persediaan
  * (Setup.gs) dan pengesah struktur menggunakannya.
  */
 
-var APP = { NAMA: 'SHAMS', VERSI: '0.1.0', TZ: 'Asia/Kuala_Lumpur' };
+var APP = { NAMA: 'UTMPreneur', VERSI: '0.1.0', TZ: 'Asia/Kuala_Lumpur' };
 
 /** Kunci Script Properties */
 var PROPS = { INDUK_ID: 'INDUK_ID', MODE: 'MODE', PEPPER: 'OTP_PEPPER' };
@@ -534,7 +534,7 @@ var ADMIN_UTAMA = 'utmxcite@utm.my';
 /** Nama spreadsheet dan tab. Kunci SS_* ialah Kod dalam Link_Dokumen. */
 var SCHEMA = {
   SS_INDUK: {
-    nama: 'SHAMS - Induk',
+    nama: 'UTMPreneur - Induk',
     modul: 'Induk',
     tabs: {
       PELAJAR: ['No_Matrik', 'Nama_Penuh', 'Emel', 'No_KP_Pasport', 'Jantina', 'Etnik', 'Kewarganegaraan', 'Fakulti', 'Program', 'Bidang_Pengajian', 'Tahun_Pengajian', 'No_Telefon', 'Alamat_Kolej', 'Alamat_Rumah', 'Status_Pelajar', 'Sesi_Kemasukan'],
@@ -551,7 +551,7 @@ var SCHEMA = {
     }
   },
   SS_PROFILING: {
-    nama: 'SHAMS - Profiling',
+    nama: 'UTMPreneur - Profiling',
     modul: 'Profiling',
     tabs: {
       Profil: ['ID_Profil', 'No_Matrik', 'Sesi', 'Tarikh_Kemas_Kini', 'No_Telefon', 'Kampung_Halaman', 'Keluarga_Berniaga', 'Pernah_Berniaga', 'Jenis_Perniagaan_Dijalankan', 'Tempoh_Perniagaan', 'Motivasi', 'Berminat_Berniaga', 'Kluster_Diminati', 'Kluster_Lain', 'Mahu_Kampus', 'Aliran_Pilihan'],
@@ -559,7 +559,7 @@ var SCHEMA = {
     }
   },
   SS_SSU: {
-    nama: 'SHAMS - SSU',
+    nama: 'UTMPreneur - SSU',
     modul: 'SSU',
     tabs: {
       Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat'],
@@ -567,7 +567,7 @@ var SCHEMA = {
     }
   },
   SS_RUANG_NIAGA: {
-    nama: 'SHAMS - Ruang Niaga',
+    nama: 'UTMPreneur - Ruang Niaga',
     modul: 'Ruang Niaga',
     tabs: {
       Lot: ['Kod_Lot', 'Nama_Paparan', 'Lokasi', 'Blok', 'Saiz_m2', 'Jenis', 'Kadar_Sewa_RM', 'Status_Buka', 'Status_Lot', 'Catatan', 'Didaftar_Oleh', 'Tarikh_Daftar', 'Alamat_Surat'],
@@ -586,14 +586,14 @@ var SCHEMA = {
     }
   },
   SS_KEWANGAN: {
-    nama: 'SHAMS - Kewangan',
+    nama: 'UTMPreneur - Kewangan',
     modul: 'Kewangan',
     tabs: {
       Laporan_Bulanan: ['ID_Laporan', 'ID_Perniagaan', 'ID_Sewaan', 'Bulan', 'Tahun', 'Tiada_Aktiviti', 'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Fail_Laporan', 'Perakuan', 'Status', 'Tarikh_Hantar', 'Tarikh_Akhir', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan']
     }
   },
   SS_TEMPAHAN_RUANG: {
-    nama: 'SHAMS - Makerspace',
+    nama: 'UTMPreneur - Makerspace',
     modul: 'Makerspace',
     tabs: {
       Tempahan: ['ID_Tempahan', 'Jenis', 'Kod_Sumber', 'Jenis_Pengguna', 'Emel_Pemohon', 'Nama_Pemohon', 'Tarikh_Mula', 'Masa_Mula', 'Tarikh_Tamat', 'Masa_Tamat', 'Tujuan', 'Emel_Penyelia', 'Status_Perakuan', 'Tarikh_Perakuan', 'Status', 'Diluluskan_Oleh', 'Tarikh_Keputusan', 'Catatan', 'No_Matrik', 'Telefon', 'Jabatan', 'Anggaran_RM', 'Dicipta_Pada', 'Didaftar_Oleh', 'Token_Hash', 'Token_Tamat', 'Catatan_Penyelia', 'Bil_Pembaharuan'],
@@ -665,7 +665,7 @@ var TAB_SS = (function () {
 var TETAPAN_LALAI = [
   ['DOMAIN_PELAJAR', '@graduate.utm.my', 'Domain emel pelajar'],
   ['DOMAIN_STAF', '@utm.my', 'Domain emel staf (juga domain penyelia)'],
-  ['NAMA_PENGHANTAR', 'SHAMS · UTMXCITE', 'Nama penghantar emel'],
+  ['NAMA_PENGHANTAR', 'UTMPreneur · UTMXCITE', 'Nama penghantar emel'],
   ['WEBAPP_URL', '', 'URL web app (digunakan dalam emel)'],
   ['PENGUJI_EMEL', '', 'MOD UJI sahaja: emel penguji dibenarkan menerima emel, dipisah koma'],
   ['OTP_TAMAT_MINIT', '5', 'Tempoh sah OTP (minit)'],
@@ -735,7 +735,7 @@ var TETAPAN_LALAI = [
 
 // ===== Db.gs =====
 /**
- * SHAMS: lapisan data. Semua capaian spreadsheet melalui sini.
+ * UTMPreneur: lapisan data. Semua capaian spreadsheet melalui sini.
  * Spreadsheet selain Induk dicari melalui tab Link_Dokumen (Kod -> URL).
  */
 
@@ -1097,7 +1097,7 @@ var Audit = {
 
 // ===== Files.gs =====
 /**
- * SHAMS: muat naik dan muat turun fail melalui pelayan.
+ * UTMPreneur: muat naik dan muat turun fail melalui pelayan.
  * Semakan jenis dan saiz dibuat di pelayan: sambungan, jenis MIME dan tandatangan fail (magic bytes).
  * Fail disimpan dalam folder Drive berdaftar (Link_Dokumen); pengguna tidak pernah menerima pautan Drive.
  */
@@ -1176,7 +1176,7 @@ var Files = (function () {
 
 // ===== Import.gs =====
 /**
- * SHAMS: import data rasmi pelajar ke tab PELAJAR (CSV, oleh Admin Penuh).
+ * UTMPreneur: import data rasmi pelajar ke tab PELAJAR (CSV, oleh Admin Penuh).
  * Semakan dibuat dahulu (dryRun). Jika ada ralat, tiada apa-apa ditulis.
  */
 
@@ -1356,7 +1356,7 @@ var PelajarImport = (function () {
 
 // ===== Jobs.gs =====
 /**
- * SHAMS: kerja berjadual. Jalankan pasangPencetus() sekali dari editor Apps Script untuk
+ * UTMPreneur: kerja berjadual. Jalankan pasangPencetus() sekali dari editor Apps Script untuk
  * memasang pencetus masa harian (pukul 7 pagi). Selamat dijalankan semula (pencetus lama diganti).
  */
 
@@ -1386,7 +1386,7 @@ function pasangPencetus() {
 
 // ===== Kewangan.gs =====
 /**
- * SHAMS: modul Kewangan (laporan kewangan bulanan).
+ * UTMPreneur: modul Kewangan (laporan kewangan bulanan).
  * Setiap perniagaan SSU (Aktif atau Tamat Tempoh) melapor bulanan, sebelum atau pada hari ke-N bulan berikutnya
  * (Tetapan TARIKH_AKHIR_LAPORAN_HARI, lalai 7). Pemilik menghantar; ahli pasukan melihat sahaja; admin menyemak
  * (Terima / Perlu Pembetulan). Laporan Diterima dikunci dan hanya ia dikira dalam KPI rasmi.
@@ -1642,7 +1642,7 @@ var Kewangan = (function () {
     if (!to) return 'Tiada emel';
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
+      if (url) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
       return Mail.send(to, { subjectBm: subjectBm, subjectEn: subjectEn, bm: bm, en: en }) ? 'Dihantar' : 'Dilangkau (MOD UJI)';
     } catch (err) {
       console.error('Emel gagal: ' + err);
@@ -1898,8 +1898,8 @@ var Kewangan = (function () {
         ['The ' + info.lbl + ' financial report for ' + nama + ' has been reviewed and ACCEPTED. Thank you.']);
     } else {
       sendMail_(to, 'Laporan kewangan perlu dibetulkan', 'Financial report needs correction',
-        ['Laporan kewangan ' + info.lbl + ' bagi ' + nama + ' perlu dibetulkan. Catatan admin: ' + cat + ' Sila hantar semula dalam SHAMS.'],
-        ['The ' + info.lbl + ' financial report for ' + nama + ' needs correction. Admin note: ' + cat + ' Please resubmit in SHAMS.']);
+        ['Laporan kewangan ' + info.lbl + ' bagi ' + nama + ' perlu dibetulkan. Catatan admin: ' + cat + ' Sila hantar semula dalam UTMPreneur.'],
+        ['The ' + info.lbl + ' financial report for ' + nama + ' needs correction. Admin note: ' + cat + ' Please resubmit in UTMPreneur.']);
     }
     kpiKemaskini_([{ tahun: info.tahun, bulan: info.bulan }]);
     return adminButiran_(ctx, { id: id });
@@ -2063,11 +2063,11 @@ var Kewangan = (function () {
       var akhirTxt = Util.fmtTarikhBM(akhir);
       var bm, en;
       if (st === 'Lewat') {
-        bm = ['Laporan kewangan ' + lbl + ' bagi ' + nama + ' telah lewat (tarikh akhir ' + akhirTxt + '). Sila hantar secepat mungkin dalam SHAMS.'];
-        en = ['The ' + lbl + ' financial report for ' + nama + ' is overdue (due ' + akhirTxt + '). Please submit it as soon as possible in SHAMS.'];
+        bm = ['Laporan kewangan ' + lbl + ' bagi ' + nama + ' telah lewat (tarikh akhir ' + akhirTxt + '). Sila hantar secepat mungkin dalam UTMPreneur.'];
+        en = ['The ' + lbl + ' financial report for ' + nama + ' is overdue (due ' + akhirTxt + '). Please submit it as soon as possible in UTMPreneur.'];
       } else {
-        bm = ['Sila hantar laporan kewangan ' + lbl + ' bagi ' + nama + ' sebelum atau pada ' + akhirTxt + ' dalam SHAMS.'];
-        en = ['Please submit the ' + lbl + ' financial report for ' + nama + ' on or before ' + akhirTxt + ' in SHAMS.'];
+        bm = ['Sila hantar laporan kewangan ' + lbl + ' bagi ' + nama + ' sebelum atau pada ' + akhirTxt + ' dalam UTMPreneur.'];
+        en = ['Please submit the ' + lbl + ' financial report for ' + nama + ' on or before ' + akhirTxt + ' in UTMPreneur.'];
       }
       var status = to ? sendMail_(to, jenisBm, jenisEn, bm, en) : 'Tiada emel';
       if (status === 'Gagal') return; // cuba lagi pada kerja berikutnya
@@ -2108,7 +2108,7 @@ var Kewangan = (function () {
 
 // ===== Mail.gs =====
 /**
- * SHAMS: penghantaran emel dwibahasa (BM utama, English italik kecil).
+ * UTMPreneur: penghantaran emel dwibahasa (BM utama, English italik kecil).
  * MOD UJI: emel hanya dihantar kepada senarai penguji (Tetapan PENGUJI_EMEL) dan ditanda [UJI].
  */
 
@@ -2124,7 +2124,7 @@ var Mail = {
     };
     return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#2B2023;max-width:560px">' +
       '<div style="border-top:4px solid #8A2D3B;border-bottom:3px solid #D9A02E;padding:10px 0;margin-bottom:14px">' +
-      '<b style="color:#8A2D3B;font-size:17px">SHAMS</b> <span style="color:#74676B;font-size:12px">· UTMXCITE</span></div>' +
+      '<b style="color:#8A2D3B;font-size:17px">UTMPreneur</b> <span style="color:#74676B;font-size:12px">· UTMXCITE</span></div>' +
       p(bm, 'margin:0 0 10px') +
       '<div style="border-top:1px solid #E7DFE0;margin-top:14px;padding-top:10px">' +
       p(en, 'margin:0 0 8px;font-style:italic;font-size:12px;color:#74676B') + '</div>' +
@@ -2149,7 +2149,7 @@ var Mail = {
       to: to,
       subject: subject,
       htmlBody: Mail.bodyHtml(opts.bm, opts.en),
-      name: Cfg.get('NAMA_PENGHANTAR', 'SHAMS · UTMXCITE')
+      name: Cfg.get('NAMA_PENGHANTAR', 'UTMPreneur · UTMXCITE')
     });
     return true;
   },
@@ -2173,7 +2173,7 @@ var Mail = {
 
 // ===== Makerspace.gs =====
 /**
- * SHAMS: modul Makerspace (tempahan ruang, Laser Cut, 3D Printer dan pinjaman peralatan).
+ * UTMPreneur: modul Makerspace (tempahan ruang, Laser Cut, 3D Printer dan pinjaman peralatan).
  * Dipecahkan kepada beberapa fail Makerspace*.gs. Objek global tunggal `Makerspace` mendedahkan routes(), jobHarian() dan seed().
  * Fail ini mengandungi mesej, Tetapan, fungsi pembantu kongsi (objek Mk) dan jadual laluan RPC.
  * PERHATIAN: tiada kebergantungan semasa muat antara fail; fungsi fail lain dipanggil di dalam fungsi sahaja.
@@ -2348,7 +2348,7 @@ var Mk = (function () {
     if (!to) return false;
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url && !tanpaPautan) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
+      if (url && !tanpaPautan) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
       return Mail.send(to, { subjectBm: subjectBm, subjectEn: subjectEn, bm: bm, en: en });
     } catch (err) { console.error('Emel Makerspace gagal: ' + err); return false; }
   }
@@ -2554,7 +2554,7 @@ var Makerspace = {
 
 // ===== MakerspaceAdmin.gs =====
 /**
- * SHAMS: Makerspace, tindakan admin: senarai/butiran tempahan, kelulusan, penggunaan sebenar, pemulangan pinjaman,
+ * UTMPreneur: Makerspace, tindakan admin: senarai/butiran tempahan, kelulusan, penggunaan sebenar, pemulangan pinjaman,
  * pengesahan bayaran, urus ALAT / PERALATAN / KADAR dan carian pemohon (tempah bagi pihak).
  * Kebenaran: Admin Penuh dan Pegawai Modul (modul kosong/Semua/Makerspace) memutuskan; Pemerhati baca sahaja; Penilai tiada akses.
  */
@@ -3087,7 +3087,7 @@ var MkAdmin = (function () {
 
 // ===== MakerspaceBil.gs =====
 /**
- * SHAMS: Makerspace, kiraan kos, bil (Bayaran_Makerspace), bayaran oleh pemohon dan kerja harian.
+ * UTMPreneur: Makerspace, kiraan kos, bil (Bayaran_Makerspace), bayaran oleh pemohon dan kerja harian.
  * Kadar kosong atau tiada = "belum ditetapkan": bil tidak dijana sehingga ditetapkan dan admin diberi amaran.
  * Bil dijana selepas sesi (kerja harian) atau apabila admin merekod penggunaan sebenar.
  */
@@ -3203,8 +3203,8 @@ var MkBil = (function () {
   function emelBil_(r, b) {
     var j = Mk.rm2(b.Kos_Sebenar_RM !== '' && b.Kos_Sebenar_RM !== undefined ? b.Kos_Sebenar_RM : b.Anggaran_RM);
     Mk.mel(Util.normEmail(r.Emel_Pemohon), 'Bil Makerspace dijana', 'Makerspace bill issued',
-      ['Bil ' + Util.str(b.ID_Bayaran) + ' bagi tempahan ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Tarikh akhir bayaran: ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '. Sila rekod bayaran dalam SHAMS (Makerspace).'],
-      ['Bill ' + Util.str(b.ID_Bayaran) + ' for booking ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Payment due date: ' + Util.dateKey(b.Tarikh_Akhir) + '. Please record the payment in SHAMS (Makerspace).']);
+      ['Bil ' + Util.str(b.ID_Bayaran) + ' bagi tempahan ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Tarikh akhir bayaran: ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '. Sila rekod bayaran dalam UTMPreneur (Makerspace).'],
+      ['Bill ' + Util.str(b.ID_Bayaran) + ' for booking ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Payment due date: ' + Util.dateKey(b.Tarikh_Akhir) + '. Please record the payment in UTMPreneur (Makerspace).']);
   }
 
   // ---------- Bayaran oleh pemohon ----------
@@ -3287,8 +3287,8 @@ var MkBil = (function () {
     });
     warnKadar.forEach(function (w) {
       if (sekali('MK_KADAR_TIADA:' + w.id, ADMIN_UTAMA, w.id, 'Amaran: kadar Makerspace belum ditetapkan', 'Warning: Makerspace rate not set',
-        ['Bil bagi tempahan ' + w.id + ' tidak dapat dijana kerana kadar belum ditetapkan: ' + w.belum.join(', ') + '. Sila tetapkan kadar dalam SHAMS (Makerspace admin, Kadar).'],
-        ['The bill for booking ' + w.id + ' cannot be generated because rates are not set: ' + w.belum.join(', ') + '. Please set the rates in SHAMS (Makerspace admin, Rates).'], w.belum.join(','))) hasil.amaranKadar++;
+        ['Bil bagi tempahan ' + w.id + ' tidak dapat dijana kerana kadar belum ditetapkan: ' + w.belum.join(', ') + '. Sila tetapkan kadar dalam UTMPreneur (Makerspace admin, Kadar).'],
+        ['The bill for booking ' + w.id + ' cannot be generated because rates are not set: ' + w.belum.join(', ') + '. Please set the rates in UTMPreneur (Makerspace admin, Rates).'], w.belum.join(','))) hasil.amaranKadar++;
     });
 
     // 3. Bil: peringatan, Lewat dan susulan
@@ -3376,8 +3376,8 @@ var MkBil = (function () {
           ['The activity report for booking ' + id + ' is overdue (due ' + had + '). New space bookings are blocked until it is submitted.']);
       } else {
         sekali('MK_LAPORAN:' + id, to, id, 'Peringatan: hantar laporan aktiviti', 'Reminder: submit the activity report',
-          ['Sila hantar laporan aktiviti bagi tempahan ' + id + ' sebelum ' + Util.fmtTarikhBM(had) + ' melalui SHAMS (Makerspace).'],
-          ['Please submit the activity report for booking ' + id + ' by ' + had + ' via SHAMS (Makerspace).']);
+          ['Sila hantar laporan aktiviti bagi tempahan ' + id + ' sebelum ' + Util.fmtTarikhBM(had) + ' melalui UTMPreneur (Makerspace).'],
+          ['Please submit the activity report for booking ' + id + ' by ' + had + ' via UTMPreneur (Makerspace).']);
       }
     });
     return hasil;
@@ -3389,7 +3389,7 @@ var MkBil = (function () {
 
 // ===== MakerspacePerakuan.gs =====
 /**
- * SHAMS: Makerspace, perakuan penyelia melalui pautan emel (tanpa log masuk).
+ * UTMPreneur: Makerspace, perakuan penyelia melalui pautan emel (tanpa log masuk).
  * Token rawak sekali guna (hanya hash disimpan dalam sheet), tamat tempoh, pengesahan OTP ke emel penyelia
  * (Otp.issue/verify dengan tujuan unik bagi setiap tempahan), had kadar dan mesej generik. Direkod dalam Audit.
  * Halaman hanya memaparkan ringkasan tempahan, bukan data peribadi tambahan.
@@ -3554,7 +3554,7 @@ var MkPerakuan = (function () {
 
 // ===== MakerspaceTempahan.gs =====
 /**
- * SHAMS: Makerspace, tempahan oleh pengguna (pelajar, staf, orang luar) dan bagi pihak oleh admin.
+ * UTMPreneur: Makerspace, tempahan oleh pengguna (pelajar, staf, orang luar) dan bagi pihak oleh admin.
  * Empat jenis: Ruang, Laser Cut, 3D Printer, Pinjaman. Semua pengesahan di pelayan.
  */
 
@@ -4257,7 +4257,7 @@ var MkTempahan = (function () {
 
 // ===== Otp.gs =====
 /**
- * SHAMS: OTP berasaskan tujuan (bukan log masuk). Contoh: pemohon mengesahkan penerimaan tawaran,
+ * UTMPreneur: OTP berasaskan tujuan (bukan log masuk). Contoh: pemohon mengesahkan penerimaan tawaran,
  * penyelia memperakui tempahan. OTP dihantar ke emel yang ditentukan, disimpan sebagai hash dalam CacheService,
  * had percubaan, jeda dan had sejam; dikira dalam kuota OTP harian yang sama dengan log masuk.
  *   Otp.issue('TERIMA_TAWARAN:PLT-2026-0001', emel, {subjectBm, subjectEn, bm:[...], en:[...]})
@@ -4327,7 +4327,7 @@ var Otp = (function () {
 
 // ===== Pdf.gs =====
 /**
- * SHAMS: penjanaan PDF daripada HTML (tanpa templat Google Docs) dan enjin templat Google Docs.
+ * UTMPreneur: penjanaan PDF daripada HTML (tanpa templat Google Docs) dan enjin templat Google Docs.
  *   Pdf.wrap(bodyHtml, tajuk)               -> HTML A4 dengan gaya seragam (UTMXCITE)
  *   Pdf.dariHtml(html, namaFail, folderKod) -> {url}   (simpan dalam folder berdaftar)
  *   DocTpl.jana(kodTemplat, data, folderKod, namaFail) -> {url, amaran[]}  (templat Google Docs dalam Link_Dokumen)
@@ -4339,7 +4339,7 @@ var Pdf = {
   esc: function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); },
 
   wrap: function (bodyHtml, tajuk) {
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + Pdf.esc(tajuk || 'SHAMS') + '</title><style>' +
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + Pdf.esc(tajuk || 'UTMPreneur') + '</title><style>' +
       '@page{size:A4;margin:22mm 20mm}body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#000}' +
       'h1{font-size:14pt;text-align:center;margin:6pt 0}h2{font-size:12pt;margin:12pt 0 4pt}p{margin:0 0 7pt;text-align:justify}' +
       'table{border-collapse:collapse;width:100%}td,th{border:1px solid #444;padding:4pt 6pt;vertical-align:top;font-size:10.5pt}' +
@@ -4411,7 +4411,7 @@ var DocTpl = (function () {
 
 // ===== Profiling.gs =====
 /**
- * SHAMS: Profiling pelajar (peringkat 2).
+ * UTMPreneur: Profiling pelajar (peringkat 2).
  * - Data rasmi daripada PELAJAR dipaparkan (auto-isi); hanya medan semester dan hubungan boleh dikemas kini pelajar.
  * - Satu baris Profil bagi setiap pelajar bagi setiap sesi (sejarah disimpan).
  * - "Lengkap" = ada sekurang-kurangnya satu Profil yang sah. Sesi baharu hanya mencetuskan peringatan, bukan sekatan.
@@ -4603,7 +4603,7 @@ var Profiling = (function () {
 
 // ===== Ref.gs =====
 /**
- * SHAMS: capaian tab Rujukan (senarai pilihan), dicache 2 minit.
+ * UTMPreneur: capaian tab Rujukan (senarai pilihan), dicache 2 minit.
  */
 
 var Ref = {
@@ -4650,7 +4650,7 @@ var Ref = {
 
 // ===== RuangNiaga.gs =====
 /**
- * SHAMS: modul Ruang Niaga (titik masuk). Objek global tunggal RuangNiaga mendedahkan:
+ * UTMPreneur: modul Ruang Niaga (titik masuk). Objek global tunggal RuangNiaga mendedahkan:
  *   routes()      laluan RPC rn.* (digabungkan oleh rpcTable_ dalam Code.gs)
  *   jobHarian()   kerja harian (dipanggil oleh Jobs.harian)
  *   seed()        data awal modul (tiada keperluan buat masa ini)
@@ -4725,7 +4725,7 @@ var RuangNiaga = (function () {
 
 // ===== RuangNiagaCagaran.gs =====
 /**
- * SHAMS: Ruang Niaga fasa 4. Cagaran (sewaan dan utiliti): pemilik memuat naik resit rasmi, admin mengesahkan,
+ * UTMPreneur: Ruang Niaga fasa 4. Cagaran (sewaan dan utiliti): pemilik memuat naik resit rasmi, admin mengesahkan,
  * pemulangan dalam CAGARAN_PULANG_HARI (90) selepas tamat kontrak (peringatan admin hari ke-60 dan ke-80, tanda Lewat Pulang)
  * dan rampasan. Status: Belum Bayar, Menunggu Pengesahan, Diterima, Dipulangkan, Dirampas (Dibatalkan jika tawaran gugur).
  */
@@ -4781,8 +4781,8 @@ var RnCagaran = (function () {
       Audit.log(ctx, 'MUAT_NAIK_RESIT_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), S(cur.Status), 'Menunggu Pengesahan', noResit);
     });
     RnU.melAdmin('Resit cagaran menunggu pengesahan', 'Deposit receipt awaiting verification',
-      ['Pemohon ' + S(r.ID_Permohonan) + ' memuat naik resit cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ', resit ' + noResit + '). Sila sahkan dalam SHAMS.'],
-      ['Applicant ' + S(r.ID_Permohonan) + ' uploaded a deposit receipt. Please verify it in SHAMS.']);
+      ['Pemohon ' + S(r.ID_Permohonan) + ' memuat naik resit cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ', resit ' + noResit + '). Sila sahkan dalam UTMPreneur.'],
+      ['Applicant ' + S(r.ID_Permohonan) + ' uploaded a deposit receipt. Please verify it in UTMPreneur.']);
     return { id: S(r.ID_Permohonan), cagaran: senarai_(S(r.ID_Permohonan)) };
   }
 
@@ -4919,8 +4919,8 @@ var RnCagaran = (function () {
         if (baki >= 0 && baki <= sebelum && !log.ada('RN_CAGARAN_SEBELUM_' + idC)) {
           log.tambah('RN_CAGARAN_SEBELUM_' + idC, RnU.emelOf(Util.normMatric(r.No_Matrik)), idPer, baki + ' hari');
           RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Peringatan: bayar cagaran', 'Reminder: pay your deposit',
-            ['Cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ') bagi ' + idPer + ' perlu dibayar selewat-lewatnya ' + Util.fmtTarikhBM(c.Tarikh_Akhir_Bayar) + '. Muat naik resit rasmi dalam SHAMS.'],
-            ['Your deposit (RM ' + S(c.Jumlah_RM) + ') for ' + idPer + ' is due by ' + RnU.dk(c.Tarikh_Akhir_Bayar) + '. Upload the official receipt in SHAMS.']);
+            ['Cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ') bagi ' + idPer + ' perlu dibayar selewat-lewatnya ' + Util.fmtTarikhBM(c.Tarikh_Akhir_Bayar) + '. Muat naik resit rasmi dalam UTMPreneur.'],
+            ['Your deposit (RM ' + S(c.Jumlah_RM) + ') for ' + idPer + ' is due by ' + RnU.dk(c.Tarikh_Akhir_Bayar) + '. Upload the official receipt in UTMPreneur.']);
           hasil.peringatanBayar++;
         } else if (baki < 0 && !log.ada('RN_CAGARAN_LEWAT_' + idC)) {
           log.tambah('RN_CAGARAN_LEWAT_' + idC, '-', idPer, 'lewat');
@@ -4961,7 +4961,7 @@ var RnCagaran = (function () {
 
 // ===== RuangNiagaDokumen.gs =====
 /**
- * SHAMS: Ruang Niaga. Dokumen sewaan (tab Dokumen_Sewaan): surat tawaran (versi), rekod penerimaan, perjanjian,
+ * UTMPreneur: Ruang Niaga. Dokumen sewaan (tab Dokumen_Sewaan): surat tawaran (versi), rekod penerimaan, perjanjian,
  * salinan bertandatangan, notis dan dokumen lain. Pemilik dan semua ahli pasukan SSU boleh melihat dan memuat turun
  * bila-bila masa melalui pelayan (akses disemak pada setiap panggilan; tiada pautan Drive didedahkan).
  */
@@ -5085,8 +5085,8 @@ var RnDok = (function () {
       return nid;
     });
     RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Dokumen baharu dalam Ruang Niaga', 'New document in Business Premises',
-      ['UTMXCITE telah menambah dokumen "' + tajuk + '" bagi permohonan ' + S(r.ID_Permohonan) + '. Sila lihat dalam SHAMS.'],
-      ['UTMXCITE added the document "' + tajuk + '" for application ' + S(r.ID_Permohonan) + '. Please view it in SHAMS.']);
+      ['UTMXCITE telah menambah dokumen "' + tajuk + '" bagi permohonan ' + S(r.ID_Permohonan) + '. Sila lihat dalam UTMPreneur.'],
+      ['UTMXCITE added the document "' + tajuk + '" for application ' + S(r.ID_Permohonan) + '. Please view it in UTMPreneur.']);
     return { id: id };
   }
 
@@ -5099,7 +5099,7 @@ var RnDok = (function () {
 
 // ===== RuangNiagaLanjut.gs =====
 /**
- * SHAMS: Ruang Niaga. Penghubung antara sub-modul: pendaftaran laluan RPC fasa 2 ke atas, butiran admin
+ * UTMPreneur: Ruang Niaga. Penghubung antara sub-modul: pendaftaran laluan RPC fasa 2 ke atas, butiran admin
  * yang menggabungkan data sub-modul, dan kerja harian. Rujukan sub-modul dibuat di dalam fungsi sahaja.
  */
 
@@ -5223,7 +5223,7 @@ var RnLanjut = (function () {
 
 // ===== RuangNiagaMsg.gs =====
 /**
- * SHAMS: mesej pengguna dwibahasa modul Ruang Niaga. Kunci = kod ralat (dikenali oleh appError_ dalam Util.gs).
+ * UTMPreneur: mesej pengguna dwibahasa modul Ruang Niaga. Kunci = kod ralat (dikenali oleh appError_ dalam Util.gs).
  */
 var MSG_RN = {
   RN_BORANG_TIDAK_SAH: ['Maklumat tidak sah. Semak medan yang bertanda.', 'The details are invalid. Check the highlighted fields.'],
@@ -5267,7 +5267,7 @@ var MSG_RN = {
 
 // ===== RuangNiagaNilai.gs =====
 /**
- * SHAMS: Ruang Niaga fasa 2. Penilaian jawatankuasa.
+ * UTMPreneur: Ruang Niaga fasa 2. Penilaian jawatankuasa.
  * Sesi penilaian (tarikh, masa, tempat, penilai, senarai disenarai pendek dengan slot pembentangan), skrin penilai
  * (rubrik 6 kriteria, skala 5 tahap yang mengisi markah automatik dan boleh dilaras dalam julat tahap, simpan draf,
  * hantar mengunci), kerahsiaan skor antara penilai sehingga sesi ditutup, purata dan kedudukan.
@@ -5489,8 +5489,8 @@ var RnNilai = (function () {
     var s2 = sesiRow_(id);
     penilaiOf_(s2).forEach(function (e) {
       RnU.mel(e, 'Sesi penilaian permohonan lot bermula', 'Lot evaluation session started',
-        ['Sesi penilaian ' + id + ' (' + Util.fmtTarikhBM(s2.Tarikh) + ', ' + S(s2.Masa) + ', ' + S(s2.Tempat) + ') telah bermula. Sila log masuk SHAMS untuk menilai.'],
-        ['Evaluation session ' + id + ' has started. Please sign in to SHAMS to evaluate.']);
+        ['Sesi penilaian ' + id + ' (' + Util.fmtTarikhBM(s2.Tarikh) + ', ' + S(s2.Masa) + ', ' + S(s2.Tempat) + ') telah bermula. Sila log masuk UTMPreneur untuk menilai.'],
+        ['Evaluation session ' + id + ' has started. Please sign in to UTMPreneur to evaluate.']);
     });
     return sesiButiran_(ctx, { id: id });
   }
@@ -5776,7 +5776,7 @@ var RnNilai = (function () {
 
 // ===== RuangNiagaPerjanjian.gs =====
 /**
- * SHAMS: Ruang Niaga fasa 4. Perjanjian penyewaan (templat Google Docs F&B / bukan F&B), salinan bertandatangan,
+ * UTMPreneur: Ruang Niaga fasa 4. Perjanjian penyewaan (templat Google Docs F&B / bukan F&B), salinan bertandatangan,
  * senarai pekerja penyewa (Lampiran 2), peralatan universiti per lot (Lampiran 3) dan pengaktifan sewaan.
  * Perjanjian dicetak, ditandatangani, salinan bertandatangan dimuat naik pemilik dan disahkan admin.
  * Sewaan aktif hanya selepas perjanjian disahkan DAN cagaran sewaan disahkan (atau tiada cagaran sewaan).
@@ -5866,8 +5866,8 @@ var RnPerjanjian = (function () {
       Audit.log(ctx, 'JANA_PERJANJIAN_SEWA', 'Ruang Niaga', id, S(r.Status), 'Perjanjian', 'v' + versi + ' | ' + kodTpl + (amaran.length ? ' | ' + amaran.join('; ') : ''));
     });
     RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Perjanjian sewa sedia untuk ditandatangani', 'Tenancy agreement ready for signing',
-      ['Perjanjian sewa bagi ' + id + ' telah disediakan. Sila muat turun, cetak, tandatangani dan muat naik salinan bertandatangan dalam SHAMS.'],
-      ['The tenancy agreement for ' + id + ' is ready. Please download, print, sign and upload the signed copy in SHAMS.']);
+      ['Perjanjian sewa bagi ' + id + ' telah disediakan. Sila muat turun, cetak, tandatangani dan muat naik salinan bertandatangan dalam UTMPreneur.'],
+      ['The tenancy agreement for ' + id + ' is ready. Please download, print, sign and upload the signed copy in UTMPreneur.']);
     var out = RnPer.adminButiran(ctx, { id: id });
     out.amaranPerjanjian = amaran;
     return out;
@@ -5895,7 +5895,7 @@ var RnPerjanjian = (function () {
       Audit.log(ctx, 'MUAT_NAIK_PERJANJIAN_BERTANDATANGAN', 'Ruang Niaga', id, S(c2.Status), 'Dimuat naik', 'v' + versi);
     });
     RnU.melAdmin('Salinan perjanjian bertandatangan dimuat naik', 'Signed agreement uploaded',
-      ['Pemohon ' + id + ' memuat naik salinan perjanjian bertandatangan. Sila sahkan dalam SHAMS.'], ['Applicant ' + id + ' uploaded the signed agreement. Please verify it in SHAMS.']);
+      ['Pemohon ' + id + ' memuat naik salinan perjanjian bertandatangan. Sila sahkan dalam UTMPreneur.'], ['Applicant ' + id + ' uploaded the signed agreement. Please verify it in UTMPreneur.']);
     return { id: id };
   }
 
@@ -6155,7 +6155,7 @@ var RnPerjanjian = (function () {
 
 // ===== RuangNiagaPermohonan.gs =====
 /**
- * SHAMS: Ruang Niaga fasa 1. Pengurusan lot (admin), tempoh permohonan, permohonan lot oleh pemilik SSU,
+ * UTMPreneur: Ruang Niaga fasa 1. Pengurusan lot (admin), tempoh permohonan, permohonan lot oleh pemilik SSU,
  * senarai dan butiran permohonan untuk admin, dan peralihan status awal (semak, tolak, batal, putus).
  * Peraturan: pemilik perniagaan SSU Diluluskan + Aktif sahaja boleh memohon; ahli pasukan hanya melihat;
  * satu lot bagi satu pelajar/perniagaan; permohonan dibuat dalam tempoh global sahaja.
@@ -6619,7 +6619,7 @@ var RnPer = (function () {
 
 // ===== RuangNiagaSewa.gs =====
 /**
- * SHAMS: Ruang Niaga fasa 4-5. Sewaan aktif, jadual sewa berperingkat, bil sewa bulanan, bayaran, tunggakan dan notis,
+ * UTMPreneur: Ruang Niaga fasa 4-5. Sewaan aktif, jadual sewa berperingkat, bil sewa bulanan, bayaran, tunggakan dan notis,
  * tamat/pembaharuan sewaan, daftar sewaan sedia ada, dashboard admin dan kerja harian.
  * Bil dijana pada hari JANA_BIL_SEWA_HARI (5) bagi bulan itu, tarikh akhir hari TARIKH_AKHIR_SEWA_HARI (7).
  */
@@ -6813,8 +6813,8 @@ var RnSewa = (function () {
       Audit.log(ctx, 'REKOD_BAYARAN_SEWA', 'Ruang Niaga', S(b.ID_Bil), S(cur.Status), 'Menunggu Pengesahan', kaedah + ' | ' + no);
     });
     RnU.melAdmin('Bayaran sewa menunggu pengesahan', 'Rent payment awaiting verification',
-      ['Bayaran bil ' + S(b.ID_Bil) + ' (' + S(b.Kod_Lot) + ', ' + S(b.Bulan) + '/' + S(b.Tahun) + ') direkodkan oleh pemilik. Sila sahkan dalam SHAMS.'],
-      ['A payment for bill ' + S(b.ID_Bil) + ' was recorded by the tenant. Please verify it in SHAMS.']);
+      ['Bayaran bil ' + S(b.ID_Bil) + ' (' + S(b.Kod_Lot) + ', ' + S(b.Bulan) + '/' + S(b.Tahun) + ') direkodkan oleh pemilik. Sila sahkan dalam UTMPreneur.'],
+      ['A payment for bill ' + S(b.ID_Bil) + ' was recorded by the tenant. Please verify it in UTMPreneur.']);
     return { id: S(b.ID_Bil), sewaan: untukPemohon_(ctx, RnU.perById(S(r.ID_Permohonan))) };
   }
 
@@ -6926,7 +6926,7 @@ var RnSewa = (function () {
       emel = emelBil_(b);
     });
     if (jumlah > 0) RnU.mel(emel, 'Caj utiliti ditambah pada bil sewa', 'Utility charge added to your rent bill',
-      ['Caj utiliti RM ' + jumlah + ' telah ditambah pada bil ' + S(p.id) + (cat ? ' (' + cat + ')' : '') + '. Sila semak jumlah terkini dalam SHAMS.'], ['A utility charge of RM ' + jumlah + ' was added to bill ' + S(p.id) + '.']);
+      ['Caj utiliti RM ' + jumlah + ' telah ditambah pada bil ' + S(p.id) + (cat ? ' (' + cat + ')' : '') + '. Sila semak jumlah terkini dalam UTMPreneur.'], ['A utility charge of RM ' + jumlah + ' was added to bill ' + S(p.id) + '.']);
     return out;
   }
 
@@ -6959,7 +6959,7 @@ var RnSewa = (function () {
       return '<tr><td>' + e(Util.BULAN_BM[Number(b.Bulan) - 1] + ' ' + b.Tahun) + '</td><td class="r">' + e(Number(b.Jumlah_RM).toFixed(2)) + '</td><td>' + e(Util.fmtTarikhBM(b.Tarikh_Akhir)) +
         '</td><td class="r">' + e(String(Util.daysBetween(b.Tarikh_Akhir, new Date()))) + '</td></tr>';
     }).join('') + '<tr><td><b>Jumlah tertunggak</b></td><td class="r"><b>' + e(tg.jumlah.toFixed(2)) + '</b></td><td></td><td></td></tr></table>' +
-      '<p class="sig">Pengarah<br>UTMXCITE, Universiti Teknologi Malaysia<br><span class="sm">Notis ini dijana oleh sistem SHAMS.</span></p>';
+      '<p class="sig">Pengarah<br>UTMXCITE, Universiti Teknologi Malaysia<br><span class="sm">Notis ini dijana oleh sistem UTMPreneur.</span></p>';
     var nama = tajuk + ' ' + S(s.ID_Sewaan);
     var res = Pdf.dariHtml(Pdf.wrap(h, nama), nama, 'FLD_LAMPIRAN_LOT');
     Db.withLock(function () {
@@ -6971,7 +6971,7 @@ var RnSewa = (function () {
       Audit.log(ctx, 'JANA_NOTIS_SEWA', 'Ruang Niaga', S(s.ID_Sewaan), '', tajuk, 'Tunggakan RM ' + tg.jumlah.toFixed(2));
     });
     RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), tajuk + ' sewaan lot', tajuk + ' for your tenancy',
-      ['UTMXCITE telah mengeluarkan ' + tajuk + ' bagi sewaan ' + S(s.ID_Sewaan) + ' (tunggakan RM ' + tg.jumlah.toFixed(2) + '). Sila lihat dokumen dalam SHAMS.'],
+      ['UTMXCITE telah mengeluarkan ' + tajuk + ' bagi sewaan ' + S(s.ID_Sewaan) + ' (tunggakan RM ' + tg.jumlah.toFixed(2) + '). Sila lihat dokumen dalam UTMPreneur.'],
       ['UTMXCITE issued a ' + tajuk + ' for tenancy ' + S(s.ID_Sewaan) + ' (arrears RM ' + tg.jumlah.toFixed(2) + ').']);
     return adminButiran_(ctx, { id: S(s.ID_Sewaan) });
   }
@@ -7201,7 +7201,7 @@ var RnSewa = (function () {
       var ringkas = 'Bil ' + id + ' (' + S(b.Kod_Lot) + ', ' + Util.BULAN_BM[Number(b.Bulan) - 1] + ' ' + b.Tahun + ') RM ' + (Number(b.Jumlah_RM) || 0).toFixed(2);
       if (!log.ada('RN_BIL_JANA_' + id)) {
         RnU.mel(emel, 'Bil sewa bulan ' + b.Bulan + '/' + b.Tahun, 'Rent bill for ' + b.Bulan + '/' + b.Tahun,
-          [ringkas + ' telah dijana. Sila bayar sebelum ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + ' dan rekod bayaran dalam SHAMS.'], [ringkas + ' has been issued. Please pay by ' + RnU.dk(b.Tarikh_Akhir) + '.']);
+          [ringkas + ' telah dijana. Sila bayar sebelum ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + ' dan rekod bayaran dalam UTMPreneur.'], [ringkas + ' has been issued. Please pay by ' + RnU.dk(b.Tarikh_Akhir) + '.']);
         log.tambah('RN_BIL_JANA_' + id, emel, id, 'bil dijana');
         if (baki <= sebelum) log.tambah('RN_BIL_SEBELUM_' + id, emel, id, 'digabung dengan emel bil');
         hasil.peringatan++;
@@ -7251,7 +7251,7 @@ var RnSewa = (function () {
 
 // ===== RuangNiagaTawaran.gs =====
 /**
- * SHAMS: Ruang Niaga fasa 3. Surat tawaran (Surat Setuju Terima), pratonton PDF, hantar, penerimaan dengan OTP,
+ * UTMPreneur: Ruang Niaga fasa 3. Surat tawaran (Surat Setuju Terima), pratonton PDF, hantar, penerimaan dengan OTP,
  * rekod penerimaan, tawaran luput, peringatan dan salinan fizikal.
  *
  * Aliran: Diluluskan -> admin isi Tawaran_Sewa (+ Jadual_Sewa) -> jana pratonton (versi) -> hantar (Ditawarkan, lot Dipohon,
@@ -7463,7 +7463,7 @@ var RnTawaran = (function () {
     h += p('8. Tiada apa-apa urusniaga boleh dimulakan kecuali dan sehingga Saudara telah mengemukakan wang cagaran sewaan.');
     h += p('9. Pihak UTM juga berhak menamatkan penyewaan Saudara pada bila-bila masa sekiranya prestasi tidak memuaskan atau melanggar mana-mana syarat yang ditetapkan oleh Universiti dan juga pihak berkuasa.');
     h += p('10. Lain-lain syarat adalah sebagaimana yang akan dipersetujui seperti di dalam Syarat / Prosedur UTMXCITE dan akan dimuktamadkan melalui Dokumen Perjanjian yang akan disempurnakan.');
-    h += p('11. Tawaran ini hendaklah diterima atau ditolak dalam sistem SHAMS (disahkan dengan kod OTP) selewat-lewatnya pada ' + e(d.tarikh_luput) + ' (' + e(d.tempoh_terima_hari) + ' hari dari tarikh surat ini dihantar). Kegagalan berbuat demikian akan menyebabkan tawaran ini terbatal secara automatik. Di samping itu, sila kembalikan dua (2) salinan surat ini, termasuk satu yang ASAL, yang telah ditandatangani oleh Saudara dan disaksikan dengan sempurnanya ke pejabat ini dalam masa ' + e(d.hari_salinan_fizikal) + ' hari dari tarikh surat ini dihantar, dan satu (1) salinan untuk simpanan Saudara.');
+    h += p('11. Tawaran ini hendaklah diterima atau ditolak dalam sistem UTMPreneur (disahkan dengan kod OTP) selewat-lewatnya pada ' + e(d.tarikh_luput) + ' (' + e(d.tempoh_terima_hari) + ' hari dari tarikh surat ini dihantar). Kegagalan berbuat demikian akan menyebabkan tawaran ini terbatal secara automatik. Di samping itu, sila kembalikan dua (2) salinan surat ini, termasuk satu yang ASAL, yang telah ditandatangani oleh Saudara dan disaksikan dengan sempurnanya ke pejabat ini dalam masa ' + e(d.hari_salinan_fizikal) + ' hari dari tarikh surat ini dihantar, dan satu (1) salinan untuk simpanan Saudara.');
     h += p('Kerjasama yang diberikan amatlah kami hargai.');
     h += p('Sekian, terima kasih.');
     h += p('&ldquo;Malaysia Madani&rdquo;<br>&quot;Berkhidmat untuk Negara kerana Allah&quot;');
@@ -7553,8 +7553,8 @@ var RnTawaran = (function () {
       return { m: Util.normMatric(r.No_Matrik), luput: luput, akhirBayar: akhirBayar, nama: RnU.namaLot(lot) };
     });
     RnU.mel(RnU.emelOf(info.m), 'Surat tawaran sewa lot', 'Lot tenancy offer letter',
-      ['Surat tawaran sewa ' + info.nama + ' (' + id + ') telah dihantar. Sila lihat dan muat turun surat dalam SHAMS, kemudian terima atau tolak tawaran dengan kod OTP selewat-lewatnya ' + Util.fmtTarikhBM(info.luput) + '. Bayaran cagaran hendaklah dijelaskan sebelum ' + Util.fmtTarikhBM(info.akhirBayar) + '.'],
-      ['The tenancy offer letter for ' + info.nama + ' (' + id + ') has been sent. View and download it in SHAMS, then accept or decline with an OTP by ' + RnU.dk(info.luput) + '. The deposit must be paid by ' + RnU.dk(info.akhirBayar) + '.']);
+      ['Surat tawaran sewa ' + info.nama + ' (' + id + ') telah dihantar. Sila lihat dan muat turun surat dalam UTMPreneur, kemudian terima atau tolak tawaran dengan kod OTP selewat-lewatnya ' + Util.fmtTarikhBM(info.luput) + '. Bayaran cagaran hendaklah dijelaskan sebelum ' + Util.fmtTarikhBM(info.akhirBayar) + '.'],
+      ['The tenancy offer letter for ' + info.nama + ' (' + id + ') has been sent. View and download it in UTMPreneur, then accept or decline with an OTP by ' + RnU.dk(info.luput) + '. The deposit must be paid by ' + RnU.dk(info.akhirBayar) + '.']);
     return dapat_(ctx, { id: id });
   }
 
@@ -7650,7 +7650,7 @@ var RnTawaran = (function () {
     var nama = tajuk + ' ' + id + (versi > 1 ? ' v' + versi : '');
     var tm = Util.fmtDate(masa, 'dd/MM/yyyy HH:mm');
     var h = '<h1>' + e(tajuk.toUpperCase()) + '</h1>' +
-      '<p>Dokumen ini merekodkan bahawa tawaran sewa lot berikut telah <b>' + (terima ? 'DITERIMA' : 'DITOLAK') + '</b> oleh pemohon secara elektronik melalui sistem SHAMS.</p>' +
+      '<p>Dokumen ini merekodkan bahawa tawaran sewa lot berikut telah <b>' + (terima ? 'DITERIMA' : 'DITOLAK') + '</b> oleh pemohon secara elektronik melalui sistem UTMPreneur.</p>' +
       '<table><tr><td>ID permohonan</td><td>' + e(id) + '</td></tr><tr><td>No. rujukan surat tawaran</td><td>' + e(S(t.No_Rujukan)) + '</td></tr>' +
       '<tr><td>Perniagaan</td><td>' + e(S(k.per.Nama_Perniagaan)) + '</td></tr><tr><td>Pemohon</td><td>' + e(S(k.pel.Nama_Penuh)) + ' (' + e(k.m) + ')</td></tr>' +
       '<tr><td>Lot</td><td>' + e(RnU.alamatLot(k.lot)) + '</td></tr><tr><td>Tempoh kontrak</td><td>' + e(Util.fmtTarikhBM(t.Tarikh_Mula) + ' hingga ' + Util.fmtTarikhBM(t.Tarikh_Tamat)) + '</td></tr>' +
@@ -7730,8 +7730,8 @@ var RnTawaran = (function () {
         if (semakLuput_(id)) { hasil.luput++; return; }
         hasil.peringatanTawaran += peringatanBertingkat_(log, 'RN_TAWARAN_H', id, hari, ambang_('TAWARAN_PERINGATAN_HARI'), function (a) {
           RnU.mel(emel, 'Peringatan: tawaran sewa lot belum dijawab', 'Reminder: lot offer not yet answered',
-            ['Tawaran sewa ' + nama + ' (' + id + ') akan luput pada ' + Util.fmtTarikhBM(t.Tarikh_Luput) + '. Sila terima atau tolak tawaran dalam SHAMS.'],
-            ['Your tenancy offer for ' + nama + ' (' + id + ') expires on ' + RnU.dk(t.Tarikh_Luput) + '. Please accept or decline in SHAMS.']);
+            ['Tawaran sewa ' + nama + ' (' + id + ') akan luput pada ' + Util.fmtTarikhBM(t.Tarikh_Luput) + '. Sila terima atau tolak tawaran dalam UTMPreneur.'],
+            ['Your tenancy offer for ' + nama + ' (' + id + ') expires on ' + RnU.dk(t.Tarikh_Luput) + '. Please accept or decline in UTMPreneur.']);
         });
       }
       // salinan fizikal Surat Setuju Terima
@@ -7784,7 +7784,7 @@ var RnTawaran = (function () {
 
 // ===== RuangNiagaTetapan.gs =====
 /**
- * SHAMS: Tetapan khusus modul Ruang Niaga (digabungkan ke Seed.tetapan()).
+ * UTMPreneur: Tetapan khusus modul Ruang Niaga (digabungkan ke Seed.tetapan()).
  * Setiap baris: [Kunci, Nilai lalai, Penerangan]. Nilai boleh diubah urusetia dalam tab Tetapan.
  * Nama dan jawatan penandatangan ialah DATA (bukan kod); nilai lalai di bawah diambil daripada contoh surat/perjanjian
  * dan mesti disemak sebelum pelancaran.
@@ -7817,7 +7817,7 @@ var TETAPAN_RN = [
 
 // ===== RuangNiagaUtil.gs =====
 /**
- * SHAMS: pembantu dikongsi modul Ruang Niaga (RnU). Tiada kebergantungan semasa muat fail.
+ * UTMPreneur: pembantu dikongsi modul Ruang Niaga (RnU). Tiada kebergantungan semasa muat fail.
  * Capaian data, kebenaran, emel, log peringatan.
  */
 
@@ -7945,7 +7945,7 @@ var RnU = (function () {
     if (!to) return false;
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
+      if (url) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
       return Mail.send(to, { subjectBm: sBm, subjectEn: sEn, bm: bm, en: en });
     } catch (err) { console.error('Emel gagal: ' + err); return false; }
   }
@@ -8010,7 +8010,7 @@ var RnU = (function () {
 
 // ===== Seed.gs =====
 /**
- * SHAMS: data awal yang diisi oleh skrip persediaan (hanya jika tab kosong,
+ * UTMPreneur: data awal yang diisi oleh skrip persediaan (hanya jika tab kosong,
  * kecuali Tetapan dan Admin yang melengkapkan kunci/baris yang tiada).
  * Nama BM sesetengah rujukan ialah draf untuk disemak urusetia.
  */
@@ -8270,9 +8270,9 @@ var Seed = (function () {
 
 // ===== Setup.gs =====
 /**
- * SHAMS: skrip persediaan.
+ * UTMPreneur: skrip persediaan.
  *
- * Cara mudah: jalankan setup() terus. Jika Script Property INDUK_ID tiada, folder "SHAMS" dan
+ * Cara mudah: jalankan setup() terus. Jika Script Property INDUK_ID tiada, folder "UTMPreneur" dan
  * spreadsheet Induk dicipta automatik dalam Drive akaun pelaksana. Cara manual: cipta SS_INDUK sendiri
  * dan tetapkan INDUK_ID (URL atau ID). MODE (UJI atau PRODUKSI) lalai UJI jika tidak ditetapkan.
  * Kemudian jalankan setup() dari editor Apps Script. Skrip ini:
@@ -8295,8 +8295,8 @@ var Setup = (function () {
     var raw = Db.props().getProperty(PROPS.INDUK_ID);
     if (!raw) {
       // Tiada INDUK_ID: cipta folder dan spreadsheet Induk secara automatik dalam Drive akaun pelaksana.
-      var folder = DriveApp.getRootFolder().createFolder(nama_('SHAMS'));
-      var created = SpreadsheetApp.create(nama_('SHAMS - Induk'));
+      var folder = DriveApp.getRootFolder().createFolder(nama_('UTMPreneur'));
+      var created = SpreadsheetApp.create(nama_('UTMPreneur - Induk'));
       DriveApp.getFileById(created.getId()).moveTo(folder);
       Db.props().setProperty(PROPS.INDUK_ID, created.getId());
       Db.reset();
@@ -8347,30 +8347,6 @@ var Setup = (function () {
     }
   }
 
-  var NAMA_LAMA = 'UTMPreneur';
-
-  /** Gantikan awalan jenama lama (UTMPreneur) dengan nama semasa pada spreadsheet dan folder berdaftar. */
-  function namakanSemula_(ind, parent, log) {
-    var baru = APP.NAMA, n = 0;
-    var tukar = function (nama) { return String(nama).indexOf(NAMA_LAMA) === 0 ? baru + String(nama).substr(NAMA_LAMA.length) : null; };
-    Object.keys(SCHEMA).forEach(function (kod) {
-      try {
-        var ss = kod === 'SS_INDUK' ? ind : Db.openByKod(kod);
-        var nn = tukar(ss.getName());
-        if (nn) { ss.rename(nn); n++; }
-      } catch (e) { console.error('Nama semula spreadsheet gagal (' + kod + '): ' + e); }
-    });
-    var folders = [parent];
-    FOLDERS.forEach(function (f) {
-      var l = Db.links()[f.kod];
-      if (l && l.id) { try { folders.push(DriveApp.getFolderById(l.id)); } catch (e) { /* abaikan */ } }
-    });
-    folders.forEach(function (fl) {
-      try { var nn = tukar(fl.getName()); if (nn) { fl.setName(nn); n++; } } catch (e) { console.error('Nama semula folder gagal: ' + e); }
-    });
-    if (n) log.push('Dinamakan semula kepada ' + baru + ': ' + n + ' spreadsheet/folder');
-  }
-
   /** Daftar atau lengkapkan satu baris Link_Dokumen. URL sedia ada tidak ditimpa. */
   function upsertLink_(ind, kod, jenis, modul, nama, url, catatan) {
     var sh = ind.getSheetByName('Link_Dokumen');
@@ -8417,9 +8393,6 @@ var Setup = (function () {
     Db.rows('Tetapan').forEach(function (r) { have[Util.str(r.Kunci)] = true; });
     var addT = Seed.tetapan().filter(function (t) { return !have[t.Kunci]; });
     if (addT.length) { appendMany_('Tetapan', addT); log.push('Tetapan: ' + addT.length + ' kunci ditambah'); }
-    // Nama penghantar emel lalai lama diganti dengan nama sistem semasa (nilai yang disunting pengguna dibiarkan)
-    var np = Db.find('Tetapan', function (r) { return Util.str(r.Kunci) === 'NAMA_PENGHANTAR' && Util.str(r.Nilai) === NAMA_LAMA + ' · UTMXCITE'; });
-    if (np.length) { Db.update('Tetapan', np[0]._row, { Nilai: APP.NAMA + ' · UTMXCITE' }); log.push('NAMA_PENGHANTAR dikemas kini kepada ' + APP.NAMA); }
     // Admin utama
     var hasAdmin = Db.rows('Admin').some(function (r) { return Util.normEmail(r.Emel) === ADMIN_UTAMA; });
     if (!hasAdmin) { appendMany_('Admin', Seed.admin()); log.push('Admin utama didaftar: ' + ADMIN_UTAMA); }
@@ -8554,9 +8527,6 @@ var Setup = (function () {
     });
     Db.reset();
 
-    Db.reset();
-    namakanSemula_(ind, parent, log);
-
     // 5. Data awal
     if (timeUp()) { log.push('Masa hampir habis. Jalankan setup() sekali lagi.'); return result(false); }
     seed_(log);
@@ -8616,7 +8586,7 @@ function isiNoKp() {
 
 // ===== Sijil.gs =====
 /**
- * SHAMS: penjanaan sijil SSU (PDF) daripada templat Google Slides.
+ * UTMPreneur: penjanaan sijil SSU (PDF) daripada templat Google Slides.
  * Templat dibaca dari Drive pada masa penjanaan (Link_Dokumen: TEMPLAT_SIJIL_SSU). Penanda boleh ditulis
  * [nama_syarikat] (templat semasa) atau {{NAMA_PERNIAGAAN}}. Penanda tidak dikenali dibiarkan dan dilaporkan.
  */
@@ -8712,7 +8682,7 @@ var Sijil = (function () {
 
 // ===== Ssu.gs =====
 /**
- * SHAMS: pendaftaran Syarikat Pemula Pelajar (SSU), peringkat 2.
+ * UTMPreneur: pendaftaran Syarikat Pemula Pelajar (SSU), peringkat 2.
  * Pelajar memohon (perlu profiling lengkap), admin menyemak dan memutuskan, kelulusan mencipta Perniagaan dan sijil PDF.
  * Pembaharuan: permohonan baharu berjenis "Pembaharuan" bagi Perniagaan sedia ada (nombor asal, akhiran kali sijil).
  * Admin boleh mendaftar SSU sedia ada (terus diluluskan).
@@ -8999,7 +8969,7 @@ var Ssu = (function () {
     if (!to) return;
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
+      if (url) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
       Mail.send(to, { subjectBm: subjectBm, subjectEn: subjectEn, bm: bm, en: en });
     } catch (err) { console.error('Emel gagal: ' + err); }
   }
@@ -9304,8 +9274,8 @@ var Ssu = (function () {
     }
     if (!opts.senyap) {
       sendMail_(emelOf_(hasil.m), 'Permohonan SSU diluluskan', 'Your SSU application is approved',
-        ['Tahniah. SSU anda (' + hasil.nama + ') telah diluluskan. No. pendaftaran: ' + hasil.noDaftar + '. Sijil boleh dimuat turun dalam SHAMS.'],
-        ['Congratulations. Your SSU (' + hasil.nama + ') has been approved. Registration no.: ' + hasil.noDaftar + '. The certificate can be downloaded in SHAMS.']);
+        ['Tahniah. SSU anda (' + hasil.nama + ') telah diluluskan. No. pendaftaran: ' + hasil.noDaftar + '. Sijil boleh dimuat turun dalam UTMPreneur.'],
+        ['Congratulations. Your SSU (' + hasil.nama + ') has been approved. Registration no.: ' + hasil.noDaftar + '. The certificate can be downloaded in UTMPreneur.']);
       ahliOf_(id).forEach(function (a) {
         var am = Util.normMatric(a.No_Matrik);
         if (am !== hasil.m) sendMail_(emelOf_(am), 'SSU anda telah diluluskan', 'Your SSU is approved',
@@ -9417,8 +9387,8 @@ var Ssu = (function () {
           Audit.log({ email: 'sistem', role: '-' }, 'SSU_TAMAT_TEMPOH', 'SSU', id, 'Aktif', 'Tamat Tempoh', Util.str(per.No_Pendaftaran));
           hasil.tamat++;
           sendMail_(emelOf_(m), 'SSU anda telah tamat tempoh', 'Your SSU has expired',
-            ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' telah tamat tempoh pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Sila buat pembaharuan dalam SHAMS.'],
-            ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expired on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Please renew in SHAMS.']);
+            ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' telah tamat tempoh pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Sila buat pembaharuan dalam UTMPreneur.'],
+            ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expired on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Please renew in UTMPreneur.']);
         }
         return;
       }
@@ -9429,8 +9399,8 @@ var Ssu = (function () {
       if (logs.some(function (l) { return Util.str(l.Jenis) === kunci; })) return;
       var to = emelOf_(m);
       sendMail_(to, 'Peringatan pembaharuan SSU', 'SSU renewal reminder',
-        ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' akan tamat pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' hari lagi). Sila perbaharui dalam SHAMS.'],
-        ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expires on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' days left). Please renew in SHAMS.']);
+        ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' akan tamat pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' hari lagi). Sila perbaharui dalam UTMPreneur.'],
+        ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expires on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' days left). Please renew in UTMPreneur.']);
       Db.append('Peringatan', { Masa: new Date(), Emel: to, Jenis: kunci, Rujukan: id, Status: 'Dihantar', Catatan: h + ' hari baki' });
       hasil.peringatan++;
     });
@@ -9448,7 +9418,7 @@ var Ssu = (function () {
 
 // ===== Util.gs =====
 /**
- * SHAMS: fungsi pembantu. Kebanyakannya fungsi tulen supaya boleh diuji dengan Node.
+ * UTMPreneur: fungsi pembantu. Kebanyakannya fungsi tulen supaya boleh diuji dengan Node.
  */
 
 /** Ralat aplikasi dengan mesej dwibahasa yang selamat dipaparkan kepada pengguna. */

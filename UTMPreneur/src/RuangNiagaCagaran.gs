@@ -1,5 +1,5 @@
 /**
- * SHAMS: Ruang Niaga fasa 4. Cagaran (sewaan dan utiliti): pemilik memuat naik resit rasmi, admin mengesahkan,
+ * UTMPreneur: Ruang Niaga fasa 4. Cagaran (sewaan dan utiliti): pemilik memuat naik resit rasmi, admin mengesahkan,
  * pemulangan dalam CAGARAN_PULANG_HARI (90) selepas tamat kontrak (peringatan admin hari ke-60 dan ke-80, tanda Lewat Pulang)
  * dan rampasan. Status: Belum Bayar, Menunggu Pengesahan, Diterima, Dipulangkan, Dirampas (Dibatalkan jika tawaran gugur).
  */
@@ -55,8 +55,8 @@ var RnCagaran = (function () {
       Audit.log(ctx, 'MUAT_NAIK_RESIT_CAGARAN', 'Ruang Niaga', S(c.ID_Cagaran), S(cur.Status), 'Menunggu Pengesahan', noResit);
     });
     RnU.melAdmin('Resit cagaran menunggu pengesahan', 'Deposit receipt awaiting verification',
-      ['Pemohon ' + S(r.ID_Permohonan) + ' memuat naik resit cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ', resit ' + noResit + '). Sila sahkan dalam SHAMS.'],
-      ['Applicant ' + S(r.ID_Permohonan) + ' uploaded a deposit receipt. Please verify it in SHAMS.']);
+      ['Pemohon ' + S(r.ID_Permohonan) + ' memuat naik resit cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ', resit ' + noResit + '). Sila sahkan dalam UTMPreneur.'],
+      ['Applicant ' + S(r.ID_Permohonan) + ' uploaded a deposit receipt. Please verify it in UTMPreneur.']);
     return { id: S(r.ID_Permohonan), cagaran: senarai_(S(r.ID_Permohonan)) };
   }
 
@@ -193,8 +193,8 @@ var RnCagaran = (function () {
         if (baki >= 0 && baki <= sebelum && !log.ada('RN_CAGARAN_SEBELUM_' + idC)) {
           log.tambah('RN_CAGARAN_SEBELUM_' + idC, RnU.emelOf(Util.normMatric(r.No_Matrik)), idPer, baki + ' hari');
           RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Peringatan: bayar cagaran', 'Reminder: pay your deposit',
-            ['Cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ') bagi ' + idPer + ' perlu dibayar selewat-lewatnya ' + Util.fmtTarikhBM(c.Tarikh_Akhir_Bayar) + '. Muat naik resit rasmi dalam SHAMS.'],
-            ['Your deposit (RM ' + S(c.Jumlah_RM) + ') for ' + idPer + ' is due by ' + RnU.dk(c.Tarikh_Akhir_Bayar) + '. Upload the official receipt in SHAMS.']);
+            ['Cagaran ' + S(c.Jenis) + ' (RM ' + S(c.Jumlah_RM) + ') bagi ' + idPer + ' perlu dibayar selewat-lewatnya ' + Util.fmtTarikhBM(c.Tarikh_Akhir_Bayar) + '. Muat naik resit rasmi dalam UTMPreneur.'],
+            ['Your deposit (RM ' + S(c.Jumlah_RM) + ') for ' + idPer + ' is due by ' + RnU.dk(c.Tarikh_Akhir_Bayar) + '. Upload the official receipt in UTMPreneur.']);
           hasil.peringatanBayar++;
         } else if (baki < 0 && !log.ada('RN_CAGARAN_LEWAT_' + idC)) {
           log.tambah('RN_CAGARAN_LEWAT_' + idC, '-', idPer, 'lewat');

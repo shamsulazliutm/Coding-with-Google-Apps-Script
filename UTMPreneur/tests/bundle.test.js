@@ -40,9 +40,9 @@ test('setup() tanpa INDUK_ID mencipta folder dan Induk secara automatik, dan sel
   assert.deepEqual(r1.masalah, []);
   const id = env.state.props.INDUK_ID;
   assert.ok(id, 'INDUK_ID ditetapkan');
-  assert.equal(env.state.spreadsheets[id].getName(), 'SHAMS - Induk (UJI)');
+  assert.equal(env.state.spreadsheets[id].getName(), 'UTMPreneur - Induk (UJI)');
   const folders = env.state.folders.root.children.filter((c) => !c.file).map((c) => c.name);
-  assert.deepEqual(folders, ['SHAMS (UJI)']);
+  assert.deepEqual(folders, ['UTMPreneur (UJI)']);
   const nSheets = Object.keys(env.state.spreadsheets).length;
   const r2 = env.plain(env.run('Setup.run()'));
   assert.equal(r2.selesai, true);
@@ -63,7 +63,7 @@ test('tetapPengeluaran() menukar ke PRODUKSI dengan Induk baharu tanpa data reka
   assert.equal(r.mod, 'PRODUKSI');
   const baru = env.state.props.INDUK_ID;
   assert.notEqual(baru, lama);
-  assert.equal(env.state.spreadsheets[baru].getName(), 'SHAMS - Induk');
+  assert.equal(env.state.spreadsheets[baru].getName(), 'UTMPreneur - Induk');
   assert.equal(env.plain(env.run("Db.rows('PELAJAR').length")), 0, 'tiada pelajar rekaan');
   assert.equal(env.plain(env.run("Admins.find('utmxcite@utm.my').aktif")), true);
   assert.equal(env.run('Mode.isUji()'), false);

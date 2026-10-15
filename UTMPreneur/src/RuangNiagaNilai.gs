@@ -1,5 +1,5 @@
 /**
- * SHAMS: Ruang Niaga fasa 2. Penilaian jawatankuasa.
+ * UTMPreneur: Ruang Niaga fasa 2. Penilaian jawatankuasa.
  * Sesi penilaian (tarikh, masa, tempat, penilai, senarai disenarai pendek dengan slot pembentangan), skrin penilai
  * (rubrik 6 kriteria, skala 5 tahap yang mengisi markah automatik dan boleh dilaras dalam julat tahap, simpan draf,
  * hantar mengunci), kerahsiaan skor antara penilai sehingga sesi ditutup, purata dan kedudukan.
@@ -221,8 +221,8 @@ var RnNilai = (function () {
     var s2 = sesiRow_(id);
     penilaiOf_(s2).forEach(function (e) {
       RnU.mel(e, 'Sesi penilaian permohonan lot bermula', 'Lot evaluation session started',
-        ['Sesi penilaian ' + id + ' (' + Util.fmtTarikhBM(s2.Tarikh) + ', ' + S(s2.Masa) + ', ' + S(s2.Tempat) + ') telah bermula. Sila log masuk SHAMS untuk menilai.'],
-        ['Evaluation session ' + id + ' has started. Please sign in to SHAMS to evaluate.']);
+        ['Sesi penilaian ' + id + ' (' + Util.fmtTarikhBM(s2.Tarikh) + ', ' + S(s2.Masa) + ', ' + S(s2.Tempat) + ') telah bermula. Sila log masuk UTMPreneur untuk menilai.'],
+        ['Evaluation session ' + id + ' has started. Please sign in to UTMPreneur to evaluate.']);
     });
     return sesiButiran_(ctx, { id: id });
   }

@@ -1,5 +1,5 @@
 /**
- * SHAMS: tindakan pentadbir peringkat 1 (status sistem, urus admin, import PELAJAR).
+ * UTMPreneur: tindakan pentadbir peringkat 1 (status sistem, urus admin, import PELAJAR).
  */
 
 var AdminApi = {

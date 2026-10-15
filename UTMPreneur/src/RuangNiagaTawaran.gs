@@ -1,5 +1,5 @@
 /**
- * SHAMS: Ruang Niaga fasa 3. Surat tawaran (Surat Setuju Terima), pratonton PDF, hantar, penerimaan dengan OTP,
+ * UTMPreneur: Ruang Niaga fasa 3. Surat tawaran (Surat Setuju Terima), pratonton PDF, hantar, penerimaan dengan OTP,
  * rekod penerimaan, tawaran luput, peringatan dan salinan fizikal.
  *
  * Aliran: Diluluskan -> admin isi Tawaran_Sewa (+ Jadual_Sewa) -> jana pratonton (versi) -> hantar (Ditawarkan, lot Dipohon,
@@ -211,7 +211,7 @@ var RnTawaran = (function () {
     h += p('8. Tiada apa-apa urusniaga boleh dimulakan kecuali dan sehingga Saudara telah mengemukakan wang cagaran sewaan.');
     h += p('9. Pihak UTM juga berhak menamatkan penyewaan Saudara pada bila-bila masa sekiranya prestasi tidak memuaskan atau melanggar mana-mana syarat yang ditetapkan oleh Universiti dan juga pihak berkuasa.');
     h += p('10. Lain-lain syarat adalah sebagaimana yang akan dipersetujui seperti di dalam Syarat / Prosedur UTMXCITE dan akan dimuktamadkan melalui Dokumen Perjanjian yang akan disempurnakan.');
-    h += p('11. Tawaran ini hendaklah diterima atau ditolak dalam sistem SHAMS (disahkan dengan kod OTP) selewat-lewatnya pada ' + e(d.tarikh_luput) + ' (' + e(d.tempoh_terima_hari) + ' hari dari tarikh surat ini dihantar). Kegagalan berbuat demikian akan menyebabkan tawaran ini terbatal secara automatik. Di samping itu, sila kembalikan dua (2) salinan surat ini, termasuk satu yang ASAL, yang telah ditandatangani oleh Saudara dan disaksikan dengan sempurnanya ke pejabat ini dalam masa ' + e(d.hari_salinan_fizikal) + ' hari dari tarikh surat ini dihantar, dan satu (1) salinan untuk simpanan Saudara.');
+    h += p('11. Tawaran ini hendaklah diterima atau ditolak dalam sistem UTMPreneur (disahkan dengan kod OTP) selewat-lewatnya pada ' + e(d.tarikh_luput) + ' (' + e(d.tempoh_terima_hari) + ' hari dari tarikh surat ini dihantar). Kegagalan berbuat demikian akan menyebabkan tawaran ini terbatal secara automatik. Di samping itu, sila kembalikan dua (2) salinan surat ini, termasuk satu yang ASAL, yang telah ditandatangani oleh Saudara dan disaksikan dengan sempurnanya ke pejabat ini dalam masa ' + e(d.hari_salinan_fizikal) + ' hari dari tarikh surat ini dihantar, dan satu (1) salinan untuk simpanan Saudara.');
     h += p('Kerjasama yang diberikan amatlah kami hargai.');
     h += p('Sekian, terima kasih.');
     h += p('&ldquo;Malaysia Madani&rdquo;<br>&quot;Berkhidmat untuk Negara kerana Allah&quot;');
@@ -301,8 +301,8 @@ var RnTawaran = (function () {
       return { m: Util.normMatric(r.No_Matrik), luput: luput, akhirBayar: akhirBayar, nama: RnU.namaLot(lot) };
     });
     RnU.mel(RnU.emelOf(info.m), 'Surat tawaran sewa lot', 'Lot tenancy offer letter',
-      ['Surat tawaran sewa ' + info.nama + ' (' + id + ') telah dihantar. Sila lihat dan muat turun surat dalam SHAMS, kemudian terima atau tolak tawaran dengan kod OTP selewat-lewatnya ' + Util.fmtTarikhBM(info.luput) + '. Bayaran cagaran hendaklah dijelaskan sebelum ' + Util.fmtTarikhBM(info.akhirBayar) + '.'],
-      ['The tenancy offer letter for ' + info.nama + ' (' + id + ') has been sent. View and download it in SHAMS, then accept or decline with an OTP by ' + RnU.dk(info.luput) + '. The deposit must be paid by ' + RnU.dk(info.akhirBayar) + '.']);
+      ['Surat tawaran sewa ' + info.nama + ' (' + id + ') telah dihantar. Sila lihat dan muat turun surat dalam UTMPreneur, kemudian terima atau tolak tawaran dengan kod OTP selewat-lewatnya ' + Util.fmtTarikhBM(info.luput) + '. Bayaran cagaran hendaklah dijelaskan sebelum ' + Util.fmtTarikhBM(info.akhirBayar) + '.'],
+      ['The tenancy offer letter for ' + info.nama + ' (' + id + ') has been sent. View and download it in UTMPreneur, then accept or decline with an OTP by ' + RnU.dk(info.luput) + '. The deposit must be paid by ' + RnU.dk(info.akhirBayar) + '.']);
     return dapat_(ctx, { id: id });
   }
 
@@ -398,7 +398,7 @@ var RnTawaran = (function () {
     var nama = tajuk + ' ' + id + (versi > 1 ? ' v' + versi : '');
     var tm = Util.fmtDate(masa, 'dd/MM/yyyy HH:mm');
     var h = '<h1>' + e(tajuk.toUpperCase()) + '</h1>' +
-      '<p>Dokumen ini merekodkan bahawa tawaran sewa lot berikut telah <b>' + (terima ? 'DITERIMA' : 'DITOLAK') + '</b> oleh pemohon secara elektronik melalui sistem SHAMS.</p>' +
+      '<p>Dokumen ini merekodkan bahawa tawaran sewa lot berikut telah <b>' + (terima ? 'DITERIMA' : 'DITOLAK') + '</b> oleh pemohon secara elektronik melalui sistem UTMPreneur.</p>' +
       '<table><tr><td>ID permohonan</td><td>' + e(id) + '</td></tr><tr><td>No. rujukan surat tawaran</td><td>' + e(S(t.No_Rujukan)) + '</td></tr>' +
       '<tr><td>Perniagaan</td><td>' + e(S(k.per.Nama_Perniagaan)) + '</td></tr><tr><td>Pemohon</td><td>' + e(S(k.pel.Nama_Penuh)) + ' (' + e(k.m) + ')</td></tr>' +
       '<tr><td>Lot</td><td>' + e(RnU.alamatLot(k.lot)) + '</td></tr><tr><td>Tempoh kontrak</td><td>' + e(Util.fmtTarikhBM(t.Tarikh_Mula) + ' hingga ' + Util.fmtTarikhBM(t.Tarikh_Tamat)) + '</td></tr>' +
@@ -478,8 +478,8 @@ var RnTawaran = (function () {
         if (semakLuput_(id)) { hasil.luput++; return; }
         hasil.peringatanTawaran += peringatanBertingkat_(log, 'RN_TAWARAN_H', id, hari, ambang_('TAWARAN_PERINGATAN_HARI'), function (a) {
           RnU.mel(emel, 'Peringatan: tawaran sewa lot belum dijawab', 'Reminder: lot offer not yet answered',
-            ['Tawaran sewa ' + nama + ' (' + id + ') akan luput pada ' + Util.fmtTarikhBM(t.Tarikh_Luput) + '. Sila terima atau tolak tawaran dalam SHAMS.'],
-            ['Your tenancy offer for ' + nama + ' (' + id + ') expires on ' + RnU.dk(t.Tarikh_Luput) + '. Please accept or decline in SHAMS.']);
+            ['Tawaran sewa ' + nama + ' (' + id + ') akan luput pada ' + Util.fmtTarikhBM(t.Tarikh_Luput) + '. Sila terima atau tolak tawaran dalam UTMPreneur.'],
+            ['Your tenancy offer for ' + nama + ' (' + id + ') expires on ' + RnU.dk(t.Tarikh_Luput) + '. Please accept or decline in UTMPreneur.']);
         });
       }
       // salinan fizikal Surat Setuju Terima

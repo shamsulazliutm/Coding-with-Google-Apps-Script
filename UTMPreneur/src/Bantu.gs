@@ -1,5 +1,5 @@
 /**
- * SHAMS: admin bertindak bagi pihak pelajar ("Bantu pelajar").
+ * UTMPreneur: admin bertindak bagi pihak pelajar ("Bantu pelajar").
  * Admin Penuh, atau Pegawai Modul yang modulnya kosong / Semua / mengandungi SSU atau Profiling, boleh
  * mengisi profiling dan memohon SSU untuk mana-mana pelajar dalam PELAJAR (pelajar tidak perlu sudah log masuk).
  * Semua tindakan menggunakan peraturan pengesahan yang sama seperti pelajar dan direkod dalam Audit dengan

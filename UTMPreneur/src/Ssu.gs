@@ -1,5 +1,5 @@
 /**
- * SHAMS: pendaftaran Syarikat Pemula Pelajar (SSU), peringkat 2.
+ * UTMPreneur: pendaftaran Syarikat Pemula Pelajar (SSU), peringkat 2.
  * Pelajar memohon (perlu profiling lengkap), admin menyemak dan memutuskan, kelulusan mencipta Perniagaan dan sijil PDF.
  * Pembaharuan: permohonan baharu berjenis "Pembaharuan" bagi Perniagaan sedia ada (nombor asal, akhiran kali sijil).
  * Admin boleh mendaftar SSU sedia ada (terus diluluskan).
@@ -286,7 +286,7 @@ var Ssu = (function () {
     if (!to) return;
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
+      if (url) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
       Mail.send(to, { subjectBm: subjectBm, subjectEn: subjectEn, bm: bm, en: en });
     } catch (err) { console.error('Emel gagal: ' + err); }
   }
@@ -591,8 +591,8 @@ var Ssu = (function () {
     }
     if (!opts.senyap) {
       sendMail_(emelOf_(hasil.m), 'Permohonan SSU diluluskan', 'Your SSU application is approved',
-        ['Tahniah. SSU anda (' + hasil.nama + ') telah diluluskan. No. pendaftaran: ' + hasil.noDaftar + '. Sijil boleh dimuat turun dalam SHAMS.'],
-        ['Congratulations. Your SSU (' + hasil.nama + ') has been approved. Registration no.: ' + hasil.noDaftar + '. The certificate can be downloaded in SHAMS.']);
+        ['Tahniah. SSU anda (' + hasil.nama + ') telah diluluskan. No. pendaftaran: ' + hasil.noDaftar + '. Sijil boleh dimuat turun dalam UTMPreneur.'],
+        ['Congratulations. Your SSU (' + hasil.nama + ') has been approved. Registration no.: ' + hasil.noDaftar + '. The certificate can be downloaded in UTMPreneur.']);
       ahliOf_(id).forEach(function (a) {
         var am = Util.normMatric(a.No_Matrik);
         if (am !== hasil.m) sendMail_(emelOf_(am), 'SSU anda telah diluluskan', 'Your SSU is approved',
@@ -704,8 +704,8 @@ var Ssu = (function () {
           Audit.log({ email: 'sistem', role: '-' }, 'SSU_TAMAT_TEMPOH', 'SSU', id, 'Aktif', 'Tamat Tempoh', Util.str(per.No_Pendaftaran));
           hasil.tamat++;
           sendMail_(emelOf_(m), 'SSU anda telah tamat tempoh', 'Your SSU has expired',
-            ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' telah tamat tempoh pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Sila buat pembaharuan dalam SHAMS.'],
-            ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expired on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Please renew in SHAMS.']);
+            ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' telah tamat tempoh pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Sila buat pembaharuan dalam UTMPreneur.'],
+            ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expired on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + '. Please renew in UTMPreneur.']);
         }
         return;
       }
@@ -716,8 +716,8 @@ var Ssu = (function () {
       if (logs.some(function (l) { return Util.str(l.Jenis) === kunci; })) return;
       var to = emelOf_(m);
       sendMail_(to, 'Peringatan pembaharuan SSU', 'SSU renewal reminder',
-        ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' akan tamat pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' hari lagi). Sila perbaharui dalam SHAMS.'],
-        ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expires on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' days left). Please renew in SHAMS.']);
+        ['Sijil SSU ' + Util.str(per.Nama_Perniagaan) + ' akan tamat pada ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' hari lagi). Sila perbaharui dalam UTMPreneur.'],
+        ['The SSU certificate for ' + Util.str(per.Nama_Perniagaan) + ' expires on ' + Util.fmtTarikhBM(per.Tarikh_Tamat) + ' (' + h + ' days left). Please renew in UTMPreneur.']);
       Db.append('Peringatan', { Masa: new Date(), Emel: to, Jenis: kunci, Rujukan: id, Status: 'Dihantar', Catatan: h + ' hari baki' });
       hasil.peringatan++;
     });

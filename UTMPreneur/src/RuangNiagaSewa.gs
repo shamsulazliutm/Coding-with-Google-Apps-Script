@@ -1,5 +1,5 @@
 /**
- * SHAMS: Ruang Niaga fasa 4-5. Sewaan aktif, jadual sewa berperingkat, bil sewa bulanan, bayaran, tunggakan dan notis,
+ * UTMPreneur: Ruang Niaga fasa 4-5. Sewaan aktif, jadual sewa berperingkat, bil sewa bulanan, bayaran, tunggakan dan notis,
  * tamat/pembaharuan sewaan, daftar sewaan sedia ada, dashboard admin dan kerja harian.
  * Bil dijana pada hari JANA_BIL_SEWA_HARI (5) bagi bulan itu, tarikh akhir hari TARIKH_AKHIR_SEWA_HARI (7).
  */
@@ -193,8 +193,8 @@ var RnSewa = (function () {
       Audit.log(ctx, 'REKOD_BAYARAN_SEWA', 'Ruang Niaga', S(b.ID_Bil), S(cur.Status), 'Menunggu Pengesahan', kaedah + ' | ' + no);
     });
     RnU.melAdmin('Bayaran sewa menunggu pengesahan', 'Rent payment awaiting verification',
-      ['Bayaran bil ' + S(b.ID_Bil) + ' (' + S(b.Kod_Lot) + ', ' + S(b.Bulan) + '/' + S(b.Tahun) + ') direkodkan oleh pemilik. Sila sahkan dalam SHAMS.'],
-      ['A payment for bill ' + S(b.ID_Bil) + ' was recorded by the tenant. Please verify it in SHAMS.']);
+      ['Bayaran bil ' + S(b.ID_Bil) + ' (' + S(b.Kod_Lot) + ', ' + S(b.Bulan) + '/' + S(b.Tahun) + ') direkodkan oleh pemilik. Sila sahkan dalam UTMPreneur.'],
+      ['A payment for bill ' + S(b.ID_Bil) + ' was recorded by the tenant. Please verify it in UTMPreneur.']);
     return { id: S(b.ID_Bil), sewaan: untukPemohon_(ctx, RnU.perById(S(r.ID_Permohonan))) };
   }
 
@@ -306,7 +306,7 @@ var RnSewa = (function () {
       emel = emelBil_(b);
     });
     if (jumlah > 0) RnU.mel(emel, 'Caj utiliti ditambah pada bil sewa', 'Utility charge added to your rent bill',
-      ['Caj utiliti RM ' + jumlah + ' telah ditambah pada bil ' + S(p.id) + (cat ? ' (' + cat + ')' : '') + '. Sila semak jumlah terkini dalam SHAMS.'], ['A utility charge of RM ' + jumlah + ' was added to bill ' + S(p.id) + '.']);
+      ['Caj utiliti RM ' + jumlah + ' telah ditambah pada bil ' + S(p.id) + (cat ? ' (' + cat + ')' : '') + '. Sila semak jumlah terkini dalam UTMPreneur.'], ['A utility charge of RM ' + jumlah + ' was added to bill ' + S(p.id) + '.']);
     return out;
   }
 
@@ -339,7 +339,7 @@ var RnSewa = (function () {
       return '<tr><td>' + e(Util.BULAN_BM[Number(b.Bulan) - 1] + ' ' + b.Tahun) + '</td><td class="r">' + e(Number(b.Jumlah_RM).toFixed(2)) + '</td><td>' + e(Util.fmtTarikhBM(b.Tarikh_Akhir)) +
         '</td><td class="r">' + e(String(Util.daysBetween(b.Tarikh_Akhir, new Date()))) + '</td></tr>';
     }).join('') + '<tr><td><b>Jumlah tertunggak</b></td><td class="r"><b>' + e(tg.jumlah.toFixed(2)) + '</b></td><td></td><td></td></tr></table>' +
-      '<p class="sig">Pengarah<br>UTMXCITE, Universiti Teknologi Malaysia<br><span class="sm">Notis ini dijana oleh sistem SHAMS.</span></p>';
+      '<p class="sig">Pengarah<br>UTMXCITE, Universiti Teknologi Malaysia<br><span class="sm">Notis ini dijana oleh sistem UTMPreneur.</span></p>';
     var nama = tajuk + ' ' + S(s.ID_Sewaan);
     var res = Pdf.dariHtml(Pdf.wrap(h, nama), nama, 'FLD_LAMPIRAN_LOT');
     Db.withLock(function () {
@@ -351,7 +351,7 @@ var RnSewa = (function () {
       Audit.log(ctx, 'JANA_NOTIS_SEWA', 'Ruang Niaga', S(s.ID_Sewaan), '', tajuk, 'Tunggakan RM ' + tg.jumlah.toFixed(2));
     });
     RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), tajuk + ' sewaan lot', tajuk + ' for your tenancy',
-      ['UTMXCITE telah mengeluarkan ' + tajuk + ' bagi sewaan ' + S(s.ID_Sewaan) + ' (tunggakan RM ' + tg.jumlah.toFixed(2) + '). Sila lihat dokumen dalam SHAMS.'],
+      ['UTMXCITE telah mengeluarkan ' + tajuk + ' bagi sewaan ' + S(s.ID_Sewaan) + ' (tunggakan RM ' + tg.jumlah.toFixed(2) + '). Sila lihat dokumen dalam UTMPreneur.'],
       ['UTMXCITE issued a ' + tajuk + ' for tenancy ' + S(s.ID_Sewaan) + ' (arrears RM ' + tg.jumlah.toFixed(2) + ').']);
     return adminButiran_(ctx, { id: S(s.ID_Sewaan) });
   }
@@ -581,7 +581,7 @@ var RnSewa = (function () {
       var ringkas = 'Bil ' + id + ' (' + S(b.Kod_Lot) + ', ' + Util.BULAN_BM[Number(b.Bulan) - 1] + ' ' + b.Tahun + ') RM ' + (Number(b.Jumlah_RM) || 0).toFixed(2);
       if (!log.ada('RN_BIL_JANA_' + id)) {
         RnU.mel(emel, 'Bil sewa bulan ' + b.Bulan + '/' + b.Tahun, 'Rent bill for ' + b.Bulan + '/' + b.Tahun,
-          [ringkas + ' telah dijana. Sila bayar sebelum ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + ' dan rekod bayaran dalam SHAMS.'], [ringkas + ' has been issued. Please pay by ' + RnU.dk(b.Tarikh_Akhir) + '.']);
+          [ringkas + ' telah dijana. Sila bayar sebelum ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + ' dan rekod bayaran dalam UTMPreneur.'], [ringkas + ' has been issued. Please pay by ' + RnU.dk(b.Tarikh_Akhir) + '.']);
         log.tambah('RN_BIL_JANA_' + id, emel, id, 'bil dijana');
         if (baki <= sebelum) log.tambah('RN_BIL_SEBELUM_' + id, emel, id, 'digabung dengan emel bil');
         hasil.peringatan++;

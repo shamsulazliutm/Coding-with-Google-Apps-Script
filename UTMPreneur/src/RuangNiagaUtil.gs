@@ -1,5 +1,5 @@
 /**
- * SHAMS: pembantu dikongsi modul Ruang Niaga (RnU). Tiada kebergantungan semasa muat fail.
+ * UTMPreneur: pembantu dikongsi modul Ruang Niaga (RnU). Tiada kebergantungan semasa muat fail.
  * Capaian data, kebenaran, emel, log peringatan.
  */
 
@@ -127,7 +127,7 @@ var RnU = (function () {
     if (!to) return false;
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
+      if (url) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
       return Mail.send(to, { subjectBm: sBm, subjectEn: sEn, bm: bm, en: en });
     } catch (err) { console.error('Emel gagal: ' + err); return false; }
   }

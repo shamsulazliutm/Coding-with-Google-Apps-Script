@@ -1,5 +1,5 @@
 /**
- * SHAMS: modul Ruang Niaga (titik masuk). Objek global tunggal RuangNiaga mendedahkan:
+ * UTMPreneur: modul Ruang Niaga (titik masuk). Objek global tunggal RuangNiaga mendedahkan:
  *   routes()      laluan RPC rn.* (digabungkan oleh rpcTable_ dalam Code.gs)
  *   jobHarian()   kerja harian (dipanggil oleh Jobs.harian)
  *   seed()        data awal modul (tiada keperluan buat masa ini)

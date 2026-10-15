@@ -1,5 +1,5 @@
 /**
- * SHAMS: lapisan data. Semua capaian spreadsheet melalui sini.
+ * UTMPreneur: lapisan data. Semua capaian spreadsheet melalui sini.
  * Spreadsheet selain Induk dicari melalui tab Link_Dokumen (Kod -> URL).
  */
 

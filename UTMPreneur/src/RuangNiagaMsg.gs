@@ -1,5 +1,5 @@
 /**
- * SHAMS: mesej pengguna dwibahasa modul Ruang Niaga. Kunci = kod ralat (dikenali oleh appError_ dalam Util.gs).
+ * UTMPreneur: mesej pengguna dwibahasa modul Ruang Niaga. Kunci = kod ralat (dikenali oleh appError_ dalam Util.gs).
  */
 var MSG_RN = {
   RN_BORANG_TIDAK_SAH: ['Maklumat tidak sah. Semak medan yang bertanda.', 'The details are invalid. Check the highlighted fields.'],

@@ -1,5 +1,5 @@
 /**
- * SHAMS: Ruang Niaga fasa 4. Perjanjian penyewaan (templat Google Docs F&B / bukan F&B), salinan bertandatangan,
+ * UTMPreneur: Ruang Niaga fasa 4. Perjanjian penyewaan (templat Google Docs F&B / bukan F&B), salinan bertandatangan,
  * senarai pekerja penyewa (Lampiran 2), peralatan universiti per lot (Lampiran 3) dan pengaktifan sewaan.
  * Perjanjian dicetak, ditandatangani, salinan bertandatangan dimuat naik pemilik dan disahkan admin.
  * Sewaan aktif hanya selepas perjanjian disahkan DAN cagaran sewaan disahkan (atau tiada cagaran sewaan).
@@ -89,8 +89,8 @@ var RnPerjanjian = (function () {
       Audit.log(ctx, 'JANA_PERJANJIAN_SEWA', 'Ruang Niaga', id, S(r.Status), 'Perjanjian', 'v' + versi + ' | ' + kodTpl + (amaran.length ? ' | ' + amaran.join('; ') : ''));
     });
     RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Perjanjian sewa sedia untuk ditandatangani', 'Tenancy agreement ready for signing',
-      ['Perjanjian sewa bagi ' + id + ' telah disediakan. Sila muat turun, cetak, tandatangani dan muat naik salinan bertandatangan dalam SHAMS.'],
-      ['The tenancy agreement for ' + id + ' is ready. Please download, print, sign and upload the signed copy in SHAMS.']);
+      ['Perjanjian sewa bagi ' + id + ' telah disediakan. Sila muat turun, cetak, tandatangani dan muat naik salinan bertandatangan dalam UTMPreneur.'],
+      ['The tenancy agreement for ' + id + ' is ready. Please download, print, sign and upload the signed copy in UTMPreneur.']);
     var out = RnPer.adminButiran(ctx, { id: id });
     out.amaranPerjanjian = amaran;
     return out;
@@ -118,7 +118,7 @@ var RnPerjanjian = (function () {
       Audit.log(ctx, 'MUAT_NAIK_PERJANJIAN_BERTANDATANGAN', 'Ruang Niaga', id, S(c2.Status), 'Dimuat naik', 'v' + versi);
     });
     RnU.melAdmin('Salinan perjanjian bertandatangan dimuat naik', 'Signed agreement uploaded',
-      ['Pemohon ' + id + ' memuat naik salinan perjanjian bertandatangan. Sila sahkan dalam SHAMS.'], ['Applicant ' + id + ' uploaded the signed agreement. Please verify it in SHAMS.']);
+      ['Pemohon ' + id + ' memuat naik salinan perjanjian bertandatangan. Sila sahkan dalam UTMPreneur.'], ['Applicant ' + id + ' uploaded the signed agreement. Please verify it in UTMPreneur.']);
     return { id: id };
   }
 

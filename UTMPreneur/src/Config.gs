@@ -1,10 +1,10 @@
 /**
- * SHAMS: konfigurasi tetap dan skema spreadsheet.
+ * UTMPreneur: konfigurasi tetap dan skema spreadsheet.
  * Skema ini ialah satu-satunya sumber nama tab dan tajuk lajur. Skrip persediaan
  * (Setup.gs) dan pengesah struktur menggunakannya.
  */
 
-var APP = { NAMA: 'SHAMS', VERSI: '0.1.0', TZ: 'Asia/Kuala_Lumpur' };
+var APP = { NAMA: 'UTMPreneur', VERSI: '0.1.0', TZ: 'Asia/Kuala_Lumpur' };
 
 /** Kunci Script Properties */
 var PROPS = { INDUK_ID: 'INDUK_ID', MODE: 'MODE', PEPPER: 'OTP_PEPPER' };
@@ -26,7 +26,7 @@ var ADMIN_UTAMA = 'utmxcite@utm.my';
 /** Nama spreadsheet dan tab. Kunci SS_* ialah Kod dalam Link_Dokumen. */
 var SCHEMA = {
   SS_INDUK: {
-    nama: 'SHAMS - Induk',
+    nama: 'UTMPreneur - Induk',
     modul: 'Induk',
     tabs: {
       PELAJAR: ['No_Matrik', 'Nama_Penuh', 'Emel', 'No_KP_Pasport', 'Jantina', 'Etnik', 'Kewarganegaraan', 'Fakulti', 'Program', 'Bidang_Pengajian', 'Tahun_Pengajian', 'No_Telefon', 'Alamat_Kolej', 'Alamat_Rumah', 'Status_Pelajar', 'Sesi_Kemasukan'],
@@ -43,7 +43,7 @@ var SCHEMA = {
     }
   },
   SS_PROFILING: {
-    nama: 'SHAMS - Profiling',
+    nama: 'UTMPreneur - Profiling',
     modul: 'Profiling',
     tabs: {
       Profil: ['ID_Profil', 'No_Matrik', 'Sesi', 'Tarikh_Kemas_Kini', 'No_Telefon', 'Kampung_Halaman', 'Keluarga_Berniaga', 'Pernah_Berniaga', 'Jenis_Perniagaan_Dijalankan', 'Tempoh_Perniagaan', 'Motivasi', 'Berminat_Berniaga', 'Kluster_Diminati', 'Kluster_Lain', 'Mahu_Kampus', 'Aliran_Pilihan'],
@@ -51,7 +51,7 @@ var SCHEMA = {
     }
   },
   SS_SSU: {
-    nama: 'SHAMS - SSU',
+    nama: 'UTMPreneur - SSU',
     modul: 'SSU',
     tabs: {
       Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat'],
@@ -59,7 +59,7 @@ var SCHEMA = {
     }
   },
   SS_RUANG_NIAGA: {
-    nama: 'SHAMS - Ruang Niaga',
+    nama: 'UTMPreneur - Ruang Niaga',
     modul: 'Ruang Niaga',
     tabs: {
       Lot: ['Kod_Lot', 'Nama_Paparan', 'Lokasi', 'Blok', 'Saiz_m2', 'Jenis', 'Kadar_Sewa_RM', 'Status_Buka', 'Status_Lot', 'Catatan', 'Didaftar_Oleh', 'Tarikh_Daftar', 'Alamat_Surat'],
@@ -78,14 +78,14 @@ var SCHEMA = {
     }
   },
   SS_KEWANGAN: {
-    nama: 'SHAMS - Kewangan',
+    nama: 'UTMPreneur - Kewangan',
     modul: 'Kewangan',
     tabs: {
       Laporan_Bulanan: ['ID_Laporan', 'ID_Perniagaan', 'ID_Sewaan', 'Bulan', 'Tahun', 'Tiada_Aktiviti', 'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Fail_Laporan', 'Perakuan', 'Status', 'Tarikh_Hantar', 'Tarikh_Akhir', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan']
     }
   },
   SS_TEMPAHAN_RUANG: {
-    nama: 'SHAMS - Makerspace',
+    nama: 'UTMPreneur - Makerspace',
     modul: 'Makerspace',
     tabs: {
       Tempahan: ['ID_Tempahan', 'Jenis', 'Kod_Sumber', 'Jenis_Pengguna', 'Emel_Pemohon', 'Nama_Pemohon', 'Tarikh_Mula', 'Masa_Mula', 'Tarikh_Tamat', 'Masa_Tamat', 'Tujuan', 'Emel_Penyelia', 'Status_Perakuan', 'Tarikh_Perakuan', 'Status', 'Diluluskan_Oleh', 'Tarikh_Keputusan', 'Catatan', 'No_Matrik', 'Telefon', 'Jabatan', 'Anggaran_RM', 'Dicipta_Pada', 'Didaftar_Oleh', 'Token_Hash', 'Token_Tamat', 'Catatan_Penyelia', 'Bil_Pembaharuan'],
@@ -157,7 +157,7 @@ var TAB_SS = (function () {
 var TETAPAN_LALAI = [
   ['DOMAIN_PELAJAR', '@graduate.utm.my', 'Domain emel pelajar'],
   ['DOMAIN_STAF', '@utm.my', 'Domain emel staf (juga domain penyelia)'],
-  ['NAMA_PENGHANTAR', 'SHAMS · UTMXCITE', 'Nama penghantar emel'],
+  ['NAMA_PENGHANTAR', 'UTMPreneur · UTMXCITE', 'Nama penghantar emel'],
   ['WEBAPP_URL', '', 'URL web app (digunakan dalam emel)'],
   ['PENGUJI_EMEL', '', 'MOD UJI sahaja: emel penguji dibenarkan menerima emel, dipisah koma'],
   ['OTP_TAMAT_MINIT', '5', 'Tempoh sah OTP (minit)'],
