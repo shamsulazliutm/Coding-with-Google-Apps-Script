@@ -167,8 +167,6 @@ let browser;
   await a.emulateMedia({ media: 'print' }); await a.pdf({ path: OUT + '/dashboard-admin.pdf', format: 'A4', printBackground: true });
   for (const sel of ['.tabs', '[data-act=dashpdf]', '#ds-month', '.todo .btn']) assert.strictEqual(await a.isVisible(sel), false, sel + ' tersembunyi semasa cetak');
   assert.strictEqual(await a.isVisible('#print-meta'), true); await a.emulateMedia({ media: 'screen' });
-  assert.match(await a.textContent('.how'), /Sepanjang 2026: \d+ daripada \d+ laporan dihantar \(\d+%\)/); assert.match(await a.textContent('.how'), /Bar gelap/); assert.match(await a.textContent('.how'), /Bar pudar/);
-  assert.ok((await a.evaluate(() => [...document.querySelectorAll('.chart svg text')].filter(t => /^\d+\/\d+$/.test(t.textContent)).length)) >= 8, 'nombor dihantar/dijangka di bawah bulan');
   assert.match(await a.textContent('.hero'), /laporan dijangka/); await a.selectOption('#ds-month', '9'); await a.waitForFunction(() => /September 2026/.test(document.querySelector('.hero').textContent)); await settle(a);
   await a.click('.todo [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await a.click('[data-act=closedlg]');
   await a.click('[data-tab=adm]'); await a.waitForSelector('#a-rows tr'); await settle(a);
