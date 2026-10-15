@@ -590,6 +590,13 @@ t('5hb: lot belum hantar diingatkan sekali sahaja (tiada duplikasi)', () => {
   assert.match(b.outbox[b.outbox.length - 1].htmlBody, /12 November 2026/);
   b.setNow(Date.parse('2026-10-14T01:30:00Z'));
 });
+t('dashboard admin: rumusan mengikut peniaga sepadan dengan jumlah', () => {
+  const d = ok('adminDashboard', adm.token, { tahun: 2026, bulan: 0 });
+  assert.ok(d.peniaga.length >= 1);
+  const sum = d.peniaga.reduce((a, o) => a + (o.pendapatan || 0), 0);
+  assert.ok(Math.abs(sum - d.jumlah.pendapatan) < 0.01, 'jumlah pendapatan sepadan');
+  d.peniaga.forEach(o => { if (o.pendapatan !== null) assert.ok(Math.abs(o.untungRugi - (o.pendapatan - o.perbelanjaan)) < 0.01); });
+});
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Tidak aktif' } });
   assert.strictEqual(bad('myReports', ten.token, {}).code, 'SESSION');

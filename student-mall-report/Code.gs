@@ -1355,6 +1355,18 @@ function adminDashboard_(user, p) {
   });
   lokasi.forEach(function (o) { o.pendapatan = round2_(o.pendapatan); o.perbelanjaan = round2_(o.perbelanjaan); });
 
+  // Rumusan mengikut peniaga (satu baris bagi setiap lot dan penyewaan dalam tempoh yang dipilih)
+  var pnMap = {}, peniaga = [];
+  sel.forEach(function (r) {
+    var k = r.kodLot + '|' + r.idSewa, o = pnMap[k];
+    if (!o) { o = pnMap[k] = { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, pendapatan: 0, perbelanjaan: 0, dikira: 0 }; peniaga.push(o); }
+    if (counted_(r)) { o.pendapatan += r.pendapatan; o.perbelanjaan += r.perbelanjaan; o.dikira++; }
+  });
+  peniaga.forEach(function (o) {
+    o.pendapatan = o.dikira ? round2_(o.pendapatan) : null; o.perbelanjaan = o.dikira ? round2_(o.perbelanjaan) : null;
+    o.untungRugi = o.dikira ? round2_(o.pendapatan - o.perbelanjaan) : null;
+  });
+
   var slim = function (r) { return { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, tahun: r.tahun, bulan: r.bulan, bulanNama: r.bulanNama,
     pendapatan: r.pendapatan, perbelanjaan: r.perbelanjaan, untungRugi: r.untungRugi, lewat: !!r.lewat, tarikhAkhirLabel: r.tarikhAkhirLabel }; };
   var cnt = counted_;
@@ -1370,7 +1382,7 @@ function adminDashboard_(user, p) {
     counts: counts, jumlahBaris: sel.length, lewat: lewat,
     kadar: { hantar: hantar, dijangka: sel.length, peratus: sel.length ? Math.round(hantar * 100 / sel.length) : null },
     jumlah: { pendapatan: round2_(jum.pendapatan), perbelanjaan: round2_(jum.perbelanjaan), untung: round2_(jum.pendapatan - jum.perbelanjaan), sewa: round2_(jum.sewa), bilLaporan: jum.dikira },
-    siri: siri, lokasi: lokasi, teratas: teratas, rugi: rugi,
+    siri: siri, lokasi: lokasi, peniaga: peniaga, teratas: teratas, rugi: rugi,
     tindakan: {
       menunggu: { jumlah: menunggu.length, senarai: menunggu.sort(oldest).slice(0, 8).map(slim) },
       tertunggak: { jumlah: tertunggak.length, senarai: tertunggak.sort(oldest).slice(0, 8).map(slim) },

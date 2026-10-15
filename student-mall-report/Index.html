@@ -200,6 +200,9 @@ textarea.fi { min-height: 72px; resize: vertical; }
 .todo .none { color: var(--muted); font-size: 13px; padding: 6px 0; }
 .mini { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 0; }
 .mini td, .mini th { padding: 6px 4px; border-top: 1px solid var(--line); text-align: left; } .mini th { border-top: 0; color: var(--muted); font-weight: 600; font-size: 12px; }
+.mini .sub { display: block; font-size: 11.5px; color: var(--muted); }
+.mini tr.tot td { font-weight: 700; border-top: 2px solid var(--line); }
+.mini td.neg { color: var(--bad, #b3261e); }
 .mini td.num, .mini th.num { text-align: right; }
 .kmsg { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 10px 14px; font-size: 13px; }
 .kmsg p { color: var(--fg); margin: 2px 0 0; white-space: pre-wrap; }
@@ -701,6 +704,21 @@ textarea.fi { min-height: 72px; resize: vertical; }
     }).join('') + '</tbody></table>';
   }
 
+  /** Jadual rumusan mengikut peniaga bagi tempoh dashboard. */
+  function peniagaTable(d) {
+    var tp = 0, tb = 0, any = false;
+    var body = d.peniaga.map(function (o) {
+      if (o.pendapatan !== null) { tp += o.pendapatan; tb += o.perbelanjaan; any = true; }
+      return '<tr><td class="nw"><b>' + esc(o.lotNama) + '</b></td><td>' + esc(o.perniagaan || '-') + '<span class="sub">' + esc(o.pelajar || '') + '</span></td>' +
+        '<td class="num mono">' + fmt(o.pendapatan) + '</td><td class="num mono">' + fmt(o.perbelanjaan) + '</td>' +
+        '<td class="num mono ' + (o.untungRugi !== null && o.untungRugi < 0 ? 'neg' : '') + '">' + (o.untungRugi === null ? '-' : (o.untungRugi < 0 ? '-' : '') + fmt(Math.abs(o.untungRugi))) + '</td></tr>';
+    }).join('');
+    var net = Math.round((tp - tb) * 100) / 100;
+    var foot = any ? '<tr class="tot"><td colspan="2">Jumlah</td><td class="num mono">' + fmt(tp) + '</td><td class="num mono">' + fmt(tb) + '</td><td class="num mono ' + (net < 0 ? 'neg' : '') + '">' + (net < 0 ? '-' : '') + fmt(Math.abs(net)) + '</td></tr>' : '';
+    return '<div class="dgrid" style="grid-template-columns:1fr"><div class="dcard"><h3>Rumusan mengikut peniaga</h3><p class="hint">Jumlah laporan yang sudah dihantar bagi tempoh yang dipilih.</p>' +
+      (d.peniaga.length ? '<div class="tbl-wrap" style="box-shadow:none"><table class="mini" style="min-width:560px"><thead><tr><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Untung/Rugi (RM)</th></tr></thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table></div>' : '<p class="hint" style="margin:0">Tiada penyewaan dalam tempoh ini.</p>') + '</div></div>';
+  }
+
   function dashAdminHtml(d) {
     var j = d.jumlah, c = d.counts, cy = new Date().getFullYear(), yrs = [cy + 1, cy, cy - 1, cy - 2];
     var per = d.bulan === 0 ? 'sepanjang ' + d.tahun : MS[d.bulan - 1] + ' ' + d.tahun;
@@ -722,7 +740,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.dihantar * 100 / x.dijangka : null, b: x.dijangka ? x.tepatMasa * 100 / x.dijangka : null }; }), { pct: true, label: 'Kadar penghantaran bulanan', empty: 'Belum ada data.' }) + '</div></div>' +
       '<div class="dcard"><h3>Pendapatan dan perbelanjaan semua lot</h3><p class="hint">Jumlah laporan yang sudah dihantar, setiap bulan ' + d.tahun + '.</p>' + legend([['Pendapatan', 'var(--c1)'], ['Perbelanjaan', 'var(--c2)']]) +
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka && x.dihantar ? x.pendapatan : null, b: x.dijangka && x.dihantar ? x.perbelanjaan : null }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan semua lot', empty: 'Belum ada laporan dihantar.' }) + '</div></div>' +
-      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>';
+      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d);
     return h;
   }
 
