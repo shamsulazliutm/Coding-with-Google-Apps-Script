@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: log masuk emel + OTP, sesi dan peranan.
+ * SHAMS: log masuk emel + OTP, sesi dan peranan.
  * OTP disimpan sebagai hash dalam CacheService (tidak pernah teks biasa).
  * Sesi disimpan dalam CacheService (maksimum 6 jam, had CacheService).
  */

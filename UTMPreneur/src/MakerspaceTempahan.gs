@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: Makerspace, tempahan oleh pengguna (pelajar, staf, orang luar) dan bagi pihak oleh admin.
+ * SHAMS: Makerspace, tempahan oleh pengguna (pelajar, staf, orang luar) dan bagi pihak oleh admin.
  * Empat jenis: Ruang, Laser Cut, 3D Printer, Pinjaman. Semua pengesahan di pelayan.
  */
 

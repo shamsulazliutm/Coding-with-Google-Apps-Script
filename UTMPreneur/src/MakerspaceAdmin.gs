@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: Makerspace, tindakan admin: senarai/butiran tempahan, kelulusan, penggunaan sebenar, pemulangan pinjaman,
+ * SHAMS: Makerspace, tindakan admin: senarai/butiran tempahan, kelulusan, penggunaan sebenar, pemulangan pinjaman,
  * pengesahan bayaran, urus ALAT / PERALATAN / KADAR dan carian pemohon (tempah bagi pihak).
  * Kebenaran: Admin Penuh dan Pegawai Modul (modul kosong/Semua/Makerspace) memutuskan; Pemerhati baca sahaja; Penilai tiada akses.
  */

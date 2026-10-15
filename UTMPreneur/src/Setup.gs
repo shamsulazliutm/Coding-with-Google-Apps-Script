@@ -1,7 +1,7 @@
 /**
- * UTMPreneur: skrip persediaan.
+ * SHAMS: skrip persediaan.
  *
- * Cara mudah: jalankan setup() terus. Jika Script Property INDUK_ID tiada, folder "UTMPreneur" dan
+ * Cara mudah: jalankan setup() terus. Jika Script Property INDUK_ID tiada, folder "SHAMS" dan
  * spreadsheet Induk dicipta automatik dalam Drive akaun pelaksana. Cara manual: cipta SS_INDUK sendiri
  * dan tetapkan INDUK_ID (URL atau ID). MODE (UJI atau PRODUKSI) lalai UJI jika tidak ditetapkan.
  * Kemudian jalankan setup() dari editor Apps Script. Skrip ini:
@@ -24,8 +24,8 @@ var Setup = (function () {
     var raw = Db.props().getProperty(PROPS.INDUK_ID);
     if (!raw) {
       // Tiada INDUK_ID: cipta folder dan spreadsheet Induk secara automatik dalam Drive akaun pelaksana.
-      var folder = DriveApp.getRootFolder().createFolder(nama_('UTMPreneur'));
-      var created = SpreadsheetApp.create(nama_('UTMPreneur - Induk'));
+      var folder = DriveApp.getRootFolder().createFolder(nama_('SHAMS'));
+      var created = SpreadsheetApp.create(nama_('SHAMS - Induk'));
       DriveApp.getFileById(created.getId()).moveTo(folder);
       Db.props().setProperty(PROPS.INDUK_ID, created.getId());
       Db.reset();
@@ -76,6 +76,30 @@ var Setup = (function () {
     }
   }
 
+  var NAMA_LAMA = 'UTMPreneur';
+
+  /** Gantikan awalan jenama lama (UTMPreneur) dengan nama semasa pada spreadsheet dan folder berdaftar. */
+  function namakanSemula_(ind, parent, log) {
+    var baru = APP.NAMA, n = 0;
+    var tukar = function (nama) { return String(nama).indexOf(NAMA_LAMA) === 0 ? baru + String(nama).substr(NAMA_LAMA.length) : null; };
+    Object.keys(SCHEMA).forEach(function (kod) {
+      try {
+        var ss = kod === 'SS_INDUK' ? ind : Db.openByKod(kod);
+        var nn = tukar(ss.getName());
+        if (nn) { ss.rename(nn); n++; }
+      } catch (e) { console.error('Nama semula spreadsheet gagal (' + kod + '): ' + e); }
+    });
+    var folders = [parent];
+    FOLDERS.forEach(function (f) {
+      var l = Db.links()[f.kod];
+      if (l && l.id) { try { folders.push(DriveApp.getFolderById(l.id)); } catch (e) { /* abaikan */ } }
+    });
+    folders.forEach(function (fl) {
+      try { var nn = tukar(fl.getName()); if (nn) { fl.setName(nn); n++; } } catch (e) { console.error('Nama semula folder gagal: ' + e); }
+    });
+    if (n) log.push('Dinamakan semula kepada ' + baru + ': ' + n + ' spreadsheet/folder');
+  }
+
   /** Daftar atau lengkapkan satu baris Link_Dokumen. URL sedia ada tidak ditimpa. */
   function upsertLink_(ind, kod, jenis, modul, nama, url, catatan) {
     var sh = ind.getSheetByName('Link_Dokumen');
@@ -122,6 +146,9 @@ var Setup = (function () {
     Db.rows('Tetapan').forEach(function (r) { have[Util.str(r.Kunci)] = true; });
     var addT = Seed.tetapan().filter(function (t) { return !have[t.Kunci]; });
     if (addT.length) { appendMany_('Tetapan', addT); log.push('Tetapan: ' + addT.length + ' kunci ditambah'); }
+    // Nama penghantar emel lalai lama diganti dengan nama sistem semasa (nilai yang disunting pengguna dibiarkan)
+    var np = Db.find('Tetapan', function (r) { return Util.str(r.Kunci) === 'NAMA_PENGHANTAR' && Util.str(r.Nilai) === NAMA_LAMA + ' · UTMXCITE'; });
+    if (np.length) { Db.update('Tetapan', np[0]._row, { Nilai: APP.NAMA + ' · UTMXCITE' }); log.push('NAMA_PENGHANTAR dikemas kini kepada ' + APP.NAMA); }
     // Admin utama
     var hasAdmin = Db.rows('Admin').some(function (r) { return Util.normEmail(r.Emel) === ADMIN_UTAMA; });
     if (!hasAdmin) { appendMany_('Admin', Seed.admin()); log.push('Admin utama didaftar: ' + ADMIN_UTAMA); }
@@ -255,6 +282,9 @@ var Setup = (function () {
       upsertLink_(ind, d.kod, d.jenis, d.modul, d.nama, '', d.catatan);
     });
     Db.reset();
+
+    Db.reset();
+    namakanSemula_(ind, parent, log);
 
     // 5. Data awal
     if (timeUp()) { log.push('Masa hampir habis. Jalankan setup() sekali lagi.'); return result(false); }

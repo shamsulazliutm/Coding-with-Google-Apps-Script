@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: data awal yang diisi oleh skrip persediaan (hanya jika tab kosong,
+ * SHAMS: data awal yang diisi oleh skrip persediaan (hanya jika tab kosong,
  * kecuali Tetapan dan Admin yang melengkapkan kunci/baris yang tiada).
  * Nama BM sesetengah rujukan ialah draf untuk disemak urusetia.
  */

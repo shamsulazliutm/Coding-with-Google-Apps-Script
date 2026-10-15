@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: OTP berasaskan tujuan (bukan log masuk). Contoh: pemohon mengesahkan penerimaan tawaran,
+ * SHAMS: OTP berasaskan tujuan (bukan log masuk). Contoh: pemohon mengesahkan penerimaan tawaran,
  * penyelia memperakui tempahan. OTP dihantar ke emel yang ditentukan, disimpan sebagai hash dalam CacheService,
  * had percubaan, jeda dan had sejam; dikira dalam kuota OTP harian yang sama dengan log masuk.
  *   Otp.issue('TERIMA_TAWARAN:PLT-2026-0001', emel, {subjectBm, subjectEn, bm:[...], en:[...]})

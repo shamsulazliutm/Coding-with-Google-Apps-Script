@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: penjanaan sijil SSU (PDF) daripada templat Google Slides.
+ * SHAMS: penjanaan sijil SSU (PDF) daripada templat Google Slides.
  * Templat dibaca dari Drive pada masa penjanaan (Link_Dokumen: TEMPLAT_SIJIL_SSU). Penanda boleh ditulis
  * [nama_syarikat] (templat semasa) atau {{NAMA_PERNIAGAAN}}. Penanda tidak dikenali dibiarkan dan dilaporkan.
  */

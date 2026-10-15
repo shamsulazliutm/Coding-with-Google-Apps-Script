@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: kerja berjadual. Jalankan pasangPencetus() sekali dari editor Apps Script untuk
+ * SHAMS: kerja berjadual. Jalankan pasangPencetus() sekali dari editor Apps Script untuk
  * memasang pencetus masa harian (pukul 7 pagi). Selamat dijalankan semula (pencetus lama diganti).
  */
 

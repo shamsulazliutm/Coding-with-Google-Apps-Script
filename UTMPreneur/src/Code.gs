@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: titik masuk web app dan penghantar RPC.
+ * SHAMS: titik masuk web app dan penghantar RPC.
  * Semua panggilan antara muka melalui rpc(kaedah, token, muatan). Peranan disemak di sini (server),
  * bukan di antara muka.
  */
@@ -8,13 +8,13 @@ function doGet(e) {
   var t;
   try {
     if (!PropertiesService.getScriptProperties().getProperty(PROPS.INDUK_ID)) {
-      return HtmlService.createHtmlOutput('<p style="font-family:sans-serif;padding:24px">UTMPreneur belum disediakan. Tetapkan INDUK_ID dan jalankan setup().<br><i>UTMPreneur is not set up yet.</i></p>')
-        .setTitle('UTMPreneur');
+      return HtmlService.createHtmlOutput('<p style="font-family:sans-serif;padding:24px">SHAMS belum disediakan. Tetapkan INDUK_ID dan jalankan setup().<br><i>SHAMS is not set up yet.</i></p>')
+        .setTitle('SHAMS');
     }
     t = HtmlService.createTemplateFromFile('Index');
     t.versi = APP.VERSI;
     return t.evaluate()
-      .setTitle('UTMPreneur · UTMXCITE')
+      .setTitle('SHAMS · UTMXCITE')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   } catch (err) {
     console.error('doGet gagal: ' + err);

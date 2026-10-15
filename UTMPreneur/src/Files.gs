@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: muat naik dan muat turun fail melalui pelayan.
+ * SHAMS: muat naik dan muat turun fail melalui pelayan.
  * Semakan jenis dan saiz dibuat di pelayan: sambungan, jenis MIME dan tandatangan fail (magic bytes).
  * Fail disimpan dalam folder Drive berdaftar (Link_Dokumen); pengguna tidak pernah menerima pautan Drive.
  */

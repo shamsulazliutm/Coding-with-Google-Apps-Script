@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: penjanaan PDF daripada HTML (tanpa templat Google Docs) dan enjin templat Google Docs.
+ * SHAMS: penjanaan PDF daripada HTML (tanpa templat Google Docs) dan enjin templat Google Docs.
  *   Pdf.wrap(bodyHtml, tajuk)               -> HTML A4 dengan gaya seragam (UTMXCITE)
  *   Pdf.dariHtml(html, namaFail, folderKod) -> {url}   (simpan dalam folder berdaftar)
  *   DocTpl.jana(kodTemplat, data, folderKod, namaFail) -> {url, amaran[]}  (templat Google Docs dalam Link_Dokumen)
@@ -11,7 +11,7 @@ var Pdf = {
   esc: function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); },
 
   wrap: function (bodyHtml, tajuk) {
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + Pdf.esc(tajuk || 'UTMPreneur') + '</title><style>' +
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + Pdf.esc(tajuk || 'SHAMS') + '</title><style>' +
       '@page{size:A4;margin:22mm 20mm}body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#000}' +
       'h1{font-size:14pt;text-align:center;margin:6pt 0}h2{font-size:12pt;margin:12pt 0 4pt}p{margin:0 0 7pt;text-align:justify}' +
       'table{border-collapse:collapse;width:100%}td,th{border:1px solid #444;padding:4pt 6pt;vertical-align:top;font-size:10.5pt}' +

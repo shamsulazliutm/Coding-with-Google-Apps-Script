@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: Makerspace, perakuan penyelia melalui pautan emel (tanpa log masuk).
+ * SHAMS: Makerspace, perakuan penyelia melalui pautan emel (tanpa log masuk).
  * Token rawak sekali guna (hanya hash disimpan dalam sheet), tamat tempoh, pengesahan OTP ke emel penyelia
  * (Otp.issue/verify dengan tujuan unik bagi setiap tempahan), had kadar dan mesej generik. Direkod dalam Audit.
  * Halaman hanya memaparkan ringkasan tempahan, bukan data peribadi tambahan.

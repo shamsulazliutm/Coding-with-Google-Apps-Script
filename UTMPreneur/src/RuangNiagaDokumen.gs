@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: Ruang Niaga. Dokumen sewaan (tab Dokumen_Sewaan): surat tawaran (versi), rekod penerimaan, perjanjian,
+ * SHAMS: Ruang Niaga. Dokumen sewaan (tab Dokumen_Sewaan): surat tawaran (versi), rekod penerimaan, perjanjian,
  * salinan bertandatangan, notis dan dokumen lain. Pemilik dan semua ahli pasukan SSU boleh melihat dan memuat turun
  * bila-bila masa melalui pelayan (akses disemak pada setiap panggilan; tiada pautan Drive didedahkan).
  */
@@ -123,8 +123,8 @@ var RnDok = (function () {
       return nid;
     });
     RnU.mel(RnU.emelOf(Util.normMatric(r.No_Matrik)), 'Dokumen baharu dalam Ruang Niaga', 'New document in Business Premises',
-      ['UTMXCITE telah menambah dokumen "' + tajuk + '" bagi permohonan ' + S(r.ID_Permohonan) + '. Sila lihat dalam UTMPreneur.'],
-      ['UTMXCITE added the document "' + tajuk + '" for application ' + S(r.ID_Permohonan) + '. Please view it in UTMPreneur.']);
+      ['UTMXCITE telah menambah dokumen "' + tajuk + '" bagi permohonan ' + S(r.ID_Permohonan) + '. Sila lihat dalam SHAMS.'],
+      ['UTMXCITE added the document "' + tajuk + '" for application ' + S(r.ID_Permohonan) + '. Please view it in SHAMS.']);
     return { id: id };
   }
 

@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: Ruang Niaga fasa 1. Pengurusan lot (admin), tempoh permohonan, permohonan lot oleh pemilik SSU,
+ * SHAMS: Ruang Niaga fasa 1. Pengurusan lot (admin), tempoh permohonan, permohonan lot oleh pemilik SSU,
  * senarai dan butiran permohonan untuk admin, dan peralihan status awal (semak, tolak, batal, putus).
  * Peraturan: pemilik perniagaan SSU Diluluskan + Aktif sahaja boleh memohon; ahli pasukan hanya melihat;
  * satu lot bagi satu pelajar/perniagaan; permohonan dibuat dalam tempoh global sahaja.

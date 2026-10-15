@@ -56,3 +56,25 @@ test('Laluan modul lain digabungkan, mesej modul dikenali, Bantu.ctx menyokong k
   assert.equal(env.run(`Bantu.allowed({ role: 'Pegawai Modul', email: 'pegawai@utm.my' }, 'ruang niaga')`), false);
   assert.equal(env.run(`Bantu.allowed({ role: 'Pegawai Modul', email: 'pegawai@utm.my' })`), false);
 });
+
+test('Jenama SHAMS: setup() menamakan semula spreadsheet, folder dan nama penghantar lalai lama (UTMPreneur)', () => {
+  const env = ready();
+  assert.equal(env.run('APP.NAMA'), 'SHAMS');
+  // pasang semula nama lama seperti pemasangan sebelum ini
+  env.run(`(function(){
+    Object.keys(SCHEMA).forEach(function (k) { var ss = k === 'SS_INDUK' ? Db.induk() : Db.openByKod(k); ss.rename('UTMPreneur - ' + SCHEMA[k].modul + ' (UJI)'); });
+    var l = Db.links().FLD_SIJIL_SSU; DriveApp.getFolderById(l.id).setName('UTMPreneur Sijil');
+    var np = Db.find('Tetapan', function (r) { return r.Kunci === 'NAMA_PENGHANTAR'; })[0]; Db.update('Tetapan', np._row, { Nilai: 'UTMPreneur · UTMXCITE' });
+    Cfg.invalidate();
+  })()`);
+  const r = env.plain(env.run('Setup.run()'));
+  assert.ok(r.langkah.some((x) => /Dinamakan semula kepada SHAMS: \d+/.test(x)), JSON.stringify(r.langkah));
+  const names = Object.values(env.state.spreadsheets).map((s) => s.getName());
+  assert.ok(names.every((n) => n.indexOf('SHAMS') === 0), names.join(' | '));
+  assert.equal(env.state.folders[env.plain(env.run('Db.links().FLD_SIJIL_SSU.id'))].name, 'SHAMS Sijil');
+  assert.equal(env.run("Cfg.get('NAMA_PENGHANTAR')"), 'SHAMS · UTMXCITE');
+  // nilai yang disunting pengguna dibiarkan
+  env.run(`(function(){ var np = Db.find('Tetapan', function (r) { return r.Kunci === 'NAMA_PENGHANTAR'; })[0]; Db.update('Tetapan', np._row, { Nilai: 'UTMXCITE Pelajar' }); Cfg.invalidate(); })()`);
+  env.run('Setup.run()');
+  assert.equal(env.run("Cfg.get('NAMA_PENGHANTAR')"), 'UTMXCITE Pelajar');
+});

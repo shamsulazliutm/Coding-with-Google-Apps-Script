@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: penghantaran emel dwibahasa (BM utama, English italik kecil).
+ * SHAMS: penghantaran emel dwibahasa (BM utama, English italik kecil).
  * MOD UJI: emel hanya dihantar kepada senarai penguji (Tetapan PENGUJI_EMEL) dan ditanda [UJI].
  */
 
@@ -15,7 +15,7 @@ var Mail = {
     };
     return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#2B2023;max-width:560px">' +
       '<div style="border-top:4px solid #8A2D3B;border-bottom:3px solid #D9A02E;padding:10px 0;margin-bottom:14px">' +
-      '<b style="color:#8A2D3B;font-size:17px">UTMPreneur</b> <span style="color:#74676B;font-size:12px">· UTMXCITE</span></div>' +
+      '<b style="color:#8A2D3B;font-size:17px">SHAMS</b> <span style="color:#74676B;font-size:12px">· UTMXCITE</span></div>' +
       p(bm, 'margin:0 0 10px') +
       '<div style="border-top:1px solid #E7DFE0;margin-top:14px;padding-top:10px">' +
       p(en, 'margin:0 0 8px;font-style:italic;font-size:12px;color:#74676B') + '</div>' +
@@ -40,7 +40,7 @@ var Mail = {
       to: to,
       subject: subject,
       htmlBody: Mail.bodyHtml(opts.bm, opts.en),
-      name: Cfg.get('NAMA_PENGHANTAR', 'UTMPreneur · UTMXCITE')
+      name: Cfg.get('NAMA_PENGHANTAR', 'SHAMS · UTMXCITE')
     });
     return true;
   },

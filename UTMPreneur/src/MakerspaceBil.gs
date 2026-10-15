@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: Makerspace, kiraan kos, bil (Bayaran_Makerspace), bayaran oleh pemohon dan kerja harian.
+ * SHAMS: Makerspace, kiraan kos, bil (Bayaran_Makerspace), bayaran oleh pemohon dan kerja harian.
  * Kadar kosong atau tiada = "belum ditetapkan": bil tidak dijana sehingga ditetapkan dan admin diberi amaran.
  * Bil dijana selepas sesi (kerja harian) atau apabila admin merekod penggunaan sebenar.
  */
@@ -115,8 +115,8 @@ var MkBil = (function () {
   function emelBil_(r, b) {
     var j = Mk.rm2(b.Kos_Sebenar_RM !== '' && b.Kos_Sebenar_RM !== undefined ? b.Kos_Sebenar_RM : b.Anggaran_RM);
     Mk.mel(Util.normEmail(r.Emel_Pemohon), 'Bil Makerspace dijana', 'Makerspace bill issued',
-      ['Bil ' + Util.str(b.ID_Bayaran) + ' bagi tempahan ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Tarikh akhir bayaran: ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '. Sila rekod bayaran dalam UTMPreneur (Makerspace).'],
-      ['Bill ' + Util.str(b.ID_Bayaran) + ' for booking ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Payment due date: ' + Util.dateKey(b.Tarikh_Akhir) + '. Please record the payment in UTMPreneur (Makerspace).']);
+      ['Bil ' + Util.str(b.ID_Bayaran) + ' bagi tempahan ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Tarikh akhir bayaran: ' + Util.fmtTarikhBM(b.Tarikh_Akhir) + '. Sila rekod bayaran dalam SHAMS (Makerspace).'],
+      ['Bill ' + Util.str(b.ID_Bayaran) + ' for booking ' + Util.str(r.ID_Tempahan) + ': RM' + j.toFixed(2) + '. Payment due date: ' + Util.dateKey(b.Tarikh_Akhir) + '. Please record the payment in SHAMS (Makerspace).']);
   }
 
   // ---------- Bayaran oleh pemohon ----------
@@ -199,8 +199,8 @@ var MkBil = (function () {
     });
     warnKadar.forEach(function (w) {
       if (sekali('MK_KADAR_TIADA:' + w.id, ADMIN_UTAMA, w.id, 'Amaran: kadar Makerspace belum ditetapkan', 'Warning: Makerspace rate not set',
-        ['Bil bagi tempahan ' + w.id + ' tidak dapat dijana kerana kadar belum ditetapkan: ' + w.belum.join(', ') + '. Sila tetapkan kadar dalam UTMPreneur (Makerspace admin, Kadar).'],
-        ['The bill for booking ' + w.id + ' cannot be generated because rates are not set: ' + w.belum.join(', ') + '. Please set the rates in UTMPreneur (Makerspace admin, Rates).'], w.belum.join(','))) hasil.amaranKadar++;
+        ['Bil bagi tempahan ' + w.id + ' tidak dapat dijana kerana kadar belum ditetapkan: ' + w.belum.join(', ') + '. Sila tetapkan kadar dalam SHAMS (Makerspace admin, Kadar).'],
+        ['The bill for booking ' + w.id + ' cannot be generated because rates are not set: ' + w.belum.join(', ') + '. Please set the rates in SHAMS (Makerspace admin, Rates).'], w.belum.join(','))) hasil.amaranKadar++;
     });
 
     // 3. Bil: peringatan, Lewat dan susulan
@@ -288,8 +288,8 @@ var MkBil = (function () {
           ['The activity report for booking ' + id + ' is overdue (due ' + had + '). New space bookings are blocked until it is submitted.']);
       } else {
         sekali('MK_LAPORAN:' + id, to, id, 'Peringatan: hantar laporan aktiviti', 'Reminder: submit the activity report',
-          ['Sila hantar laporan aktiviti bagi tempahan ' + id + ' sebelum ' + Util.fmtTarikhBM(had) + ' melalui UTMPreneur (Makerspace).'],
-          ['Please submit the activity report for booking ' + id + ' by ' + had + ' via UTMPreneur (Makerspace).']);
+          ['Sila hantar laporan aktiviti bagi tempahan ' + id + ' sebelum ' + Util.fmtTarikhBM(had) + ' melalui SHAMS (Makerspace).'],
+          ['Please submit the activity report for booking ' + id + ' by ' + had + ' via SHAMS (Makerspace).']);
       }
     });
     return hasil;

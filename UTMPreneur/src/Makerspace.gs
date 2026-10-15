@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: modul Makerspace (tempahan ruang, Laser Cut, 3D Printer dan pinjaman peralatan).
+ * SHAMS: modul Makerspace (tempahan ruang, Laser Cut, 3D Printer dan pinjaman peralatan).
  * Dipecahkan kepada beberapa fail Makerspace*.gs. Objek global tunggal `Makerspace` mendedahkan routes(), jobHarian() dan seed().
  * Fail ini mengandungi mesej, Tetapan, fungsi pembantu kongsi (objek Mk) dan jadual laluan RPC.
  * PERHATIAN: tiada kebergantungan semasa muat antara fail; fungsi fail lain dipanggil di dalam fungsi sahaja.
@@ -174,7 +174,7 @@ var Mk = (function () {
     if (!to) return false;
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url && !tanpaPautan) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
+      if (url && !tanpaPautan) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
       return Mail.send(to, { subjectBm: subjectBm, subjectEn: subjectEn, bm: bm, en: en });
     } catch (err) { console.error('Emel Makerspace gagal: ' + err); return false; }
   }

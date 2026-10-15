@@ -1,5 +1,5 @@
 /**
- * UTMPreneur: modul Kewangan (laporan kewangan bulanan).
+ * SHAMS: modul Kewangan (laporan kewangan bulanan).
  * Setiap perniagaan SSU (Aktif atau Tamat Tempoh) melapor bulanan, sebelum atau pada hari ke-N bulan berikutnya
  * (Tetapan TARIKH_AKHIR_LAPORAN_HARI, lalai 7). Pemilik menghantar; ahli pasukan melihat sahaja; admin menyemak
  * (Terima / Perlu Pembetulan). Laporan Diterima dikunci dan hanya ia dikira dalam KPI rasmi.
@@ -255,7 +255,7 @@ var Kewangan = (function () {
     if (!to) return 'Tiada emel';
     try {
       var url = Cfg.get('WEBAPP_URL', '');
-      if (url) { bm = bm.concat(['Buka UTMPreneur: ' + url]); en = en.concat(['Open UTMPreneur: ' + url]); }
+      if (url) { bm = bm.concat(['Buka SHAMS: ' + url]); en = en.concat(['Open SHAMS: ' + url]); }
       return Mail.send(to, { subjectBm: subjectBm, subjectEn: subjectEn, bm: bm, en: en }) ? 'Dihantar' : 'Dilangkau (MOD UJI)';
     } catch (err) {
       console.error('Emel gagal: ' + err);
@@ -511,8 +511,8 @@ var Kewangan = (function () {
         ['The ' + info.lbl + ' financial report for ' + nama + ' has been reviewed and ACCEPTED. Thank you.']);
     } else {
       sendMail_(to, 'Laporan kewangan perlu dibetulkan', 'Financial report needs correction',
-        ['Laporan kewangan ' + info.lbl + ' bagi ' + nama + ' perlu dibetulkan. Catatan admin: ' + cat + ' Sila hantar semula dalam UTMPreneur.'],
-        ['The ' + info.lbl + ' financial report for ' + nama + ' needs correction. Admin note: ' + cat + ' Please resubmit in UTMPreneur.']);
+        ['Laporan kewangan ' + info.lbl + ' bagi ' + nama + ' perlu dibetulkan. Catatan admin: ' + cat + ' Sila hantar semula dalam SHAMS.'],
+        ['The ' + info.lbl + ' financial report for ' + nama + ' needs correction. Admin note: ' + cat + ' Please resubmit in SHAMS.']);
     }
     kpiKemaskini_([{ tahun: info.tahun, bulan: info.bulan }]);
     return adminButiran_(ctx, { id: id });
@@ -676,11 +676,11 @@ var Kewangan = (function () {
       var akhirTxt = Util.fmtTarikhBM(akhir);
       var bm, en;
       if (st === 'Lewat') {
-        bm = ['Laporan kewangan ' + lbl + ' bagi ' + nama + ' telah lewat (tarikh akhir ' + akhirTxt + '). Sila hantar secepat mungkin dalam UTMPreneur.'];
-        en = ['The ' + lbl + ' financial report for ' + nama + ' is overdue (due ' + akhirTxt + '). Please submit it as soon as possible in UTMPreneur.'];
+        bm = ['Laporan kewangan ' + lbl + ' bagi ' + nama + ' telah lewat (tarikh akhir ' + akhirTxt + '). Sila hantar secepat mungkin dalam SHAMS.'];
+        en = ['The ' + lbl + ' financial report for ' + nama + ' is overdue (due ' + akhirTxt + '). Please submit it as soon as possible in SHAMS.'];
       } else {
-        bm = ['Sila hantar laporan kewangan ' + lbl + ' bagi ' + nama + ' sebelum atau pada ' + akhirTxt + ' dalam UTMPreneur.'];
-        en = ['Please submit the ' + lbl + ' financial report for ' + nama + ' on or before ' + akhirTxt + ' in UTMPreneur.'];
+        bm = ['Sila hantar laporan kewangan ' + lbl + ' bagi ' + nama + ' sebelum atau pada ' + akhirTxt + ' dalam SHAMS.'];
+        en = ['Please submit the ' + lbl + ' financial report for ' + nama + ' on or before ' + akhirTxt + ' in SHAMS.'];
       }
       var status = to ? sendMail_(to, jenisBm, jenisEn, bm, en) : 'Tiada emel';
       if (status === 'Gagal') return; // cuba lagi pada kerja berikutnya

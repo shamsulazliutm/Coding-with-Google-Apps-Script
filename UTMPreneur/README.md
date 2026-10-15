@@ -1,4 +1,6 @@
-# UTMPreneur
+# SHAMS (nama kod: UTMPreneur)
+
+Nama sistem yang dipaparkan kepada pengguna ialah **SHAMS** (`APP.NAMA` dalam `src/Config.gs`). Nama folder, cabang git dan dokumen reka bentuk kekal "UTMPreneur" kerana ia nama kod dalaman.
 
 Sistem aktiviti keusahawanan dan inovasi pelajar UTM (UTMXCITE), dibina dengan Google Apps Script dan
 Google Sheets. Pelajar, staf dan orang luar log masuk dengan emel dan OTP.
