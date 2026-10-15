@@ -127,8 +127,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 .file .meta { flex: 1 1 240px; min-width: 0; } .file b { display: block; font-size: 13px; }
 .fname { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
 .file.off { opacity: .55; }
-.tpl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; border: 1px dashed var(--line); border-radius: 8px; padding: 10px 14px; background: var(--bg); margin-top: -8px; }
-.tpl > div { flex: 1 1 260px; min-width: 0; font-size: 13px; }
+.tpl { margin-top: -8px; font-size: 13px; }
 .file .fa { display: flex; gap: 8px; }
 .declare { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--bg); border-radius: 8px; font-size: 13px; }
 .declare input { margin-top: 3px; accent-color: var(--accent); }
@@ -469,8 +468,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   /** Kotak muat turun templat, di bawah fail laporan kewangan. Untuk pelajar yang tiada format laporan sendiri. */
   function templateBox() {
-    return '<div class="tpl"><div><b>Tiada format laporan?</b><span class="help" style="display:block">Gunakan templat kami: 1 helaian Excel dengan tajuk, jadual pendapatan dan perbelanjaan, serta jumlah dan untung/rugi dikira automatik. Isi, kemudian simpan atau cetak sebagai PDF dan muat naik di atas. Anda juga boleh menggunakan format sendiri.</span></div>' +
-      '<button class="btn sm" data-act="template" type="button">Muat turun templat (Excel)</button></div>';
+    return '<div class="tpl"><button class="linkbtn" data-act="template" type="button">Tiada format laporan? Muat turun templat (Excel)</button></div>';
   }
 
   function drawDlg() {
