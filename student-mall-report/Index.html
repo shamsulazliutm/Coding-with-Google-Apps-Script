@@ -181,6 +181,8 @@ textarea.fi { min-height: 72px; resize: vertical; }
 .chart { width: 100%; overflow-x: auto; }
 .chart svg { display: block; width: 100%; height: auto; min-width: 360px; }
 .chart text { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+.chart .vl { font-size: 9px; font-weight: 600; fill: var(--fg); }
+.chart .vl.in { fill: #fff; }
 .chart .ax { stroke: var(--grid); stroke-width: 1; }
 .chart .zero { stroke: var(--line); stroke-width: 1; }
 .stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--idle-soft); }
@@ -603,7 +605,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   /** Carta bar berkumpulan. data: [{label, a, b}], a/b boleh null. */
   function barChart(data, o) {
-    var W = 640, H = 250, L = o.pct ? 36 : 46, R = 8, T = 10, B = 26, iw = W - L - R, ih = H - T - B;
+    var W = 640, H = 250, L = o.pct ? 36 : 46, R = 8, T = o.pct ? 20 : 36, B = 26, iw = W - L - R, ih = H - T - B;
     var max = o.pct ? 100 : niceMax(Math.max.apply(null, data.map(function (d) { return Math.max(d.a || 0, d.b || 0); })));
     var any = data.some(function (d) { return d.a !== null && d.a !== undefined || d.b !== null && d.b !== undefined; });
     if (!any) return '<p class="hint" style="margin:8px 0">' + esc(o.empty || 'Belum ada data.') + '</p>';
@@ -613,16 +615,20 @@ textarea.fi { min-height: 72px; resize: vertical; }
       var v = max * i / 4, yy = y(v);
       g += '<line class="' + (i === 0 ? 'zero' : 'ax') + '" x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '"/><text x="' + (L - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + (o.pct ? Math.round(v) + '%' : rmShort(v)) + '</text>';
     }
+    var vlab = function (x, yy, t, k) {
+      if (!o.pct) return '<text class="vl" transform="translate(' + (x + 3) + ' ' + yy + ') rotate(-90)" text-anchor="start">' + t + '</text>';
+      return '<text class="vl' + (k === 'in' ? ' in' : '') + '" x="' + x + '" y="' + yy + '" text-anchor="middle">' + t + '</text>';
+    };
     var gw = iw / data.length, bw = Math.min(18, gw * 0.34);
     data.forEach(function (d, k) {
       var cx = L + gw * k + gw / 2, tip = esc(d.label) + (o.pct ? ': ' + (d.a === null ? '-' : Math.round(d.a) + '% dihantar') + (d.b === null || d.b === undefined ? '' : ', ' + Math.round(d.b) + '% tepat masa') : ': ' + o.names[0] + ' ' + rmFull(d.a) + ', ' + o.names[1] + ' ' + rmFull(d.b));
       g += '<g><title>' + tip + '</title><rect x="' + L + gw * k + '" y="' + T + '" width="' + gw + '" height="' + ih + '" fill="transparent"/>';
       if (o.pct) {
-        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw) + '" y="' + y(d.a) + '" width="' + bw * 2 + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c3)"/>';
-        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx - bw * 0.55) + '" y="' + y(d.b) + '" width="' + bw * 1.1 + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c1)"/>';
+        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw) + '" y="' + y(d.a) + '" width="' + bw * 2 + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c3)"/>' + vlab(cx, y(d.a) - 4, Math.round(d.a) + '%', 'out');
+        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx - bw * 0.55) + '" y="' + y(d.b) + '" width="' + bw * 1.1 + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c1)"/>' + (T + ih - y(d.b) >= 14 ? vlab(cx, y(d.b) + 11, Math.round(d.b) + '%', 'in') : '');
       } else {
-        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw - 1) + '" y="' + y(d.a) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)"/>';
-        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx + 1) + '" y="' + y(d.b) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c2)"/>';
+        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw - 1) + '" y="' + y(d.a) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)"/>' + vlab(cx - bw / 2 - 1, y(d.a) - 4, rmShort(d.a), 'out');
+        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx + 1) + '" y="' + y(d.b) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c2)"/>' + vlab(cx + bw / 2 + 1, y(d.b) - 4, rmShort(d.b), 'out');
       }
       g += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(d.label) + '</text></g>';
     });
