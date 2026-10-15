@@ -590,6 +590,17 @@ t('5hb: lot belum hantar diingatkan sekali sahaja (tiada duplikasi)', () => {
   assert.match(b.outbox[b.outbox.length - 1].htmlBody, /12 November 2026/);
   b.setNow(Date.parse('2026-10-14T01:30:00Z'));
 });
+t('7hb: notifikasi auto kepada lot belum hantar, sekali sehari, tanpa mengubah tarikh akhir', () => {
+  b.setNow(Date.parse('2026-11-07T01:00:00Z'));   // 7 Nov: bulan laporan = Oktober
+  const before = b.readTable_('Peringatan').filter(r => !r.kunci.startsWith('N|')).length;
+  const n = b.outbox.length; const r1 = b.dailyReminderJob(); const n1 = b.outbox.length; b.dailyReminderJob();
+  assert.match(r1, /Notifikasi dihantar: [1-9]/); assert.ok(n1 > n, 'e-mel dihantar'); assert.strictEqual(b.outbox.length, n1, 'tidak duplikasi');
+  assert.match(b.outbox[b.outbox.length - 1].subject, /^Notifikasi: Laporan Kewangan Oktober 2026/);
+  const rows = b.readTable_('Peringatan');
+  assert.ok(rows.some(r => r.kunci.startsWith('N|') && r.kunci.includes('|2026-10|2026-11-07')));
+  assert.strictEqual(rows.filter(r => !r.kunci.startsWith('N|')).length, before, 'bukan rekod peringatan');
+  b.setNow(Date.parse('2026-10-14T01:30:00Z'));
+});
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Tidak aktif' } });
   assert.strictEqual(bad('myReports', ten.token, {}).code, 'SESSION');

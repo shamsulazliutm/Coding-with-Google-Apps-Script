@@ -71,6 +71,7 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 - **Catatan penyewa**: dalam borang laporan, penyewa boleh menulis catatan pilihan (maksimum 500 aksara) bagi menerangkan laporan mereka, contohnya jualan rendah kerana cuti semester. Catatan disimpan dalam lajur **Catatan** pada sheet Laporan, dan **boleh dilihat oleh admin** dalam senarai laporan, butiran semakan dan eksport CSV. Catatan boleh diubah sehingga laporan disahkan. Komen admin kekal berasingan (lajur **Komen admin**).
 - **Pangkalan Data** (tab admin): tab terakhir ialah pautan terus ke Google Sheet yang menyimpan semua data. Klik dan sheet dibuka dalam tab pelayar baharu. Pautan ditetapkan oleh `DATABASE_URL` di bahagian atas `Code.gs` dan hanya diberi kepada admin. Akaun Google yang membuka mesti mempunyai akses pada sheet itu. `checkSystem` memberi amaran jika pautan tidak sepadan dengan sheet yang digunakan sistem.
 - **Status**: `Belum dihantar` (termasuk draf), `Dihantar`, `Perlu dibetulkan`, `Disahkan`. Laporan yang disahkan dikunci.
+- **Notifikasi automatik 7hb**: pada 7hb setiap bulan (trigger harian yang sama), e-mel notifikasi dihantar kepada penyewa yang belum menghantar laporan bulan lepas, termasuk yang diminta dibetulkan dan belum dihantar semula. E-mel menyatakan tarikh akhir semasa (atau bahawa ia telah berlalu). Notifikasi tidak mengubah tarikh akhir dan hanya sekali sehari bagi setiap lot. Hari ditetapkan oleh `NOTIFY_DAY` dalam `Code.gs`; rekod disimpan dalam sheet **Peringatan** dengan kunci berawalan `N|`.
 - **Peringatan automatik**: pada 5hb setiap bulan (sekitar jam 9 pagi), e-mel dihantar kepada penyewa yang belum menghantar laporan bulan lepas. Setiap lot hanya diingatkan sekali pada hari itu. Setiap peringatan (automatik atau manual dari dashboard) direkod dalam sheet **Peringatan** bersama tarikh akhirnya.
 
 ## Struktur sheet
@@ -122,4 +123,4 @@ Versi lama menyimpan tarikh sewa pada sheet **Lot** dan memautkan peniaga dan pe
 
 ## Ujian
 
-Logik pelayan diuji dengan tiruan API Apps Script (93 ujian dan ujian antara muka: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
+Logik pelayan diuji dengan tiruan API Apps Script (94 ujian dan ujian antara muka: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
