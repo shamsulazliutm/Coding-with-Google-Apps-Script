@@ -394,6 +394,53 @@ t('checkSystem menyemak pautan pangkalan data dengan sheet sebenar', () => {
   assert.match(o.checkSystem(), /Pautan pangkalan data: sepadan/);
 });
 
+console.log('Admin mengemas kini maklumat peniaga');
+t('admin melihat maklumat peniaga satu penyewaan (No. KP bertopeng) dan menerima bendera kebenaran', () => {
+  assert.strictEqual(ok('me', adm.token, {}).user.adminEditBiz, true);
+  const d = ok('adminGetBusiness', adm.token, { idSewa: tB }); assert.strictEqual(d.ada, true); assert.strictEqual(d.biz.nama, 'Syarikat B'); assert.strictEqual(d.biz.kp, '010203-01-****');
+  assert.strictEqual(d.lot.nama, 'Student Mall · Lot 6'); bad('adminGetBusiness', adm.token, { idSewa: 'PS-9999' }, /tidak dijumpai/);
+});
+t('admin mengemas kini nama dan telefon; No. KP kosong mengekalkan nilai; penyewa dimaklumkan tanpa nilai peribadi; direkod dalam Log', () => {
+  const n = b.outbox.length;
+  const r = ok('adminSaveBusiness', adm.token, { idSewa: tB, biz: { nama: 'Syarikat B Baharu', jenis: 'Perkhidmatan', ssm: '', pelajar: 'Pelajar Syarikat B', kp: '', matrik: 'A1', fakulti: 'FKA', telefon: '019-888 7766' } });
+  assert.strictEqual(JSON.stringify(r.diubah), '["Nama perniagaan","No. telefon"]');
+  const row = b.readTable_('Peniaga').find(x => x.idSewa === tB);
+  assert.strictEqual(row.nama, 'Syarikat B Baharu'); assert.strictEqual(row.kp, '010203-01-1234', 'No. KP dikekalkan'); assert.strictEqual(row.dikemaskiniOleh, 'utmxcite@utm.my');
+  assert.strictEqual(b.outbox.length, n + 1); const m = lastMail(); assert.strictEqual(m.to, 'b@syarikat.example'); assert.match(m.htmlBody, /Nama perniagaan, No\. telefon/);
+  assert.ok(!/888 7766|010203/.test(m.htmlBody), 'nilai peribadi tidak dihantar melalui e-mel');
+  assert.ok(b.readTable_('Log').some(l => l.tindakan === 'Admin kemas kini maklumat peniaga' && /Nama perniagaan, No\. telefon/.test(l.butiran) && !/010203/.test(l.butiran)));
+});
+t('penyewa nampak perubahan oleh admin; kemudian penyewa mengemas kini sendiri dan sumbernya menjadi "anda"', () => {
+  const g = ok('getBusiness', uB.token, {}); assert.strictEqual(g.biz.nama, 'Syarikat B Baharu'); assert.strictEqual(g.kemaskini.oleh, 'admin');
+  ok('saveBusiness', uB.token, { biz: { ...g.biz, telefon: '0123456789' } });
+  assert.strictEqual(ok('getBusiness', uB.token, {}).kemaskini.oleh, 'anda'); assert.strictEqual(b.readTable_('Peniaga').find(x => x.idSewa === tB).dikemaskiniOleh, 'b@syarikat.example');
+});
+t('admin: tiada perubahan = tiada e-mel; input tidak sah ditolak', () => {
+  const g = ok('adminGetBusiness', adm.token, { idSewa: tB }).biz; const n = b.outbox.length;
+  const r = ok('adminSaveBusiness', adm.token, { idSewa: tB, biz: { ...g, kp: '' } }); assert.strictEqual(r.diubah.length, 0); assert.strictEqual(b.outbox.length, n);
+  bad('adminSaveBusiness', adm.token, { idSewa: tB, biz: { ...g, kp: '123' } }, /12 digit/); bad('adminSaveBusiness', adm.token, { idSewa: tB, biz: { ...g, nama: ' ' } }, /Nama perniagaan wajib/);
+  bad('adminSaveBusiness', adm.token, { idSewa: tB, biz: { ...g, kp: '', telefon: '12' } }, /telefon tidak sah/); bad('adminSaveBusiness', adm.token, { idSewa: 'PS-9999', biz: { ...g, kp: '' } }, /tidak dijumpai/);
+  bad('adminSaveBusiness', adm.token, { idSewa: tB, biz: g }, /12 digit/);   // No. KP bertopeng tidak boleh dihantar semula sebagai nilai baharu
+});
+t('admin boleh mencipta maklumat bagi penyewaan yang belum diisi (No. KP wajib untuk rekod baharu)', () => {
+  const id = ok('adminSaveTenancy', adm.token, { tenancy: { kodLot: 'SUB-Lot5', mula: '2027-01-01' } }).tenancies.find(x => x.kodLot === 'SUB-Lot5').id;
+  assert.strictEqual(ok('adminGetBusiness', adm.token, { idSewa: id }).ada, false);
+  const biz = { nama: 'Kedai Baharu', jenis: 'Runcit', ssm: '', pelajar: 'Ali', kp: '', matrik: 'A9', fakulti: 'FKA', telefon: '0123456789' };
+  bad('adminSaveBusiness', adm.token, { idSewa: id, biz }, /No\. KP wajib/);
+  ok('adminSaveBusiness', adm.token, { idSewa: id, biz: { ...biz, kp: '990101-01-5555' } });
+  assert.strictEqual(ok('adminGetBusiness', adm.token, { idSewa: id }).biz.kp, '990101-01-****');
+  ok('adminDeleteTenancy', adm.token, { id });
+});
+t('penyewa tidak boleh memanggil API admin ini; suis APP.ADMIN_EDIT_BUSINESS = false mematikannya (penyewa sahaja)', () => {
+  assert.strictEqual(bad('adminSaveBusiness', ten.token, { idSewa: tB, biz: {} }).code, 'FORBIDDEN'); assert.strictEqual(bad('adminGetBusiness', ten.token, { idSewa: tB }).code, 'FORBIDDEN');
+  b.ctx.APP.ADMIN_EDIT_BUSINESS = false;
+  try {
+    assert.strictEqual(bad('adminSaveBusiness', adm.token, { idSewa: tB, biz: {} }, /tidak dibenarkan/).code, 'FORBIDDEN'); bad('adminGetBusiness', adm.token, { idSewa: tB }, /tidak dibenarkan/);
+    assert.strictEqual(ok('me', adm.token, {}).user.adminEditBiz, undefined);
+    assert.strictEqual(ok('getBusiness', uB.token, {}).biz.nama, 'Syarikat B Baharu', 'penyewa masih boleh melihat dan mengemas kini sendiri');
+  } finally { b.ctx.APP.ADMIN_EDIT_BUSINESS = true; }
+});
+
 console.log('Format tarikh');
 t('lajur tarikh disimpan sebagai tarikh sebenar (bukan teks) dan dibaca semula sebagai teks piawai', () => {
   const tnRow = b.sheets['Penyewaan'].data.find(r => r[0] === T3);

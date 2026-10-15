@@ -177,6 +177,13 @@ let browser;
   assert.ok(await a.locator('td.mono:text-is("SUB-Lot6")').count());
   await a.click('[data-tab=tn]'); await a.waitForSelector('#t-rows tr'); await settle(a); await shot(a, '12b-penyewaan', true);
   assert.match(await a.textContent('#t-rows'), /Cafe A/); assert.match(await a.textContent('#t-rows'), /Cafe B/);
+  // admin mengemas kini maklumat peniaga
+  await a.click('#t-rows tr:has-text("Cafe A") [data-act=editbiz]'); await a.waitForSelector('#ab-nama'); await settle(a); await shot(a, '12e-maklumat-peniaga');
+  assert.strictEqual(await a.inputValue('#ab-nama'), 'Cafe A'); assert.strictEqual(await a.inputValue('#ab-kp'), ''); assert.match(await a.getAttribute('#ab-kp', 'placeholder'), /\*\*\*\*/, 'No. KP bertopeng');
+  await a.fill('#ab-kp', '123'); await a.fill('#ab-nama', 'Cafe A Baharu'); await a.click('[data-act=adminsavebiz]'); await a.waitForSelector('.dlg .errbox'); assert.match(await a.textContent('.dlg .errbox'), /12 digit/);
+  assert.strictEqual(await a.inputValue('#ab-nama'), 'Cafe A Baharu', 'nilai dikekalkan selepas ralat');
+  await a.fill('#ab-kp', ''); await a.click('[data-act=adminsavebiz]'); await a.waitForFunction(() => /Maklumat peniaga dikemas kini/.test((document.querySelector('.toast') || {}).textContent || '')); await settle(a);
+  assert.match(await a.textContent('#t-rows'), /Cafe A Baharu/);
   await a.click('[data-act=newtn]'); await a.selectOption('#n-lot', 'SUB-Lot6'); await a.fill('#n-mula', '2026-07'); await a.fill('#n-akhir', '2026-05'); await a.fill('#n-sewa', '450'); await a.click('[data-act=savetn]');
   await a.waitForSelector('.dlg .errbox'); assert.match(await a.textContent('.dlg .errbox'), /selepas tarikh mula/);
   await a.fill('#n-akhir', '2026-12'); await shot(a, '12c-tambah-penyewaan'); await a.click('[data-act=savetn]');

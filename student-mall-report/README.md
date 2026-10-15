@@ -65,6 +65,7 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 - **Dashboard penyewa**: tab pertama. Menunjukkan laporan yang perlu tindakan dengan butang terus ke borang, komen admin terkini, jumlah pendapatan, perbelanjaan, untung atau rugi dan purata bulanan (laporan yang sudah dihantar sahaja), carta bulanan, kepatuhan penghantaran, dan senarai bulan yang perlu dihantar atau dibetulkan.
 - **Dashboard admin**: tab pertama. Penapis bulan dan tahun (lalai: semua bulan, tahun semasa). Menunjukkan kadar penghantaran, jumlah kewangan, bilangan lewat, senarai yang menunggu semakan, perlu dibetulkan dan belum dihantar (dengan butang Semak, Lihat dan Ingatkan), status laporan, ringkasan mengikut lokasi, carta kadar penghantaran dan kewangan bulanan semua lot, lot berpendapatan tertinggi dan lot rugi.
 - **Admin**: lihat semua lot mengikut bulan, semak laporan (Sahkan atau Minta pembetulan dengan komen), hantar peringatan manual, eksport CSV, urus lot dan pengguna.
+- **Kemas kini maklumat peniaga**: penyewa mengemas kini maklumat sendiri di tab *Maklumat Peniaga*. Admin juga boleh mengemas kini maklumat mana-mana penyewaan melalui butang **Maklumat** pada tab **Penyewaan** (termasuk mengisinya bagi pihak penyewa yang belum mengisi). No. KP sedia ada tidak dipaparkan penuh kepada admin: biarkan kosong untuk mengekalkannya, atau isi untuk menggantikannya. Setiap perubahan direkod dalam sheet **Log** (nama medan sahaja, tanpa nilai), lajur *Dikemas kini oleh* dalam sheet **Peniaga** menunjukkan siapa yang mengubah, dan penyewa menerima e-mel yang menyenaraikan nama medan yang diubah. Untuk mematikan keupayaan admin dan membenarkan penyewa sahaja, tetapkan `ADMIN_EDIT_BUSINESS: false` di bahagian atas `Code.gs`.
 - **Pangkalan Data** (tab admin): tab terakhir ialah pautan terus ke Google Sheet yang menyimpan semua data. Klik dan sheet dibuka dalam tab pelayar baharu. Pautan ditetapkan oleh `DATABASE_URL` di bahagian atas `Code.gs` dan hanya diberi kepada admin. Akaun Google yang membuka mesti mempunyai akses pada sheet itu. `checkSystem` memberi amaran jika pautan tidak sepadan dengan sheet yang digunakan sistem.
 - **Status**: `Belum dihantar` (termasuk draf), `Dihantar`, `Perlu dibetulkan`, `Disahkan`. Laporan yang disahkan dikunci.
 - **Peringatan automatik**: pada 5hb setiap bulan (sekitar jam 9 pagi), e-mel dihantar kepada penyewa yang belum menghantar laporan bulan lepas. Setiap lot hanya diingatkan sekali pada hari itu. Setiap peringatan (automatik atau manual dari dashboard) direkod dalam sheet **Peringatan** bersama tarikh akhirnya.
@@ -80,7 +81,7 @@ Jangan ubah susunan lajur. Kod membaca lajur mengikut kedudukan. Anda boleh mena
 | Pengguna | E-mel, Nama, **Peranan** (Admin / Penyewa), ID penyewaan, Status (Aktif / Tidak aktif) |
 | Lot | Kod lot, Lokasi, No lot, Status |
 | Penyewaan | ID penyewaan, Kod lot, Tarikh mula sewa, Tarikh akhir sewa, Sewa bulanan (RM) |
-| Peniaga | ID penyewaan, Nama perniagaan, Jenis, No SSM, Nama pelajar, No KP, No matrik, Fakulti, No telefon, Dikemas kini |
+| Peniaga | ID penyewaan, Nama perniagaan, Jenis, No SSM, Nama pelajar, No KP, No matrik, Fakulti, No telefon, Dikemas kini, Dikemas kini oleh |
 | Laporan | ID, Kod lot, Tahun, Bulan, Pendapatan, Perbelanjaan, Bayaran sewa, Sewa peralatan, 3 lajur fail, Status, Lewat, Komen admin, Disemak oleh, Tarikh disemak, Tarikh hantar, Akuan, Dikemas kini, ID penyewaan |
 | Log | Masa, E-mel, Tindakan, Butiran (audit semua tindakan penting) |
 | Peringatan | Rekod setiap peringatan yang dihantar (kunci, masa, tarikh akhir) |
@@ -118,4 +119,4 @@ Versi lama menyimpan tarikh sewa pada sheet **Lot** dan memautkan peniaga dan pe
 
 ## Ujian
 
-Logik pelayan diuji dengan tiruan API Apps Script (81 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
+Logik pelayan diuji dengan tiruan API Apps Script (87 ujian: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.

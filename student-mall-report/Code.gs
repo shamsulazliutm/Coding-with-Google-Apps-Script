@@ -13,6 +13,7 @@ var APP = {
   SENDER: 'UTMXCITE',
   CONTACT_EMAIL: 'utmxcite@utm.my',
   CONTACT_PHONE: '013-7630079',
+  ADMIN_EDIT_BUSINESS: true,         // true: admin juga boleh mengemas kini maklumat peniaga (sheet Peniaga). false: penyewa sahaja.
   DEFAULT_ADMIN: 'utmxcite@utm.my',   // admin lalai yang didaftarkan oleh setupSystem()
   TZ: 'Asia/Kuala_Lumpur',
   DUE_DAY: 7,              // tarikh akhir hantar: hari ke-7 bulan berikutnya
@@ -63,7 +64,7 @@ COLS[SHEETS.TENANCIES] = [
 COLS[SHEETS.BIZ] = [
   ['idSewa', 'ID penyewaan', 't'], ['nama', 'Nama perniagaan', 't'], ['jenis', 'Jenis perniagaan', 't'], ['ssm', 'No SSM', 't'],
   ['pelajar', 'Nama pelajar', 't'], ['kp', 'No KP', 't'], ['matrik', 'No matrik', 't'], ['fakulti', 'Fakulti', 't'],
-  ['telefon', 'No telefon', 't'], ['dikemaskini', 'Dikemas kini', 'dt']
+  ['telefon', 'No telefon', 't'], ['dikemaskini', 'Dikemas kini', 'dt'], ['dikemaskiniOleh', 'Dikemas kini oleh', 't']
 ];
 COLS[SHEETS.REPORTS] = [
   ['id', 'ID', 't'], ['kodLot', 'Kod lot', 't'], ['tahun', 'Tahun', 'n'], ['bulan', 'Bulan', 'n'],
@@ -318,6 +319,7 @@ function findUser_(email) {
 
 function userView_(u) {
   var v = { email: u.email, nama: u.nama, peranan: u.peranan, idSewa: u.idSewa || '' };
+  if (u.peranan === ROLE.ADMIN && APP.ADMIN_EDIT_BUSINESS) v.adminEditBiz = true;
   if (u.peranan === ROLE.ADMIN && APP.DATABASE_URL) v.dbUrl = APP.DATABASE_URL;   // tab Pangkalan Data = pautan terus ke Google Sheet
   return v;
 }
@@ -543,37 +545,99 @@ function bizView_(b, mask) {
 function getBusiness_(user) {
   var lot = lotOfUser_(user);
   var biz = findBy_(readTable_(SHEETS.BIZ), 'idSewa', lot.idSewa);
-  return { lot: lotView_(lot), email: user.email, peranan: user.peranan, biz: bizView_(biz, false), lengkap: !!(biz && biz.nama) };
+  var kemaskini = null;
+  if (biz && biz.dikemaskini) {
+    var by = biz.dikemaskiniOleh ? findUser_(normEmail_(biz.dikemaskiniOleh)) : null;
+    kemaskini = { masa: biz.dikemaskini, oleh: by && by.peranan === ROLE.ADMIN ? 'admin' : 'anda' };
+  }
+  return { lot: lotView_(lot), email: user.email, peranan: user.peranan, biz: bizView_(biz, false), lengkap: !!(biz && biz.nama), kemaskini: kemaskini };
+}
+
+var BIZ_FIELDS = [['nama', 'Nama perniagaan'], ['jenis', 'Jenis perniagaan'], ['ssm', 'No. SSM'], ['pelajar', 'Nama pelajar'], ['kp', 'No. KP'],
+                  ['matrik', 'No. matrik'], ['fakulti', 'Fakulti'], ['telefon', 'No. telefon']];
+
+/**
+ * Semak dan kemaskan input maklumat peniaga. No. KP yang dikosongkan mengekalkan nilai sedia ada
+ * (admin tidak perlu melihat No. KP penuh untuk mengemas kini medan lain).
+ */
+function cleanBiz_(f, existing) {
+  var req = [['nama', 'Nama perniagaan'], ['jenis', 'Jenis perniagaan'], ['pelajar', 'Nama pelajar'],
+             ['matrik', 'No. matrik'], ['fakulti', 'Fakulti'], ['telefon', 'No. telefon']];
+  for (var i = 0; i < req.length; i++) {
+    if (!String(f[req[i][0]] || '').trim()) fail_(req[i][1] + ' wajib diisi.');
+  }
+  var kpIn = String(f.kp || '').trim(), kp;
+  if (kpIn) { kp = normKp_(kpIn); if (!kp) fail_('No. KP mesti 12 digit, contoh 010203-01-1234.'); }
+  else if (existing && existing.kp) kp = existing.kp;
+  else fail_('No. KP wajib diisi.');
+  var tel = String(f.telefon).replace(/[^\d+\- ]/g, '').trim();
+  if (tel.replace(/\D/g, '').length < 9) fail_('No. telefon tidak sah.');
+  return {
+    nama: String(f.nama).trim().slice(0, 120), jenis: String(f.jenis).trim().slice(0, 80), ssm: String(f.ssm || '').trim().slice(0, 40),
+    pelajar: String(f.pelajar).trim().toUpperCase().slice(0, 120), kp: kp, matrik: String(f.matrik).trim().toUpperCase().slice(0, 20),
+    fakulti: String(f.fakulti).trim().toUpperCase().slice(0, 40), telefon: tel
+  };
+}
+
+/** Simpan rekod peniaga bagi satu penyewaan. Mengembalikan senarai label medan yang berubah (tanpa nilai). */
+function writeBiz_(idSewa, clean, byEmail) {
+  var cur = findBy_(readTable_(SHEETS.BIZ), 'idSewa', idSewa);
+  var changed = [];
+  BIZ_FIELDS.forEach(function (fd) { if (!cur || String(cur[fd[0]] || '') !== String(clean[fd[0]] || '')) changed.push(fd[1]); });
+  var rec = cur || { idSewa: idSewa };
+  Object.keys(clean).forEach(function (k) { rec[k] = clean[k]; });
+  rec.dikemaskini = nowStr_(); rec.dikemaskiniOleh = byEmail;
+  if (rec._row) updateObj_(SHEETS.BIZ, rec); else appendObj_(SHEETS.BIZ, rec);
+  return changed;
 }
 
 function saveBusiness_(user, p) {
   var lot = lotOfUser_(user);
   var f = p.biz || {};
-  var req = [['nama', 'Nama perniagaan'], ['jenis', 'Jenis perniagaan'], ['pelajar', 'Nama pelajar'], ['kp', 'No. KP'],
-             ['matrik', 'No. matrik'], ['fakulti', 'Fakulti'], ['telefon', 'No. telefon']];
-  for (var i = 0; i < req.length; i++) {
-    if (!String(f[req[i][0]] || '').trim()) fail_(req[i][1] + ' wajib diisi.');
-  }
-  var kp = normKp_(f.kp);
-  if (!kp) fail_('No. KP mesti 12 digit, contoh 010203-01-1234.');
-  var tel = String(f.telefon).replace(/[^\d+\- ]/g, '').trim();
-  if (tel.replace(/\D/g, '').length < 9) fail_('No. telefon tidak sah.');
-
   return withLock_(function () {
-    var cur = findBy_(readTable_(SHEETS.BIZ), 'idSewa', lot.idSewa) || { idSewa: lot.idSewa };
-    cur.nama = String(f.nama).trim().slice(0, 120);
-    cur.jenis = String(f.jenis).trim().slice(0, 80);
-    cur.ssm = String(f.ssm || '').trim().slice(0, 40);
-    cur.pelajar = String(f.pelajar).trim().toUpperCase().slice(0, 120);
-    cur.kp = kp;
-    cur.matrik = String(f.matrik).trim().toUpperCase().slice(0, 20);
-    cur.fakulti = String(f.fakulti).trim().toUpperCase().slice(0, 40);
-    cur.telefon = tel;
-    cur.dikemaskini = nowStr_();
-    if (cur._row) updateObj_(SHEETS.BIZ, cur); else appendObj_(SHEETS.BIZ, cur);
+    var clean = cleanBiz_(f, findBy_(readTable_(SHEETS.BIZ), 'idSewa', lot.idSewa));
+    writeBiz_(lot.idSewa, clean, user.email);
     logAction_(user.email, 'Kemas kini maklumat peniaga', lot.kodLot);
     return getBusiness_(user);
   });
+}
+
+/* ---------- Admin mengemas kini maklumat peniaga (jika dibenarkan oleh APP.ADMIN_EDIT_BUSINESS) ---------- */
+
+function requireAdminEdit_() {
+  if (!APP.ADMIN_EDIT_BUSINESS) fail_('Pentadbir tidak dibenarkan mengemas kini maklumat peniaga. Penyewa mengemas kini sendiri.', 'FORBIDDEN');
+}
+
+function adminGetBusiness_(user, p) {
+  requireAdminEdit_();
+  var tn = tenancyById_(String(p.idSewa || ''));
+  if (!tn) fail_('Penyewaan tidak dijumpai.');
+  var ctx = lotCtx_(tn);
+  var biz = findBy_(readTable_(SHEETS.BIZ), 'idSewa', tn.id);
+  return { idSewa: tn.id, lot: lotView_(ctx), tempoh: tnRangeLabel_(tn), biz: bizView_(biz, true), ada: !!biz };
+}
+
+function adminSaveBusiness_(user, p) {
+  requireAdminEdit_();
+  var tn = tenancyById_(String(p.idSewa || ''));
+  if (!tn) fail_('Penyewaan tidak dijumpai.');
+  var changed = withLock_(function () {
+    var clean = cleanBiz_(p.biz || {}, findBy_(readTable_(SHEETS.BIZ), 'idSewa', tn.id));
+    var ch = writeBiz_(tn.id, clean, user.email);
+    logAction_(user.email, 'Admin kemas kini maklumat peniaga', tn.id + ' / ' + tn.kodLot + ' / ' + (ch.length ? ch.join(', ') : 'tiada perubahan'));
+    return ch;
+  });
+  if (changed.length) {
+    try {
+      var to = readTable_(SHEETS.USERS).filter(function (u) { return u.idSewa === tn.id && u.peranan === ROLE.TENANT && u.status === 'Aktif'; }).map(function (u) { return u.email; });
+      to.forEach(function (email) {
+        sendMail_(email, 'Maklumat peniaga anda telah dikemas kini',
+          '<p>Salam,</p><p>Maklumat peniaga untuk <b>' + escHtml_(tn.kodLot) + '</b> telah dikemas kini oleh pentadbir UTMXCITE.</p>' +
+          '<p>Medan yang diubah: ' + escHtml_(changed.join(', ')) + '.</p><p>Sila semak di tab <b>Maklumat Peniaga</b> dan hubungi ' + APP.CONTACT_EMAIL + ' jika terdapat kesilapan.</p>');
+      });
+    } catch (e) { logAction_(user.email, 'Ralat e-mel', String(e)); }
+  }
+  return { diubah: changed, tenancies: tenancyList_() };
 }
 
 // ============================================================
@@ -1475,6 +1539,8 @@ var ROUTES = {
   adminSaveUser: { auth: true, role: ROLE.ADMIN, fn: adminSaveUser_ },
   adminLots:     { auth: true, role: ROLE.ADMIN, fn: adminLots_ },
   adminTenancies:    { auth: true, role: ROLE.ADMIN, fn: adminTenancies_ },
+  adminGetBusiness:  { auth: true, role: ROLE.ADMIN, fn: adminGetBusiness_ },
+  adminSaveBusiness: { auth: true, role: ROLE.ADMIN, fn: adminSaveBusiness_ },
   adminSaveTenancy:  { auth: true, role: ROLE.ADMIN, fn: adminSaveTenancy_ },
   adminDeleteTenancy: { auth: true, role: ROLE.ADMIN, fn: adminDeleteTenancy_ },
   adminSaveLot:  { auth: true, role: ROLE.ADMIN, fn: adminSaveLot_ },

@@ -218,7 +218,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   var S = { token: null, user: null, tab: null, login: { step: 'email', email: '', msg: '', err: '' },
             fin: null, finQ: '', finStatus: '', biz: null,
-            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null, tns: null, tnOpts: null, tnQ: '', dash: null, dashY: null, dashM: null, openAfter: null };
+            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null, tns: null, tnOpts: null, tnQ: '', bizDlg: null, dash: null, dashY: null, dashM: null, openAfter: null };
   var D = null;   // dialog laporan penyewa
   var pending = 0;
 
@@ -383,7 +383,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   function bizHtml() {
     var d = S.biz, b = d.biz, l = d.lot;
-    return '<div class="card"><div class="ch"><div><h2>Maklumat Peniaga</h2><p>Dikemas kini sekali, digunakan untuk semua laporan bulanan.</p></div>' +
+    return '<div class="card"><div class="ch"><div><h2>Maklumat Peniaga</h2><p>Dikemas kini sekali, digunakan untuk semua laporan bulanan.' + (d.kemaskini ? ' Kemas kini terakhir ' + esc(fmtDT(d.kemaskini.masa)) + ' oleh ' + d.kemaskini.oleh + '.' : '') + '</p></div>' +
       (d.lengkap ? '<span class="pill s-ok">Lengkap</span>' : '<span class="pill s-warn">Sila lengkapkan</span>') + '</div><div class="cb">' +
       '<section><h3 class="sech">Perniagaan</h3><div class="grid">' +
       inp('b-nama', 'Nama perniagaan / syarikat', b.nama, true) + inp('b-jenis', 'Jenis perniagaan', b.jenis, true, 'Contoh: Makanan dan minuman') + inp('b-ssm', 'No. pendaftaran (SSM)', b.ssm, false) +
@@ -792,7 +792,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
         '<td class="nw">' + esc(t.tempoh) + '</td><td class="num mono">' + fmt(t.sewa) + '</td>' +
         '<td>' + (t.pengguna.length ? t.pengguna.map(esc).join('<br>') : '<span class="sub">Tiada pengguna</span>') + '</td>' +
         '<td>' + (t.semasa ? '<span class="pill s-ok">Semasa</span>' : '<span class="pill s-idle">Bukan semasa</span>') + '</td>' +
-        '<td class="act"><button class="btn sm" data-act="edittn" data-i="' + x[1] + '" type="button">Edit</button> <button class="btn sm del" data-act="deltn" data-i="' + x[1] + '" type="button">Padam</button></td></tr>';
+        '<td class="act">' + (S.user.adminEditBiz ? '<button class="btn sm" data-act="editbiz" data-i="' + x[1] + '" type="button" title="Kemas kini maklumat peniaga">Maklumat</button> ' : '') + '<button class="btn sm" data-act="edittn" data-i="' + x[1] + '" type="button">Edit</button> <button class="btn sm del" data-act="deltn" data-i="' + x[1] + '" type="button">Padam</button></td></tr>';
     }).join('');
   }
 
@@ -815,6 +815,33 @@ textarea.fi { min-height: 72px; resize: vertical; }
     var t = { id: id, kodLot: lot, mula: m1 ? m1 + '-01' : '', akhir: m2 ? lastDayOf(m2) : '', sewa: $('n-sewa').value };
     api('adminSaveTenancy', { tenancy: t }).then(function (d) { S.tns = d.tenancies; S.lots = d.lots; $('dlg-slot').innerHTML = ''; refreshView(tnHtml()); toast('Penyewaan disimpan'); })
       .catch(function (e) { tnDlg(null, e.message, t); });
+  }
+
+  /* ---------- admin: kemas kini maklumat peniaga (sheet Peniaga) ---------- */
+  function openBiz(i) {
+    var t = S.tns[i];
+    run(api('adminGetBusiness', { idSewa: t.id }).then(function (d) { S.bizDlg = d; bizDlg(d); }));
+  }
+
+  function bizDlg(d, err, keep) {
+    var b = keep || d.biz;
+    var fld = function (id, label, val, req, ph) { return '<div class="field"><label for="ab-' + id + '">' + label + (req ? ' <span class="req">*</span>' : '') + '</label><input class="fi" id="ab-' + id + '" value="' + esc(val) + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '></div>'; };
+    $('dlg-slot').innerHTML = '<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" data-bizid="' + esc(d.idSewa) + '"><div class="dhead"><div><h2>Maklumat peniaga</h2><p>' + esc(d.lot.nama) + ' · ' + esc(d.tempoh) + ' · ' + esc(d.idSewa) + '</p></div><button class="x" data-act="closedlg" aria-label="Tutup" type="button">×</button></div><div class="dbody">' +
+      (err ? '<div class="errbox" role="alert">' + esc(err) + '</div>' : '') +
+      (d.ada ? '' : '<div class="banner s-warn"><b>Belum diisi</b><p>Penyewa belum mengisi maklumat. Anda boleh mengisinya bagi pihak penyewa.</p></div>') +
+      '<div class="grid">' + fld('nama', 'Nama perniagaan', b.nama, true) + fld('jenis', 'Jenis perniagaan', b.jenis, true) + fld('ssm', 'No. pendaftaran (SSM)', b.ssm, false) + '</div>' +
+      '<div class="grid">' + fld('pelajar', 'Nama pelajar', b.pelajar, true) + fld('kp', 'No. kad pengenalan', keep ? keep.kp : '', !d.ada, d.ada ? 'Kosongkan untuk kekalkan (' + d.biz.kp + ')' : '010203-01-1234') + fld('matrik', 'No. matrik', b.matrik, true) + fld('fakulti', 'Fakulti', b.fakulti, true) + fld('telefon', 'No. telefon', b.telefon, true) + '</div>' +
+      '<p class="help" style="margin:0">Perubahan direkod dalam log dan penyewa dimaklumkan melalui e-mel (hanya nama medan yang diubah, tanpa nilai). No. KP sedia ada tidak dipaparkan penuh; isi hanya jika mahu menggantikannya.</p>' +
+      '</div><div class="dfoot" style="justify-content:flex-end"><button class="btn" data-act="closedlg" type="button">Batal</button><button class="btn primary" data-act="adminsavebiz" type="button">Simpan</button></div></div></div>';
+  }
+
+  function doAdminSaveBiz() {
+    var d = S.bizDlg, g = function (id) { return $('ab-' + id).value; };
+    var biz = { nama: g('nama'), jenis: g('jenis'), ssm: g('ssm'), pelajar: g('pelajar'), kp: g('kp'), matrik: g('matrik'), fakulti: g('fakulti'), telefon: g('telefon') };
+    api('adminSaveBusiness', { idSewa: d.idSewa, biz: biz }).then(function (res) {
+      S.tns = res.tenancies; $('dlg-slot').innerHTML = ''; refreshView(tnHtml());
+      toast(res.diubah.length ? 'Maklumat peniaga dikemas kini' : 'Tiada perubahan');
+    }).catch(function (e) { bizDlg(d, e.message, biz); });
   }
 
   /* ---------- admin: lot ---------- */
@@ -920,6 +947,8 @@ textarea.fi { min-height: 72px; resize: vertical; }
         run(api('adminRemind', { kodLot: t.dataset.lot, tahun: Number(t.dataset.y), bulan: Number(t.dataset.m) }).then(function (d) { toast('Peringatan dihantar kepada ' + d.dihantar + ' pengguna'); })); break;
       case 'export':
         run(api('adminExport', { tahun: S.adm.tahun, bulan: S.adm.bulan }).then(function (d) { download(d.name, 'text/csv;charset=utf-8', d.csv, false); })); break;
+      case 'editbiz': openBiz(Number(t.dataset.i)); break;
+      case 'adminsavebiz': doAdminSaveBiz(); break;
       case 'newtn': tnDlg(null); break;
       case 'edittn': tnDlg(Number(t.dataset.i)); break;
       case 'savetn': doSaveTn(); break;
