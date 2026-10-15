@@ -18,7 +18,6 @@ var APP = {
   TZ: 'Asia/Kuala_Lumpur',
   DUE_DAY: 7,              // tarikh akhir hantar: hari ke-7 bulan berikutnya
   REMINDER_DAY: 5,         // peringatan automatik pada 5hb setiap bulan
-  NOTIFY_DAY: 7,           // notifikasi automatik pada 7hb kepada peniaga yang belum menghantar laporan
   REMINDER_DEADLINE_DAYS: 7, // tarikh akhir dalam e-mel peringatan = tarikh e-mel dihantar + 7 hari
   REMINDER_HOUR: 9,        // trigger harian dijalankan sekitar jam 9 pagi
   OTP_TTL: 300,            // OTP sah 5 minit
@@ -500,34 +499,6 @@ function sendReminderMail_(kodLot, y, m) {
   to.forEach(function (email) { sendMail_(email, subject, body, { noFooter: true }); });
   appendObj_(SHEETS.REMINDERS, { kunci: kodLot + '|' + y + '-' + pad2_(m) + '|' + today + '|' + nowStr_().slice(11), masa: nowStr_(), akhir: deadline });
   REMINDER_DEADLINES_ = null;   // tarikh akhir baharu berkuat kuasa serta-merta
-  return to.length;
-}
-
-/**
- * Notifikasi 7hb: laporan bulan lepas masih belum dihantar. Tidak mengubah tarikh akhir;
- * kunci rekod berawalan "N|" dan lajur Tarikh akhir dibiarkan kosong supaya tidak dikira sebagai peringatan.
- */
-function sendNotifyMail_(kodLot, y, m, rejected) {
-  var to = tenantEmailsForLot_(kodLot, y, m);
-  if (!to.length) return 0;
-  var today = todayStr_(), due = effectiveDue_(kodLot, y, m), url = appUrl_();
-  var subject = 'Notifikasi: Laporan Kewangan ' + MONTHS_MS[m - 1] + ' ' + y + (rejected ? ' perlu dibetulkan' : ' belum dikemas kini');
-  var tarikh = due >= today
-    ? 'Sila kemas kini dan hantar laporan selewat-lewatnya pada <b>' + dateLabelMs_(due) + '</b>.'
-    : 'Tarikh akhir (<b>' + dateLabelMs_(due) + '</b>) telah berlalu. Sila hantar laporan dengan segera; penghantaran sekarang direkodkan sebagai lewat.';
-  var body =
-    '<h2 style="font-size:16px;letter-spacing:.5px;margin:0 0 16px;color:#5b1a33">NOTIFIKASI LAPORAN KEWANGAN</h2>' +
-    '<p>Assalamualaikum dan salam sejahtera.</p>' +
-    '<p>Laporan kewangan bagi bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> ' +
-    (rejected ? 'telah diminta dibetulkan oleh admin dan masih belum dihantar semula.' : 'masih belum dikemas kini dalam sistem.') + '</p>' +
-    '<p>' + tarikh + '</p>' +
-    (url ? '<p style="margin:20px 0"><a href="' + url + '" style="background:#5b1a33;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:bold">\uD83D\uDD17 Buka Sistem</a></p>' : '') +
-    '<p>Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
-    '<p style="margin-top:20px"><b>UTMXCITE</b><br>' +
-    '\uD83D\uDCE7 ' + APP.CONTACT_EMAIL + '<br>' +
-    '\uD83D\uDCDE ' + APP.CONTACT_PHONE + '</p>';
-  to.forEach(function (email) { sendMail_(email, subject, body, { noFooter: true }); });
-  appendObj_(SHEETS.REMINDERS, { kunci: 'N|' + kodLot + '|' + y + '-' + pad2_(m) + '|' + today, masa: nowStr_(), akhir: '' });
   return to.length;
 }
 
@@ -1424,33 +1395,8 @@ function spreadsheetIdFromUrl_(url) {
 
 function dailyReminderJob() {
   var today = todayStr_();
-  var day = Number(today.slice(8, 10)), out = [];
-  if (day === APP.REMINDER_DAY) out.push(runReminders_(today));
-  if (day === APP.NOTIFY_DAY) out.push(runNotifications_(today));
-  return out.length ? out.join('; ') : 'Bukan hari peringatan';
-}
-
-/** Notifikasi 7hb kepada peniaga yang belum menghantar laporan bulan lepas. Sekali sehari bagi setiap lot. */
-function runNotifications_(today) {
-  REMINDER_DEADLINES_ = null; LAYOUT_ = {};
-  var t = ymFromStr_(today);
-  var y = t.m === 1 ? t.y - 1 : t.y, m = t.m === 1 ? 12 : t.m - 1;
-  var lots = readTable_(SHEETS.LOTS).filter(function (l) { return l.status === 'Aktif'; });
-  var map = reportMap_();
-  var done = {}; readTable_(SHEETS.REMINDERS).forEach(function (r) { if (String(r.kunci).indexOf('N|') === 0) done[String(r.kunci)] = true; });
-  var sent = 0;
-  lots.forEach(function (lot) {
-    var ctx = ctxFor_(lot.kodLot, y, m);
-    if (!ctx || !monthAllowed_(ctx, y, m, today)) return;
-    var key = statusKey_(map[reportId_(lot.kodLot, y, m)]);
-    if (key === 'sent' || key === 'ok') return;
-    if (done['N|' + lot.kodLot + '|' + y + '-' + pad2_(m) + '|' + today]) return;
-    try {
-      if (sendNotifyMail_(lot.kodLot, y, m, key === 'fix') > 0) sent++;
-    } catch (e) { logAction_('sistem', 'Ralat notifikasi', lot.kodLot + ': ' + e); }
-  });
-  logAction_('sistem', 'Notifikasi automatik', 'Bulan ' + y + '-' + pad2_(m) + ', lot dimaklumkan: ' + sent);
-  return 'Notifikasi dihantar: ' + sent;
+  if (Number(today.slice(8, 10)) !== APP.REMINDER_DAY) return 'Bukan hari peringatan';
+  return runReminders_(today);
 }
 
 /** Boleh dipanggil manual dari editor untuk ujian: runReminders_('2026-10-05'). */

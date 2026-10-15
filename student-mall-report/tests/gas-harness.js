@@ -76,7 +76,7 @@ function createBackend(opts = {}) {
   }
   if (opts.configuredFolder !== false) makeFolder('Folder simpanan (dikongsi pengguna)', '1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE');
   vm.createContext(ctx);
-  vm.runInContext(fs.readFileSync(CODE, 'utf8') + '\n;this.__exports = { rpc, setupSystem, checkSystem, runReminders_, runNotifications_, dailyReminderJob, readTable_, COLS, SHEETS };', ctx, { filename: 'Code.gs' });
+  vm.runInContext(fs.readFileSync(CODE, 'utf8') + '\n;this.__exports = { rpc, setupSystem, checkSystem, runReminders_, dailyReminderJob, readTable_, COLS, SHEETS };', ctx, { filename: 'Code.gs' });
   const ex = ctx.__exports;
   return { ...ex, outbox, ctxFlags, folders, props, cache, sheets, driveFiles, ctx, setNow: t => { NOW = t; }, ss };
 }
