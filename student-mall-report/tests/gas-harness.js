@@ -20,7 +20,7 @@ function createBackend(opts = {}) {
     };
   }
   function makeSheet(name) {
-    const sh = { name, data: [], getLastRow() { let l = 0; this.data.forEach((row, i) => { if (row && row.some(v => v !== '' && v !== undefined)) l = i + 1; }); return l; },
+    const sh = { name, gid: 1000 + Object.keys(sheets).length, getSheetId() { return this.gid; }, data: [], getLastRow() { let l = 0; this.data.forEach((row, i) => { if (row && row.some(v => v !== '' && v !== undefined)) l = i + 1; }); return l; },
       getMaxRows() { return 1000; }, setFrozenRows() {},
       getRange(r, c, nr, nc) { return makeRange(this, r, c, nr || 1, nc || 1); },
       appendRow(arr) { this.data[this.getLastRow()] = arr.slice(); },

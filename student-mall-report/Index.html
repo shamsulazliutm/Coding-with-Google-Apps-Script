@@ -217,7 +217,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   var S = { token: null, user: null, tab: null, login: { step: 'email', email: '', msg: '', err: '' },
             fin: null, finQ: '', finStatus: '', biz: null,
-            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null, tns: null, tnOpts: null, tnQ: '', dash: null, dashY: null, dashM: null, openAfter: null };
+            adm: null, admQ: '', admStatus: '', admLokasi: '', admY: null, admM: null, lots: null, users: null, tns: null, tnOpts: null, tnQ: '', db: null, dash: null, dashY: null, dashM: null, openAfter: null };
   var D = null;   // dialog laporan penyewa
   var pending = 0;
 
@@ -318,7 +318,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     var app = $('app');
     if (!S.token) { app.innerHTML = loginHtml(); return; }
     var admin = S.user.peranan === 'Admin';
-    var tabs = admin ? [['dash', 'Dashboard'], ['adm', 'Semua Laporan'], ['tn', 'Penyewaan'], ['lots', 'Lot'], ['users', 'Pengguna']] : [['dash', 'Dashboard'], ['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
+    var tabs = admin ? [['dash', 'Dashboard'], ['adm', 'Semua Laporan'], ['tn', 'Penyewaan'], ['lots', 'Lot'], ['users', 'Pengguna'], ['db', 'Pangkalan Data']] : [['dash', 'Dashboard'], ['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
     if (!S.tab) S.tab = tabs[0][0];
     app.innerHTML = '<div class="wrap">' + header() + tabsHtml(tabs) + '<div id="view" class="wrap"></div></div>';
     loadTab();
@@ -333,6 +333,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     else if (S.tab === 'adm') loadAdm();
     else if (S.tab === 'tn') run(api('adminTenancies').then(function (d) { S.tns = d.tenancies; S.lots = d.lots; v.innerHTML = tnHtml(); }));
     else if (S.tab === 'lots') run(api('adminLots').then(function (d) { S.lots = d.lots; v.innerHTML = lotsHtml(); }));
+    else if (S.tab === 'db') run(api('adminDatabase').then(function (d) { S.db = d; v.innerHTML = dbHtml(); }));
     else if (S.tab === 'users') run(api('adminUsers').then(function (d) { S.users = d.users; S.tnOpts = d.penyewaan; v.innerHTML = usersHtml(); }));
   }
 
@@ -844,6 +845,23 @@ textarea.fi { min-height: 72px; resize: vertical; }
       .catch(function (e) { var i = null; if (!isNew) { for (var k = 0; k < S.lots.length; k++) if (S.lots[k].noLot === Number(lot.noLot) && S.lots[k].lokasi === lot.lokasi) i = k; } lotDlg(i, e.message); });
   }
 
+  /* ---------- admin: pangkalan data ---------- */
+  function dbHtml() {
+    var d = S.db;
+    var h = '<div class="card"><div class="ch"><div><h2>Pangkalan data</h2><p>Semua data sistem disimpan dalam Google Sheet ini. ' + esc(d.nama) + '</p></div>' +
+      '<a class="btn primary" href="' + esc(d.url) + '" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Buka pangkalan data</a></div><div class="cb">';
+    if (!d.sama) h += '<div class="errbox" role="alert">Pautan yang ditetapkan dalam <span class="mono">DATABASE_URL</span> tidak sama dengan Google Sheet yang sebenarnya digunakan sistem. Pautan sheet di bawah merujuk kepada sheet sebenar. <a href="' + esc(d.urlSebenar) + '" target="_blank" rel="noopener">Buka sheet sebenar</a></div>';
+    h += '<div class="field"><label for="db-url">Pautan</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="fi mono" id="db-url" readonly value="' + esc(d.url) + '" style="flex:1 1 320px;font-size:12px"><button class="btn" data-act="copydb" type="button">Salin pautan</button></div>' +
+      '<span class="help">Hanya akaun Google yang diberi akses pada sheet ini boleh membukanya. Kongsi kepada admin yang perlu sahaja.</span></div>' +
+      '<section><h3 class="sech">Sheet dalam pangkalan data</h3><div class="tbl-wrap" style="box-shadow:none;border:1px solid var(--line)"><table style="min-width:560px"><thead><tr><th>Sheet</th><th>Kandungan</th><th class="num">Bil. baris</th><th></th></tr></thead><tbody>' +
+      d.sheets.map(function (x) {
+        return '<tr><td class="nw"><b>' + esc(x.nama) + '</b></td><td>' + esc(x.huraian) + '</td><td class="num mono">' + x.bil + '</td><td class="act">' + (x.ada ? '<a class="btn sm" href="' + esc(x.url) + '" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Buka</a>' : '<span class="pill s-bad">Tiada</span>') + '</td></tr>';
+      }).join('') + '</tbody></table></div></section>';
+    if (d.folderUrl) h += '<section><h3 class="sech">Folder fail PDF</h3><p style="margin:0 0 8px">Laporan, resit sewa dan resit incubator disimpan dalam folder Google Drive ini.</p><a class="btn" href="' + esc(d.folderUrl) + '" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Buka folder Drive</a></section>';
+    h += '<section><h3 class="sech">Peringatan</h3><ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13px"><li>Jangan ubah susunan lajur atau padam sheet. Sistem membaca lajur mengikut kedudukan.</li><li>Sheet <b>Peniaga</b> mengandungi No. KP penuh. Hadkan akses kepada admin yang perlu.</li><li>Kemas kini data melalui sistem jika boleh, supaya semakan dan log audit kekal betul.</li></ul></section></div></div>';
+    return h;
+  }
+
   /* ---------- admin: pengguna ---------- */
   function usersHtml() {
     return '<div class="bar"><div class="grow"><input id="u-q" type="search" placeholder="Cari e-mel atau nama"></div><button class="btn primary" data-act="newuser" type="button">+ Tambah pengguna</button></div>' +
@@ -918,6 +936,9 @@ textarea.fi { min-height: 72px; resize: vertical; }
         run(api('adminRemind', { kodLot: t.dataset.lot, tahun: Number(t.dataset.y), bulan: Number(t.dataset.m) }).then(function (d) { toast('Peringatan dihantar kepada ' + d.dihantar + ' pengguna'); })); break;
       case 'export':
         run(api('adminExport', { tahun: S.adm.tahun, bulan: S.adm.bulan }).then(function (d) { download(d.name, 'text/csv;charset=utf-8', d.csv, false); })); break;
+      case 'copydb':
+        var inp = $('db-url'); inp.select();
+        (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(inp.value) : Promise.reject()).then(function () { toast('Pautan disalin'); }, function () { try { document.execCommand('copy'); toast('Pautan disalin'); } catch (x) { toast('Pilih pautan dan tekan Ctrl+C', true); } }); break;
       case 'newtn': tnDlg(null); break;
       case 'edittn': tnDlg(Number(t.dataset.i)); break;
       case 'savetn': doSaveTn(); break;

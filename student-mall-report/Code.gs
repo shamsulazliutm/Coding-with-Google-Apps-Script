@@ -27,7 +27,9 @@ var APP = {
   // Folder Drive untuk menyimpan semua PDF. Kosongkan ('') untuk mencipta folder baharu secara automatik.
   // Pemilik skrip mesti mempunyai akses Editor pada folder ini. Disyorkan kongsi "Restricted" (bukan sesiapa dengan pautan).
   ROOT_FOLDER_ID: '1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE',
-  ROOT_FOLDER_NAME: 'Laporan Kewangan Penyewa'
+  ROOT_FOLDER_NAME: 'Laporan Kewangan Penyewa',
+  // Pautan Google Sheet (pangkalan data) yang dipaparkan dalam tab Pangkalan Data untuk admin.
+  DATABASE_URL: 'https://docs.google.com/spreadsheets/d/1X8LexdkStIb4-93sZz4ZmAD5ZbzD1BS3RWz4JZBgJ50/edit'
 };
 
 var SHEETS = {
@@ -1257,6 +1259,46 @@ function adminDashboard_(user, p) {
 }
 
 // ============================================================
+// Pangkalan data (pautan ke Google Sheet untuk admin)
+// ============================================================
+
+var SHEET_INFO = {};
+SHEET_INFO[SHEETS.USERS] = 'Akaun log masuk dan peranan (Admin atau Penyewa)';
+SHEET_INFO[SHEETS.LOTS] = 'Senarai lot Student Mall dan SUB';
+SHEET_INFO[SHEETS.TENANCIES] = 'Tempoh sewa setiap lot (lot boleh bertukar penyewa)';
+SHEET_INFO[SHEETS.BIZ] = 'Maklumat peniaga bagi setiap penyewaan (mengandungi No. KP)';
+SHEET_INFO[SHEETS.REPORTS] = 'Laporan kewangan bulanan, status dan pautan fail PDF';
+SHEET_INFO[SHEETS.LOG] = 'Log audit semua tindakan dan ralat sistem';
+SHEET_INFO[SHEETS.REMINDERS] = 'Rekod peringatan yang telah dihantar';
+
+function spreadsheetIdFromUrl_(url) {
+  var m = /\/spreadsheets\/d\/([A-Za-z0-9_-]+)/.exec(String(url || ''));
+  return m ? m[1] : '';
+}
+
+/** Maklumat pangkalan data untuk tab Pangkalan Data (admin sahaja). */
+function adminDatabase_() {
+  var ss = ss_();
+  var actualId = ss.getId();
+  var configuredId = spreadsheetIdFromUrl_(APP.DATABASE_URL);
+  var base = 'https://docs.google.com/spreadsheets/d/' + actualId;   // pautan setiap sheet sentiasa merujuk sheet yang benar-benar digunakan sistem
+  var sheets = Object.keys(COLS).map(function (name) {
+    var sh = ss.getSheetByName(name);
+    return {
+      nama: name, huraian: SHEET_INFO[name] || '', bil: sh ? readTable_(name).length : 0,
+      ada: !!sh, url: sh ? base + '/edit#gid=' + sh.getSheetId() : base + '/edit'
+    };
+  });
+  return {
+    url: configuredId ? APP.DATABASE_URL : base + '/edit', id: configuredId || actualId,
+    nama: ss.getName(), sama: !configuredId || configuredId === actualId,
+    idSebenar: actualId, urlSebenar: 'https://docs.google.com/spreadsheets/d/' + actualId + '/edit',
+    folderUrl: APP.ROOT_FOLDER_ID ? 'https://drive.google.com/drive/folders/' + APP.ROOT_FOLDER_ID : '',
+    sheets: sheets
+  };
+}
+
+// ============================================================
 // Reminders
 // ============================================================
 /**
@@ -1469,7 +1511,8 @@ var ROUTES = {
   adminSaveTenancy:  { auth: true, role: ROLE.ADMIN, fn: adminSaveTenancy_ },
   adminDeleteTenancy: { auth: true, role: ROLE.ADMIN, fn: adminDeleteTenancy_ },
   adminSaveLot:  { auth: true, role: ROLE.ADMIN, fn: adminSaveLot_ },
-  adminExport:   { auth: true, role: ROLE.ADMIN, fn: adminExport_ }
+  adminExport:   { auth: true, role: ROLE.ADMIN, fn: adminExport_ },
+  adminDatabase: { auth: true, role: ROLE.ADMIN, fn: adminDatabase_ }
 };
 
 /** Dipanggil oleh pelayar melalui google.script.run.rpc(method, token, params). */
@@ -1507,6 +1550,7 @@ function checkSystem() {
   step('Pengguna aktif (Admin)', function () { return readTable_(SHEETS.USERS).filter(function (u) { return u.peranan === ROLE.ADMIN && u.status === 'Aktif'; }).map(function (u) { return u.email; }).join(', ') || 'TIADA'; });
   step('Kebenaran e-mel (MailApp)', function () { return 'baki kuota harian ' + MailApp.getRemainingDailyQuota(); });
   step('Folder Drive', function () { return rootFolder_().getName(); });
+  step('Pautan pangkalan data', function () { var d = adminDatabase_(); return d.sama ? 'sepadan dengan sheet yang digunakan (' + d.nama + ')' : 'TIDAK SEPADAN: sistem menggunakan ' + d.idSebenar + ' tetapi DATABASE_URL menunjuk ke ' + d.id; });
   step('Trigger peringatan', function () { return ScriptApp.getProjectTriggers().filter(function (t) { return t.getHandlerFunction() === 'dailyReminderJob'; }).length + ' trigger'; });
   step('URL web app', function () { return appUrl_() || '(belum di-deploy)'; });
   var msg = out.join('\n');
