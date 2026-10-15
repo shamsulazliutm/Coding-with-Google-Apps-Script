@@ -597,6 +597,13 @@ t('dashboard admin: rumusan mengikut peniaga sepadan dengan jumlah', () => {
   assert.ok(Math.abs(sum - d.jumlah.pendapatan) < 0.01, 'jumlah pendapatan sepadan');
   d.peniaga.forEach(o => { if (o.pendapatan !== null) assert.ok(Math.abs(o.untungRugi - (o.pendapatan - o.perbelanjaan)) < 0.01); });
 });
+t('dashboard admin: kutipan sewa mengikut peniaga', () => {
+  const d = ok('adminDashboard', adm.token, { tahun: 2026, bulan: 0 });
+  const dit = d.peniaga.reduce((a, o) => a + o.sewaDiterima, 0), tun = d.peniaga.reduce((a, o) => a + (o.sewaTertunggak || 0), 0);
+  assert.ok(Math.abs(dit - d.sewaJumlah.diterima) < 0.01 && Math.abs(tun - d.sewaJumlah.tertunggak) < 0.01);
+  d.peniaga.forEach(o => { if (o.sewaTertunggak !== null) assert.ok(Math.abs(o.sewaJumlah - (o.sewaDiterima + o.sewaTertunggak)) < 0.01 && o.sewaTertunggak >= 0); });
+  assert.ok(d.sewaJumlah.diterima >= 0);
+});
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Tidak aktif' } });
   assert.strictEqual(bad('myReports', ten.token, {}).code, 'SESSION');

@@ -1366,7 +1366,20 @@ function adminDashboard_(user, p) {
     var k = r.kodLot + '|' + r.idSewa, o = pnMap[k];
     if (!o) { o = pnMap[k] = { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, pendapatan: 0, perbelanjaan: 0, dikira: 0 }; peniaga.push(o); }
     if (counted_(r)) { o.pendapatan += r.pendapatan; o.perbelanjaan += r.perbelanjaan; o.dikira++; }
+    // Kutipan sewa: diterima = bayaran sewa dalam laporan yang sudah dihantar; tertunggak = kekurangan berbanding sewa bulanan, bagi setiap bulan
+    var dihantar = r.status === 'sent' || r.status === 'ok';
+    var bayar = dihantar && typeof r.sewa === 'number' ? r.sewa : 0;
+    o.sewaDiterima = (o.sewaDiterima || 0) + bayar;
+    if (typeof r.sewaBulanan === 'number') { o.sewaAda = true; o.sewaTertunggak = (o.sewaTertunggak || 0) + Math.max(0, r.sewaBulanan - bayar); }
   });
+  var sewaJum = { diterima: 0, tertunggak: 0 };
+  peniaga.forEach(function (o) {
+    o.sewaDiterima = round2_(o.sewaDiterima || 0);
+    o.sewaTertunggak = o.sewaAda ? round2_(o.sewaTertunggak || 0) : null;
+    o.sewaJumlah = o.sewaTertunggak === null ? null : round2_(o.sewaDiterima + o.sewaTertunggak);
+    sewaJum.diterima += o.sewaDiterima; sewaJum.tertunggak += o.sewaTertunggak || 0;
+  });
+  sewaJum.diterima = round2_(sewaJum.diterima); sewaJum.tertunggak = round2_(sewaJum.tertunggak);
   peniaga.forEach(function (o) {
     o.pendapatan = o.dikira ? round2_(o.pendapatan) : null; o.perbelanjaan = o.dikira ? round2_(o.perbelanjaan) : null;
     o.untungRugi = o.dikira ? round2_(o.pendapatan - o.perbelanjaan) : null;
@@ -1387,7 +1400,7 @@ function adminDashboard_(user, p) {
     counts: counts, jumlahBaris: sel.length, lewat: lewat,
     kadar: { hantar: hantar, dijangka: sel.length, peratus: sel.length ? Math.round(hantar * 100 / sel.length) : null },
     jumlah: { pendapatan: round2_(jum.pendapatan), perbelanjaan: round2_(jum.perbelanjaan), untung: round2_(jum.pendapatan - jum.perbelanjaan), sewa: round2_(jum.sewa), bilLaporan: jum.dikira },
-    siri: siri, lokasi: lokasi, peniaga: peniaga, teratas: teratas, rugi: rugi,
+    siri: siri, lokasi: lokasi, peniaga: peniaga, sewaJumlah: sewaJum, teratas: teratas, rugi: rugi,
     tindakan: {
       menunggu: { jumlah: menunggu.length, senarai: menunggu.sort(oldest).slice(0, 8).map(slim) },
       tertunggak: { jumlah: tertunggak.length, senarai: tertunggak.sort(oldest).slice(0, 8).map(slim) },

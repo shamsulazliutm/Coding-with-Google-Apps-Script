@@ -726,6 +726,26 @@ textarea.fi { min-height: 72px; resize: vertical; }
       (d.peniaga.length ? '<div class="tbl-wrap" style="box-shadow:none"><table class="mini" style="min-width:560px"><thead><tr><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Pendapatan (RM)</th><th class="num">Perbelanjaan (RM)</th><th class="num">Untung/Rugi (RM)</th></tr></thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table></div>' : '<p class="hint" style="margin:0">Tiada penyewaan dalam tempoh ini.</p>') + '</div></div>';
   }
 
+  /** Rumusan kutipan sewa mengikut peniaga, dengan dua kad skor. */
+  function sewaTable(d) {
+    var isN = function (v) { return typeof v === 'number' && isFinite(v); };
+    var money = function (v) { return isN(v) ? fmt(v) : '-'; };
+    var td = 0, tt = 0, tj = 0, any = false;
+    var body = d.peniaga.map(function (o) {
+      var a = isN(o.sewaDiterima) ? o.sewaDiterima : 0, t = isN(o.sewaTertunggak) ? o.sewaTertunggak : null;
+      var j = t === null ? null : Math.round((a + t) * 100) / 100;
+      td += a; if (t !== null) { tt += t; tj += j; any = true; }
+      return '<tr><td class="nw"><b>' + esc(o.lotNama) + '</b></td><td>' + esc(o.perniagaan || '-') + '<span class="sub">' + esc(o.pelajar || '') + '</span></td>' +
+        '<td class="num mono">' + fmt(a) + '</td><td class="num mono ' + (t ? 'neg' : '') + '">' + money(t) + '</td><td class="num mono">' + money(j) + '</td></tr>';
+    }).join('');
+    td = Math.round(td * 100) / 100; tt = Math.round(tt * 100) / 100; tj = Math.round(tj * 100) / 100;
+    var foot = d.peniaga.length ? '<tr class="tot"><td colspan="2">Jumlah</td><td class="num mono">' + fmt(td) + '</td><td class="num mono ' + (tt ? 'neg' : '') + '">' + (any ? fmt(tt) : '-') + '</td><td class="num mono">' + (any ? fmt(tj) : '-') + '</td></tr>' : '';
+    var sj = d.sewaJumlah || { diterima: 0, tertunggak: 0 };
+    return '<div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + kpi('Sewa diterima', rmFull(sj.diterima), 'Bayaran sewa dalam laporan yang dihantar') + kpi('Sewa tertunggak', rmFull(sj.tertunggak), 'Sewa bulanan tolak bayaran diterima') + '</div>' +
+      '<div class="dgrid" style="grid-template-columns:1fr"><div class="dcard"><h3>Rumusan Kutipan Sewa mengikut Peniaga</h3><p class="hint">Bagi tempoh yang dipilih. Sewa tertunggak ialah kekurangan berbanding sewa bulanan setiap bulan; jumlah = diterima + tertunggak.</p>' +
+      (d.peniaga.length ? '<div class="tbl-wrap" style="box-shadow:none"><table class="mini" style="min-width:560px"><thead><tr><th>Lot</th><th>Perniagaan · Pelajar</th><th class="num">Sewa diterima (RM)</th><th class="num">Sewa tertunggak (RM)</th><th class="num">Jumlah (RM)</th></tr></thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table></div>' : '<p class="hint" style="margin:0">Tiada penyewaan dalam tempoh ini.</p>') + '</div></div>';
+  }
+
   function dashAdminHtml(d) {
     var j = d.jumlah, c = d.counts, cy = new Date().getFullYear(), yrs = [cy + 1, cy, cy - 1, cy - 2];
     var per = d.bulan === 0 ? 'sepanjang ' + d.tahun : MS[d.bulan - 1] + ' ' + d.tahun;
@@ -747,7 +767,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.dihantar * 100 / x.dijangka : null, b: x.dijangka ? x.tepatMasa * 100 / x.dijangka : null }; }), { pct: true, label: 'Kadar penghantaran bulanan', empty: 'Belum ada data.' }) + '</div></div>' +
       '<div class="dcard"><h3>Pendapatan dan perbelanjaan semua lot</h3><p class="hint">Jumlah laporan yang sudah dihantar, setiap bulan ' + d.tahun + '.</p>' + legend([['Pendapatan', 'var(--c1)'], ['Perbelanjaan', 'var(--c2)']]) +
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka && x.dihantar ? x.pendapatan : null, b: x.dijangka && x.dihantar ? x.perbelanjaan : null }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan semua lot', empty: 'Belum ada laporan dihantar.' }) + '</div></div>' +
-      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d);
+      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d) + sewaTable(d);
     return h;
   }
 
