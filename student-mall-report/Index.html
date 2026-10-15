@@ -160,6 +160,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 .otp { font-family: var(--font-mono); font-size: 24px; letter-spacing: 8px; text-align: center; }
 
 /* ---------- dashboard ---------- */
+.stackcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
 .dgrid > * { min-width: 0; }
 .dcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
@@ -630,8 +631,8 @@ textarea.fi { min-height: 72px; resize: vertical; }
         if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw) + '" y="' + y(d.a) + '" width="' + bw * 2 + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c3)"/>' + vlab(cx, y(d.a) - 4, Math.round(d.a) + '%', 'out');
         if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx - bw * 0.55) + '" y="' + y(d.b) + '" width="' + bw * 1.1 + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c1)"/>' + (T + ih - y(d.b) >= 14 ? vlab(cx, y(d.b) + 11, Math.round(d.b) + '%', 'in') : '');
       } else {
-        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw - 1) + '" y="' + y(d.a) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)"/>' + vlab(cx - bw / 2 - 1, y(d.a) - 4, rmShort(d.a), 'out');
-        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx + 1) + '" y="' + y(d.b) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c2)"/>' + vlab(cx + bw / 2 + 1, y(d.b) - 4, rmShort(d.b), 'out');
+        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw - 1) + '" y="' + y(d.a) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="' + ((o.colors || [])[0] || 'var(--c1)') + '"/>' + vlab(cx - bw / 2 - 1, y(d.a) - 4, rmShort(d.a), 'out');
+        if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx + 1) + '" y="' + y(d.b) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="' + ((o.colors || [])[1] || 'var(--c2)') + '"/>' + vlab(cx + bw / 2 + 1, y(d.b) - 4, rmShort(d.b), 'out');
       }
       g += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(d.label) + '</text></g>';
     });
@@ -765,8 +766,10 @@ textarea.fi { min-height: 72px; resize: vertical; }
         d.lokasi.map(function (o) { return '<tr><td>' + esc(o.lokasi) + '</td><td class="num mono">' + o.dihantar + '/' + o.dijangka + '</td><td class="num mono">' + rmShort(o.pendapatan) + '</td><td class="num mono">' + rmShort(o.perbelanjaan) + '</td></tr>'; }).join('') + '</tbody></table>' : '') + '</div>' +
       '<div class="dcard"><h3>Kadar penghantaran mengikut bulan</h3><p class="hint">Peratus laporan yang dihantar, dan yang dihantar tepat masa.</p>' + legend([['Dihantar', 'var(--c3)'], ['Tepat masa', 'var(--c1)']]) +
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.dihantar * 100 / x.dijangka : null, b: x.dijangka ? x.tepatMasa * 100 / x.dijangka : null }; }), { pct: true, label: 'Kadar penghantaran bulanan', empty: 'Belum ada data.' }) + '</div></div>' +
-      '<div class="dcard"><h3>Pendapatan dan perbelanjaan semua lot</h3><p class="hint">Jumlah laporan yang sudah dihantar, setiap bulan ' + d.tahun + '.</p>' + legend([['Pendapatan', 'var(--c1)'], ['Perbelanjaan', 'var(--c2)']]) +
+      '<div class="stackcol">' + '<div class="dcard"><h3>Pendapatan dan perbelanjaan semua lot</h3><p class="hint">Jumlah laporan yang sudah dihantar, setiap bulan ' + d.tahun + '.</p>' + legend([['Pendapatan', 'var(--c1)'], ['Perbelanjaan', 'var(--c2)']]) +
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka && x.dihantar ? x.pendapatan : null, b: x.dijangka && x.dihantar ? x.perbelanjaan : null }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan semua lot', empty: 'Belum ada laporan dihantar.' }) + '</div></div>' +
+      '<div class="dcard"><h3>Kutipan sewa semua lot</h3><p class="hint">Sewa diterima dan sewa tertunggak, setiap bulan ' + d.tahun + '.</p>' + legend([['Diterima', 'var(--c1)'], ['Tertunggak', 'var(--c3)']]) +
+      '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.sewaDiterima : null, b: x.dijangka ? x.sewaTertunggak : null }; }), { names: ['Diterima', 'Tertunggak'], colors: ['var(--c1)', 'var(--c3)'], label: 'Kutipan sewa semua lot', empty: 'Belum ada data sewa.' }) + '</div></div></div>' +
       '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d) + sewaTable(d);
     return h;
   }

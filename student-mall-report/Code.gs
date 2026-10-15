@@ -1284,6 +1284,11 @@ function adminExport_(user, p) {
 // Dashboard
 // ============================================================
 
+/** Kutipan sewa bagi satu baris laporan: bayar = bayaran sewa laporan yang sudah dihantar; tunggak = kekurangan berbanding sewa bulanan (null jika sewa bulanan belum diisi). */
+function rentOf_(r) {
+  var bayar = (r.status === 'sent' || r.status === 'ok') && typeof r.sewa === 'number' ? r.sewa : 0;
+  return { bayar: bayar, tunggak: typeof r.sewaBulanan === 'number' ? Math.max(0, r.sewaBulanan - bayar) : null };
+}
 function counted_(r) { return (r.status === 'sent' || r.status === 'ok') && typeof r.pendapatan === 'number' && typeof r.perbelanjaan === 'number'; }
 function shortMonth_(m) { return MONTHS_MS[m - 1].slice(0, 3); }
 
@@ -1343,13 +1348,14 @@ function adminDashboard_(user, p) {
   var siri = [];
   for (var k = 1; k <= 12; k++) {
     var rows = all.rows.filter(function (r) { return r.bulan === k; });
-    var it = { bulan: k, bulanNama: shortMonth_(k), dijangka: rows.length, dihantar: 0, tepatMasa: 0, disahkan: 0, pendapatan: 0, perbelanjaan: 0 };
+    var it = { bulan: k, bulanNama: shortMonth_(k), dijangka: rows.length, dihantar: 0, tepatMasa: 0, disahkan: 0, pendapatan: 0, perbelanjaan: 0, sewaDiterima: 0, sewaTertunggak: 0 };
     rows.forEach(function (r) {
+      var rt = rentOf_(r); it.sewaDiterima += rt.bayar; it.sewaTertunggak += rt.tunggak || 0;
       if (r.status === 'sent' || r.status === 'ok') { it.dihantar++; if (!r.lewat) it.tepatMasa++; }
       if (r.status === 'ok') it.disahkan++;
       if (counted_(r)) { it.pendapatan += r.pendapatan; it.perbelanjaan += r.perbelanjaan; }
     });
-    it.pendapatan = round2_(it.pendapatan); it.perbelanjaan = round2_(it.perbelanjaan);
+    it.pendapatan = round2_(it.pendapatan); it.perbelanjaan = round2_(it.perbelanjaan); it.sewaDiterima = round2_(it.sewaDiterima); it.sewaTertunggak = round2_(it.sewaTertunggak);
     siri.push(it);
   }
 
@@ -1370,10 +1376,9 @@ function adminDashboard_(user, p) {
     if (!o) { o = pnMap[k] = { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, pendapatan: 0, perbelanjaan: 0, dikira: 0 }; peniaga.push(o); }
     if (counted_(r)) { o.pendapatan += r.pendapatan; o.perbelanjaan += r.perbelanjaan; o.dikira++; }
     // Kutipan sewa: diterima = bayaran sewa dalam laporan yang sudah dihantar; tertunggak = kekurangan berbanding sewa bulanan, bagi setiap bulan
-    var dihantar = r.status === 'sent' || r.status === 'ok';
-    var bayar = dihantar && typeof r.sewa === 'number' ? r.sewa : 0;
-    o.sewaDiterima = (o.sewaDiterima || 0) + bayar;
-    if (typeof r.sewaBulanan === 'number') { o.sewaAda = true; o.sewaTertunggak = (o.sewaTertunggak || 0) + Math.max(0, r.sewaBulanan - bayar); }
+    var rt = rentOf_(r);
+    o.sewaDiterima = (o.sewaDiterima || 0) + rt.bayar;
+    if (rt.tunggak !== null) { o.sewaAda = true; o.sewaTertunggak = (o.sewaTertunggak || 0) + rt.tunggak; }
   });
   var sewaJum = { diterima: 0, tertunggak: 0 };
   peniaga.forEach(function (o) {
