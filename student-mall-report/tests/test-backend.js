@@ -383,24 +383,16 @@ t('dashboard: akses mengikut peranan dan tiada No. KP dalam data admin', () => {
 });
 
 console.log('Pangkalan data');
-t('tab Pangkalan Data: pautan konfigurasi, senarai sheet dengan pautan gid dan bilangan baris', () => {
-  const d = ok('adminDatabase', adm.token, {});
-  assert.strictEqual(d.id, '1X8LexdkStIb4-93sZz4ZmAD5ZbzD1BS3RWz4JZBgJ50');
-  assert.strictEqual(d.url, 'https://docs.google.com/spreadsheets/d/1X8LexdkStIb4-93sZz4ZmAD5ZbzD1BS3RWz4JZBgJ50/edit');
-  assert.strictEqual(d.sheets.map(x => x.nama).join(','), 'Pengguna,Lot,Penyewaan,Peniaga,Laporan,Log,Peringatan');
-  d.sheets.forEach(x => { assert.ok(x.ada); assert.match(x.url, /^https:\/\/docs\.google\.com\/spreadsheets\/d\/SS1\/edit#gid=\d+$/, 'pautan sheet merujuk sheet sebenar'); assert.ok(x.huraian); });
-  assert.strictEqual(d.sheets.find(x => x.nama === 'Pengguna').bil, b.readTable_('Pengguna').length);
-  assert.strictEqual(d.folderUrl, 'https://drive.google.com/drive/folders/1n7GPr2AIOQ4qBWJCZxWBID4RvbfKHONE');
-  assert.strictEqual(d.sama, false, 'sheet sebenar (SS1) berbeza daripada pautan konfigurasi: amaran'); assert.strictEqual(d.idSebenar, 'SS1');
+t('tab Pangkalan Data = pautan terus: admin menerima pautan, penyewa tidak', () => {
+  const me = ok('me', adm.token, {}); assert.strictEqual(me.user.dbUrl, 'https://docs.google.com/spreadsheets/d/1X8LexdkStIb4-93sZz4ZmAD5ZbzD1BS3RWz4JZBgJ50/edit');
+  assert.strictEqual(ok('me', ten.token, {}).user.dbUrl, undefined, 'penyewa tidak diberi pautan pangkalan data');
+  assert.strictEqual(bad('adminDatabase', adm.token, {}, /tidak dikenali/).ok, false, 'tiada halaman perantara');
 });
-t('pautan sepadan dengan sheet sebenar: tiada amaran; checkSystem melaporkan padanan', () => {
+t('checkSystem menyemak pautan pangkalan data dengan sheet sebenar', () => {
+  assert.match(b.checkSystem(), /TIDAK SEPADAN/);
   const o = createBackend(); o.setupSystem(); o.ctx.APP.DATABASE_URL = 'https://docs.google.com/spreadsheets/d/SS1/edit';
-  o.cache['otpwait:utmxcite@utm.my'] = undefined; o.rpc('requestOtp', null, { email: 'utmxcite@utm.my' });
-  const code = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1];
-  const tok = o.rpc('verifyOtp', null, { email: 'utmxcite@utm.my', code }).data.token;
-  assert.strictEqual(o.rpc('adminDatabase', tok, {}).data.sama, true); assert.match(o.checkSystem(), /Pautan pangkalan data: sepadan/);
+  assert.match(o.checkSystem(), /Pautan pangkalan data: sepadan/);
 });
-t('tab Pangkalan Data: admin sahaja', () => { assert.strictEqual(bad('adminDatabase', ten.token, {}).code, 'FORBIDDEN'); });
 
 console.log('Format tarikh');
 t('lajur tarikh disimpan sebagai tarikh sebenar (bukan teks) dan dibaca semula sebagai teks piawai', () => {
