@@ -5,7 +5,7 @@
  * Student Mall & SUB Financial Monthly Report
  * Konfigurasi umum, nama sheet dan susunan lajur.
  *
- * PENTING: jangan ubah susunan lajur dalam sheet. Kod membaca lajur mengikut kedudukan.
+ * PENTING: kod memadankan lajur mengikut TAJUK lajur (baris 1). Lajur boleh disisip atau disusun semula, tetapi jangan ubah ejaan tajuk lajur sistem.
  */
 
 var APP = {
@@ -70,7 +70,7 @@ COLS[SHEETS.REPORTS] = [
   ['id', 'ID', 't'], ['kodLot', 'Kod lot', 't'], ['tahun', 'Tahun', 'n'], ['bulan', 'Bulan', 'n'],
   ['pendapatan', 'Pendapatan (RM)', 'n'], ['perbelanjaan', 'Perbelanjaan (RM)', 'n'], ['sewa', 'Bayaran sewa (RM)', 'n'],
   ['sewaPeralatan', 'Sewa peralatan', 't'], ['fLaporan', 'Fail laporan', 't'], ['fSewa', 'Fail resit sewa', 't'],
-  ['fIncubator', 'Fail resit incubator', 't'], ['status', 'Status', 't'], ['lewat', 'Lewat', 't'], ['komen', 'Komen admin', 't'],
+  ['fIncubator', 'Fail resit incubator', 't'], ['status', 'Status', 't'], ['lewat', 'Lewat', 't'], ['catatan', 'Catatan', 't'], ['komen', 'Komen admin', 't'],
   ['disemakOleh', 'Disemak oleh', 't'], ['tarikhSemak', 'Tarikh disemak', 'dt'], ['tarikhHantar', 'Tarikh hantar', 'dt'],
   ['akuan', 'Akuan', 't'], ['dikemaskini', 'Dikemas kini', 'dt'], ['idSewa', 'ID penyewaan', 't']
 ];
@@ -80,6 +80,15 @@ COLS[SHEETS.LOG] = [
 COLS[SHEETS.REMINDERS] = [
   ['kunci', 'Kunci', 't'], ['masa', 'Masa', 'dt'], ['akhir', 'Tarikh akhir', 'd']
 ];
+
+/** Tajuk lajur yang dinamakan semula (label baharu -> label lama), supaya data lama dikenali. */
+var ALIASES = {};
+ALIASES[SHEETS.USERS] = { 'ID penyewaan': 'Kod lot' };
+ALIASES[SHEETS.BIZ] = { 'ID penyewaan': 'Kod lot' };
+
+/** Lajur baharu disisip selepas lajur ini (selain itu ditambah di hujung sheet). */
+var INSERT_AFTER = {};
+INSERT_AFTER[SHEETS.REPORTS] = { catatan: 'lewat' };
 
 /** Jenis fail lampiran: kunci -> sambungan nama fail dan lajur dalam sheet Laporan */
 var FILE_KINDS = {
@@ -237,41 +246,79 @@ function sheet_(name) {
 }
 
 /** Baca semua baris. Setiap objek ada _row (nombor baris dalam sheet). */
-function readTable_(name) {
-  var cols = COLS[name];
+/**
+ * Lajur dipadankan mengikut TAJUK lajur (baris 1), bukan kedudukan. Anda boleh menyisip lajur sendiri atau menyusun semula
+ * lajur tanpa merosakkan data. Jangan ubah ejaan tajuk lajur sistem. Lajur sendiri tidak diubah oleh sistem.
+ */
+var LAYOUT_ = {};   // dikosongkan pada setiap permintaan (lihat rpc) dan selepas setup
+
+function findCol_(head, label) {
+  var j = head.indexOf(label);
+  if (j >= 0) return j;
+  var want = String(label).toLowerCase();
+  for (var i = 0; i < head.length; i++) if (String(head[i]).toLowerCase() === want) return i;
+  return -1;
+}
+
+function headerOf_(sh) {
+  var width = sh.getLastColumn();
+  if (!width) return [];
+  return sh.getRange(1, 1, 1, width).getValues()[0].map(function (h) { return String(h === null || h === undefined ? '' : h).trim(); });
+}
+
+function layout_(name) {
+  if (LAYOUT_[name]) return LAYOUT_[name];
   var sh = sheet_(name);
-  var last = sh.getLastRow();
+  var head = headerOf_(sh);
+  var idx = {};
+  COLS[name].forEach(function (c) {
+    var j = findCol_(head, c[1]);
+    if (j < 0) fail_('Lajur "' + c[1] + '" tidak dijumpai dalam sheet "' + name + '". Jalankan setupSystem() untuk menambahnya semula.', 'SCHEMA');
+    idx[c[0]] = j;
+  });
+  LAYOUT_[name] = { sh: sh, width: Math.max(head.length, 1), idx: idx };
+  return LAYOUT_[name];
+}
+
+function readTable_(name) {
+  var cols = COLS[name], L = layout_(name);
+  var last = L.sh.getLastRow();
   if (last < 2) return [];
-  var vals = sh.getRange(2, 1, last - 1, cols.length).getValues();
+  var vals = L.sh.getRange(2, 1, last - 1, L.width).getValues();
   var out = [];
   for (var i = 0; i < vals.length; i++) {
     var empty = true;
-    var o = { _row: i + 2 };
+    var o = { _row: i + 2, _raw: vals[i] };
     for (var j = 0; j < cols.length; j++) {
-      var v = cell_(vals[i][j], cols[j][2]);
-      if (v !== '' && v !== null) empty = false;
-      o[cols[j][0]] = v;
+      var v = cell_(vals[i][L.idx[cols[j][0]]], cols[j][2]);
+      if (v !== '' && v !== null && v !== undefined) empty = false;
+      o[cols[j][0]] = v === undefined ? '' : v;
     }
     if (!empty) out.push(o);
   }
   return out;
 }
 
-function toRow_(name, obj) {
-  return COLS[name].map(function (c) {
+/** Baris sheet daripada objek. `base` ialah baris asal supaya lajur sendiri pengguna dikekalkan. */
+function rowFrom_(name, obj, base) {
+  var L = layout_(name);
+  var row = base ? base.slice() : [];
+  while (row.length < L.width) row.push('');
+  COLS[name].forEach(function (c) {
     var v = obj[c[0]];
-    if (v === undefined || v === null) return '';
-    return c[2] === 'd' || c[2] === 'dt' ? toDate_(v) : v;   // simpan sebagai tarikh sebenar, bukan teks
+    row[L.idx[c[0]]] = v === undefined || v === null ? '' : (c[2] === 'd' || c[2] === 'dt' ? toDate_(v) : v);   // tarikh disimpan sebagai tarikh sebenar
   });
+  return row;
 }
 
 function appendObj_(name, obj) {
-  sheet_(name).appendRow(toRow_(name, obj));
+  layout_(name).sh.appendRow(rowFrom_(name, obj, null));
 }
 
 function updateObj_(name, obj) {
   if (!obj._row) throw new Error('updateObj_ memerlukan _row');
-  sheet_(name).getRange(obj._row, 1, 1, COLS[name].length).setValues([toRow_(name, obj)]);
+  var L = layout_(name);
+  L.sh.getRange(obj._row, 1, 1, L.width).setValues([rowFrom_(name, obj, obj._raw)]);
 }
 
 function deleteObj_(name, obj) {
@@ -704,6 +751,7 @@ function reportView_(rep, lot, y, m) {
     files: filesView_(rep),
     lewat: !!(rep && rep.lewat === 'Ya'),
     kesempatanLewat: key === 'none' && today > due,
+    catatan: rep ? rep.catatan || '' : '',
     komen: rep ? rep.komen || '' : '',
     disemakOleh: rep ? rep.disemakOleh || '' : '',
     tarikhSemak: rep ? rep.tarikhSemak || '' : '',
@@ -766,6 +814,11 @@ function checkEditable_(lot, y, m, rep) {
   if (rep && rep.status === STATUS.OK) fail_('Laporan yang telah disahkan tidak boleh diubah.');
 }
 
+/** Catatan penyewa: teks bebas, maksimum 500 aksara, tanpa aksara kawalan. */
+function cleanNote_(v) {
+  return String(v === undefined || v === null ? '' : v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim().slice(0, 500);
+}
+
 function readMoney_(v, label) {
   var n = toNum_(v);
   if (n !== null && (isNaN(n) || n < 0 || n > 100000000)) fail_(label + ' tidak sah. Masukkan nombor 0 atau lebih.');
@@ -779,6 +832,7 @@ function saveMyReport_(user, p) {
   var pendapatan = readMoney_(d.pendapatan, 'Jumlah pendapatan');
   var perbelanjaan = readMoney_(d.perbelanjaan, 'Jumlah perbelanjaan');
   var sewa = readMoney_(d.sewa, 'Bayaran sewa');
+  var catatan = cleanNote_(d.catatan);
   return withLock_(function () {
     var existing = findBy_(readTable_(SHEETS.REPORTS), 'id', reportId_(lot.kodLot, y, m));
     checkEditable_(lot, y, m, existing);
@@ -787,6 +841,7 @@ function saveMyReport_(user, p) {
     rep.perbelanjaan = perbelanjaan;
     rep.sewa = sewa;
     rep.sewaPeralatan = d.sewaPeralatan === true ? 'Ya' : d.sewaPeralatan === false ? 'Tidak' : '';
+    if (d.catatan !== undefined) rep.catatan = catatan;   // catatan penyewa, terbuka kepada admin; tidak diubah jika tidak dihantar
     rep.akuan = d.akuan === true ? 'Ya' : '';
     rep.dikemaskini = nowStr_();
     updateObj_(SHEETS.REPORTS, rep);
@@ -1206,12 +1261,12 @@ function csvCell_(v) {
 function adminExport_(user, p) {
   var data = adminReports_(user, p);
   var head = ['Lot', 'Lokasi', 'Perniagaan', 'Pelajar', 'Tahun', 'Bulan', 'Pendapatan (RM)', 'Perbelanjaan (RM)', 'Untung/Rugi (RM)',
-              'Bayaran sewa (RM)', 'Sewa peralatan', 'Status', 'Lewat', 'Tarikh hantar', 'Disemak oleh'];
+              'Bayaran sewa (RM)', 'Sewa peralatan', 'Status', 'Lewat', 'Tarikh hantar', 'Disemak oleh', 'Catatan penyewa'];
   var lines = [head.map(csvCell_).join(',')];
   data.rows.forEach(function (r) {
     lines.push([r.lotNama, r.lokasi, r.perniagaan, r.pelajar, r.tahun, MONTHS_MS[r.bulan - 1], r.pendapatan, r.perbelanjaan, r.untungRugi,
       r.sewa, r.sewaPeralatan === null ? '' : (r.sewaPeralatan ? 'Ya' : 'Tidak'),
-      ({ ok: 'Disahkan', sent: 'Dihantar', fix: 'Perlu dibetulkan', none: 'Belum dihantar' })[r.status], r.lewat ? 'Ya' : '', r.tarikhHantar, r.disemakOleh].map(csvCell_).join(','));
+      ({ ok: 'Disahkan', sent: 'Dihantar', fix: 'Perlu dibetulkan', none: 'Belum dihantar' })[r.status], r.lewat ? 'Ya' : '', r.tarikhHantar, r.disemakOleh, r.catatan].map(csvCell_).join(','));
   });
   logAction_(user.email, 'Eksport CSV', data.tahun + '-' + (data.bulan ? pad2_(data.bulan) : 'semua'));
   return { name: 'Laporan_' + data.tahun + '-' + (data.bulan ? pad2_(data.bulan) : 'semua') + '.csv', csv: '﻿' + lines.join('\r\n') };
@@ -1346,7 +1401,7 @@ function dailyReminderJob() {
 
 /** Boleh dipanggil manual dari editor untuk ujian: runReminders_('2026-10-05'). */
 function runReminders_(today) {
-  REMINDER_DEADLINES_ = null;
+  REMINDER_DEADLINES_ = null; LAYOUT_ = {};
   var t = ymFromStr_(today);
   var y = t.m === 1 ? t.y - 1 : t.y, m = t.m === 1 ? 12 : t.m - 1;   // bulan laporan = bulan lepas
   var lots = readTable_(SHEETS.LOTS).filter(function (l) { return l.status === 'Aktif'; });
@@ -1404,15 +1459,50 @@ function setupSystem() {
   return msg;
 }
 
+/**
+ * Pastikan sheet dan semua lajur sistem wujud. Tidak menyusun semula atau menimpa lajur sedia ada:
+ * lajur yang tiada disisip (Catatan selepas Lewat) atau ditambah di hujung, dan tajuk lama dinamakan semula.
+ */
 function ensureSheet_(ss, name) {
+  LAYOUT_ = {};
   var cols = COLS[name];
   var sh = ss.getSheetByName(name) || ss.insertSheet(name);
-  var head = cols.map(function (c) { return c[1]; });
-  sh.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold').setBackground('#f1e5e8');
-  sh.setFrozenRows(1);
+  var head = headerOf_(sh);
+  var labels = cols.map(function (c) { return c[1]; });
+
+  if (!head.some(function (h) { return h !== ''; })) {
+    sh.getRange(1, 1, 1, labels.length).setValues([labels]);
+    head = labels.slice();
+  } else {
+    var al = ALIASES[name] || {};
+    cols.forEach(function (c) {          // tajuk lama dinamakan semula
+      var legacy = al[c[1]];
+      if (findCol_(head, c[1]) < 0 && legacy && findCol_(head, legacy) >= 0) {
+        var j = findCol_(head, legacy);
+        sh.getRange(1, j + 1).setValue(c[1]);
+        head[j] = c[1];
+      }
+    });
+    cols.forEach(function (c) {          // lajur yang tiada
+      if (findCol_(head, c[1]) >= 0) return;
+      var after = (INSERT_AFTER[name] || {})[c[0]], anchor = -1;
+      if (after) anchor = findCol_(head, cols.filter(function (x) { return x[0] === after; })[0][1]);
+      if (anchor >= 0) {
+        sh.insertColumnAfter(anchor + 1);
+        sh.getRange(1, anchor + 2).setValue(c[1]);
+        head.splice(anchor + 1, 0, c[1]);
+      } else {
+        sh.getRange(1, head.length + 1).setValue(c[1]);
+        head.push(c[1]);
+      }
+    });
+  }
+
   var rows = Math.max(sh.getMaxRows() - 1, 1);
-  cols.forEach(function (c, i) {
-    var col = sh.getRange(2, i + 1, rows, 1);
+  cols.forEach(function (c) {
+    var j = findCol_(head, c[1]);
+    sh.getRange(1, j + 1).setFontWeight('bold').setBackground('#f1e5e8');
+    var col = sh.getRange(2, j + 1, rows, 1);
     if (c[2] === 't') {
       col.setNumberFormat('@');                                  // teks: elak ditukar kepada tarikh/nombor
     } else if (c[2] === 'd') {
@@ -1423,17 +1513,20 @@ function ensureSheet_(ss, name) {
       col.setNumberFormat('dd/mm/yyyy hh:mm:ss');                // format tarikh dan masa
     }
   });
-  migrateDateColumns_(sh, cols);
+  sh.setFrozenRows(1);
+  migrateDateColumns_(sh, cols, head);
+  LAYOUT_ = {};
   return sh;
 }
 
 /** Tukar nilai teks lama 'yyyy-MM-dd' dalam lajur tarikh kepada tarikh sebenar. Selamat dijalankan berulang kali. */
-function migrateDateColumns_(sh, cols) {
+function migrateDateColumns_(sh, cols, head) {
   var last = sh.getLastRow();
   if (last < 2) return;
-  cols.forEach(function (c, i) {
+  cols.forEach(function (c) {
     if (c[2] !== 'd' && c[2] !== 'dt') return;
-    var rng = sh.getRange(2, i + 1, last - 1, 1);
+    var j = findCol_(head, c[1]);
+    var rng = sh.getRange(2, j + 1, last - 1, 1);
     var vals = rng.getValues(), changed = false;
     vals.forEach(function (r) {
       var d = toDate_(r[0]);
@@ -1457,14 +1550,16 @@ function seedLotsIfEmpty_() {
 function migrateToTenancies_() {
   var lotSh = sheet_(SHEETS.LOTS);
   var last = lotSh.getLastRow();
+  var head = headerOf_(lotSh);
+  var iM = findCol_(head, 'Tarikh mula sewa'), iA = findCol_(head, 'Tarikh akhir sewa'), iS = findCol_(head, 'Sewa bulanan (RM)');   // lajur lama pada sheet Lot
   var tnCount = readTable_(SHEETS.TENANCIES).length;
 
-  if (last >= 2 && tnCount === 0) {
+  if (iM >= 0 && last >= 2 && tnCount === 0) {
     var map = {};
-    var legacy = lotSh.getRange(2, 5, last - 1, 3).getValues();   // lajur lama: mula, akhir, sewa
+    var legacy = lotSh.getRange(2, 1, last - 1, head.length).getValues();
     readTable_(SHEETS.LOTS).forEach(function (l) {
       var row = legacy[l._row - 2];
-      var mula = cell_(row[0], 'd'), akhir = cell_(row[1], 'd'), sewa = row[2];
+      var mula = cell_(row[iM], 'd'), akhir = iA >= 0 ? cell_(row[iA], 'd') : '', sewa = iS >= 0 ? row[iS] : '';
       if (!isDateStr_(mula)) return;
       var id = nextTenancyId_();
       appendObj_(SHEETS.TENANCIES, { id: id, kodLot: l.kodLot, mula: mula, akhir: isDateStr_(akhir) ? akhir : '', sewa: sewa === '' || sewa === undefined ? '' : Number(sewa) });
@@ -1477,7 +1572,7 @@ function migrateToTenancies_() {
     }
   }
   if (readTable_(SHEETS.TENANCIES).length) {
-    lotSh.getRange(1, 5, Math.max(last, 1), 3).clearContent();      // buang lajur lama yang tidak digunakan lagi
+    [iM, iA, iS].forEach(function (j) { if (j >= 0) lotSh.getRange(1, j + 1, Math.max(last, 1), 1).clearContent(); });   // buang lajur lama yang tidak digunakan lagi
   }
   // laporan lama: isi ID penyewaan mengikut bulan
   readTable_(SHEETS.REPORTS).forEach(function (r) {
@@ -1492,9 +1587,9 @@ function seedDefaultAdmin_() {
   var email = normEmail_(APP.DEFAULT_ADMIN);
   var cur = findBy_(readTable_(SHEETS.USERS), 'email', email);
   if (!cur) {
-    appendObj_(SHEETS.USERS, { email: email, nama: 'Admin UTMXCITE', peranan: ROLE.ADMIN, kodLot: '', status: 'Aktif' });
+    appendObj_(SHEETS.USERS, { email: email, nama: 'Admin UTMXCITE', peranan: ROLE.ADMIN, idSewa: '', status: 'Aktif' });
   } else if (cur.peranan !== ROLE.ADMIN || cur.status !== 'Aktif') {
-    cur.peranan = ROLE.ADMIN; cur.status = 'Aktif'; cur.kodLot = '';
+    cur.peranan = ROLE.ADMIN; cur.status = 'Aktif'; cur.idSewa = '';
     updateObj_(SHEETS.USERS, cur);
   }
 }
@@ -1549,7 +1644,7 @@ var ROUTES = {
 
 /** Dipanggil oleh pelayar melalui google.script.run.rpc(method, token, params). */
 function rpc(method, token, params) {
-  REMINDER_DEADLINES_ = null;
+  REMINDER_DEADLINES_ = null; LAYOUT_ = {};
   try {
     var r = Object.prototype.hasOwnProperty.call(ROUTES, method) ? ROUTES[method] : null;
     if (!r) fail_('Permintaan tidak dikenali.');

@@ -16,12 +16,14 @@ function createBackend(opts = {}) {
     return {
       getValues() { const out = []; for (let i = 0; i < nr; i++) { const row = []; for (let j = 0; j < nc; j++) { const v = (sh.data[r - 1 + i] || [])[c - 1 + j]; row.push(v === undefined ? '' : v); } out.push(row); } return out; },
       setValues(vals) { for (let i = 0; i < nr; i++) { sh.data[r - 1 + i] = sh.data[r - 1 + i] || []; for (let j = 0; j < nc; j++) sh.data[r - 1 + i][c - 1 + j] = vals[i][j]; } return this; },
-      clearContent() { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { if (sh.data[r - 1 + i]) sh.data[r - 1 + i][c - 1 + j] = undefined; } return this; }, setNumberFormat() { return this; }, setDataValidation() { return this; }, setFontWeight() { return this; }, setBackground() { return this; }
+      clearContent() { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { if (sh.data[r - 1 + i]) sh.data[r - 1 + i][c - 1 + j] = undefined; } return this; }, setValue(v) { sh.data[r - 1] = sh.data[r - 1] || []; sh.data[r - 1][c - 1] = v; return this; }, setNumberFormat() { return this; }, setDataValidation() { return this; }, setFontWeight() { return this; }, setBackground() { return this; }
     };
   }
   function makeSheet(name) {
     const sh = { name, gid: 1000 + Object.keys(sheets).length, getSheetId() { return this.gid; }, data: [], getLastRow() { let l = 0; this.data.forEach((row, i) => { if (row && row.some(v => v !== '' && v !== undefined)) l = i + 1; }); return l; },
       getMaxRows() { return 1000; }, setFrozenRows() {},
+      getLastColumn() { let w = 0; this.data.forEach(row => { if (row) row.forEach((v, i) => { if (v !== undefined && v !== '') w = Math.max(w, i + 1); }); }); return w; },
+      insertColumnAfter(col) { this.data.forEach(row => { if (row && row.length > col) row.splice(col, 0, undefined); }); },
       getRange(r, c, nr, nc) { return makeRange(this, r, c, nr || 1, nc || 1); },
       appendRow(arr) { this.data[this.getLastRow()] = arr.slice(); },
       deleteRow(n) { this.data.splice(n - 1, 1); } };

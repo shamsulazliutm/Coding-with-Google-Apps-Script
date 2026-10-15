@@ -67,6 +67,7 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 - **Admin**: lihat semua lot mengikut bulan, semak laporan (Sahkan atau Minta pembetulan dengan komen), hantar peringatan manual, eksport CSV, urus lot dan pengguna.
 - **Kemas kini maklumat peniaga**: penyewa mengemas kini maklumat sendiri di tab *Maklumat Peniaga*. Admin juga boleh mengemas kini maklumat mana-mana penyewaan melalui butang **Maklumat** pada tab **Penyewaan** (termasuk mengisinya bagi pihak penyewa yang belum mengisi). No. KP sedia ada tidak dipaparkan penuh kepada admin: biarkan kosong untuk mengekalkannya, atau isi untuk menggantikannya. Setiap perubahan direkod dalam sheet **Log** (nama medan sahaja, tanpa nilai), lajur *Dikemas kini oleh* dalam sheet **Peniaga** menunjukkan siapa yang mengubah, dan penyewa menerima e-mel yang menyenaraikan nama medan yang diubah. Untuk mematikan keupayaan admin dan membenarkan penyewa sahaja, tetapkan `ADMIN_EDIT_BUSINESS: false` di bahagian atas `Code.gs`.
 - **Templat laporan kewangan**: dalam borang laporan, di bawah baris *Laporan kewangan bulanan*, terdapat pautan **"Tiada format laporan? Muat turun templat (Excel)"**. Templat ialah satu helaian (`assets/Templat_Laporan_Kewangan.xlsx`) dengan tajuk, ruang nama perniagaan, lot, bulan dan penyedia, jadual Tarikh / Perkara / Pendapatan / Perbelanjaan, serta ringkasan (jumlah pendapatan, jumlah perbelanjaan, untung atau rugi) yang dikira automatik. Ia muat satu halaman A4 apabila dicetak. Pelajar mengisi, menyimpan atau mencetak sebagai PDF, kemudian memuat naiknya. Pautan ini tidak dipaparkan untuk laporan yang telah disahkan. Fail templat tertanam dalam `Index.html`; untuk mengubah templat, ubah `tools/make_template.py` dan jalankan `python3 tools/make_template.py` (memerlukan `openpyxl`).
+- **Catatan penyewa**: dalam borang laporan, penyewa boleh menulis catatan pilihan (maksimum 500 aksara) bagi menerangkan laporan mereka, contohnya jualan rendah kerana cuti semester. Catatan disimpan dalam lajur **Catatan** pada sheet Laporan, dan **boleh dilihat oleh admin** dalam senarai laporan, butiran semakan dan eksport CSV. Catatan boleh diubah sehingga laporan disahkan. Komen admin kekal berasingan (lajur **Komen admin**).
 - **Pangkalan Data** (tab admin): tab terakhir ialah pautan terus ke Google Sheet yang menyimpan semua data. Klik dan sheet dibuka dalam tab pelayar baharu. Pautan ditetapkan oleh `DATABASE_URL` di bahagian atas `Code.gs` dan hanya diberi kepada admin. Akaun Google yang membuka mesti mempunyai akses pada sheet itu. `checkSystem` memberi amaran jika pautan tidak sepadan dengan sheet yang digunakan sistem.
 - **Status**: `Belum dihantar` (termasuk draf), `Dihantar`, `Perlu dibetulkan`, `Disahkan`. Laporan yang disahkan dikunci.
 - **Peringatan automatik**: pada 5hb setiap bulan (sekitar jam 9 pagi), e-mel dihantar kepada penyewa yang belum menghantar laporan bulan lepas. Setiap lot hanya diingatkan sekali pada hari itu. Setiap peringatan (automatik atau manual dari dashboard) direkod dalam sheet **Peringatan** bersama tarikh akhirnya.
@@ -75,7 +76,7 @@ Jalankan **`checkSystem`** dari editor untuk senarai semakan automatik (sheet, a
 
 Lajur tarikh (Tarikh mula sewa, Tarikh akhir sewa, Tarikh hantar, Tarikh disemak, Dikemas kini, Masa) menggunakan format tarikh sebenar `dd/mm/yyyy`. Pada sheet **Lot**, sel tarikh mempunyai pemilih tarikh (klik dua kali sel) dan menolak teks yang bukan tarikh. Jika anda mengemas kini daripada versi lama, jalankan `setupSystem` semula untuk menukar tarikh teks lama kepada format tarikh.
 
-Jangan ubah susunan lajur. Kod membaca lajur mengikut kedudukan. Anda boleh menambah lajur di sebelah kanan, mewarna, atau menapis.
+Sistem memadankan lajur mengikut **tajuk lajur** (baris 1), bukan kedudukan. Anda boleh menyisip lajur sendiri di mana-mana, menyusun semula lajur, mewarna atau menapis, dan lajur anda tidak akan diubah atau ditimpa. **Jangan ubah ejaan tajuk lajur sistem atau padamnya.** Jika tajuk hilang, sistem memaparkan ralat "Lajur ... tidak dijumpai" dan `setupSystem` menambahnya semula. Lajur baharu dalam versi akan datang disisip automatik apabila `setupSystem` dijalankan (contohnya **Catatan** selepas **Lewat** dalam sheet Laporan).
 
 | Sheet | Lajur |
 |---|---|
@@ -83,7 +84,7 @@ Jangan ubah susunan lajur. Kod membaca lajur mengikut kedudukan. Anda boleh mena
 | Lot | Kod lot, Lokasi, No lot, Status |
 | Penyewaan | ID penyewaan, Kod lot, Tarikh mula sewa, Tarikh akhir sewa, Sewa bulanan (RM) |
 | Peniaga | ID penyewaan, Nama perniagaan, Jenis, No SSM, Nama pelajar, No KP, No matrik, Fakulti, No telefon, Dikemas kini, Dikemas kini oleh |
-| Laporan | ID, Kod lot, Tahun, Bulan, Pendapatan, Perbelanjaan, Bayaran sewa, Sewa peralatan, 3 lajur fail, Status, Lewat, Komen admin, Disemak oleh, Tarikh disemak, Tarikh hantar, Akuan, Dikemas kini, ID penyewaan |
+| Laporan | ID, Kod lot, Tahun, Bulan, Pendapatan, Perbelanjaan, Bayaran sewa, Sewa peralatan, 3 lajur fail, Status, Lewat, **Catatan**, Komen admin, Disemak oleh, Tarikh disemak, Tarikh hantar, Akuan, Dikemas kini, ID penyewaan |
 | Log | Masa, E-mel, Tindakan, Butiran (audit semua tindakan penting) |
 | Peringatan | Rekod setiap peringatan yang dihantar (kunci, masa, tarikh akhir) |
 
@@ -120,4 +121,4 @@ Versi lama menyimpan tarikh sewa pada sheet **Lot** dan memautkan peniaga dan pe
 
 ## Ujian
 
-Logik pelayan diuji dengan tiruan API Apps Script (87 ujian dan ujian antara muka: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.
+Logik pelayan diuji dengan tiruan API Apps Script (93 ujian dan ujian antara muka: OTP, kebenaran, tarikh akhir dan lewat, muat naik PDF, semakan, peringatan, keselamatan). Antara muka diuji hujung ke hujung dengan Playwright. Skrip ujian ada dalam folder `tests/`.

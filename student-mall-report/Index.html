@@ -128,6 +128,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 .fname { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
 .file.off { opacity: .55; }
 .tpl { margin-top: -8px; font-size: 13px; }
+.notebox { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .file .fa { display: flex; gap: 8px; }
 .declare { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--bg); border-radius: 8px; font-size: 13px; }
 .declare input { margin-top: 3px; accent-color: var(--accent); }
@@ -229,6 +230,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function fmt(n) { return n === null || n === undefined || n === '' ? '-' : Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function snip(t) { t = String(t || '').replace(/\s+/g, ' '); return t.length > 70 ? t.slice(0, 70) + '…' : t; }
   function pill(k) { return '<span class="pill ' + ST[k][0] + '">' + ST[k][1] + '</span>'; }
   function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* abaikan */ } }
   function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
@@ -437,7 +439,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
         '<td>' + esc(S.fin.perniagaan || '') + '<span class="sub">' + esc(f.lot.nama) + '</span></td>' +
         '<td class="num mono">' + fmt(r.pendapatan) + '</td><td class="num mono">' + fmt(r.perbelanjaan) + '</td><td class="num mono">' + fmt(r.sewa) + '</td>' +
         '<td>' + pill(r.status) + (r.lewat ? '<span class="late">Lewat</span>' : '') +
-        (r.status === 'fix' ? '<span class="cmt">' + esc(r.komen) + '</span>' : '') +
+        (r.status === 'fix' ? '<span class="cmt">' + esc(r.komen) + '</span>' : '') + (r.catatan ? '<span class="sub">Catatan: ' + esc(snip(r.catatan)) + '</span>' : '') +
         (r.status === 'none' ? '<span class="sub">' + (r.draf ? 'Draf disimpan · ' : '') + 'Tarikh akhir ' + esc(r.tarikhAkhirLabel) + (r.kesempatanLewat ? ' (lewat)' : '') + '</span>' : '') + '</td>' +
         '<td class="act">' + act + '</td></tr>';
     });
@@ -448,7 +450,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function openReport(year, month, isNew) {
     run(api('getMyReport', { tahun: year, bulan: month }).then(function (rep) {
       D = { isNew: !!isNew, year: year, month: month, rep: rep, pending: {}, err: '',
-            v: { pendapatan: rep.pendapatan, perbelanjaan: rep.perbelanjaan, sewa: rep.sewa === null && rep.sewaBulanan !== null ? rep.sewaBulanan : rep.sewa, eq: rep.sewaPeralatan, ack: false } };
+            v: { pendapatan: rep.pendapatan, perbelanjaan: rep.perbelanjaan, sewa: rep.sewa === null && rep.sewaBulanan !== null ? rep.sewaBulanan : rep.sewa, eq: rep.sewaPeralatan, ack: false, catatan: rep.catatan || '' } };
       drawDlg();
     }));
   }
@@ -502,6 +504,8 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<button type="button" data-act="eq" data-v="1" aria-pressed="' + (v.eq === true) + '"' + (edit ? '' : ' disabled') + '>Ya</button>' +
       '<button type="button" data-act="eq" data-v="0" aria-pressed="' + (v.eq === false) + '"' + (edit ? '' : ' disabled') + '>Tidak</button></div></div>' +
       (v.eq === false ? fileRow('incubator', 'Resit incubator', false, true) : v.eq === true ? fileRow('incubator', 'Resit bayaran incubator', edit) : '') +
+      (edit ? '<div class="field"><label for="d-note">Catatan <span class="help" style="display:inline;font-weight:400">(pilihan)</span></label><textarea class="fi" id="d-note" maxlength="500" placeholder="Contoh: jualan rendah kerana cuti semester.">' + esc(v.catatan || '') + '</textarea><span class="help">Catatan ini boleh dilihat oleh admin UTMXCITE. Maksimum 500 aksara.</span></div>'
+        : (v.catatan ? '<div class="field"><span class="lbl">Catatan</span><div class="notebox">' + esc(v.catatan) + '</div></div>' : '')) +
       (edit ? '<label class="declare"><input id="d-ack" type="checkbox"' + (v.ack ? ' checked' : '') + '><span>Saya mengesahkan bahawa semua maklumat yang diberikan adalah lengkap dan tepat mengikut pengetahuan saya.</span></label>' : '') +
       '</div><div class="dfoot"><span class="help">PDF sahaja, maksimum 10 MB setiap fail.</span><span>' +
       '<button class="btn" data-act="closedlg" type="button">' + (edit ? 'Batal' : 'Tutup') + '</button> ' +
@@ -515,6 +519,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     if (g('d-inc') !== null) D.v.pendapatan = g('d-inc');
     if (g('d-exp') !== null) D.v.perbelanjaan = g('d-exp');
     if (g('d-rent') !== null) D.v.sewa = g('d-rent');
+    if (g('d-note') !== null) D.v.catatan = g('d-note');
   }
 
   function pickFile(kind) {
@@ -536,7 +541,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     readDlgInputs();
     var y = D.year, m = D.month, v = D.v;
     D.err = '';
-    var data = { pendapatan: v.pendapatan, perbelanjaan: v.perbelanjaan, sewa: v.sewa, sewaPeralatan: v.eq, akuan: !!v.ack };
+    var data = { pendapatan: v.pendapatan, perbelanjaan: v.perbelanjaan, sewa: v.sewa, sewaPeralatan: v.eq, akuan: !!v.ack, catatan: v.catatan || '' };
     var p = api('saveReport', { tahun: y, bulan: m, data: data });
     var kinds = Object.keys(D.pending);
     if (v.eq === false) kinds = kinds.filter(function (k) { return k !== 'incubator'; });
@@ -739,7 +744,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       out += '<tr><td class="nw">' + esc(r.bulanNama) + ' ' + r.tahun + '</td><td class="nw"><b>' + esc(r.lotNama) + '</b></td><td>' + esc(r.perniagaan || '-') + '<span class="sub">' + esc(r.pelajar) + '</span></td>' +
         '<td class="num mono">' + fmt(r.pendapatan) + '</td><td class="num mono">' + fmt(r.perbelanjaan) + '</td>' +
         '<td class="num mono ' + (net != null && net < 0 ? 'neg' : '') + '">' + (net == null ? '-' : (net < 0 ? '-' : '') + fmt(Math.abs(net))) + '</td>' +
-        '<td>' + pill(r.status) + (r.lewat ? '<span class="late">Lewat</span>' : '') + '</td><td class="act">' + act + '</td></tr>';
+        '<td>' + pill(r.status) + (r.lewat ? '<span class="late">Lewat</span>' : '') + (r.catatan ? '<span class="sub" title="' + esc(r.catatan) + '">Catatan: ' + esc(snip(r.catatan)) + '</span>' : '') + '</td><td class="act">' + act + '</td></tr>';
     });
     return n ? out : '<tr><td class="empty" colspan="8">Tiada laporan sepadan.</td></tr>';
   }
@@ -766,6 +771,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<div><small>' + (net !== null && net < 0 ? 'Rugi' : 'Untung') + '</small><strong class="' + (net !== null && net < 0 ? 'neg' : 'pos') + '">' + (net === null ? '-' : 'RM ' + fmt(Math.abs(net))) + '</strong></div>' +
       '<div><small>Bayaran sewa</small><strong>RM ' + fmt(r.sewa) + '</strong></div><div><small>Sewa peralatan</small><strong>' + (r.sewaPeralatan === null ? '-' : r.sewaPeralatan ? 'Ya' : 'Tidak') + '</strong></div></div>' +
       files +
+      (r.catatan ? '<div class="field"><span class="lbl">Catatan penyewa</span><div class="notebox">' + esc(r.catatan) + '</div></div>' : '') +
       (canReview ? '<div class="field"><label for="rv-komen">Komen untuk penyewa</label><textarea class="fi" id="rv-komen" placeholder="Wajib diisi jika meminta pembetulan"></textarea></div>' : '') +
       '</div><div class="dfoot"><span></span><span><button class="btn" data-act="closedlg" type="button">Tutup</button> ' +
       (canReview ? '<button class="btn danger" data-act="rv-fix" type="button">Minta pembetulan</button> <button class="btn good" data-act="rv-ok" type="button">Sahkan</button>' : '') + '</span></div></div></div>';

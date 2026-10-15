@@ -299,31 +299,95 @@ t('A boleh dinyahaktifkan tanpa menjejaskan B atau laporan lama', () => {
 });
 
 console.log('Naik taraf daripada struktur lama (tarikh sewa pada sheet Lot)');
-t('setupSystem menukar data lama kepada penyewaan: lot, peniaga, pengguna dan laporan dipautkan', () => {
+const LEG_LAPORAN = ['ID', 'Kod lot', 'Tahun', 'Bulan', 'Pendapatan (RM)', 'Perbelanjaan (RM)', 'Bayaran sewa (RM)', 'Sewa peralatan', 'Fail laporan', 'Fail resit sewa', 'Fail resit incubator', 'Status', 'Lewat'];
+const LEG_TAIL = ['Komen admin', 'Disemak oleh', 'Tarikh disemak', 'Tarikh hantar', 'Akuan', 'Dikemas kini'];
+function legacyBackend(withCatatan) {
+  const o = createBackend();
+  const mk = (name, header, rows) => { const sh = o.ss.insertSheet(name); sh.data = [header, ...rows]; return sh; };
+  mk('Pengguna', ['E-mel', 'Nama', 'Peranan', 'Kod lot', 'Status'], [['aina@graduan.example', 'Aina', 'Penyewa', 'StudentMall-Lot3', 'Aktif']]);
+  mk('Lot', ['Kod lot', 'Lokasi', 'No lot', 'Status', 'Tarikh mula sewa', 'Tarikh akhir sewa', 'Sewa bulanan (RM)'],
+    [['StudentMall-Lot3', 'Student Mall', 3, 'Aktif', '2026-01-01', '2026-12-31', 600], ['SUB-Lot1', 'SUB', 1, 'Aktif', '2026-03-01', '', '']]);
+  mk('Peniaga', ['Kod lot', 'Nama perniagaan', 'Jenis perniagaan', 'No SSM', 'Nama pelajar', 'No KP', 'No matrik', 'Fakulti', 'No telefon', 'Dikemas kini'],
+    [['StudentMall-Lot3', 'Kopi Lama', 'F&B', '', 'AINA', '010203-01-1234', 'A1', 'FKA', '0123456789', '']]);
+  const head = withCatatan ? [...LEG_LAPORAN, 'Catatan', ...LEG_TAIL] : [...LEG_LAPORAN, ...LEG_TAIL];
+  const rep = new Array(head.length).fill(''); rep[0] = 'StudentMall-Lot3_2026-02'; rep[1] = 'StudentMall-Lot3'; rep[2] = 2026; rep[3] = 2; rep[11] = 'Disahkan';
+  rep[head.indexOf('Komen admin')] = 'Bagus'; if (withCatatan) rep[head.indexOf('Catatan')] = 'Catatan lama pelajar';
+  mk('Laporan', head, [rep]);
+  return o;
+}
+const hdr = (o, n) => o.sheets[n].data[0].filter(x => x !== undefined && x !== '');
+for (const withCatatan of [false, true]) {
+  t('naik taraf daripada struktur lama (' + (withCatatan ? 'lajur Catatan sudah disisip manual' : 'tanpa lajur Catatan') + '): penyewaan, tajuk dan lajur dipadankan, data utuh', () => {
+    const o = legacyBackend(withCatatan); o.setupSystem();
+    const tns = o.readTable_('Penyewaan'); assert.strictEqual(tns.length, 2);
+    const t3 = tns.find(x => x.kodLot === 'StudentMall-Lot3'); assert.strictEqual(t3.mula, '2026-01-01'); assert.strictEqual(t3.akhir, '2026-12-31'); assert.strictEqual(t3.sewa, 600);
+    assert.strictEqual(tns.find(x => x.kodLot === 'SUB-Lot1').akhir, '');
+    assert.strictEqual(o.readTable_('Peniaga')[0].idSewa, t3.id); assert.strictEqual(o.readTable_('Pengguna').find(u => u.email === 'aina@graduan.example').idSewa, t3.id);
+    assert.ok(hdr(o, 'Pengguna').includes('ID penyewaan') && !hdr(o, 'Pengguna').includes('Kod lot'), 'tajuk Kod lot dinamakan semula');
+    const lap = hdr(o, 'Laporan'); assert.strictEqual(lap[lap.indexOf('Lewat') + 1], 'Catatan', 'Catatan betul-betul selepas Lewat'); assert.strictEqual(lap.filter(x => x === 'Catatan').length, 1, 'tiada lajur Catatan berganda');
+    assert.strictEqual(lap[lap.length - 1], 'ID penyewaan');
+    const r = o.readTable_('Laporan')[0]; assert.strictEqual(r.status, 'Disahkan'); assert.strictEqual(r.komen, 'Bagus'); assert.strictEqual(r.idSewa, t3.id);
+    assert.strictEqual(r.catatan, withCatatan ? 'Catatan lama pelajar' : '', 'catatan sedia ada dikekalkan'); assert.strictEqual(r.dikemaskini, '');
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(hdr(o, 'Lot'))), ['Kod lot', 'Lokasi', 'No lot', 'Status'], 'lajur tarikh lama pada Lot dibuang');
+    o.setupSystem(); assert.strictEqual(o.readTable_('Penyewaan').length, 2, 'selamat dijalankan semula'); assert.strictEqual(hdr(o, 'Laporan').length, lap.length);
+    delete o.cache['otpwait:aina@graduan.example']; o.rpc('requestOtp', null, { email: 'aina@graduan.example' });
+    const code = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1];
+    const tok = o.rpc('verifyOtp', null, { email: 'aina@graduan.example', code }).data.token;
+    const mr = o.rpc('myReports', tok, {}).data; assert.strictEqual(mr.rows.length, 10); assert.strictEqual(mr.perniagaan, 'Kopi Lama'); assert.strictEqual(mr.rows.find(x => x.bulan === 2).status, 'ok');
+  });
+}
+t('lajur boleh disisip atau disusun semula oleh pengguna: data betul, lajur sendiri tidak ditimpa', () => {
   const o = createBackend(); o.setupSystem();
-  // simulasi sheet versi lama: tarikh sewa dalam lajur 5-7 pada sheet Lot, peniaga/pengguna ikut kod lot
-  const lotRow = o.sheets['Lot'].data.find(r => r[0] === 'StudentMall-Lot3');
-  lotRow[4] = '2026-01-01'; lotRow[5] = '2026-12-31'; lotRow[6] = 600;
-  const lot2 = o.sheets['Lot'].data.find(r => r[0] === 'SUB-Lot1'); lot2[4] = '2026-03-01'; lot2[5] = ''; lot2[6] = '';
-  o.sheets['Peniaga'].data.push(['StudentMall-Lot3', 'Kopi Lama', 'F&B', '', 'AINA', '010203-01-1234', 'A1', 'FKA', '0123456789', '']);
-  o.sheets['Pengguna'].data.push(['aina@graduan.example', 'Aina', 'Penyewa', 'StudentMall-Lot3', 'Aktif']);
-  const rep = new Array(19).fill(''); rep[0] = 'StudentMall-Lot3_2026-02'; rep[1] = 'StudentMall-Lot3'; rep[2] = 2026; rep[3] = 2; rep[11] = 'Disahkan';
-  o.sheets['Laporan'].data.push(rep);
-  assert.strictEqual(o.readTable_('Penyewaan').length, 0);
-  o.setupSystem();
-  const tns = o.readTable_('Penyewaan'); assert.strictEqual(tns.length, 2);
-  const t3 = tns.find(x => x.kodLot === 'StudentMall-Lot3'); assert.strictEqual(t3.mula, '2026-01-01'); assert.strictEqual(t3.akhir, '2026-12-31'); assert.strictEqual(t3.sewa, 600);
-  assert.strictEqual(tns.find(x => x.kodLot === 'SUB-Lot1').akhir, '');
-  assert.strictEqual(o.readTable_('Peniaga')[0].idSewa, t3.id); assert.strictEqual(o.readTable_('Pengguna').find(u => u.email === 'aina@graduan.example').idSewa, t3.id);
-  assert.strictEqual(o.readTable_('Laporan')[0].idSewa, t3.id);
-  assert.strictEqual(o.sheets['Lot'].data.find(r => r[0] === 'StudentMall-Lot3')[4], undefined, 'lajur lama dikosongkan');
-  o.setupSystem(); assert.strictEqual(o.readTable_('Penyewaan').length, 2, 'selamat dijalankan semula');
-  // pengguna lama boleh log masuk dan melihat bulan sendiri
-  o.cache['otpwait:aina@graduan.example'] && delete o.cache['otpwait:aina@graduan.example'];
-  o.rpc('requestOtp', null, { email: 'aina@graduan.example' }); const code = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1];
-  const tok = o.rpc('verifyOtp', null, { email: 'aina@graduan.example', code }).data.token;
-  const mr = o.rpc('myReports', tok, {}).data; assert.strictEqual(mr.rows.length, 10); assert.strictEqual(mr.perniagaan, 'Kopi Lama');
-  assert.strictEqual(mr.rows.find(r => r.bulan === 2).status, 'ok');
+  const adm2 = (() => { o.rpc('requestOtp', null, { email: 'utmxcite@utm.my' }); const c = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1]; return o.rpc('verifyOtp', null, { email: 'utmxcite@utm.my', code: c }).data; })();
+  const okk = (m, tok, p) => { const r = o.rpc(m, tok, p); assert.ok(r.ok, m + ': ' + r.error); return r.data; };
+  const id = okk('adminSaveTenancy', adm2.token, { tenancy: { kodLot: 'StudentMall-Lot1', mula: '2026-01-01', akhir: '2026-12-31', sewa: 500 } }).tenancies[0].id;
+  okk('adminSaveUser', adm2.token, { user: { email: 'x@y.example', nama: 'X', peranan: 'Penyewa', idSewa: id, status: 'Aktif' } });
+  delete o.cache['otpwait:x@y.example']; o.rpc('requestOtp', null, { email: 'x@y.example' });
+  const tk = o.rpc('verifyOtp', null, { email: 'x@y.example', code: o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1] }).data.token;
+  okk('saveReport', tk, { tahun: 2026, bulan: 3, data: { pendapatan: 100, perbelanjaan: 40, sewa: 20, sewaPeralatan: false, akuan: true, catatan: 'asal' } });
+  const sh = o.sheets['Laporan'];
+  sh.insertColumnAfter(3); sh.data[0][3] = 'Nota Kami'; const row = sh.data.findIndex((r, i) => i > 0 && r && r[0] === 'StudentMall-Lot1_2026-03'); sh.data[row][3] = 'JANGAN PADAM';   // lajur sendiri disisip
+  const lsh = o.sheets['Pengguna']; const tmp = lsh.data.map(r => { const c = r ? r.slice() : r; if (c) { const x = c[1]; c[1] = c[2]; c[2] = x; } return c; }); lsh.data = tmp;   // susun semula Nama <-> Peranan
+  okk('saveReport', tk, { tahun: 2026, bulan: 3, data: { pendapatan: 250, perbelanjaan: 40, sewa: 20, sewaPeralatan: false, akuan: true, catatan: 'baharu' } });
+  assert.strictEqual(sh.data[row][3], 'JANGAN PADAM', 'lajur sendiri dikekalkan selepas kemas kini');
+  const r = o.readTable_('Laporan')[0]; assert.strictEqual(r.pendapatan, 250); assert.strictEqual(r.catatan, 'baharu'); assert.strictEqual(r.status, 'Draf');
+  assert.strictEqual(o.rpc('me', tk, {}).data.user.peranan, 'Penyewa', 'peranan dibaca betul walaupun lajur disusun semula');
+});
+t('lajur sistem yang dipadam: ralat jelas, setupSystem memulihkannya', () => {
+  const o = createBackend(); o.setupSystem();
+  const sh = o.sheets['Pengguna']; const j = sh.data[0].indexOf('Status'); sh.data[0][j] = undefined;
+  const r = o.rpc('requestOtp', null, { email: 'utmxcite@utm.my' }); assert.ok(!r.ok); assert.match(r.error, /Lajur "Status" tidak dijumpai dalam sheet "Pengguna"/); assert.strictEqual(r.code, 'SCHEMA');
+  o.setupSystem(); assert.ok(hdr(o, 'Pengguna').includes('Status')); delete o.cache['otpwait:utmxcite@utm.my']; assert.ok(o.rpc('requestOtp', null, { email: 'utmxcite@utm.my' }).ok);
+});
+
+console.log('Catatan penyewa pada laporan');
+t('penyewa menulis catatan; disimpan dalam lajur Catatan dan dilihat oleh admin (senarai, butiran, eksport)', () => {
+  const nota = 'Jualan rendah kerana cuti semester. Kedai tutup 3 hari.';
+  ok('saveReport', uB.token, { tahun: 2026, bulan: 9, data: { pendapatan: 1000, perbelanjaan: 700, sewa: 700, sewaPeralatan: false, akuan: true, catatan: '  ' + nota + '  ' } });
+  const v = ok('getMyReport', uB.token, { tahun: 2026, bulan: 9 }); assert.strictEqual(v.catatan, nota, 'dipangkas');
+  const col = b.sheets['Laporan'].data[0].indexOf('Catatan'); const row = b.sheets['Laporan'].data.find(r => r && r[0] === 'StudentMall-Lot6_2026-09'); assert.strictEqual(row[col], nota, 'dalam lajur Catatan');
+  assert.strictEqual(b.sheets['Laporan'].data[0][col - 1], 'Lewat', 'lajur Catatan selepas Lewat');
+  assert.strictEqual(ok('adminReport', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 9 }).catatan, nota);
+  assert.strictEqual(ok('adminReports', adm.token, { tahun: 2026, bulan: 9 }).rows.find(r => r.kodLot === 'StudentMall-Lot6').catatan, nota);
+  assert.match(ok('adminExport', adm.token, { tahun: 2026, bulan: 9 }).csv, /Catatan penyewa[\s\S]*Jualan rendah kerana cuti semester/);
+  assert.strictEqual(ok('myReports', uB.token, {}).rows.find(r => r.bulan === 9).catatan, nota);
+});
+t('catatan: dihad 500 aksara, aksara kawalan dibuang, formula kekal teks; tidak dihantar = tidak diubah; kosong = dipadam', () => {
+  ok('saveReport', uB.token, { tahun: 2026, bulan: 9, data: { pendapatan: 1000, perbelanjaan: 700, sewa: 700, sewaPeralatan: false, akuan: true, catatan: 'x'.repeat(800) } });
+  assert.strictEqual(ok('getMyReport', uB.token, { tahun: 2026, bulan: 9 }).catatan.length, 500);
+  ok('saveReport', uB.token, { tahun: 2026, bulan: 9, data: { pendapatan: 1000, perbelanjaan: 700, sewa: 700, sewaPeralatan: false, akuan: true, catatan: '=HYPERLINK("x")\u0007\u0000' } });
+  assert.strictEqual(ok('getMyReport', uB.token, { tahun: 2026, bulan: 9 }).catatan, '=HYPERLINK("x")');
+  const csv = ok('adminExport', adm.token, { tahun: 2026, bulan: 9 }).csv; assert.match(csv, /"'=HYPERLINK/, 'formula dilindungi dalam CSV');
+  ok('saveReport', uB.token, { tahun: 2026, bulan: 9, data: { pendapatan: 1100, perbelanjaan: 700, sewa: 700, sewaPeralatan: false, akuan: true } });
+  assert.strictEqual(ok('getMyReport', uB.token, { tahun: 2026, bulan: 9 }).catatan, '=HYPERLINK("x")', 'tanpa medan catatan: kekal');
+  ok('saveReport', uB.token, { tahun: 2026, bulan: 9, data: { pendapatan: 1100, perbelanjaan: 700, sewa: 700, sewaPeralatan: false, akuan: true, catatan: '' } });
+  assert.strictEqual(ok('getMyReport', uB.token, { tahun: 2026, bulan: 9 }).catatan, '', 'dikosongkan');
+});
+t('catatan: dikunci apabila laporan disahkan; catatan dipaparkan kepada admin semasa semakan', () => {
+  ok('saveReport', uB.token, { tahun: 2026, bulan: 9, data: { pendapatan: 1100, perbelanjaan: 700, sewa: 700, sewaPeralatan: false, akuan: true, catatan: 'Catatan akhir' } });
+  ['laporan', 'sewa'].forEach(k => ok('uploadFile', uB.token, { tahun: 2026, bulan: 9, kind: k, base64: pdf }));
+  ok('submitReport', uB.token, { tahun: 2026, bulan: 9 }); ok('adminReview', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 9, decision: 'ok' });
+  bad('saveReport', uB.token, { tahun: 2026, bulan: 9, data: { catatan: 'ubah' } }, /disahkan/); assert.strictEqual(ok('adminReport', adm.token, { kodLot: 'StudentMall-Lot6', tahun: 2026, bulan: 9 }).catatan, 'Catatan akhir');
 });
 
 console.log('Dashboard');
@@ -447,7 +511,7 @@ t('lajur tarikh disimpan sebagai tarikh sebenar (bukan teks) dan dibaca semula s
   assert.ok(tnRow[2] instanceof Date, 'mula mesti Date'); assert.ok(tnRow[3] instanceof Date, 'akhir mesti Date');
   assert.strictEqual(b.readTable_('Penyewaan').find(x => x.id === T3).mula, '2026-01-01');
   const rep = b.sheets['Laporan'].data.find(r => String(r[0]).startsWith('StudentMall-Lot3_2026-09'));
-  assert.ok(rep[16] instanceof Date, 'tarikh hantar mesti Date');
+  assert.ok(rep[b.sheets['Laporan'].data[0].indexOf('Tarikh hantar')] instanceof Date, 'tarikh hantar mesti Date');
   assert.match(b.readTable_('Laporan').find(r => r.id === 'StudentMall-Lot3_2026-09').tarikhHantar, /^2026-10-14 09:30:00$/);
 });
 t('tarikh yang ditaip admin sebagai Date dalam sheet dibaca betul', () => {

@@ -115,6 +115,7 @@ let browser;
   const tbuf = require('fs').readFileSync(await tdl.path()); assert.strictEqual(tbuf.slice(0, 2).toString(), 'PK', 'fail xlsx (zip) sah'); assert.ok(tbuf.length > 5000 && tbuf.length < 20000);
   assert.ok(tbuf.includes(Buffer.from('xl/worksheets/sheet1.xml')), 'mengandungi helaian'); assert.ok(!tbuf.includes(Buffer.from('xl/worksheets/sheet2.xml')), 'hanya 1 helaian');
   assert.strictEqual(await p.isDisabled('[data-act=submitreport]'), true);
+  assert.strictEqual(await p.inputValue('#d-note'), ''); await p.fill('#d-note', 'Catatan ujian UI: jualan naik kerana promosi.');
   await p.fill('#d-exp', '4560'); await p.check('#d-ack'); assert.strictEqual(await p.isDisabled('[data-act=submitreport]'), false);
   // fail bukan PDF
   let [fc] = await Promise.all([p.waitForEvent('filechooser'), p.click('[data-act=pick][data-kind=laporan]')]); await fc.setFiles(S + '/fake.pdf');
@@ -126,6 +127,7 @@ let browser;
   await p.click('[data-act=submitreport]'); await p.waitForFunction(() => /dihantar untuk semakan/.test((document.querySelector('.toast') || {}).textContent || '')); await settle(p);
   assert.strictEqual(await p.locator('#dlg-slot .scrim').count(), 0);
   assert.match(await p.textContent('#f-rows tr:has-text("September")'), /Dihantar/); assert.match(await p.textContent('#f-rows tr:has-text("September")'), /Lewat/);
+  assert.match(await p.textContent('#f-rows tr:has-text("September")'), /Catatan: Catatan ujian UI/, 'catatan dipaparkan dalam senarai penyewa');
   // laporan baharu Oktober
   await p.click('[data-act=newreport]'); await p.waitForSelector('#d-month'); await settle(p);
   await p.fill('#d-inc', '3000'); await p.fill('#d-exp', '1200'); await p.click('[data-act=eq][data-v="0"]'); await p.check('#d-ack');
@@ -170,6 +172,8 @@ let browser;
   await a.fill('#a-q', 'kopi'); assert.strictEqual(await a.locator('#a-rows tr').count(), 1); await a.fill('#a-q', '');
   await a.click('#a-rows tr:has-text("Kopi Kampus") [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await shot(a, '11-semak');
   assert.match(await a.textContent('.dlg'), /\*\*\*\*/, 'No. KP bertopeng');
+  assert.match(await a.textContent('.dlg .notebox'), /Catatan ujian UI: jualan naik kerana promosi\./, 'admin nampak catatan penyewa');
+  assert.match(await a.textContent('#a-rows tr:has-text("Kopi Kampus")'), /Catatan: Catatan ujian UI/, 'catatan dalam senarai admin');
   await a.click('[data-act=rv-fix]'); await a.waitForSelector('.dlg .errbox'); assert.match(await a.textContent('.dlg .errbox'), /komen/);
   await a.fill('#rv-komen', 'Sila lampirkan penyata bank.'); await a.click('[data-act=rv-fix]'); await a.waitForFunction(() => /pembetulan/i.test((document.querySelector('.toast') || {}).textContent || '')); await settle(a);
   assert.match(await a.textContent('#a-rows tr:has-text("Kopi Kampus")'), /Perlu dibetulkan/);
