@@ -11,6 +11,7 @@
 var APP = {
   NAME: 'Laporan Pendapatan dan Perbelanjaan Usahawan Pelajar',
   SENDER: 'UTMXCITE',
+  DEPARTMENT: 'Jabatan Timbalan Naib Canselor (Hal Ehwal Pelajar dan Alumni)',
   CONTACT_EMAIL: 'utmxcite@utm.my',
   CONTACT_PHONE: '013-7630079',
   ADMIN_EDIT_BUSINESS: true,         // true: admin juga boleh mengemas kini maklumat peniaga (sheet Peniaga). false: penyewa sahaja.
@@ -457,7 +458,7 @@ function mailBody_(tajuk, isi) {
   return '<h2 style="font-size:16px;letter-spacing:.5px;margin:0 0 16px;color:#5b1a33">' + escHtml_(String(tajuk).toUpperCase()) + '</h2>' +
     '<p>Assalamualaikum dan salam sejahtera.</p>' + isi +
     '<p>Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
-    '<p style="margin-top:20px"><b>UTMXCITE</b><br>' +
+    '<p style="margin-top:20px"><b>UTMXCITE</b><br>' + escHtml_(APP.DEPARTMENT) + '<br>' +
     '\uD83D\uDCE7 ' + APP.CONTACT_EMAIL + '<br>' +
     '\uD83D\uDCDE ' + APP.CONTACT_PHONE + '</p>';
 }
