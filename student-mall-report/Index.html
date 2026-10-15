@@ -671,7 +671,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
         '<p>' + pill(f.status === 'none' ? 'none' : f.status) + ' ' + (f.status === 'none' || f.status === 'fix' ? 'Tarikh akhir ' + esc(f.tarikhAkhirLabel) + (f.lewat ? ' (lewat)' : '') : '') + '</p>' + '</div>' +
         '<button class="btn primary" data-act="dash-open" data-y="' + f.tahun + '" data-m="' + f.bulan + '" type="button">' + cta + '</button></div>';
     }
-    if (d.komenTerkini) h += '<div class="kmsg"><b>Komen admin untuk ' + esc(d.komenTerkini.bulanNama) + ' ' + d.komenTerkini.tahun + '</b><p>' + esc(d.komenTerkini.komen) + '</p></div>';
+    if (d.komenTerkini) h += '<div class="kmsg"><b>Komen UTMXCITE untuk ' + esc(d.komenTerkini.bulanNama) + ' ' + d.komenTerkini.tahun + '</b><p>' + esc(d.komenTerkini.komen) + '</p></div>';
     h += '<div class="kpis">' +
       kpi('Jumlah pendapatan ' + d.tahun, rmFull(j.pendapatan), j.bulanDikira ? j.bulanDikira + ' bulan dihantar' : 'Belum ada laporan dihantar') +
       kpi('Jumlah perbelanjaan', rmFull(j.perbelanjaan), 'Bayaran sewa direkod: ' + rmFull(j.sewa)) +

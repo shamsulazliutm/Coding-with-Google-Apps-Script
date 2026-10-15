@@ -515,7 +515,7 @@ function sendReviewMail_(kodLot, y, m, decision, komen, by) {
     sendMail_(email, (ok ? 'Laporan disahkan: ' : 'Pembetulan diminta: ') + MONTHS_MS[m - 1] + ' ' + y,
       mailBody_(ok ? 'Laporan kewangan disahkan' : 'Pembetulan laporan kewangan diminta',
         '<p>Laporan kewangan bagi bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> ' + (ok ? 'telah <b>disahkan</b>.' : 'memerlukan <b>pembetulan</b>.') + '</p>' +
-        (komen ? '<p style="background:#f6f6f6;padding:10px;border-radius:6px"><b>Komen admin:</b><br>' + escHtml_(komen).replace(/\n/g, '<br>') + '</p>' : '') +
+        (komen ? '<p style="background:#f6f6f6;padding:10px;border-radius:6px"><b>Komen UTMXCITE:</b><br>' + escHtml_(komen).replace(/\n/g, '<br>') + '</p>' : '') +
         (ok ? '' : '<p>Sila kemas kini laporan dan hantar semula melalui sistem.</p>' + mailButton_(appUrl_()))));
   });
 }
