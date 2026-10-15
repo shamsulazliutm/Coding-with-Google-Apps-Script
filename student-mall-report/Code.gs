@@ -458,8 +458,8 @@ function mailBody_(tajuk, isi) {
     '<p>Assalamualaikum dan salam sejahtera.</p>' + isi +
     '<p>Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
     '<p style="margin-top:20px"><b>UTMXCITE</b><br>' +
-    '\uD83D\uDCE7 ' + APP.CONTACT_EMAIL + '<br>' +
-    '\uD83D\uDCDE ' + APP.CONTACT_PHONE + '</p>';
+    APP.CONTACT_EMAIL + '<br>' +
+    APP.CONTACT_PHONE + '</p>';
 }
 
 function mailButton_(url) {
