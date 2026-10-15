@@ -353,6 +353,14 @@ t('lajur boleh disisip atau disusun semula oleh pengguna: data betul, lajur send
   const r = o.readTable_('Laporan')[0]; assert.strictEqual(r.pendapatan, 250); assert.strictEqual(r.catatan, 'baharu'); assert.strictEqual(r.status, 'Draf');
   assert.strictEqual(o.rpc('me', tk, {}).data.user.peranan, 'Penyewa', 'peranan dibaca betul walaupun lajur disusun semula');
 });
+t('sheet Peniaga: Deposit di lajur J (selepas No telefon); sheet lama tanpa Deposit disisip tanpa mengganggu data', () => {
+  const o = createBackend(); o.setupSystem();
+  let h = hdr(o, 'Peniaga'); assert.strictEqual(h[8], 'No telefon'); assert.strictEqual(h[9], 'Deposit', 'Deposit pada lajur J');
+  const sh = o.sheets['Peniaga']; const j = sh.data[0].indexOf('Deposit');
+  sh.data.forEach(r => { if (r) r.splice(j, 1); });   // buang lajur untuk meniru sheet lama
+  o.setupSystem(); h = hdr(o, 'Peniaga');
+  assert.strictEqual(h[8], 'No telefon'); assert.strictEqual(h[9], 'Deposit'); assert.strictEqual(h[10], 'Dikemas kini');
+});
 t('lajur sistem yang dipadam: ralat jelas, setupSystem memulihkannya', () => {
   const o = createBackend(); o.setupSystem();
   const sh = o.sheets['Pengguna']; const j = sh.data[0].indexOf('Status'); sh.data[0][j] = undefined;
@@ -478,6 +486,18 @@ t('penyewa nampak perubahan oleh admin; kemudian penyewa mengemas kini sendiri d
   const g = ok('getBusiness', uB.token, {}); assert.strictEqual(g.biz.nama, 'Syarikat B Baharu'); assert.strictEqual(g.kemaskini.oleh, 'admin');
   ok('saveBusiness', uB.token, { biz: { ...g.biz, telefon: '0123456789' } });
   assert.strictEqual(ok('getBusiness', uB.token, {}).kemaskini.oleh, 'anda'); assert.strictEqual(b.readTable_('Peniaga').find(x => x.idSewa === tB).dikemaskiniOleh, 'b@syarikat.example');
+});
+t('deposit: lajur Deposit selepas No telefon; hanya admin boleh isi; penyewa nampak tetapi tidak boleh ubah', () => {
+  const g0 = ok('adminGetBusiness', adm.token, { idSewa: tB }); assert.strictEqual(g0.biz.deposit, null);
+  bad('adminSaveBusiness', adm.token, { idSewa: tB, biz: { ...g0.biz, kp: '', deposit: '-5' } }, /Deposit tidak sah/);
+  const r = ok('adminSaveBusiness', adm.token, { idSewa: tB, biz: { ...g0.biz, kp: '', deposit: '500' } });
+  assert.strictEqual(JSON.stringify(r.diubah), '["Deposit"]');
+  assert.strictEqual(Number(b.readTable_('Peniaga').find(x => x.idSewa === tB).deposit), 500);
+  const g = ok('getBusiness', uB.token, {}); assert.strictEqual(g.biz.deposit, 500);
+  ok('saveBusiness', uB.token, { biz: { ...g.biz, deposit: 9999, telefon: '0123456780' } });
+  assert.strictEqual(Number(b.readTable_('Peniaga').find(x => x.idSewa === tB).deposit), 500, 'penyewa tidak boleh mengubah deposit');
+  ok('adminSaveBusiness', adm.token, { idSewa: tB, biz: { ...g0.biz, kp: '', deposit: '' } });
+  assert.strictEqual(ok('adminGetBusiness', adm.token, { idSewa: tB }).biz.deposit, null, 'kosong = tiada deposit');
 });
 t('admin: tiada perubahan = tiada e-mel; input tidak sah ditolak', () => {
   const g = ok('adminGetBusiness', adm.token, { idSewa: tB }).biz; const n = b.outbox.length;

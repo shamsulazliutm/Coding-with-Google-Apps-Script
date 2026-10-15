@@ -64,7 +64,7 @@ COLS[SHEETS.TENANCIES] = [
 COLS[SHEETS.BIZ] = [
   ['idSewa', 'ID penyewaan', 't'], ['nama', 'Nama perniagaan', 't'], ['jenis', 'Jenis perniagaan', 't'], ['ssm', 'No SSM', 't'],
   ['pelajar', 'Nama pelajar', 't'], ['kp', 'No KP', 't'], ['matrik', 'No matrik', 't'], ['fakulti', 'Fakulti', 't'],
-  ['telefon', 'No telefon', 't'], ['dikemaskini', 'Dikemas kini', 'dt'], ['dikemaskiniOleh', 'Dikemas kini oleh', 't']
+  ['telefon', 'No telefon', 't'], ['deposit', 'Deposit', 'n'], ['dikemaskini', 'Dikemas kini', 'dt'], ['dikemaskiniOleh', 'Dikemas kini oleh', 't']
 ];
 COLS[SHEETS.REPORTS] = [
   ['id', 'ID', 't'], ['kodLot', 'Kod lot', 't'], ['tahun', 'Tahun', 'n'], ['bulan', 'Bulan', 'n'],
@@ -89,6 +89,7 @@ ALIASES[SHEETS.BIZ] = { 'ID penyewaan': 'Kod lot' };
 /** Lajur baharu disisip selepas lajur ini (selain itu ditambah di hujung sheet). */
 var INSERT_AFTER = {};
 INSERT_AFTER[SHEETS.REPORTS] = { catatan: 'lewat' };
+INSERT_AFTER[SHEETS.BIZ] = { deposit: 'telefon' };
 
 /** Jenis fail lampiran: kunci -> sambungan nama fail dan lajur dalam sheet Laporan */
 var FILE_KINDS = {
@@ -590,7 +591,8 @@ function bizView_(b, mask) {
   b = b || {};
   return {
     nama: b.nama || '', jenis: b.jenis || '', ssm: b.ssm || '', pelajar: b.pelajar || '',
-    kp: mask ? maskKp_(b.kp) : (b.kp || ''), matrik: b.matrik || '', fakulti: b.fakulti || '', telefon: b.telefon || ''
+    kp: mask ? maskKp_(b.kp) : (b.kp || ''), matrik: b.matrik || '', fakulti: b.fakulti || '', telefon: b.telefon || '',
+    deposit: b.deposit === '' || b.deposit === undefined || b.deposit === null ? null : Number(b.deposit)
   };
 }
 
@@ -606,7 +608,7 @@ function getBusiness_(user) {
 }
 
 var BIZ_FIELDS = [['nama', 'Nama perniagaan'], ['jenis', 'Jenis perniagaan'], ['ssm', 'No. SSM'], ['pelajar', 'Nama pelajar'], ['kp', 'No. KP'],
-                  ['matrik', 'No. matrik'], ['fakulti', 'Fakulti'], ['telefon', 'No. telefon']];
+                  ['matrik', 'No. matrik'], ['fakulti', 'Fakulti'], ['telefon', 'No. telefon'], ['deposit', 'Deposit']];
 
 /**
  * Semak dan kemaskan input maklumat peniaga. No. KP yang dikosongkan mengekalkan nilai sedia ada
@@ -675,6 +677,7 @@ function adminSaveBusiness_(user, p) {
   if (!tn) fail_('Penyewaan tidak dijumpai.');
   var changed = withLock_(function () {
     var clean = cleanBiz_(p.biz || {}, findBy_(readTable_(SHEETS.BIZ), 'idSewa', tn.id));
+    clean.deposit = readMoney_((p.biz || {}).deposit, 'Deposit');   // deposit hanya boleh dikemas kini oleh admin
     var ch = writeBiz_(tn.id, clean, user.email);
     logAction_(user.email, 'Admin kemas kini maklumat peniaga', tn.id + ' / ' + tn.kodLot + ' / ' + (ch.length ? ch.join(', ') : 'tiada perubahan'));
     return ch;

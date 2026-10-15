@@ -418,12 +418,12 @@ textarea.fi { min-height: 72px; resize: vertical; }
       (d.lengkap ? '<span class="pill s-ok">Lengkap</span>' : '<span class="pill s-warn">Sila lengkapkan</span>') + '</div><div class="cb">' +
       '<section><h3 class="sech">Perniagaan</h3><div class="grid">' +
       inp('b-nama', 'Nama perniagaan / syarikat', b.nama, true) + inp('b-jenis', 'Jenis perniagaan', b.jenis, true, 'Contoh: Makanan dan minuman') + inp('b-ssm', 'No. pendaftaran (SSM)', b.ssm, false) +
-      ro('Lot sewaan', l.nama) + ro('Tarikh mula sewa', dateLabel(l.mula)) + ro('Tarikh akhir sewa', dateLabel(l.akhir)) + ro('Sewa bulanan (RM)', l.sewa === null ? '-' : fmt(l.sewa)) +
+      ro('Lot sewaan', l.nama) + ro('Tarikh mula sewa', dateLabel(l.mula)) + ro('Tarikh akhir sewa', dateLabel(l.akhir)) + ro('Sewa bulanan (RM)', l.sewa === null ? '-' : fmt(l.sewa)) + ro('Deposit (RM)', b.deposit === null || b.deposit === undefined ? '-' : fmt(b.deposit)) +
       '</div></section><section><h3 class="sech">Pelajar / pemilik</h3><div class="grid">' +
       inp('b-pelajar', 'Nama pelajar', b.pelajar, true) + inp('b-kp', 'No. kad pengenalan (No. KP)', b.kp, true, '010203-01-1234') + inp('b-matrik', 'No. matrik', b.matrik, true) +
       inp('b-fakulti', 'Fakulti', b.fakulti, true) + inp('b-telefon', 'No. telefon', b.telefon, true) +
       '</div></section><section><h3 class="sech">Akaun log masuk</h3><div class="grid">' + ro('E-mel (untuk OTP)', d.email) + ro('Peranan', d.peranan) + '</div>' +
-      '<p class="help" style="margin:10px 0 0">E-mel, lot, tarikh sewa dan sewa bulanan hanya boleh diubah oleh admin UTMXCITE. Hubungi utmxcite@utm.my.</p></section>' +
+      '<p class="help" style="margin:10px 0 0">E-mel, lot, tarikh sewa, sewa bulanan dan deposit hanya boleh diubah oleh admin UTMXCITE. Hubungi utmxcite@utm.my.</p></section>' +
       '<div style="display:flex;justify-content:flex-end"><button class="btn primary" data-act="savebiz" type="button">Simpan maklumat</button></div></div></div>';
   }
 
@@ -929,14 +929,14 @@ textarea.fi { min-height: 72px; resize: vertical; }
       (err ? '<div class="errbox" role="alert">' + esc(err) + '</div>' : '') +
       (d.ada ? '' : '<div class="banner s-warn"><b>Belum diisi</b><p>Penyewa belum mengisi maklumat. Anda boleh mengisinya bagi pihak penyewa.</p></div>') +
       '<div class="grid">' + fld('nama', 'Nama perniagaan', b.nama, true) + fld('jenis', 'Jenis perniagaan', b.jenis, true) + fld('ssm', 'No. pendaftaran (SSM)', b.ssm, false) + '</div>' +
-      '<div class="grid">' + fld('pelajar', 'Nama pelajar', b.pelajar, true) + fld('kp', 'No. kad pengenalan', keep ? keep.kp : '', !d.ada, d.ada ? 'Kosongkan untuk kekalkan (' + d.biz.kp + ')' : '010203-01-1234') + fld('matrik', 'No. matrik', b.matrik, true) + fld('fakulti', 'Fakulti', b.fakulti, true) + fld('telefon', 'No. telefon', b.telefon, true) + '</div>' +
+      '<div class="grid">' + fld('pelajar', 'Nama pelajar', b.pelajar, true) + fld('kp', 'No. kad pengenalan', keep ? keep.kp : '', !d.ada, d.ada ? 'Kosongkan untuk kekalkan (' + d.biz.kp + ')' : '010203-01-1234') + fld('matrik', 'No. matrik', b.matrik, true) + fld('fakulti', 'Fakulti', b.fakulti, true) + fld('telefon', 'No. telefon', b.telefon, true) + fld('deposit', 'Deposit (RM)', b.deposit === null || b.deposit === undefined ? '' : b.deposit, false, 'Contoh: 500') + '</div>' +
       '<p class="help" style="margin:0">Perubahan direkod dalam log dan penyewa dimaklumkan melalui e-mel (hanya nama medan yang diubah, tanpa nilai). No. KP sedia ada tidak dipaparkan penuh; isi hanya jika mahu menggantikannya.</p>' +
       '</div><div class="dfoot" style="justify-content:flex-end"><button class="btn" data-act="closedlg" type="button">Batal</button><button class="btn primary" data-act="adminsavebiz" type="button">Simpan</button></div></div></div>';
   }
 
   function doAdminSaveBiz() {
     var d = S.bizDlg, g = function (id) { return $('ab-' + id).value; };
-    var biz = { nama: g('nama'), jenis: g('jenis'), ssm: g('ssm'), pelajar: g('pelajar'), kp: g('kp'), matrik: g('matrik'), fakulti: g('fakulti'), telefon: g('telefon') };
+    var biz = { nama: g('nama'), jenis: g('jenis'), ssm: g('ssm'), pelajar: g('pelajar'), kp: g('kp'), matrik: g('matrik'), fakulti: g('fakulti'), telefon: g('telefon'), deposit: g('deposit') };
     api('adminSaveBusiness', { idSewa: d.idSewa, biz: biz }).then(function (res) {
       S.tns = res.tenancies; $('dlg-slot').innerHTML = ''; refreshView(tnHtml());
       toast(res.diubah.length ? 'Maklumat peniaga dikemas kini' : 'Tiada perubahan');
