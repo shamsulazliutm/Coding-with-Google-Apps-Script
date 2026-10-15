@@ -199,8 +199,32 @@ textarea.fi { min-height: 72px; resize: vertical; }
 .mini { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 0; }
 .mini td, .mini th { padding: 6px 4px; border-top: 1px solid var(--line); text-align: left; } .mini th { border-top: 0; color: var(--muted); font-weight: 600; font-size: 12px; }
 .mini td.num, .mini th.num { text-align: right; }
+.how { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.how b { color: var(--fg); font-weight: 600; }
+.how ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
 .kmsg { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 10px 14px; font-size: 13px; }
 .kmsg p { color: var(--fg); margin: 2px 0 0; white-space: pre-wrap; }
+
+.po { display: none; } .poi { display: none; }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --bg: #ffffff; --surface: #ffffff; --fg: #2a2224; --muted: #6f6467; --line: #e8e0e1; --head: #f1e5e8;
+    --accent: #5b1a33; --accent-fg: #ffffff; --accent-soft: #f6e6e8; --ok: #1f7a4d; --ok-soft: #e2f3ea; --warn: #9a5b00; --warn-soft: #fbefd5;
+    --bad: #b3261e; --bad-soft: #fbe4e2; --info: #2c5d8f; --info-soft: #e3edf8; --idle: #6f6467; --idle-soft: #ece8e7;
+    --c1: #5b1a33; --c2: #d1a145; --grid: #ebe4e5; color-scheme: light;
+  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff !important; padding: 0; font-size: 12px; }
+  .tabs, .who .linkbtn, .bar, .hero > select, .btn, #progress, #toast-slot, #dlg-slot { display: none !important; }
+  .po { display: block !important; } .poi { display: inline !important; }
+  .dcard, .kpi, .stat { break-inside: avoid; box-shadow: none; }
+  .dgrid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpis { gap: 8px; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); grid-template-columns: none; }
+  .kpi { padding: 10px 10px; } .kpi .v { font-size: 14px; }
+  .chart { overflow: visible; } .chart svg { min-width: 0; }
+  .logo { height: 40px !important; }
+}
 </style>
 </head>
 <body>
@@ -582,7 +606,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   /** Carta bar berkumpulan. data: [{label, a, b}], a/b boleh null. */
   function barChart(data, o) {
-    var W = 640, H = 250, L = o.pct ? 36 : 46, R = 8, T = 10, B = 26, iw = W - L - R, ih = H - T - B;
+    var W = 640, H = o.sub ? 264 : 250, L = o.pct ? 36 : 46, R = 8, T = 10, B = o.sub ? 40 : 26, iw = W - L - R, ih = H - T - B;
     var max = o.pct ? 100 : niceMax(Math.max.apply(null, data.map(function (d) { return Math.max(d.a || 0, d.b || 0); })));
     var any = data.some(function (d) { return d.a !== null && d.a !== undefined || d.b !== null && d.b !== undefined; });
     if (!any) return '<p class="hint" style="margin:8px 0">' + esc(o.empty || 'Belum ada data.') + '</p>';
@@ -597,13 +621,13 @@ textarea.fi { min-height: 72px; resize: vertical; }
       var cx = L + gw * k + gw / 2, tip = esc(d.label) + (o.pct ? ': ' + (d.a === null ? '-' : Math.round(d.a) + '% dihantar') + (d.b === null || d.b === undefined ? '' : ', ' + Math.round(d.b) + '% tepat masa') : ': ' + o.names[0] + ' ' + rmFull(d.a) + ', ' + o.names[1] + ' ' + rmFull(d.b));
       g += '<g><title>' + tip + '</title><rect x="' + L + gw * k + '" y="' + T + '" width="' + gw + '" height="' + ih + '" fill="transparent"/>';
       if (o.pct) {
-        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw) + '" y="' + y(d.a) + '" width="' + bw * 2 + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)" opacity=".3"/>';
+        if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw) + '" y="' + y(d.a) + '" width="' + bw * 2 + '" height="' + Math.max(d.a === 0 ? 2 : 0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)" opacity=".3"/>';   // 0% = garis nipis (ada laporan dijangka tetapi belum dihantar)
         if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx - bw * 0.55) + '" y="' + y(d.b) + '" width="' + bw * 1.1 + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c1)"/>';
       } else {
         if (d.a !== null && d.a !== undefined) g += '<rect x="' + (cx - bw - 1) + '" y="' + y(d.a) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.a)) + '" rx="2" fill="var(--c1)"/>';
         if (d.b !== null && d.b !== undefined) g += '<rect x="' + (cx + 1) + '" y="' + y(d.b) + '" width="' + bw + '" height="' + Math.max(0, T + ih - y(d.b)) + '" rx="2" fill="var(--c2)"/>';
       }
-      g += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(d.label) + '</text></g>';
+      g += '<text x="' + cx + '" y="' + (o.sub ? H - 22 : H - 8) + '" text-anchor="middle">' + esc(d.label) + '</text>' + (o.sub ? '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle" style="font-size:9px">' + esc(d.sub || '') + '</text>' : '') + '</g>';
     });
     return g + '</svg>';
   }
@@ -630,8 +654,9 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   function dashTenantHtml(d) {
     var j = d.jumlah, k = d.kepatuhan, f = d.fokus, c = d.counts;
-    var h = '<div class="hero"><div><h2>' + esc(d.perniagaan || 'Selamat datang') + '</h2><p>' + esc(d.lot.nama) + ' · Tempoh sewa ' + esc(dateLabel(d.lot.mula)) + ' hingga ' + (d.lot.akhir ? esc(dateLabel(d.lot.akhir)) : 'kini') + '</p></div>' +
-      '<select id="ds-year" aria-label="Tahun">' + d.tahunList.map(function (y) { return '<option' + (y === d.tahun ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select></div>';
+    var h = '<div class="po note" id="print-meta"></div><div class="hero"><div><h2>' + esc(d.perniagaan || 'Selamat datang') + ' <span class="poi">· Tahun ' + d.tahun + '</span></h2><p>' + esc(d.lot.nama) + ' · Tempoh sewa ' + esc(dateLabel(d.lot.mula)) + ' hingga ' + (d.lot.akhir ? esc(dateLabel(d.lot.akhir)) : 'kini') + '</p></div>' +
+      '<div class="bar"><select id="ds-year" aria-label="Tahun">' + d.tahunList.map(function (y) { return '<option' + (y === d.tahun ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
+      '<button class="btn" data-act="dashpdf" type="button" title="Cetak atau simpan dashboard ini sebagai PDF">Simpan PDF</button></div></div>';
     if (!d.bulanDibenarkan) return h + '<div class="dcard"><p style="margin:0">Tempoh sewa anda belum ditetapkan. Hubungi utmxcite@utm.my.</p></div>';
     if (f) {
       var label = f.status === 'none' ? (f.lewat ? 'Belum dihantar, sudah lewat' : 'Belum dihantar') : ST[f.status][1];
@@ -658,6 +683,17 @@ textarea.fi { min-height: 72px; resize: vertical; }
     return h;
   }
 
+  /** Penerangan graf kadar penghantaran: cara membaca dan ringkasan tahun semasa. */
+  function rateNote(d) {
+    var dij = 0, hant = 0, tepat = 0, kosong = [];
+    d.siri.forEach(function (x) { dij += x.dijangka; hant += x.dihantar; tepat += x.tepatMasa; if (x.dijangka && !x.dihantar) kosong.push(x.bulanNama); });
+    var sum = dij ? 'Sepanjang ' + d.tahun + ': <b>' + hant + ' daripada ' + dij + ' laporan dihantar (' + Math.round(hant * 100 / dij) + '%)</b>, ' + tepat + ' daripada itu tepat masa.' + (kosong.length ? ' Belum ada laporan dihantar bagi ' + esc(kosong.join(', ')) + '.' : '') : 'Belum ada laporan yang dijangka bagi ' + d.tahun + '.';
+    return '<div class="how"><p style="margin:0">' + sum + '</p><ul><li><b>Setiap bar</b> ialah satu bulan. Tingginya ialah peratus laporan bulan itu yang sudah dihantar, daripada semua lot yang sepatutnya menghantar.</li>' +
+      '<li><b>Bar pudar</b>: dihantar, termasuk yang lewat. <b>Bar gelap</b>: dihantar tepat masa, iaitu sebelum tarikh akhir (hari ke-7 bulan berikutnya, atau tarikh dalam e-mel peringatan). Bar gelap sentiasa sama atau lebih rendah daripada bar pudar.</li>' +
+      '<li><b>Nombor kecil di bawah bulan</b> ialah laporan dihantar / laporan dijangka. Garis nipis bermaksud ada laporan dijangka tetapi belum ada yang dihantar. Bulan tanpa bar tiada laporan dijangka (contohnya bulan akan datang atau sebelum tempoh sewa bermula).</li>' +
+      '<li>Peratusan bulan-bulan lalu boleh naik kemudian apabila penyewa menghantar laporan tertunggak.</li></ul></div>';
+  }
+
   function todoList(title, group, btn, act) {
     return '<div class="dcard"><h3>' + esc(title) + ' <span class="pill ' + (group.jumlah ? 's-warn' : 's-ok') + '" style="margin-left:6px">' + group.jumlah + '</span></h3><ul class="todo">' +
       (group.senarai.length ? group.senarai.map(function (r) {
@@ -676,9 +712,10 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function dashAdminHtml(d) {
     var j = d.jumlah, c = d.counts, cy = new Date().getFullYear(), yrs = [cy + 1, cy, cy - 1, cy - 2];
     var per = d.bulan === 0 ? 'sepanjang ' + d.tahun : MS[d.bulan - 1] + ' ' + d.tahun;
-    var h = '<div class="hero"><div><h2>Ringkasan ' + esc(per) + '</h2><p>' + d.lotAktif + ' lot aktif · ' + d.jumlahBaris + ' laporan dijangka' + (d.tanpaTarikh ? ' · ' + d.tanpaTarikh + ' lot belum ada penyewaan' : '') + '</p></div>' +
+    var h = '<div class="po note" id="print-meta"></div><div class="hero"><div><h2>Ringkasan ' + esc(per) + '</h2><p>' + d.lotAktif + ' lot aktif · ' + d.jumlahBaris + ' laporan dijangka' + (d.tanpaTarikh ? ' · ' + d.tanpaTarikh + ' lot belum ada penyewaan' : '') + '</p></div>' +
       '<div class="bar"><select id="ds-month" aria-label="Bulan"><option value="0"' + (d.bulan === 0 ? ' selected' : '') + '>Bulan: Semua</option>' + MS.map(function (n, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === d.bulan ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
-      '<select id="ds-year" aria-label="Tahun">' + yrs.map(function (y) { return '<option' + (y === d.tahun ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select></div></div>';
+      '<select id="ds-year" aria-label="Tahun">' + yrs.map(function (y) { return '<option' + (y === d.tahun ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>' +
+      '<button class="btn" data-act="dashpdf" type="button" title="Cetak atau simpan dashboard ini sebagai PDF">Simpan PDF</button></div></div>';
     h += '<div class="kpis">' +
       kpi('Kadar penghantaran', d.kadar.peratus === null ? '-' : d.kadar.peratus + '%', d.kadar.hantar + ' daripada ' + d.kadar.dijangka + ' laporan', 'accent') +
       kpi('Jumlah pendapatan', rmFull(j.pendapatan), j.bilLaporan + ' laporan dihantar') +
@@ -689,12 +726,23 @@ textarea.fi { min-height: 72px; resize: vertical; }
     h += '<div class="dgrid"><div class="dcard"><h3>Status laporan</h3>' + statusStack(c) +
       (d.lokasi.length ? '<h3 style="margin-top:4px">Mengikut lokasi</h3><table class="mini"><thead><tr><th>Lokasi</th><th class="num">Dihantar</th><th class="num">Pendapatan</th><th class="num">Perbelanjaan</th></tr></thead><tbody>' +
         d.lokasi.map(function (o) { return '<tr><td>' + esc(o.lokasi) + '</td><td class="num mono">' + o.dihantar + '/' + o.dijangka + '</td><td class="num mono">' + rmShort(o.pendapatan) + '</td><td class="num mono">' + rmShort(o.perbelanjaan) + '</td></tr>'; }).join('') + '</tbody></table>' : '') + '</div>' +
-      '<div class="dcard"><h3>Kadar penghantaran mengikut bulan</h3><p class="hint">Peratus laporan yang dihantar, dan yang dihantar tepat masa.</p>' + legend([['Dihantar', 'var(--c1)', '.3'], ['Tepat masa', 'var(--c1)']]) +
-      '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.dihantar * 100 / x.dijangka : null, b: x.dijangka ? x.tepatMasa * 100 / x.dijangka : null }; }), { pct: true, label: 'Kadar penghantaran bulanan', empty: 'Belum ada data.' }) + '</div></div>' +
+      '<div class="dcard"><h3>Kadar penghantaran mengikut bulan</h3><p class="hint">Berapa peratus laporan yang dijangka bagi setiap bulan sudah dihantar oleh penyewa.</p>' + legend([['Dihantar (termasuk yang lewat)', 'var(--c1)', '.3'], ['Dihantar tepat masa', 'var(--c1)']]) +
+      '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, sub: x.dijangka ? x.dihantar + '/' + x.dijangka : '', a: x.dijangka ? x.dihantar * 100 / x.dijangka : null, b: x.dijangka ? x.tepatMasa * 100 / x.dijangka : null }; }), { pct: true, sub: true, label: 'Kadar penghantaran bulanan', empty: 'Belum ada data.' }) + '</div>' + rateNote(d) + '</div>' +
       '<div class="dcard"><h3>Pendapatan dan perbelanjaan semua lot</h3><p class="hint">Jumlah laporan yang sudah dihantar, setiap bulan ' + d.tahun + '.</p>' + legend([['Pendapatan', 'var(--c1)'], ['Perbelanjaan', 'var(--c2)']]) +
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka && x.dihantar ? x.pendapatan : null, b: x.dijangka && x.dihantar ? x.perbelanjaan : null }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan semua lot', empty: 'Belum ada laporan dihantar.' }) + '</div></div>' +
       '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>';
     return h;
+  }
+
+  /** Simpan dashboard sebagai PDF: membuka dialog cetak pelayar (pilih "Save as PDF"). Gaya cetak menyembunyikan menu dan butang. */
+  function printDash() {
+    var n = new Date(), p2 = function (x) { return String(x).padStart(2, '0'); };
+    var meta = $('print-meta');
+    if (meta) meta.textContent = 'Dicetak pada ' + p2(n.getDate()) + '/' + p2(n.getMonth() + 1) + '/' + n.getFullYear() + ' ' + p2(n.getHours()) + ':' + p2(n.getMinutes()) + ' oleh ' + S.user.email;
+    var old = document.title, d = S.dash || {};
+    var name = S.user.peranan === 'Admin' ? 'Dashboard_Admin_' + (d.bulan ? MS[d.bulan - 1] + '_' : '') + d.tahun : 'Dashboard_' + String(d.perniagaan || 'Penyewa').replace(/[^A-Za-z0-9]+/g, '_') + '_' + d.tahun;
+    document.title = name;
+    try { window.print(); } finally { setTimeout(function () { document.title = old; }, 1000); }
   }
 
   function goReport(y, m) { S.openAfter = { y: y, m: m }; S.fin = { tahun: y }; S.tab = 'fin'; render(); }
@@ -953,6 +1001,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       case 'savedraft': persist(false); break;
       case 'submitreport': persist(true); break;
       case 'review': openReview(t.dataset.lot, Number(t.dataset.y), Number(t.dataset.m)); break;
+      case 'dashpdf': printDash(); break;
       case 'dash-open': goReport(Number(t.dataset.y), Number(t.dataset.m)); break;
       case 'admfile': var d2 = document.querySelector('.dlg[data-lot]'); openFile(Number(d2.dataset.y), Number(d2.dataset.m), t.dataset.kind, d2.dataset.lot); break;
       case 'rv-ok': doReview('ok'); break;
