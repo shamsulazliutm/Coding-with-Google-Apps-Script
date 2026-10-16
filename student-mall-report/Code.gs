@@ -455,27 +455,43 @@ function auth_(token) {
  * Semua e-mel sistem dibina melalui fungsi ini.
  */
 function mailBody_(tajuk, isi) {
-  return '<h2 style="font-size:16px;letter-spacing:.5px;margin:0 0 16px;color:#5b1a33">' + escHtml_(String(tajuk).toUpperCase()) + '</h2>' +
-    '<p>Assalamualaikum dan salam sejahtera.</p>' + isi +
-    '<p>Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
-    '<p style="margin-top:20px"><b>UTMXCITE</b><br>' +
+  return '<h2 style="font-size:15px;letter-spacing:1px;margin:0 0 18px;color:' + MAIL_.maroon + ';font-weight:700">' + escHtml_(String(tajuk).toUpperCase()) + '</h2>' +
+    '<p style="margin:0 0 14px">Assalamualaikum dan salam sejahtera.</p>' + isi +
+    '<p style="margin:0 0 14px">Terima kasih atas perhatian dan kerjasama yang diberikan.</p>' +
+    '<p style="margin:22px 0 0;color:#444;font-size:14px;line-height:1.5"><b style="color:' + MAIL_.maroon + '">UTMXCITE</b><br>' +
     APP.CONTACT_EMAIL + '<br>' +
     APP.CONTACT_PHONE + '</p>';
 }
 
+/** Warna e-mel (selaras dengan rekaan UTMXCITE: maroon, emas, latar krim). */
+var MAIL_ = { maroon: '#7d2a3a', gold: '#d9a22f', paper: '#fff6f3', outer: '#fbe6e0', text: '#2b2326', line: '#eadbd7' };
+
 function mailButton_(url) {
-  return url ? '<p style="margin:20px 0"><a href="' + url + '" style="background:#5b1a33;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:bold">\uD83D\uDD17 Buka Sistem</a></p>' : '';
+  return url ? '<p style="margin:20px 0"><a href="' + url + '" style="background:' + MAIL_.maroon + ';color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:6px;display:inline-block;font-weight:bold;font-size:15px">Buka Sistem</a></p>' : '';
+}
+
+/** Bungkus kandungan dengan rekaan e-mel: bar maroon, jenama, bar emas, kandungan, garis pemisah. Berasaskan jadual supaya sesuai untuk semua klien e-mel. */
+function mailFrame_(bodyHtml) {
+  var f = 'font-family:Roboto,Arial,Helvetica,sans-serif;';
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + MAIL_.outer + ';padding:20px 8px"><tr><td align="center">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:' + MAIL_.paper + ';' + f + 'color:' + MAIL_.text + '">' +
+    '<tr><td style="height:6px;line-height:6px;font-size:0;background:' + MAIL_.maroon + '">&nbsp;</td></tr>' +
+    '<tr><td style="padding:22px 28px 16px;' + f + '"><span style="font-size:22px;font-weight:700;color:' + MAIL_.maroon + '">UTMXCITE</span>' +
+    '<span style="font-size:14px;color:#7a6e70"> &middot; Laporan Kewangan Student Mall &amp; SUB</span></td></tr>' +
+    '<tr><td style="height:4px;line-height:4px;font-size:0;background:' + MAIL_.gold + '">&nbsp;</td></tr>' +
+    '<tr><td style="padding:26px 28px 8px;font-size:16px;line-height:1.55;' + f + 'color:' + MAIL_.text + '">' + String(bodyHtml).replace(/<p>/g, '<p style="margin:0 0 14px">') + '</td></tr>' +
+    '<tr><td style="padding:12px 28px 24px"><div style="border-top:1px solid ' + MAIL_.line + ';height:1px;line-height:1px;font-size:0">&nbsp;</div></td></tr>' +
+    '</table></td></tr></table>';
 }
 
 function sendMail_(to, subject, bodyHtml) {
-  var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#222;max-width:520px">' + bodyHtml + '</div>';
-  MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: APP.SENDER });
+  MailApp.sendEmail({ to: to, subject: subject, htmlBody: mailFrame_(bodyHtml), name: APP.SENDER });
 }
 
 function sendOtpMail_(email, nama, code) {
   sendMail_(email, 'Kod OTP anda: ' + code, mailBody_('Kod OTP log masuk',
     '<p>Kod OTP untuk log masuk ke sistem laporan kewangan' + (nama ? ' (' + escHtml_(nama) + ')' : '') + ':</p>' +
-    '<p style="font-size:28px;letter-spacing:6px;font-weight:bold;margin:12px 0">' + code + '</p>' +
+    '<p style="font-size:30px;letter-spacing:6px;font-weight:bold;margin:14px 0;color:' + MAIL_.maroon + '">' + code + '</p>' +
     '<p>Kod ini sah selama ' + Math.round(APP.OTP_TTL / 60) + ' minit dan hanya boleh digunakan sekali. Jangan kongsi kod ini dengan sesiapa.</p>'));
 }
 
@@ -516,7 +532,7 @@ function sendReviewMail_(kodLot, y, m, decision, komen, by) {
     sendMail_(email, (ok ? 'Laporan disahkan: ' : 'Pembetulan diminta: ') + MONTHS_MS[m - 1] + ' ' + y,
       mailBody_(ok ? 'Laporan kewangan disahkan' : 'Pembetulan laporan kewangan diminta',
         '<p>Laporan kewangan bagi bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> ' + (ok ? 'telah <b>disahkan</b>.' : 'memerlukan <b>pembetulan</b>.') + '</p>' +
-        (komen ? '<p style="background:#f6f6f6;padding:10px;border-radius:6px"><b>Komen UTMXCITE:</b><br>' + escHtml_(komen).replace(/\n/g, '<br>') + '</p>' : '') +
+        (komen ? '<p style="background:#ffffff;border-left:4px solid ' + MAIL_.gold + ';padding:10px 14px;margin:0 0 14px;border-radius:4px"><b>Komen UTMXCITE:</b><br>' + escHtml_(komen).replace(/\n/g, '<br>') + '</p>' : '') +
         (ok ? '' : '<p>Sila kemas kini laporan dan hantar semula melalui sistem.</p>' + mailButton_(appUrl_()))));
   });
 }
