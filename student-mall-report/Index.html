@@ -768,7 +768,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   }
 
   function dashAdminHtml(d) {
-    var j = d.jumlah, c = d.counts, cy = new Date().getFullYear(), yrs = [cy + 1, cy, cy - 1, cy - 2];
+    var j = d.jumlah, c = d.counts, yrs = d.tahunList || [new Date().getFullYear()];
     var per = d.bulan === 0 ? 'sepanjang ' + d.tahun : MS[d.bulan - 1] + ' ' + d.tahun;
     var h = '<div class="po note" id="print-meta"></div><div class="hero"><div><h2>Ringkasan ' + esc(per) + '</h2><p>' + d.lotAktif + ' lot aktif · ' + d.jumlahBaris + ' laporan dijangka' + (d.tanpaTarikh ? ' · ' + d.tanpaTarikh + ' lot belum ada penyewaan' : '') + '</p></div>' +
       '<div class="bar"><select id="ds-month" aria-label="Bulan"><option value="0"' + (d.bulan === 0 ? ' selected' : '') + '>Bulan: Semua</option>' + MS.map(function (n, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === d.bulan ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
@@ -819,7 +819,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   function admHtml() {
     var a = S.adm, c = a.counts, cy = new Date().getFullYear();
-    var yrs = [cy + 1, cy, cy - 1, cy - 2];
+    var yrs = a.tahunList || [cy];
     var h = '<div class="stats"><div class="stat"><small>Lot aktif</small><strong>' + a.lotAktif + '</strong></div>' +
       '<div class="stat"><small>Disahkan</small><strong>' + c.ok + ' / ' + a.jumlahLot + '</strong></div>' +
       '<div class="stat"><small>Menunggu semakan</small><strong>' + c.sent + '</strong></div>' +
@@ -926,8 +926,8 @@ textarea.fi { min-height: 72px; resize: vertical; }
       (err ? '<div class="errbox" role="alert">' + esc(err) + '</div>' : '') +
       '<div class="field"><label for="n-lot">Lot <span class="req">*</span></label><select class="fi" id="n-lot"' + (isNew ? '' : ' disabled') + '><option value="">Pilih lot</option>' +
       S.lots.map(function (l) { return '<option value="' + esc(l.kodLot) + '"' + (t.kodLot === l.kodLot ? ' selected' : '') + '>' + esc(l.nama) + '</option>'; }).join('') + '</select></div>' +
-      '<div class="field"><label for="n-mula">Mula sewa (bulan) <span class="req">*</span></label><input class="fi" type="month" id="n-mula" value="' + esc(monthVal(t.mula)) + '"><span class="help">Penyewa mula pada hari pertama bulan ini.</span></div>' +
-      '<div class="field"><label for="n-akhir">Tamat sewa (bulan)</label><input class="fi" type="month" id="n-akhir" value="' + esc(monthVal(t.akhir)) + '"><span class="help">Tamat pada hari terakhir bulan ini. Kosongkan jika belum ditetapkan.</span></div>' +
+      '<div class="field"><label for="n-mula">Mula sewa (bulan) <span class="req">*</span></label><input class="fi" type="month" id="n-mula" min="2020-01" max="2100-12" value="' + esc(monthVal(t.mula)) + '"><span class="help">Penyewa mula pada hari pertama bulan ini. Boleh pilih mana-mana tahun (taip tahun atau gunakan pemilih).</span></div>' +
+      '<div class="field"><label for="n-akhir">Tamat sewa (bulan)</label><input class="fi" type="month" id="n-akhir" min="2020-01" max="2100-12" value="' + esc(monthVal(t.akhir)) + '"><span class="help">Tamat pada hari terakhir bulan ini; boleh melangkau tahun. Kosongkan jika belum ditetapkan.</span></div>' +
       '<div class="field"><label for="n-sewa">Sewa bulanan (RM)</label><input class="fi" id="n-sewa" inputmode="decimal" value="' + esc(t.sewa === null || t.sewa === undefined ? '' : t.sewa) + '"></div>' +
       '</div><div class="dfoot" style="justify-content:flex-end"><button class="btn" data-act="closedlg" type="button">Batal</button><button class="btn primary" data-act="savetn" type="button">Simpan</button></div></div></div>';
   }

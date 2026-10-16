@@ -1050,7 +1050,7 @@ function adminReports_(user, p) {
   });
   rows.sort(function (a, b) { return b.bulan - a.bulan; });   // bulan terkini dahulu; susunan lot dikekalkan (sort stabil)
   return { tahun: y, bulan: m, counts: counts, lotAktif: lots.length, jumlahLot: rows.length, tanpaTarikh: tanpaTarikh,
-           rows: rows, lokasiList: uniq_(lots.map(function (l) { return l.lokasi; })) };
+           rows: rows, lokasiList: uniq_(lots.map(function (l) { return l.lokasi; })), tahunList: adminYearList_() };
 }
 
 /** Susun lot mengikut lokasi (ikut susunan lokasi pertama muncul dalam sheet Lot), kemudian nombor lot menaik. */
@@ -1058,6 +1058,14 @@ function sortLots_(lots) {
   var rank = {}, n = 0;
   lots.forEach(function (l) { if (rank[l.lokasi] === undefined) rank[l.lokasi] = n++; });
   return lots.slice().sort(function (a, b) { return rank[a.lokasi] - rank[b.lokasi] || Number(a.noLot) - Number(b.noLot); });
+}
+
+/** Senarai tahun untuk penapis admin: dari tahun mula sewa paling awal hingga tahun semasa (menurun). */
+function adminYearList_() {
+  var cy = ymFromStr_(todayStr_()).y, min = cy - 1;
+  readTable_(SHEETS.TENANCIES).forEach(function (tn) { if (isDateStr_(tn.mula)) min = Math.min(min, ymFromStr_(tn.mula).y); });
+  var out = []; for (var y = cy; y >= min; y--) out.push(y);
+  return out;
 }
 
 function uniq_(arr) { var s = {}; return arr.filter(function (x) { if (s[x]) return false; s[x] = 1; return true; }); }
@@ -1428,7 +1436,7 @@ function adminDashboard_(user, p) {
   var perluBaiki = all.rows.filter(function (r) { return r.status === 'fix'; });
   var oldest = function (a, b) { return a.bulan - b.bulan; };
   return {
-    tahun: y, bulan: m, lotAktif: all.lotAktif, tanpaTarikh: all.tanpaTarikh,
+    tahun: y, bulan: m, lotAktif: all.lotAktif, tanpaTarikh: all.tanpaTarikh, tahunList: all.tahunList,
     counts: counts, jumlahBaris: sel.length, lewat: lewat,
     kadar: { hantar: hantar, dijangka: sel.length, peratus: sel.length ? Math.round(hantar * 100 / sel.length) : null },
     jumlah: { pendapatan: round2_(jum.pendapatan), perbelanjaan: round2_(jum.perbelanjaan), untung: round2_(jum.pendapatan - jum.perbelanjaan), sewa: round2_(jum.sewa), bilLaporan: jum.dikira },

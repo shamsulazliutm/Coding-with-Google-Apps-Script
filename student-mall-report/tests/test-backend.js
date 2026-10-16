@@ -636,6 +636,17 @@ t('susunan lot: ikut lokasi kemudian nombor lot (Lot 10 selepas Lot 9), walaupun
   for (let i = 1; i < lots.length; i++) { const p = lots[i - 1], c = lots[i]; assert.ok(p.lokasi === c.lokasi ? p.noLot < c.noLot : true, p.nama + ' sebelum ' + c.nama); }
   assert.strictEqual(new Set(lots.map(l => l.lokasi)).size, 2); assert.strictEqual(lots.findIndex(l => l.lokasi !== lots[0].lokasi) , lots.filter(l => l.lokasi === lots[0].lokasi).length, 'lokasi dikumpulkan');
 });
+t('sewa lebih awal atau melangkau tahun: boleh disimpan; senarai tahun penapis admin merangkumi tahun mula', () => {
+  const o = createBackend(); o.setupSystem();
+  o.rpc('requestOtp', null, { email: 'utmxcite@utm.my' }); const c = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1];
+  const tok = o.rpc('verifyOtp', null, { email: 'utmxcite@utm.my', code: c }).data.token;
+  const r = o.rpc('adminSaveTenancy', tok, { tenancy: { kodLot: 'StudentMall-Lot1', mula: '2024-11-01', akhir: '2027-02-28', sewa: 500 } }); assert.ok(r.ok, r.error);
+  const rep = o.rpc('adminReports', tok, { tahun: 2024, bulan: 0 }).data;
+  assert.strictEqual(JSON.stringify(rep.rows.filter(x => x.kodLot === 'StudentMall-Lot1').map(x => x.bulan).sort((a, b) => a - b)), '[11,12]', 'Nov dan Dis 2024');
+  assert.ok(rep.tahunList.includes(2024) && rep.tahunList.includes(2025) && rep.tahunList.includes(2026), 'tahunList: ' + rep.tahunList);
+  assert.strictEqual(o.rpc('adminReports', tok, { tahun: 2025, bulan: 0 }).data.rows.filter(x => x.kodLot === 'StudentMall-Lot1').length, 12, 'setahun penuh 2025');
+  assert.strictEqual(o.rpc('adminDashboard', tok, { tahun: 2024, bulan: 0 }).data.tahunList.includes(2024), true);
+});
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Tidak aktif' } });
   assert.strictEqual(bad('myReports', ten.token, {}).code, 'SESSION');
