@@ -1405,7 +1405,9 @@ function adminDashboard_(user, p) {
   var pnMap = {}, peniaga = [];
   sel.forEach(function (r) {
     var k = r.kodLot + '|' + r.idSewa, o = pnMap[k];
-    if (!o) { o = pnMap[k] = { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, pendapatan: 0, perbelanjaan: 0, dikira: 0 }; peniaga.push(o); }
+    if (!o) { o = pnMap[k] = { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, pendapatan: 0, perbelanjaan: 0, dikira: 0, dijangka: 0, dihantar: 0 }; peniaga.push(o); }
+    o.dijangka++;
+    if (r.status === 'sent' || r.status === 'ok') o.dihantar++;
     if (counted_(r)) { o.pendapatan += r.pendapatan; o.perbelanjaan += r.perbelanjaan; o.dikira++; }
     // Kutipan sewa: diterima = bayaran sewa dalam laporan yang sudah dihantar; tertunggak = kekurangan berbanding sewa bulanan, bagi setiap bulan
     var rt = rentOf_(r);

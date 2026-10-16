@@ -167,7 +167,7 @@ let browser;
   await a.emulateMedia({ media: 'print' }); await a.pdf({ path: OUT + '/dashboard-admin.pdf', format: 'A4', printBackground: true });
   for (const sel of ['.tabs', '[data-act=dashpdf]', '#ds-month', '.todo .btn']) assert.strictEqual(await a.isVisible(sel), false, sel + ' tersembunyi semasa cetak');
   assert.strictEqual(await a.isVisible('#print-meta'), true); await a.emulateMedia({ media: 'screen' });
-  assert.match(await a.textContent('.dcard:has(h3:text-is("Rumusan mengikut peniaga")) thead'), /Lot.*Perniagaan · Pelajar.*Pendapatan \(RM\).*Perbelanjaan \(RM\).*Untung\/Rugi \(RM\)/);
+  assert.match(await a.textContent('.dcard:has(h3:text-is("Rumusan mengikut peniaga")) thead'), /Lot.*Perniagaan · Pelajar.*Laporan.*Pendapatan \(RM\).*Perbelanjaan \(RM\).*Untung\/Rugi \(RM\)/);
   assert.ok((await a.locator('.dcard:has(h3:text-is("Rumusan mengikut peniaga")) tbody tr').count()) >= 10, 'baris peniaga'); assert.strictEqual(await a.locator('tr.tot').count(), 2);
   assert.match(await a.textContent('.dcard:has(h3:text-is("Rumusan Kutipan Sewa mengikut Peniaga")) thead'), /Lot.*Perniagaan · Pelajar.*Sewa diterima.*Sewa tertunggak.*Jumlah/);
   assert.strictEqual(await a.locator('.kpi:has(small:text-is("Sewa diterima")), .kpi:has(small:text-is("Sewa tertunggak"))').count(), 2); assert.ok(!/NaN/.test(await a.textContent('#view')), 'tiada NaN');

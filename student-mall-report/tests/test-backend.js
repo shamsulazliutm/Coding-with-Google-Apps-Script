@@ -613,6 +613,7 @@ t('5hb: lot belum hantar diingatkan sekali sahaja (tiada duplikasi)', () => {
 t('dashboard admin: rumusan mengikut peniaga sepadan dengan jumlah', () => {
   const d = ok('adminDashboard', adm.token, { tahun: 2026, bulan: 0 });
   assert.ok(d.peniaga.length >= 1);
+  assert.strictEqual(d.peniaga.reduce((a, o) => a + o.dijangka, 0), d.jumlahBaris, 'jumlah dijangka sepadan'); assert.strictEqual(d.peniaga.reduce((a, o) => a + o.dihantar, 0), d.kadar.hantar, 'jumlah dihantar sepadan'); d.peniaga.forEach(o => assert.ok(o.dihantar <= o.dijangka));
   const sum = d.peniaga.reduce((a, o) => a + (o.pendapatan || 0), 0);
   assert.ok(Math.abs(sum - d.jumlah.pendapatan) < 0.01, 'jumlah pendapatan sepadan');
   d.peniaga.forEach(o => { if (o.pendapatan !== null) assert.ok(Math.abs(o.untungRugi - (o.pendapatan - o.perbelanjaan)) < 0.01); });
