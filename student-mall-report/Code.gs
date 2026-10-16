@@ -1434,7 +1434,17 @@ function adminDashboard_(user, p) {
   var rugi = sel.filter(function (r) { return cnt(r) && r.untungRugi < 0; }).sort(function (a, b) { return a.untungRugi - b.untungRugi; }).slice(0, 5).map(slim);
 
   var menunggu = all.rows.filter(function (r) { return r.status === 'sent'; });
-  var tertunggak = all.rows.filter(function (r) { return r.status === 'none' && r.kesempatanLewat; });
+  // Belum dihantar dan sudah lewat: satu entri bagi setiap peniaga (lot + penyewaan), dengan bilangan belum dihantar / bilangan laporan perlu dihantar setahun
+  var lateMap = {}, late = [];
+  all.rows.forEach(function (r) {
+    var k = r.kodLot + '|' + r.idSewa, o = lateMap[k];
+    if (!o) { o = lateMap[k] = { kodLot: r.kodLot, idSewa: r.idSewa, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, belum: 0, dijangka: 0, tahun: y, bulan: 0 }; }
+    o.dijangka++;
+    if (r.status === 'none' && r.kesempatanLewat) { o.belum++; if (r.bulan > o.bulan) { o.bulan = r.bulan; o.bulanNama = r.bulanNama; } }   // bulan terkini yang tertunggak
+  });
+  var lotOrder = {}; sortLots_(readTable_(SHEETS.LOTS)).forEach(function (l, i) { lotOrder[l.kodLot] = i; });
+  Object.keys(lateMap).forEach(function (k) { if (lateMap[k].belum > 0) late.push(lateMap[k]); });
+  late.sort(function (a, b) { return (lotOrder[a.kodLot] || 0) - (lotOrder[b.kodLot] || 0); });
   var perluBaiki = all.rows.filter(function (r) { return r.status === 'fix'; });
   var oldest = function (a, b) { return a.bulan - b.bulan; };
   return {
@@ -1445,7 +1455,7 @@ function adminDashboard_(user, p) {
     siri: siri, lokasi: lokasi, peniaga: peniaga, sewaJumlah: sewaJum, teratas: teratas, rugi: rugi,
     tindakan: {
       menunggu: { jumlah: menunggu.length, senarai: menunggu.sort(oldest).slice(0, 8).map(slim) },
-      tertunggak: { jumlah: tertunggak.length, senarai: tertunggak.sort(oldest).slice(0, 8).map(slim) },
+      tertunggak: { jumlah: late.length, senarai: late.slice(0, 12) },
       perluBaiki: { jumlah: perluBaiki.length, senarai: perluBaiki.sort(oldest).slice(0, 8).map(slim) }
     }
   };

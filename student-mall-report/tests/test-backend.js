@@ -442,7 +442,9 @@ t('dashboard admin: bulan = 0 (semua) dan tindakan mengikut keseluruhan tahun', 
   const yr = ok('adminReports', adm.token, { tahun: 2026, bulan: 0 });
   assert.strictEqual(d.jumlahBaris, yr.rows.length);
   assert.strictEqual(d.tindakan.menunggu.jumlah, yr.rows.filter(r => r.status === 'sent').length);
-  assert.strictEqual(d.tindakan.tertunggak.jumlah, yr.rows.filter(r => r.status === 'none' && r.kesempatanLewat).length);
+  const late = yr.rows.filter(r => r.status === 'none' && r.kesempatanLewat);
+  assert.strictEqual(d.tindakan.tertunggak.jumlah, new Set(late.map(r => r.kodLot + '|' + r.idSewa)).size, 'satu entri bagi setiap peniaga');
+  d.tindakan.tertunggak.senarai.forEach(e => { const mine = yr.rows.filter(r => r.kodLot === e.kodLot && r.idSewa === e.idSewa); assert.strictEqual(e.dijangka, mine.length); assert.strictEqual(e.belum, mine.filter(r => r.status === 'none' && r.kesempatanLewat).length); assert.strictEqual(e.bulan, Math.max(...mine.filter(r => r.status === 'none' && r.kesempatanLewat).map(r => r.bulan)), 'bulan terkini'); });
   assert.strictEqual(d.tindakan.perluBaiki.jumlah, yr.rows.filter(r => r.status === 'fix').length);
   assert.ok(d.tindakan.tertunggak.senarai.length <= 8); assert.strictEqual(d.siri.reduce((a, x) => a + x.dijangka, 0), yr.rows.length);
   assert.strictEqual(ok('adminDashboard', adm.token, { tahun: 2025 }).bulan, 0, 'tahun lain: semua bulan');
