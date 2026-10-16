@@ -569,7 +569,7 @@ t('ayat e-mel peringatan mengikut teks yang diluluskan (tajuk, salam, tarikh akh
   assert.strictEqual(m.subject, 'Peringatan Penghantaran Laporan Kewangan: September 2026');
   ['PERINGATAN PENGHANTARAN LAPORAN KEWANGAN', 'Assalamualaikum dan salam sejahtera.',
    'Dimaklumkan bahawa laporan kewangan bagi bulan <b>September 2026</b> untuk <b>SUB-Lot2</b> masih belum diterima.',
-   'Sehubungan itu, mohon kerjasama pihak tuan/puan untuk mengemukakan laporan tersebut selewat-lewatnya pada',
+   'Sehubungan itu, mohon kerjasama pihak saudara untuk mengemukakan laporan tersebut selewat-lewatnya pada',
    'Laporan yang diterima selepas tarikh berkenaan akan direkodkan sebagai penghantaran lewat.',
    'Buka Sistem', 'Terima kasih atas perhatian dan kerjasama yang diberikan.', 'UTMXCITE</b>', 'utmxcite@utm.my', '013-7630079']
     .forEach(x => assert.ok(h.includes(x), 'tiada dalam e-mel: ' + x));

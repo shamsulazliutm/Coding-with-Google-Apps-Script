@@ -517,7 +517,7 @@ function sendReminderMail_(kodLot, y, m) {
   var subject = 'Peringatan Penghantaran Laporan Kewangan: ' + MONTHS_MS[m - 1] + ' ' + y;
   var body = mailBody_('Peringatan penghantaran laporan kewangan',
     '<p>Dimaklumkan bahawa laporan kewangan bagi bulan <b>' + MONTHS_MS[m - 1] + ' ' + y + '</b> untuk <b>' + escHtml_(kodLot) + '</b> masih belum diterima.</p>' +
-    '<p>Sehubungan itu, mohon kerjasama pihak tuan/puan untuk mengemukakan laporan tersebut selewat-lewatnya pada <b>' + dateLabelMs_(deadline) + '</b>.</p>' +
+    '<p>Sehubungan itu, mohon kerjasama pihak saudara untuk mengemukakan laporan tersebut selewat-lewatnya pada <b>' + dateLabelMs_(deadline) + '</b>.</p>' +
     '<p>Laporan yang diterima selepas tarikh berkenaan akan direkodkan sebagai penghantaran lewat.</p>' + mailButton_(url));
   to.forEach(function (email) { sendMail_(email, subject, body); });
   appendObj_(SHEETS.REMINDERS, { kunci: kodLot + '|' + y + '-' + pad2_(m) + '|' + today + '|' + nowStr_().slice(11), masa: nowStr_(), akhir: deadline });
