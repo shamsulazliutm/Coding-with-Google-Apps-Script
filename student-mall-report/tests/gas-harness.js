@@ -46,7 +46,7 @@ function createBackend(opts = {}) {
     console, Date: FakeDate, Math, JSON, Object, Array, String, Number, isFinite, isNaN, parseInt, Error, RegExp,
     Logger: { log() {} },
     SpreadsheetApp: { getActiveSpreadsheet: () => ss, openById: () => ss, newDataValidation: () => { const o = { requireDate() { return o; }, setAllowInvalid() { return o; }, setHelpText() { return o; }, build() { return {}; } }; return o; } },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; } }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; }, deleteProperty: k => { delete props[k]; }, getProperties: () => ({ ...props }) }) },
     CacheService: { getScriptCache: () => ({ get: k => (k in cache ? cache[k] : null), put: (k, v) => { cache[k] = v; }, remove: k => { delete cache[k]; } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => 'Pn.Salmah@utm.my' }) },

@@ -269,8 +269,12 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function fmt(n) { return n === null || n === undefined || n === '' ? '-' : Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function snip(t) { t = String(t || '').replace(/\s+/g, ' '); return t.length > 70 ? t.slice(0, 70) + '…' : t; }
   function pill(k) { return '<span class="pill ' + ST[k][0] + '">' + ST[k][1] + '</span>'; }
-  function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* abaikan */ } }
-  function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  // Sesi kekal sehingga Log keluar: token disimpan dalam localStorage (jika disekat, sessionStorage).
+  function store(k, v) {
+    if (v === null) { try { window.localStorage.removeItem(k); } catch (e) { /* abaikan */ } try { window.sessionStorage.removeItem(k); } catch (e2) { /* abaikan */ } return; }
+    try { window.localStorage.setItem(k, v); } catch (e) { try { window.sessionStorage.setItem(k, v); } catch (e2) { /* abaikan */ } }
+  }
+  function load(k) { try { var v = window.localStorage.getItem(k); if (v) return v; } catch (e) { /* abaikan */ } try { return window.sessionStorage.getItem(k); } catch (e2) { return null; } }
 
   function toast(msg, isErr) {
     var el = $('toast-slot');

@@ -23,7 +23,7 @@ var APP = {
   OTP_TTL: 300,            // OTP sah 5 minit
   OTP_MAX_TRIES: 5,
   OTP_RESEND_WAIT: 60,     // minta OTP baharu paling cepat 1 minit
-  SESSION_TTL: 7200,       // sesi 2 jam (dilanjutkan setiap tindakan)
+  SESSION_MAX_PER_USER: 5, // bilangan peranti/pelayar serentak bagi satu akaun (yang terlama dilog keluar)
   MAX_FILE_BYTES: 10 * 1024 * 1024,
   // Folder Drive untuk menyimpan semua PDF. Kosongkan ('') untuk mencipta folder baharu secara automatik.
   // Pemilik skrip mesti mempunyai akses Editor pada folder ini. Disyorkan kongsi "Restricted" (bukan sesiapa dengan pautan).
@@ -418,14 +418,45 @@ function verifyOtp_(user, p) {
   var u = findUser_(email);
   if (!u || u.status !== 'Aktif') fail_('Akaun tidak aktif. Hubungi ' + APP.CONTACT_EMAIL + '.');
 
-  var token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
-  cache.put('sess:' + token, email, APP.SESSION_TTL);
+  var token = createSession_(email);
   logAction_(email, 'Log masuk', u.peranan);
   return { token: token, user: userView_(u) };
 }
 
+/**
+ * Sesi kekal sehingga pengguna menekan Log keluar (atau akaun dinyahaktifkan).
+ * Disimpan dalam PropertiesService sebagai hash token (token sebenar hanya ada pada pelayar pengguna);
+ * CacheService hanya mempercepat bacaan.
+ */
+function sessKey_(token) {
+  return 'sess:' + toHex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt_() + '|sess|' + token));
+}
+
+function createSession_(email) {
+  var token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+  var props = PropertiesService.getScriptProperties();
+  var all = props.getProperties ? props.getProperties() : {};
+  var mine = [];
+  Object.keys(all).forEach(function (k) {
+    if (k.indexOf('sess:') !== 0) return;
+    try { var r = JSON.parse(all[k]); if (r.e === email) mine.push({ k: k, c: r.c || 0 }); } catch (e) { props.deleteProperty(k); }
+  });
+  mine.sort(function (x, y) { return x.c - y.c; });
+  while (mine.length >= APP.SESSION_MAX_PER_USER) { var old = mine.shift(); props.deleteProperty(old.k); CacheService.getScriptCache().remove(old.k); }
+  var key = sessKey_(token);
+  props.setProperty(key, JSON.stringify({ e: email, c: Date.now() }));
+  CacheService.getScriptCache().put(key, email, 21600);
+  return token;
+}
+
+function dropSession_(token) {
+  var key = sessKey_(token);
+  PropertiesService.getScriptProperties().deleteProperty(key);
+  CacheService.getScriptCache().remove(key);
+}
+
 function logout_(user, p, token) {
-  CacheService.getScriptCache().remove('sess:' + token);
+  dropSession_(token);
   logAction_(user.email, 'Log keluar', '');
   return {};
 }
@@ -433,15 +464,19 @@ function logout_(user, p, token) {
 /** Sahkan token sesi dan kembalikan pengguna semasa. */
 function auth_(token) {
   if (!token || typeof token !== 'string') fail_('Sesi tamat. Sila log masuk semula.', 'SESSION');
-  var cache = CacheService.getScriptCache();
-  var email = cache.get('sess:' + token);
+  var key = sessKey_(token), cache = CacheService.getScriptCache();
+  var email = cache.get(key);
+  if (!email) {
+    var raw = PropertiesService.getScriptProperties().getProperty(key);
+    if (raw) { try { email = JSON.parse(raw).e; } catch (e) { email = null; } }
+    if (email) cache.put(key, email, 21600);
+  }
   if (!email) fail_('Sesi tamat. Sila log masuk semula.', 'SESSION');
   var u = findUser_(email);
   if (!u || u.status !== 'Aktif') {
-    cache.remove('sess:' + token);
+    dropSession_(token);
     fail_('Akaun tidak aktif. Hubungi ' + APP.CONTACT_EMAIL + '.', 'SESSION');
   }
-  cache.put('sess:' + token, email, APP.SESSION_TTL);
   return u;
 }
 

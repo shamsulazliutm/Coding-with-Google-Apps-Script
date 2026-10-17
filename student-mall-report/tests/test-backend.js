@@ -659,6 +659,21 @@ t('admin terakhir tidak boleh diturunkan', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'rashid@utm.my', nama: 'En. Rashid', peranan: 'Penyewa', idSewa: TS2, status: 'Aktif' } });
   bad('adminSaveUser', adm.token, { user: { email: 'utmxcite@utm.my', nama: 'A', peranan: 'Penyewa', idSewa: TS2, status: 'Aktif' } }, /sendiri/);
 });
+t('sesi kekal: tidak tamat walaupun cache dikosongkan; token tidak disimpan mentah; kekal sehingga Log keluar', () => {
+  const o = createBackend(); o.setupSystem();
+  const login2 = em => { delete o.cache['otpwait:' + em]; o.rpc('requestOtp', null, { email: em }); const c = o.outbox[o.outbox.length - 1].htmlBody.match(/letter-spacing:6px[^>]*>(\d{6})</)[1]; return o.rpc('verifyOtp', null, { email: em, code: c }).data.token; };
+  const tok = login2('utmxcite@utm.my');
+  Object.keys(o.cache).forEach(k => delete o.cache[k]);   // cache dikosongkan (contoh: selepas beberapa jam)
+  assert.ok(o.rpc('me', tok, {}).ok, 'sesi masih sah tanpa OTP baharu');
+  o.setNow(Date.now() + 90 * 24 * 3600 * 1000); assert.ok(o.rpc('me', tok, {}).ok, 'masih sah selepas 90 hari');
+  assert.ok(!Object.values(o.props).some(v => String(v).includes(tok)) && !Object.keys(o.props).some(k => k.includes(tok)), 'token mentah tidak disimpan');
+  assert.ok(o.rpc('logout', tok, {}).ok); assert.strictEqual(o.rpc('me', tok, {}).code, 'SESSION', 'selepas Log keluar sesi ditolak');
+  assert.strictEqual(Object.keys(o.props).filter(k => k.startsWith('sess:')).length, 0);
+  // had peranti serentak: yang terlama dilog keluar
+  const toks = []; for (let i = 0; i < 6; i++) toks.push(login2('utmxcite@utm.my'));
+  assert.strictEqual(o.rpc('me', toks[0], {}).code, 'SESSION', 'sesi terlama digugurkan'); assert.ok(o.rpc('me', toks[5], {}).ok);
+  assert.strictEqual(Object.keys(o.props).filter(k => k.startsWith('sess:')).length, 5);
+});
 t('logout membatalkan sesi', () => { ok('logout', adm.token, {}); assert.strictEqual(bad('me', adm.token).code, 'SESSION'); });
 t('log audit direkod', () => { const log = b.readTable_('Log'); assert.ok(log.length > 20); assert.ok(log.some(l => l.tindakan === 'Sahkan laporan')); });
 if (process.env.DUMP_MAIL) {

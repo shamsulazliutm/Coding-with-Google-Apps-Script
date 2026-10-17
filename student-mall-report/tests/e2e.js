@@ -175,6 +175,8 @@ let browser;
   await a.click('.todo [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await a.click('[data-act=closedlg]');
   await a.click('[data-tab=adm]'); await a.waitForSelector('#a-rows tr'); await settle(a);
   assert.match(await a.textContent('.who'), /Admin/); await shot(a, '10-admin', true);
+  await a.reload(); await a.waitForSelector('.who'); assert.match(await a.textContent('.who'), /Admin/, 'kekal log masuk selepas muat semula halaman (tiada OTP baharu)');
+  await a.click('[data-tab=adm]'); await a.waitForSelector('#a-rows tr'); await settle(a);
   assert.strictEqual(await a.inputValue('#a-month'), '0', 'lalai: Bulan Semua');
   assert.ok((await a.locator('#a-rows tr').count()) >= 90, 'semua bulan semua lot');
   const rowText = async (bulan, lot) => a.textContent('#a-rows tr:has-text("' + bulan + '"):has-text("' + lot + '")');
@@ -233,7 +235,7 @@ let browser;
   await a.waitForFunction(() => /Pengguna disimpan/.test((document.querySelector('.toast') || {}).textContent || ''));
   assert.ok((await a.textContent('#u-rows')).includes('baru@graduan.example'));
   // tamat sesi
-  b.cache && Object.keys(b.cache).filter(k => k.startsWith('sess:')).forEach(k => delete b.cache[k]);
+  Object.keys(b.cache).filter(k => k.startsWith('sess:')).forEach(k => delete b.cache[k]); Object.keys(b.props).filter(k => k.startsWith('sess:')).forEach(k => delete b.props[k]);
   await a.click('[data-tab=lots]'); await a.waitForSelector('.errbox'); assert.match(await a.textContent('.errbox'), /Sesi tamat/);
   await shot(a, '15-sesi-tamat');
   await browser.close();
