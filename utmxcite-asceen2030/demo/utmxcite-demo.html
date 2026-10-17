@@ -445,7 +445,7 @@ label .req{color:var(--bad)}
       return true;
     } catch (e) { console.warn('Demo: keadaan rosak, dimulakan semula', e); return false; }
   };
-  window.__demoReset = function () { try { localStorage.removeItem(STATE_KEY); sessionStorage.removeItem('utmx_token'); } catch (e) { /* abaikan */ } };
+  window.__demoReset = function () { try { localStorage.removeItem(STATE_KEY); localStorage.removeItem('utmx_token'); sessionStorage.removeItem('utmx_token'); } catch (e) { /* abaikan */ } };
   window.__demoSha256Hex = function (s) { return Array.prototype.map.call(sha256(enc.encode(s)), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); };
 
   // ---------- google.script.run (tak segerak, dengan kelewatan kecil seperti pelayan sebenar)
@@ -5607,8 +5607,8 @@ window.__demoSeed = function () {
     if (b.hasAttribute('data-d')) {
       var email = b.getAttribute('data-d');
       try {
-        if (!email) { sessionStorage.removeItem('utmx_token'); }
-        else { var tok = randomHex_(48); CacheService.getScriptCache().put('sess:' + sha256Hex_(tok), email, APP.SESSION_TTL); sessionStorage.setItem('utmx_token', tok); }
+        if (!email) { localStorage.removeItem('utmx_token'); sessionStorage.removeItem('utmx_token'); }
+        else { var tok = randomHex_(48); CacheService.getScriptCache().put('sess:' + sha256Hex_(tok), email, APP.SESSION_TTL); localStorage.setItem('utmx_token', tok); }
       } catch (err) { /* abaikan */ }
       window.__demoPersistNow(); location.reload();
     } else if (b.getAttribute('data-a') === 'reset') {

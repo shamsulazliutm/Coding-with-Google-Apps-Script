@@ -166,7 +166,7 @@
       return true;
     } catch (e) { console.warn('Demo: keadaan rosak, dimulakan semula', e); return false; }
   };
-  window.__demoReset = function () { try { localStorage.removeItem(STATE_KEY); sessionStorage.removeItem('utmx_token'); } catch (e) { /* abaikan */ } };
+  window.__demoReset = function () { try { localStorage.removeItem(STATE_KEY); localStorage.removeItem('utmx_token'); sessionStorage.removeItem('utmx_token'); } catch (e) { /* abaikan */ } };
   window.__demoSha256Hex = function (s) { return Array.prototype.map.call(sha256(enc.encode(s)), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); };
 
   // ---------- google.script.run (tak segerak, dengan kelewatan kecil seperti pelayan sebenar)

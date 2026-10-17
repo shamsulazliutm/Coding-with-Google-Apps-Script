@@ -42,8 +42,8 @@
     if (b.hasAttribute('data-d')) {
       var email = b.getAttribute('data-d');
       try {
-        if (!email) { sessionStorage.removeItem('utmx_token'); }
-        else { var tok = randomHex_(48); CacheService.getScriptCache().put('sess:' + sha256Hex_(tok), email, APP.SESSION_TTL); sessionStorage.setItem('utmx_token', tok); }
+        if (!email) { localStorage.removeItem('utmx_token'); sessionStorage.removeItem('utmx_token'); }
+        else { var tok = randomHex_(48); CacheService.getScriptCache().put('sess:' + sha256Hex_(tok), email, APP.SESSION_TTL); localStorage.setItem('utmx_token', tok); }
       } catch (err) { /* abaikan */ }
       window.__demoPersistNow(); location.reload();
     } else if (b.getAttribute('data-a') === 'reset') {
