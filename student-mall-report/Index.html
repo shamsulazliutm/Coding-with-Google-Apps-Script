@@ -796,7 +796,6 @@ textarea.fi { min-height: 72px; resize: vertical; }
       kpi('Jumlah perbelanjaan', rmFull(j.perbelanjaan), 'Sewa direkod: ' + rmFull(j.sewa)) +
       kpi(j.untung < 0 ? 'Rugi bersih' : 'Untung bersih', rmFull(j.untung), '') +
       kpi('Dihantar lewat', String(d.lewat), 'daripada ' + d.jumlahBaris + ' laporan') + '</div>';
-    h += '<div class="dgrid">' + todoList('Menunggu semakan', d.tindakan.menunggu, 'Semak', 'review') + todoList('Perlu dibetulkan oleh penyewa', d.tindakan.perluBaiki, 'Lihat', 'review') + '</div>';
     h += '<div class="dgrid"><div class="dcard"><h3>Status laporan</h3>' + statusStack(c) +
       (d.lokasi.length ? '<h3 style="margin-top:4px">Mengikut lokasi</h3><table class="mini"><thead><tr><th>Lokasi</th><th class="num">Dihantar</th><th class="num">Pendapatan</th><th class="num">Perbelanjaan</th></tr></thead><tbody>' +
         d.lokasi.map(function (o) { return '<tr><td>' + esc(o.lokasi) + '</td><td class="num mono">' + o.dihantar + '/' + o.dijangka + '</td><td class="num mono">' + rmShort(o.pendapatan) + '</td><td class="num mono">' + rmShort(o.perbelanjaan) + '</td></tr>'; }).join('') + '</tbody></table>' : '') + '</div>' +
@@ -806,7 +805,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka && x.dihantar ? x.pendapatan : null, b: x.dijangka && x.dihantar ? x.perbelanjaan : null }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan semua lot', empty: 'Belum ada laporan dihantar.' }) + '</div></div>' +
       '<div class="dcard"><h3>Kutipan sewa semua lot</h3><p class="hint">Sewa diterima dan sewa tertunggak, setiap bulan ' + d.tahun + '.</p>' + legend([['Diterima', 'var(--c1)'], ['Tertunggak', 'var(--c3)']]) +
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.sewaDiterima : null, b: x.dijangka ? x.sewaTertunggak : null }; }), { names: ['Diterima', 'Tertunggak'], colors: ['var(--c1)', 'var(--c3)'], label: 'Kutipan sewa semua lot', empty: 'Belum ada data sewa.' }) + '</div></div></div>' +
-      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d) + sewaTable(d) + '<div class="dgrid" style="grid-template-columns:1fr">' + lateList(d.tindakan.tertunggak) + '</div>';
+      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d) + sewaTable(d) + '<div class="dgrid">' + todoList('Menunggu semakan', d.tindakan.menunggu, 'Semak', 'review') + todoList('Perlu dibetulkan oleh penyewa', d.tindakan.perluBaiki, 'Lihat', 'review') + '</div><div class="dgrid" style="grid-template-columns:1fr">' + lateList(d.tindakan.tertunggak) + '</div>';
     return h;
   }
 
