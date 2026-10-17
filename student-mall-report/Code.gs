@@ -1496,6 +1496,30 @@ function adminDashboard_(user, p) {
   };
 }
 
+/** Tab Tindakan: semua tindakan admin merentas semua tahun (tanpa had bilangan). */
+function adminActions_(user, p) {
+  var menunggu = [], perluBaiki = [], lateMap = {}, late = [];
+  var slim = function (r) { return { kodLot: r.kodLot, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, tahun: r.tahun, bulan: r.bulan, bulanNama: r.bulanNama, lewat: !!r.lewat }; };
+  adminYearList_().slice().sort(function (a, b) { return a - b; }).forEach(function (y) {
+    var all = adminReports_(user, { tahun: y, bulan: 0 }).rows.slice().sort(function (a, b) { return a.bulan - b.bulan; });
+    all.forEach(function (r) {
+      if (r.status === 'sent') menunggu.push(slim(r));
+      if (r.status === 'fix') perluBaiki.push(slim(r));
+      var k = r.kodLot + '|' + r.idSewa, o = lateMap[k];
+      if (!o) o = lateMap[k] = { kodLot: r.kodLot, idSewa: r.idSewa, lotNama: r.lotNama, perniagaan: r.perniagaan, pelajar: r.pelajar, belum: 0, dijangka: 0, tahun: y, bulan: 0 };
+      o.dijangka++;
+      if (r.status === 'none' && r.kesempatanLewat) { o.belum++; o.tahun = y; o.bulan = r.bulan; o.bulanNama = r.bulanNama; }   // bulan lewat terkini (tahun diulang menaik)
+    });
+  });
+  var lotOrder = {}; sortLots_(readTable_(SHEETS.LOTS)).forEach(function (l, i) { lotOrder[l.kodLot] = i; });
+  Object.keys(lateMap).forEach(function (k) { if (lateMap[k].belum > 0) late.push(lateMap[k]); });
+  late.sort(function (a, b) { return (lotOrder[a.kodLot] || 0) - (lotOrder[b.kodLot] || 0); });
+  return {
+    menunggu: { jumlah: menunggu.length, senarai: menunggu }, perluBaiki: { jumlah: perluBaiki.length, senarai: perluBaiki },
+    tertunggak: { jumlah: late.length, senarai: late }, jumlah: menunggu.length + perluBaiki.length + late.length
+  };
+}
+
 function spreadsheetIdFromUrl_(url) {
   var m = /\/spreadsheets\/d\/([A-Za-z0-9_-]+)/.exec(String(url || ''));
   return m ? m[1] : '';
@@ -1742,6 +1766,7 @@ var ROUTES = {
   getFile:       { auth: true, fn: getFile_ },
   myDashboard:   { auth: true, role: ROLE.TENANT, fn: myDashboard_ },
   adminDashboard: { auth: true, role: ROLE.ADMIN, fn: adminDashboard_ },
+  adminActions:  { auth: true, role: ROLE.ADMIN, fn: adminActions_ },
 
   adminReports:  { auth: true, role: ROLE.ADMIN, fn: adminReports_ },
   adminReport:   { auth: true, role: ROLE.ADMIN, fn: adminGetReport_ },

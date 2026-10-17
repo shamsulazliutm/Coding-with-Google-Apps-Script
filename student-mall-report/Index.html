@@ -366,7 +366,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     var app = $('app');
     if (!S.token) { app.innerHTML = loginHtml(); return; }
     var admin = S.user.peranan === 'Admin';
-    var tabs = admin ? [['dash', 'Dashboard'], ['adm', 'Semua Laporan'], ['tn', 'Penyewaan'], ['lots', 'Lot'], ['users', 'Pengguna']].concat(S.user.dbUrl ? [['db', 'Pangkalan Data', S.user.dbUrl]] : []) : [['dash', 'Dashboard'], ['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
+    var tabs = admin ? [['dash', 'Dashboard'], ['act', 'Tindakan'], ['adm', 'Semua Laporan'], ['tn', 'Penyewaan'], ['lots', 'Lot'], ['users', 'Pengguna']].concat(S.user.dbUrl ? [['db', 'Pangkalan Data', S.user.dbUrl]] : []) : [['dash', 'Dashboard'], ['info', 'Maklumat Peniaga'], ['fin', 'Laporan Kewangan']];
     if (!S.tab) S.tab = tabs[0][0];
     app.innerHTML = '<div class="wrap">' + header() + tabsHtml(tabs) + '<div id="view" class="wrap"></div></div>';
     loadTab();
@@ -378,6 +378,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
     if (S.tab === 'dash') loadDash();
     else if (S.tab === 'info') run(api('getBusiness').then(function (d) { S.biz = d; v.innerHTML = bizHtml(); }));
     else if (S.tab === 'fin') run(api('myReports', { tahun: S.fin && S.fin.tahun }).then(function (d) { S.fin = d; v.innerHTML = finHtml(); if (S.openAfter) { var o = S.openAfter; S.openAfter = null; openReport(o.y, o.m, false); } }));
+    else if (S.tab === 'act') loadAct();
     else if (S.tab === 'adm') loadAdm();
     else if (S.tab === 'tn') run(api('adminTenancies').then(function (d) { S.tns = d.tenancies; S.lots = d.lots; v.innerHTML = tnHtml(); fitTable(); }));
     else if (S.tab === 'lots') run(api('adminLots').then(function (d) { S.lots = d.lots; v.innerHTML = lotsHtml(); }));
@@ -674,6 +675,18 @@ textarea.fi { min-height: 72px; resize: vertical; }
 
   function kpi(label, val, sub, cls) { return '<div class="kpi' + (cls ? ' ' + cls : '') + '"><small>' + esc(label) + '</small><div class="v' + (val && String(val).charAt(0) === '-' ? ' neg' : '') + '">' + esc(val) + '</div>' + (sub ? '<div class="s">' + esc(sub) + '</div>' : '') + '</div>'; }
 
+  /** Tab Tindakan: semua tindakan admin dalam satu tempat. */
+  function loadAct() {
+    var v = $('view'); v.innerHTML = '<p class="note">Memuatkan…</p>';
+    run(api('adminActions').then(function (d) {
+      S.act = d;
+      var b = document.querySelector('[data-tab=act]'); if (b) b.textContent = d.jumlah ? 'Tindakan (' + d.jumlah + ')' : 'Tindakan';
+      v.innerHTML = '<div class="hero"><div><h2>Tindakan</h2><p>' + (d.jumlah ? d.jumlah + ' perkara memerlukan tindakan anda, merentas semua tahun.' : 'Tiada tindakan tertunggak.') + '</p></div></div>' +
+        '<div class="dgrid">' + todoList('Menunggu semakan', d.menunggu, 'Semak', 'review') + todoList('Perlu dibetulkan oleh penyewa', d.perluBaiki, 'Lihat', 'review') + '</div>' +
+        '<div class="dgrid" style="grid-template-columns:1fr">' + lateList(d.tertunggak) + '</div>';
+    }));
+  }
+
   function loadDash() {
     var v = $('view'); v.innerHTML = '<p class="note">Memuatkan…</p>';
     if (S.user.peranan === 'Admin') {
@@ -805,7 +818,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka && x.dihantar ? x.pendapatan : null, b: x.dijangka && x.dihantar ? x.perbelanjaan : null }; }), { names: ['Pendapatan', 'Perbelanjaan'], label: 'Pendapatan dan perbelanjaan semua lot', empty: 'Belum ada laporan dihantar.' }) + '</div></div>' +
       '<div class="dcard"><h3>Kutipan sewa semua lot</h3><p class="hint">Sewa diterima dan sewa tertunggak, setiap bulan ' + d.tahun + '.</p>' + legend([['Diterima', 'var(--c1)'], ['Tertunggak', 'var(--c3)']]) +
       '<div class="chart">' + barChart(d.siri.map(function (x) { return { label: x.bulanNama, a: x.dijangka ? x.sewaDiterima : null, b: x.dijangka ? x.sewaTertunggak : null }; }), { names: ['Diterima', 'Tertunggak'], colors: ['var(--c1)', 'var(--c3)'], label: 'Kutipan sewa semua lot', empty: 'Belum ada data sewa.' }) + '</div></div></div>' +
-      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d) + sewaTable(d) + '<div class="dgrid">' + todoList('Menunggu semakan', d.tindakan.menunggu, 'Semak', 'review') + todoList('Perlu dibetulkan oleh penyewa', d.tindakan.perluBaiki, 'Lihat', 'review') + '</div><div class="dgrid" style="grid-template-columns:1fr">' + lateList(d.tindakan.tertunggak) + '</div>';
+      '<div class="dcard"><h3>Pendapatan tertinggi</h3>' + rankTable(d.teratas, 'Belum ada laporan dihantar.') + '<h3 style="margin-top:4px">Lot mengalami kerugian</h3>' + rankTable(d.rugi, 'Tiada lot rugi.') + '</div></div>' + peniagaTable(d) + sewaTable(d);
     return h;
   }
 
@@ -903,7 +916,7 @@ textarea.fi { min-height: 72px; resize: vertical; }
   function doReview(decision) {
     var dlg = document.querySelector('.dlg[data-lot]'); if (!dlg) return;
     var p = { kodLot: dlg.dataset.lot, tahun: Number(dlg.dataset.y), bulan: Number(dlg.dataset.m), decision: decision, komen: ($('rv-komen') || {}).value || '' };
-    api('adminReview', p).then(function (r) { toast(decision === 'ok' ? 'Laporan disahkan' : 'Pembetulan diminta, e-mel dihantar'); $('dlg-slot').innerHTML = ''; if (S.tab === 'dash') loadDash(); else loadAdm(); })
+    api('adminReview', p).then(function (r) { toast(decision === 'ok' ? 'Laporan disahkan' : 'Pembetulan diminta, e-mel dihantar'); $('dlg-slot').innerHTML = ''; if (S.tab === 'dash') loadDash(); else if (S.tab === 'act') loadAct(); else loadAdm(); })
       .catch(function (e) { api('adminReport', p).then(function (r) { drawReview(r, e.message); }).catch(function () { toast(e.message, true); }); });
   }
 

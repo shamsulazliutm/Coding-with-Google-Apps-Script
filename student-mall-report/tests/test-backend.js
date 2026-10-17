@@ -650,6 +650,13 @@ t('sewa lebih awal atau melangkau tahun: boleh disimpan; senarai tahun penapis a
   assert.strictEqual(o.rpc('adminReports', tok, { tahun: 2025, bulan: 0 }).data.rows.filter(x => x.kodLot === 'StudentMall-Lot1').length, 12, 'setahun penuh 2025');
   assert.strictEqual(o.rpc('adminDashboard', tok, { tahun: 2024, bulan: 0 }).data.tahunList.includes(2024), true);
 });
+t('tab Tindakan: semua tindakan merentas tahun, tanpa had; hanya admin', () => {
+  bad('adminActions', ten.token, {}, /dibenarkan|akses/i);
+  const a = ok('adminActions', adm.token, {}), yr = ok('adminReports', adm.token, { tahun: 2026, bulan: 0 });
+  assert.strictEqual(a.menunggu.jumlah, a.menunggu.senarai.length); assert.strictEqual(a.perluBaiki.jumlah, a.perluBaiki.senarai.length); assert.strictEqual(a.tertunggak.jumlah, a.tertunggak.senarai.length);
+  assert.ok(a.menunggu.jumlah >= yr.rows.filter(r => r.status === 'sent').length); assert.strictEqual(a.jumlah, a.menunggu.jumlah + a.perluBaiki.jumlah + a.tertunggak.jumlah);
+  a.tertunggak.senarai.forEach(e => { assert.ok(e.belum >= 1 && e.belum <= e.dijangka && e.tahun >= 2020 && e.bulan >= 1); });
+});
 t('pengguna dinyahaktifkan: sesi sedia ada ditolak serta-merta', () => {
   ok('adminSaveUser', adm.token, { user: { email: 'aina@graduan.example', nama: 'Aina Sofea', peranan: 'Penyewa', idSewa: T3, status: 'Tidak aktif' } });
   assert.strictEqual(bad('myReports', ten.token, {}).code, 'SESSION');
