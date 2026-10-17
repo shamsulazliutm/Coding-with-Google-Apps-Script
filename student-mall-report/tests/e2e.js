@@ -173,6 +173,7 @@ let browser;
   assert.strictEqual(await a.locator('.kpi:has(small:text-is("Sewa diterima")), .kpi:has(small:text-is("Sewa tertunggak"))').count(), 2); assert.ok(!/NaN/.test(await a.textContent('#view')), 'tiada NaN');
   assert.match(await a.textContent('.hero'), /laporan dijangka/); await a.selectOption('#ds-month', '9'); await a.waitForFunction(() => /September 2026/.test(document.querySelector('.hero').textContent)); await settle(a);
   await a.click('[data-tab=act]'); await a.waitForSelector('.todo [data-act=review]'); await settle(a);
+  { const sc = await a.evaluate(() => { const t = document.querySelector('.tabs'); return t.scrollHeight - t.clientHeight; }); assert.ok(sc <= 0, 'bar tab tiada skrol menegak: ' + sc); }
   assert.ok(await a.locator('.todo [data-act=review]').count() >= 3, 'senarai menunggu semakan'); assert.match(await a.textContent('[data-tab=act]'), /Tindakan \(\d+\)/); assert.ok(await a.locator('.todo [data-act=remind]').count() >= 2, 'senarai peniaga belum hantar'); await shot(a, '21b-tindakan', true);
   await a.click('.todo [data-act=review]'); await a.waitForSelector('.dlg[data-lot]'); await settle(a); await a.click('[data-act=closedlg]');
   await a.click('[data-tab=adm]'); await a.waitForSelector('#a-rows tr'); await settle(a);
