@@ -38,6 +38,7 @@ function api_verifyOtp(email, code) { return wrap_(function () { return verifyOt
 
 // --- Perlu log masuk ----------------------------------------------------
 function api_logout(token) { return wrap_(function () { return logout_(str_(token, 200)); }); }
+function api_logoutAll(token) { return wrap_(function () { return logoutAll_(str_(token, 200)); }); }
 function api_session(token) { return wrap_(function () { return sessionInfo_(str_(token, 200)); }); }
 function api_list(token, kpiId, filters) { return wrap_(function () { return listRecords_(str_(token, 200), str_(kpiId, 20), filters); }); }
 function api_save(token, kpiId, rec) { return wrap_(function () { return saveRecord_(str_(token, 200), str_(kpiId, 20), rec); }); }

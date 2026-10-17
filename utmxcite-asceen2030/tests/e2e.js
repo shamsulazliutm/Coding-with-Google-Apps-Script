@@ -166,6 +166,19 @@ function buildHtml() {
     await page.click('.gh[data-g="KAI"]');
     assert.ok(!(await page.locator('.gb[data-g="KAI"] .nav').first().isVisible()));
   });
+  await step('Log masuk kekal: muat semula halaman tidak meminta OTP baharu; token dalam localStorage', async () => {
+    const tok = await page.evaluate(() => window.localStorage.getItem('utmx_token'));
+    assert.ok(tok && tok.length >= 32, 'token tiada dalam localStorage');
+    assert.strictEqual(await page.evaluate(() => window.sessionStorage.getItem('utmx_token')), null);
+    await page.reload();
+    await page.waitForSelector('.prof >> text=admin@utm.my');                       // masih log masuk
+    assert.strictEqual(await page.locator('[data-action="login"]').count(), 0);
+    assert.ok(await page.locator('[data-action="logoutall"]').isVisible());          // Log keluar semua peranti
+    // pelayar ditutup dan dibuka semula: simulasi dengan menghapus cache sesi pelayan; sesi kekal sah
+    g.CacheService.getScriptCache().remove('sess:' + g.sha256Hex_(tok));
+    await page.reload();
+    await page.waitForSelector('.prof >> text=admin@utm.my');
+  });
   await step('OTP salah menunjukkan ralat', async () => {
     await page.click('[data-action="logout"]');
     await page.click('[data-action="login"]');
@@ -239,8 +252,12 @@ function buildHtml() {
     await page.waitForSelector('td:has-text("Tiada rekod")');
   });
   await step('log keluar kembali ke paparan awam', async () => {
+    const tokBefore = await page.evaluate(() => window.localStorage.getItem('utmx_token'));
     await page.click('[data-action="logout"]');
     await page.waitForSelector('.prof >> text=Pengunjung');
+    assert.strictEqual(await page.evaluate(() => window.localStorage.getItem('utmx_token')), null);   // token dibuang daripada pelayar
+    await page.waitForTimeout(300);
+    assert.strictEqual(g.api_session(tokBefore).auth, true);                                           // dan ditamatkan di pelayan
     assert.strictEqual(await page.locator('.nav', { hasText: 'KAI 1' }).count(), 0);
   });
   await step('Admin: urus pengguna, sasaran dan log audit', async () => {

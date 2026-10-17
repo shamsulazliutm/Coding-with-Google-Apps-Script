@@ -63,6 +63,16 @@ CKAI 5 (Penggunaan Makerspace) boleh dikemas kini daripada Sheet borang permohon
 - **Borang permohonan:** pautan Drive asal disimpan (lajur `borang_pautan`); fail kekal milik pemilik asal dan tidak dipindah atau dipadam oleh aplikasi.
 - Tab lain dalam Sheet sumber (Sheet4, BLACKLIST / TAK BAYAR) tidak dibaca.
 
+## Log masuk berterusan
+
+Selepas OTP berjaya, pengguna kekal log masuk pada pelayar itu **sehingga menekan Log Keluar** (tiada OTP baharu semasa muat semula atau selepas pelayar ditutup). Token disimpan dalam `localStorage` pelayar; di pelayan, hanya **cincang SHA-256** token disimpan dalam tab `Sesi` (token mentah tidak pernah disimpan). Cache 6 jam hanya mempercepat semakan.
+
+- **Log Keluar** menamatkan sesi itu serta-merta. **Log keluar semua peranti** (pautan di bawah profil) menamatkan semua sesi pengguna.
+- Sesi tamat juga apabila akaun **dinyahaktifkan atau dipadam** oleh Admin; peranan dan akses KPI dibaca semula daripada tab Pengguna pada setiap permintaan.
+- Had **10 sesi serentak** bagi seorang pengguna (peranti/pelayar); sesi tertua ditamatkan apabila had dilampaui.
+- Jika pelayar menyekat storan, atau mod peribadi digunakan, OTP diperlukan semula pada lawatan berikutnya. Pada komputer awam, sentiasa tekan Log Keluar.
+- Padam baris tab `Sesi` untuk menamatkan sesi tertentu secara manual.
+
 ## Peranan dan akses
 
 | Peranan | Dashboard | KAI 1, 4, 6 (fakulti) | KAI 2, 3, 5, DKAI 1 | Urus pengguna / sasaran / audit |

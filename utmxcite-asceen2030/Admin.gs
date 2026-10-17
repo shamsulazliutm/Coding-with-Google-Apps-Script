@@ -41,6 +41,7 @@ function saveUser_(token, input) {
     if (!existing) obj.dicipta_pada = nowIso_();
     writeRow_(getSheet_(SHEETS.USERS), existing ? existing._row : null, obj);
     audit_(admin, existing ? 'PENGGUNA_KEMAS_KINI' : 'PENGGUNA_TAMBAH', '', email, role + ' / ' + fakulti + ' / ' + akses.join(',') + ' / aktif=' + aktif);
+    if (aktif !== 'Ya') revokeSessionsOf_(email);   // akaun dinyahaktifkan: tamatkan semua sesi
     return true;
   } finally {
     lock.releaseLock();
@@ -59,6 +60,7 @@ function deleteUser_(token, emailIn) {
     table.rows.forEach(function (r) { if (normEmail_(r.emel) === email) existing = r; });
     if (!existing) throw userError_('Pengguna tidak dijumpai.');
     getSheet_(SHEETS.USERS).deleteRow(existing._row);
+    revokeSessionsOf_(email);   // tamatkan semua sesi pengguna yang dipadam
     audit_(admin, 'PENGGUNA_PADAM', '', email, '');
     return true;
   } finally {
@@ -139,7 +141,7 @@ function getSetupInfo_(token) {
   check('Google Sheet laporan dijumpai', !!ss, ss ? '' : 'Jalankan setup() daripada editor Apps Script atau tekan "Jalankan persediaan".');
   if (ss) {
     var missingTabs = [], missingCols = [];
-    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS]]
+    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS], [SHEETS.SESSIONS, SESSION_COLS]]
       .concat(KPIS.filter(function (k) { return k.sheet; }).map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
     specs.forEach(function (sp) {
       var sh = ss.getSheetByName(sp[0]);

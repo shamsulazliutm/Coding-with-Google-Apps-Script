@@ -10,7 +10,8 @@ var APP = {
   OTP_TTL: 300,            // saat
   OTP_MAX_ATTEMPTS: 5,
   OTP_MAX_REQUESTS: 5,     // setiap jam bagi satu e-mel
-  SESSION_TTL: 21600,      // 6 jam (had maksimum CacheService)
+  SESSION_TTL: 21600,      // cache sesi 6 jam (had CacheService); sesi sebenar KEKAL dalam tab Sesi sehingga log keluar
+  SESSION_MAX_PER_USER: 10, // had peranti / pelayar serentak bagi seorang pengguna (yang tertua ditamatkan)
   DASH_CACHE_TTL: 600,
   YEARS: [2026, 2027, 2028, 2029, 2030],
   PREMIUM_INCOME_RM: 4000, // ambang purata pendapatan sebulan bagi "pekerjaan premium" (lebih daripada)
@@ -25,6 +26,9 @@ var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fa
 /** Sheet luar bagi CKAI 5: borang permohonan penggunaan peralatan (tab DATA). ID boleh ditukar melalui Script Property MAKERSPACE_SHEET_ID. */
 var MAKERSPACE_SRC = { id: '1meTCl-xyxqeLZhf3CeGjgT8oIfe62pNU7PSJFLaChdo', tab: 'DATA' };
 
+/** Sesi log masuk berterusan: cincang token (SHA-256) dan e-mel; token sebenar hanya ada pada pelayar pengguna. */
+var SESSION_COLS = ['token_hash', 'emel', 'dicipta_pada'];
+
 var SHEETS = {
   USERS: 'Pengguna',
   TARGETS: 'Sasaran',
@@ -32,6 +36,7 @@ var SHEETS = {
   RISKS: 'Risiko',
   AUDIT: 'Log_Audit',
   STUDENTS: 'PELAJAR',
+  SESSIONS: 'Sesi',
   SETUP: 'Persediaan'
 };
 

@@ -11,7 +11,8 @@ var APP = {
   OTP_TTL: 300,            // saat
   OTP_MAX_ATTEMPTS: 5,
   OTP_MAX_REQUESTS: 5,     // setiap jam bagi satu e-mel
-  SESSION_TTL: 21600,      // 6 jam (had maksimum CacheService)
+  SESSION_TTL: 21600,      // cache sesi 6 jam (had CacheService); sesi sebenar KEKAL dalam tab Sesi sehingga log keluar
+  SESSION_MAX_PER_USER: 10, // had peranti / pelayar serentak bagi seorang pengguna (yang tertua ditamatkan)
   DASH_CACHE_TTL: 600,
   YEARS: [2026, 2027, 2028, 2029, 2030],
   PREMIUM_INCOME_RM: 4000, // ambang purata pendapatan sebulan bagi "pekerjaan premium" (lebih daripada)
@@ -26,6 +27,9 @@ var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fa
 /** Sheet luar bagi CKAI 5: borang permohonan penggunaan peralatan (tab DATA). ID boleh ditukar melalui Script Property MAKERSPACE_SHEET_ID. */
 var MAKERSPACE_SRC = { id: '1meTCl-xyxqeLZhf3CeGjgT8oIfe62pNU7PSJFLaChdo', tab: 'DATA' };
 
+/** Sesi log masuk berterusan: cincang token (SHA-256) dan e-mel; token sebenar hanya ada pada pelayar pengguna. */
+var SESSION_COLS = ['token_hash', 'emel', 'dicipta_pada'];
+
 var SHEETS = {
   USERS: 'Pengguna',
   TARGETS: 'Sasaran',
@@ -33,6 +37,7 @@ var SHEETS = {
   RISKS: 'Risiko',
   AUDIT: 'Log_Audit',
   STUDENTS: 'PELAJAR',
+  SESSIONS: 'Sesi',
   SETUP: 'Persediaan'
 };
 
@@ -1263,6 +1268,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.TARGETS, TARGET_COLS, []);
   ensureSheet_(ss, SHEETS.RISKS, RISK_COLS, []);
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
+  ensureSheet_(ss, SHEETS.SESSIONS, SESSION_COLS, SESSION_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   ensureSheet_(ss, SHEETS.STUDENTS, STUDENT_COLS, STUDENT_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   renameColumns_(ss);
   KPIS.forEach(function (kpi) {
@@ -1609,27 +1615,98 @@ function verifyOtp_(emailIn, codeIn) {
   var user = findUser_(email);
   if (!user || !user.aktif) throw userError_(bad);
 
-  var token = randomHex_(48);
-  cache.put('sess:' + sha256Hex_(token), email, APP.SESSION_TTL);
+  var token = randomHex_(48), hash = sha256Hex_(token);
+  persistSession_(email, hash);                       // kekal sehingga log keluar (tiada OTP baharu diperlukan)
+  cache.put('sess:' + hash, email, APP.SESSION_TTL);
   audit_(user, 'LOG_MASUK', '', '', '');
   return { token: token, user: publicUser_(user) };
 }
 
+// ---------------------------------------------------------------------------
+// Sesi berterusan: token kekal sah sehingga pengguna log keluar (atau akaun dinyahaktifkan / dipadam).
+// Cache (6 jam) hanya mempercepat; sumber sebenar ialah tab Sesi.
+// ---------------------------------------------------------------------------
+function persistSession_(email, hash) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = getSheet_(SHEETS.SESSIONS), lr = sh.getLastRow(), mine = [];
+    if (lr >= 2) {
+      sh.getRange(2, 1, lr - 1, 3).getValues().forEach(function (r, i) {
+        if (String(r[1]).toLowerCase() === email) mine.push({ row: i + 2, hash: String(r[0]), at: String(r[2]) });
+      });
+    }
+    // had peranti: tamatkan sesi tertua supaya bilangan sesi seorang pengguna tidak melebihi had
+    var over = mine.length - (APP.SESSION_MAX_PER_USER - 1);
+    if (over > 0) {
+      mine.sort(function (a, b) { return a.at < b.at ? -1 : a.at > b.at ? 1 : 0; });
+      var drop = mine.slice(0, over).sort(function (a, b) { return b.row - a.row; });   // padam dari bawah
+      var cache = CacheService.getScriptCache();
+      drop.forEach(function (d) { cache.remove('sess:' + d.hash); sh.deleteRow(d.row); });
+    }
+    writeRow_(sh, null, { token_hash: hash, emel: email, dicipta_pada: nowIso_() });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function lookupSession_(hash) {
+  var sh = null;
+  try { sh = getSS_().getSheetByName(SHEETS.SESSIONS); } catch (e) { sh = null; }
+  if (!sh) return '';
+  var lr = sh.getLastRow();
+  if (lr < 2) return '';
+  var vals = sh.getRange(2, 1, lr - 1, 2).getValues();
+  for (var i = 0; i < vals.length; i++) { if (String(vals[i][0]) === hash) return String(vals[i][1]).toLowerCase(); }
+  return '';
+}
+
+/** Tamatkan satu sesi (cincang token) atau semua sesi seorang pengguna. */
+function revokeSessionsOf_(email, onlyHash) {
+  var sh = null;
+  try { sh = getSS_().getSheetByName(SHEETS.SESSIONS); } catch (e) { sh = null; }
+  if (!sh) return 0;
+  var lr = sh.getLastRow(), cache = CacheService.getScriptCache(), drop = [];
+  if (lr >= 2) {
+    sh.getRange(2, 1, lr - 1, 2).getValues().forEach(function (r, i) {
+      var mine = !email || String(r[1]).toLowerCase() === String(email).toLowerCase();
+      if (mine && (!onlyHash || String(r[0]) === onlyHash)) drop.push({ row: i + 2, hash: String(r[0]) });
+    });
+  }
+  drop.sort(function (a, b) { return b.row - a.row; }).forEach(function (d) { cache.remove('sess:' + d.hash); sh.deleteRow(d.row); });
+  if (onlyHash) CacheService.getScriptCache().remove('sess:' + onlyHash);
+  return drop.length;
+}
+
 function logout_(token) {
   if (!token) return true;
-  var cache = CacheService.getScriptCache();
-  var key = 'sess:' + sha256Hex_(String(token));
-  var email = cache.get(key);
-  cache.remove(key);
+  var hash = sha256Hex_(String(token)), cache = CacheService.getScriptCache();
+  var email = cache.get('sess:' + hash) || lookupSession_(hash);
+  revokeSessionsOf_(email || '', hash);
+  cache.remove('sess:' + hash);
   if (email) audit_({ emel: email }, 'LOG_KELUAR', '', '', '');
   return true;
+}
+
+/** Log keluar daripada semua peranti / pelayar pengguna ini. */
+function logoutAll_(token) {
+  var user = requireUser_(token);
+  var n = revokeSessionsOf_(user.emel);
+  audit_(user, 'LOG_KELUAR_SEMUA', '', '', n + ' sesi ditamatkan');
+  return { sessions: n };
 }
 
 /** Pulangkan pengguna sah bagi token, atau lontar ralat pengesahan. Peranan dibaca semula daripada Sheet setiap kali. */
 function requireUser_(token) {
   if (!token || typeof token !== 'string' || token.length < 32) throw authError_();
-  var email = CacheService.getScriptCache().get('sess:' + sha256Hex_(token));
-  if (!email) throw authError_();
+  var cache = CacheService.getScriptCache(), hash = sha256Hex_(token);
+  var email = cache.get('sess:' + hash);
+  if (!email) {
+    if (cache.get('nosess:' + hash)) throw authError_();   // token tidak sah dicuba berulang: elak bacaan Sheet berulang
+    email = lookupSession_(hash);
+    if (!email) { cache.put('nosess:' + hash, '1', 300); throw authError_(); }
+    cache.put('sess:' + hash, email, APP.SESSION_TTL);
+  }
   var user = findUser_(email);
   if (!user || !user.aktif) throw authError_();
   return user;
@@ -2899,6 +2976,7 @@ function saveUser_(token, input) {
     if (!existing) obj.dicipta_pada = nowIso_();
     writeRow_(getSheet_(SHEETS.USERS), existing ? existing._row : null, obj);
     audit_(admin, existing ? 'PENGGUNA_KEMAS_KINI' : 'PENGGUNA_TAMBAH', '', email, role + ' / ' + fakulti + ' / ' + akses.join(',') + ' / aktif=' + aktif);
+    if (aktif !== 'Ya') revokeSessionsOf_(email);   // akaun dinyahaktifkan: tamatkan semua sesi
     return true;
   } finally {
     lock.releaseLock();
@@ -2917,6 +2995,7 @@ function deleteUser_(token, emailIn) {
     table.rows.forEach(function (r) { if (normEmail_(r.emel) === email) existing = r; });
     if (!existing) throw userError_('Pengguna tidak dijumpai.');
     getSheet_(SHEETS.USERS).deleteRow(existing._row);
+    revokeSessionsOf_(email);   // tamatkan semua sesi pengguna yang dipadam
     audit_(admin, 'PENGGUNA_PADAM', '', email, '');
     return true;
   } finally {
@@ -2997,7 +3076,7 @@ function getSetupInfo_(token) {
   check('Google Sheet laporan dijumpai', !!ss, ss ? '' : 'Jalankan setup() daripada editor Apps Script atau tekan "Jalankan persediaan".');
   if (ss) {
     var missingTabs = [], missingCols = [];
-    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS]]
+    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS], [SHEETS.SESSIONS, SESSION_COLS]]
       .concat(KPIS.filter(function (k) { return k.sheet; }).map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
     specs.forEach(function (sp) {
       var sh = ss.getSheetByName(sp[0]);
@@ -3254,6 +3333,7 @@ function api_verifyOtp(email, code) { return wrap_(function () { return verifyOt
 
 // --- Perlu log masuk ----------------------------------------------------
 function api_logout(token) { return wrap_(function () { return logout_(str_(token, 200)); }); }
+function api_logoutAll(token) { return wrap_(function () { return logoutAll_(str_(token, 200)); }); }
 function api_session(token) { return wrap_(function () { return sessionInfo_(str_(token, 200)); }); }
 function api_list(token, kpiId, filters) { return wrap_(function () { return listRecords_(str_(token, 200), str_(kpiId, 20), filters); }); }
 function api_save(token, kpiId, rec) { return wrap_(function () { return saveRecord_(str_(token, 200), str_(kpiId, 20), rec); }); }

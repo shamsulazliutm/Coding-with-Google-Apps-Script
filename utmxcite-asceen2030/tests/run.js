@@ -1291,6 +1291,48 @@ test('Logo kulit slaid dimuat lazy (api_slideLogos) dan tidak ada dalam Logo.htm
   assert.ok(r.utm.length < 80000 && r.xcite.length < 80000);
 });
 
+console.log('Sesi berterusan (log masuk kekal sehingga log keluar)');
+test('Sesi: kekal selepas cache tamat (tiada OTP baharu); token tidak disimpan, hanya cincang', () => {
+  ok(g.api_saveUser(adminToken, { emel: 'sesi.pic@utm.my', nama: 'PIC Sesi', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1', aktif: 'Ya' }));
+  const t = login('sesi.pic@utm.my'), hash = g.sha256Hex_(t), cache = g.CacheService.getScriptCache();
+  const sesi = env.spreadsheets[env.props.SHEET_ID].getSheetByName('Sesi');
+  assert.deepStrictEqual(sesi.data[0].slice(0, 3), ['token_hash', 'emel', 'dicipta_pada']);
+  assert.ok(sesi.data.some(r => r[0] === hash && r[1] === 'sesi.pic@utm.my'));
+  assert.ok(!JSON.stringify(sesi.data).includes(t), 'token mentah tidak boleh disimpan dalam Sheet');
+  cache.remove('sess:' + hash);                                   // cache tamat (contoh selepas 6 jam / pelayar ditutup)
+  assert.strictEqual(ok(g.api_session(t)).user.emel, 'sesi.pic@utm.my');   // masih sah tanpa OTP baharu
+  assert.ok(cache.get('sess:' + hash), 'sesi dimasukkan semula ke cache');
+});
+test('Sesi: log keluar menamatkan sesi serta-merta (cache dan Sheet)', () => {
+  const t = login('sesi.pic@utm.my'), hash = g.sha256Hex_(t);
+  ok(g.api_logout(t));
+  fail(g.api_session(t), /./); assert.strictEqual(g.api_session(t).auth, true);
+  assert.ok(!env.spreadsheets[env.props.SHEET_ID].getSheetByName('Sesi').data.some(r => r[0] === hash));
+});
+test('Sesi: token rawak ditolak dan dicache negatif; pengguna dinyahaktifkan / dipadam hilang akses dan sesi dibuang', () => {
+  const rnd = 'a'.repeat(48); assert.strictEqual(g.api_session(rnd).auth, true); assert.strictEqual(g.api_session(rnd).auth, true);
+  ok(g.api_saveUser(adminToken, { emel: 'sesi.nyah@utm.my', nama: 'Nyah', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1', aktif: 'Ya' }));
+  const t = login('sesi.nyah@utm.my'), t2 = login('sesi.nyah@utm.my');
+  ok(g.api_saveUser(adminToken, { emel: 'sesi.nyah@utm.my', nama: 'Nyah', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1', aktif: 'Tidak' }));
+  assert.strictEqual(g.api_session(t).auth, true); assert.strictEqual(g.api_session(t2).auth, true);
+  assert.ok(!env.spreadsheets[env.props.SHEET_ID].getSheetByName('Sesi').data.some(r => r[1] === 'sesi.nyah@utm.my'));
+  ok(g.api_saveUser(adminToken, { emel: 'sesi.padam@utm.my', nama: 'Padam', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1', aktif: 'Ya' }));
+  const t3 = login('sesi.padam@utm.my'); ok(g.api_deleteUser(adminToken, 'sesi.padam@utm.my'));
+  assert.strictEqual(g.api_session(t3).auth, true);
+});
+test('Sesi: had peranti (yang tertua ditamatkan) dan Log keluar semua peranti', () => {
+  const keep = g.APP.SESSION_MAX_PER_USER; g.APP.SESSION_MAX_PER_USER = 3;
+  try {
+    ok(g.api_saveUser(adminToken, { emel: 'sesi.had@utm.my', nama: 'Had', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KAI1', aktif: 'Ya' }));
+    const ts = [1, 2, 3, 4].map(() => login('sesi.had@utm.my'));
+    assert.strictEqual(g.api_session(ts[0]).auth, true);                       // tertua ditamatkan
+    [1, 2, 3].forEach(i => assert.strictEqual(ok(g.api_session(ts[i])).user.emel, 'sesi.had@utm.my'));
+    ok(g.api_logoutAll(ts[3]));
+    [1, 2, 3].forEach(i => assert.strictEqual(g.api_session(ts[i]).auth, true));   // semua peranti keluar
+    assert.ok(ok(g.api_listAudit(adminToken, 80)).some(a => a.tindakan === 'LOG_KELUAR_SEMUA'));
+  } finally { g.APP.SESSION_MAX_PER_USER = keep; }
+});
+
 console.log('KPT (peringkat Kementerian)');
 const failF = (r, key) => { fail(r, /betulkan/); assert.ok(r.fields[key], 'ralat medan tiada: ' + key); };
 test('KPT: PIC fakulti boleh diberi KPT2-KPT7 tetapi bukan KPT1/KPT5 (auto)', () => {
