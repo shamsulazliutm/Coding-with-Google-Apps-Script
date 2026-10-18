@@ -1446,6 +1446,8 @@ function adminDashboard_(user, p) {
     if (counted_(r)) { o.pendapatan += r.pendapatan; o.perbelanjaan += r.perbelanjaan; o.dikira++; }
     // Kutipan sewa: diterima = bayaran sewa dalam laporan yang sudah dihantar; tertunggak = kekurangan berbanding sewa bulanan, bagi setiap bulan
     var rt = rentOf_(r);
+    // Status sewa: bulan dibayar penuh / bulan perlu dibayar (bulan yang sewa bulanannya ditetapkan)
+    if (typeof r.sewaBulanan === 'number') { o.bulanPerlu = (o.bulanPerlu || 0) + 1; if (rt.bayar >= r.sewaBulanan) o.bulanBayar = (o.bulanBayar || 0) + 1; }
     o.sewaDiterima = (o.sewaDiterima || 0) + rt.bayar;
     if (rt.tunggak !== null) { o.sewaAda = true; o.sewaTertunggak = (o.sewaTertunggak || 0) + rt.tunggak; }
   });
@@ -1454,6 +1456,7 @@ function adminDashboard_(user, p) {
     o.sewaDiterima = round2_(o.sewaDiterima || 0);
     o.sewaTertunggak = o.sewaAda ? round2_(o.sewaTertunggak || 0) : null;
     o.sewaJumlah = o.sewaTertunggak === null ? null : round2_(o.sewaDiterima + o.sewaTertunggak);
+    o.bulanPerlu = o.bulanPerlu || 0; o.bulanBayar = o.bulanBayar || 0;
     sewaJum.diterima += o.sewaDiterima; sewaJum.tertunggak += o.sewaTertunggak || 0;
   });
   sewaJum.diterima = round2_(sewaJum.diterima); sewaJum.tertunggak = round2_(sewaJum.tertunggak);

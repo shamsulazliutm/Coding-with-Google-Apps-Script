@@ -626,6 +626,7 @@ t('dashboard admin: kutipan sewa mengikut peniaga', () => {
   assert.ok(Math.abs(dit - d.sewaJumlah.diterima) < 0.01 && Math.abs(tun - d.sewaJumlah.tertunggak) < 0.01);
   d.peniaga.forEach(o => { if (o.sewaTertunggak !== null) assert.ok(Math.abs(o.sewaJumlah - (o.sewaDiterima + o.sewaTertunggak)) < 0.01 && o.sewaTertunggak >= 0); });
   assert.ok(d.sewaJumlah.diterima >= 0);
+  d.peniaga.forEach(o => assert.ok(o.bulanBayar >= 0 && o.bulanBayar <= o.bulanPerlu && o.bulanPerlu <= o.dijangka, 'status sewa bulan: ' + o.bulanBayar + '/' + o.bulanPerlu));
   const sd = d.siri.reduce((x, m) => x + m.sewaDiterima, 0), st = d.siri.reduce((x, m) => x + m.sewaTertunggak, 0);
   assert.ok(Math.abs(sd - d.sewaJumlah.diterima) < 0.01 && Math.abs(st - d.sewaJumlah.tertunggak) < 0.01, 'siri bulanan sepadan dengan jumlah sewa');
 });

@@ -169,7 +169,9 @@ let browser;
   assert.strictEqual(await a.isVisible('#print-meta'), true); await a.emulateMedia({ media: 'screen' });
   assert.match(await a.textContent('.dcard:has(h3:text-is("Rumusan mengikut peniaga")) thead'), /Lot.*Perniagaan · Pelajar.*Laporan.*Pendapatan \(RM\).*Perbelanjaan \(RM\).*Untung\/Rugi \(RM\)/);
   assert.ok((await a.locator('.dcard:has(h3:text-is("Rumusan mengikut peniaga")) tbody tr').count()) >= 10, 'baris peniaga'); assert.strictEqual(await a.locator('tr.tot').count(), 2);
-  assert.match(await a.textContent('.dcard:has(h3:text-is("Rumusan Kutipan Sewa mengikut Peniaga")) thead'), /Lot.*Perniagaan · Pelajar.*Sewa diterima.*Sewa tertunggak.*Jumlah/);
+  { const w = await a.evaluate(() => [...document.querySelectorAll('table.sum')].map(t => [...t.querySelectorAll('thead th')].map(th => Math.round(th.getBoundingClientRect().width))));
+    assert.strictEqual(w.length, 2); assert.strictEqual(JSON.stringify(w[0]), JSON.stringify(w[1]), 'lajur kedua-dua jadual sama besar: ' + JSON.stringify(w)); }
+  assert.match(await a.textContent('.dcard:has(h3:text-is("Rumusan Kutipan Sewa mengikut Peniaga")) thead'), /Lot.*Perniagaan · Pelajar.*Status.*Sewa diterima.*Sewa tertunggak.*Jumlah/);
   assert.strictEqual(await a.locator('.kpi:has(small:text-is("Sewa diterima")), .kpi:has(small:text-is("Sewa tertunggak"))').count(), 2); assert.ok(!/NaN/.test(await a.textContent('#view')), 'tiada NaN');
   assert.match(await a.textContent('.hero'), /laporan dijangka/); await a.selectOption('#ds-month', '9'); await a.waitForFunction(() => /September 2026/.test(document.querySelector('.hero').textContent)); await settle(a);
   await a.click('[data-tab=act]'); await a.waitForSelector('.todo [data-act=review]'); await settle(a);
