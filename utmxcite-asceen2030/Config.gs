@@ -589,42 +589,22 @@ var KPIS = [
     title: 'KAI 6 · Tubuhkan UTM AI Start Up', short: 'UTM AI Start Up',
     unit: 'pelajar dilatih', measure: 'kai6', jenis: 'minimum', perFacultyTarget: 5,
     facultyWhitelist: ['FAI', 'FC', 'FKE', 'MJIIT'],
-    listColumns: ['id', 'nama_pelajar', 'no_matrik', 'fakulti', 'nama_startup', 'status'],
-    statusField: 'status',
-    rules: [
-      { when: { field: 'status', in: ['Dalam latihan', 'Tamat latihan'] }, require: ['tarikh_mula_latihan'] },
-      { when: { field: 'startup_ditubuhkan', in: ['Ya'] }, require: ['tarikh_penubuhan'] }
-    ],
+    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'nama_startup', 'status'],
+    statusField: 'status', rules: [],
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
-      F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
-      F_('no_matrik', 'No. matrik', 'text', { required: true }),
+      F_('nama', 'Nama pelajar', 'text', { required: true }),
       F_('no_kp', 'No. KP / pasport', 'text'),
-      F_('emel', 'E-mel', 'email'),
-      F_('telefon', 'No. telefon', 'text'),
-      F_('program', 'Program', 'text'),
-      F_('tahun_pengajian', 'Tahun pengajian', 'number', { min: 1, max: 8 }),
-      F_('hadir_taklimat', 'Hadir taklimat?', 'yesno', { sec: 'Taklimat & pencalonan' }),
-      F_('tarikh_pencalonan', 'Tarikh pencalonan', 'date'),
-      F_('dicalonkan_oleh', 'Dicalonkan oleh', 'text'),
-      F_('status', 'Status', 'select', { required: true, options: ['Dicalonkan', 'Dipilih', 'Dalam latihan', 'Tamat latihan', 'Tarik diri'] }),
-      F_('tarikh_mula_latihan', 'Tarikh mula latihan', 'date'),
+      F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('nama_startup', 'Nama startup AI', 'text', { sec: 'Pasukan / startup' }),
-      F_('nama_pasukan', 'Nama pasukan', 'text'),
-      F_('peranan', 'Peranan dalam pasukan', 'text'),
-      F_('bidang_ai', 'Bidang AI', 'text'),
+      F_('nama_ahli_kumpulan', 'Nama ahli kumpulan', 'textarea', { full: true }),
+      F_('no_pendaftaran_SSM', 'No. pendaftaran SSM', 'text'),
+      F_('bidang_ai', 'Bidang AI', 'select', { options: ['Pendidikan dan Pembelajaran', 'Pentadbiran dan Pengurusan', 'Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Penulisan dan Penjanaan Kandungan', 'Reka Bentuk dan Multimedia', 'Pemasaran dan Komunikasi', 'Perniagaan dan Keusahawanan', 'Penyelidikan dan Inovasi', 'Pengaturcaraan dan Pembangunan Sistem', 'Khidmat Pelanggan dan Chatbot', 'Lain-lain'] }),
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
       F_('mentor_industri', 'Mentor industri', 'text'),
-      F_('bootcamp_status', 'Status bootcamp 5+5', 'select', { sec: 'Bootcamp & outreach', options: ['Belum mula', 'Sedang berjalan', 'Tamat'] }),
-      F_('kehadiran', 'Kehadiran bootcamp (%)', 'number', { min: 0, max: 100 }),
-      F_('showcase', 'Pameran produk (showcase) disertai?', 'yesno'),
-      F_('top5', 'Disenarai Top 5?', 'yesno'),
-      F_('negara_acara', 'Negara / acara Global Outreach', 'text'),
-      F_('tarikh_outreach', 'Tarikh Global Outreach', 'date'),
-      F_('startup_ditubuhkan', 'Startup ditubuhkan?', 'yesno', { sec: 'Penubuhan startup' }),
-      F_('tarikh_penubuhan', 'Tarikh penubuhan', 'date'),
-      F_('no_ssm', 'No. pendaftaran syarikat', 'text'),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
+      F_('startup_ditubuhkan', 'Startup ditubuhkan?', 'yesno'),
+      F_('status', 'Status', 'select', { required: true, options: ['Dicalonkan', 'Dipilih', 'Dalam latihan', 'Tamat latihan', 'Tarik diri'], sec: 'Pengurusan' }),
+      F_('lampiran', 'Pautan lampiran bukti', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
   },
@@ -938,7 +918,7 @@ var STUDENT_MAPS = {
   KAI3: { nama_pelajar: 'penyewa_nama', no_kp: 'penyewa_kp' },
   KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
-  KAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
+  KAI6: { nama_pelajar: 'nama', no_kp: 'no_kp' },
   CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
@@ -952,7 +932,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && k.id !== 'KPT2' && k.id !== 'KPT4') {
+  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI6'].indexOf(k.id) < 0) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }

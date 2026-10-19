@@ -252,3 +252,7 @@ id, fakulti, tajuk, rakan_institusi, bidang_kerjasama, jenis_dokumen, bil_projek
 ## KPT 7 · lajur tab `KPT7_Pembiayaan`
 
 id, fakulti, mentor, nama_syarikat, no_pendaftaran_syarikat, nama_pemilik, no_kp_pemilik, bangsa, jenis_perniagaan, jenis_pembiaya, sumber_pembiayaan (ANGEL INVESTOR, VENTURE CAPITAL, ENTITI PENDANAAN AWAM, HADIAH PERTANDINGAN, LAIN-LAIN), jumlah_rm, tarikh_mula_embiayaan, lampiran (+ lampiran_pautan), catatatn, lajur sistem. Tahun pelaporan = tahun `tarikh_mula_embiayaan`; satu syarikat dikira sekali setahun. Pecahan dashboard mengikut `sumber_pembiayaan` (hadiah CKAI 9 dikira sebagai HADIAH PERTANDINGAN).
+
+## KAI 6 · lajur tab `KAI6_AI_Startup`
+
+id, fakulti, nama, no_kp, no_matrik, nama_startup, nama_ahli_kumpulan, no_pendaftaran_SSM, bidang_ai (12 pilihan), ringkasan, mentor_industri, startup_ditubuhkan, status, lampiran (pautan), catatan, lajur sistem. Nama dan no. KP diambil daripada PELAJAR berdasarkan no. matrik. Tiada medan tarikh: pelajar berstatus Dalam latihan / Tamat latihan dikira pada tahun rekod dicipta (`dicipta_pada`).

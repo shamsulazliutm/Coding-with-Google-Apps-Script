@@ -489,14 +489,14 @@ var MEASURES = {
 
   // KAI 6: pelajar dilatih membentuk startup AI pada tahun itu; minimum 5 setiap fakulti (FAI, FC, FKE, MJIIT).
   kai6: function (kpi, rows, year, ctx) {
-    var counted = countedInYear_(rows, ['Dalam latihan', 'Tamat latihan'], 'tarikh_mula_latihan', year);
+    // Tahun pelaporan = tahun rekod dicipta (tiada medan tarikh mula latihan).
+    var counted = countedInYear_(rows, ['Dalam latihan', 'Tamat latihan'], 'dicipta_pada', year);
     var startups = {};
     counted.forEach(function (r) { if (r.nama_startup) startups[String(r.nama_startup).toLowerCase()] = 1; });
     return {
       value: counted.length,
       secondary: [
         { label: 'Startup AI (unik)', value: Object.keys(startups).length },
-        { label: 'Top 5 Global Outreach', value: counted.filter(function (r) { return r.top5 === 'Ya'; }).length },
         { label: 'Startup ditubuhkan', value: counted.filter(function (r) { return r.startup_ditubuhkan === 'Ya'; }).length }
       ],
       breakdown: [

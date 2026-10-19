@@ -201,7 +201,7 @@ test('Admin merekod bagi fakulti lain dan melihat semua', () => {
   assert.strictEqual(ok(g.api_list(adminToken, 'KAI1', { q: 'co-work' })).rows.length, 1);
 });
 test('KAI6 terhad kepada FAI, FC, FKE, MJIIT', () => {
-  const base = { nama_pelajar: 'Ali', no_matrik: 'A1', status: 'Dipilih' };
+  const base = { nama: 'Ali', no_matrik: 'A1', status: 'Dipilih' };
   fail(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKA' }, base)), /betulkan/);
   ok(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKE' }, base)));
   // PIC FC tidak diberi KAI6 dan PIC FKA bukan fakulti KAI6
@@ -326,13 +326,16 @@ test('KAI4/KAI5: pelajar mendaftar mengikut tahun; sasaran 20 dan 4', () => {
   assert.ok(fac.length >= 13 && fac.every(i => i.target === 2));
 });
 test('KAI6: sasaran 20, minimum 5 setiap fakulti (4 fakulti), startup unik', () => {
-  const mk = (f, n, s) => ok(g.api_save(adminToken, 'KAI6', { fakulti: f, nama_pelajar: n, no_matrik: n, status: 'Dalam latihan', tarikh_mula_latihan: '2026-05-04', nama_startup: s, top5: 'Ya' }));
+  const mk = (f, n, s) => ok(g.api_save(adminToken, 'KAI6', { fakulti: f, nama: n, no_matrik: n, status: 'Dalam latihan', nama_startup: s }));
   mk('FAI', 'p1', 'StartupA'); mk('FAI', 'p2', 'startupa'); mk('FC', 'p3', 'StartupB');
   const c = card(dash(2026), 'KAI6');
   assert.strictEqual(c.value, 3); assert.strictEqual(c.target, 20);
   assert.strictEqual(c.secondary[0].value, 2);
   deepEq(c.breakdown[0].items.map(i => i.label), ['FAI', 'FC', 'FKE', 'MJIIT']);
   assert.ok(c.breakdown[0].items.every(i => i.target === 5));
+  const sh6 = g.getSheet_('KAI6_AI_Startup');
+  deepEq(sh6.getRange(1, 1, 1, sh6.getLastColumn()).getValues()[0], ['id', 'fakulti', 'nama', 'no_kp', 'no_matrik', 'nama_startup', 'nama_ahli_kumpulan', 'no_pendaftaran_SSM', 'bidang_ai', 'ringkasan', 'mentor_industri', 'startup_ditubuhkan', 'status', 'lampiran', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
+  const bad = g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: 'Z', no_matrik: 'z9', status: 'Dalam latihan', bidang_ai: 'Memasak' }); fail(bad, /betulkan/); assert.ok(bad.fields.bidang_ai);
 });
 test('DKAI1: siap 100% pada 2026 sahaja', () => {
   const c = card(dash(2026), 'DKAI1');
@@ -1155,7 +1158,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    if (k.id !== 'KPT2' && k.id !== 'KPT4') assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (!['KPT2', 'KPT4', 'KAI6'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR
