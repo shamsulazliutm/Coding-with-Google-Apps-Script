@@ -79,18 +79,18 @@ var MEASURES = {
   },
 
   // KPT 2: % graduan usahawan (menubuhkan perniagaan berdaftar / menjana pekerjaan) daripada usahawan pelajar tahun akhir.
-  kpt2: function (kpi, rows, year) {
-    var grads = rows.filter(function (r) { return r.jenis_rekod === 'Graduan usahawan' && yearOf_(r.tarikh_tamat) === year; });
-    var den = 0;
-    rows.forEach(function (r) { if (r.jenis_rekod === 'Penyebut tahunan' && num_(r.tahun) === year) den += num_(r.bil_penyebut); });
+  // Penyebut: tab KPT2_Penyebut (tahun, fakulti, bil_penyebut), dijumlahkan bagi tahun dipilih.
+  kpt2: function (kpi, rows, year, ctx) {
+    var grads = rows.filter(function (r) { return num_(r.tahun_graduan) === year; });
+    var den = ctx.kpt2Den(year);
     var w = [];
-    if (!den && grads.length) w.push('Penyebut (bilangan usahawan pelajar tahun akhir) belum dilaporkan untuk tahun ini.');
+    if (!den && grads.length) w.push('Penyebut (bilangan usahawan pelajar tahun akhir) belum diisi dalam tab KPT2_Penyebut untuk tahun ini.');
     return {
       value: den ? round1_(grads.length * 100 / den) : 0,
       secondary: [{ label: 'Graduan usahawan', value: grads.length }, { label: 'Usahawan pelajar tahun akhir (penyebut)', value: den }],
       breakdown: [
-        { title: 'Graduan mengikut kategori', items: countBy_(grads, function (r) { return r.kategori; }) },
-        { title: 'Graduan mengikut fakulti', items: sortDesc_(countBy_(grads, function (r) { return r.fakulti; })) }
+        { title: 'Graduan mengikut fakulti', items: sortDesc_(countBy_(grads, function (r) { return r.fakulti; })) },
+        { title: 'Graduan mengikut jantina', items: sortDesc_(countBy_(grads, function (r) { return r.jantina; })) }
       ],
       warnings: w
     };
@@ -598,7 +598,12 @@ function computeDashboard_(year) {
     if (!k.sheet) return [];
     return cache[id] || (cache[id] = readTable_(k.sheet, typesFor_(k)).rows);
   }
-  var ctx = { faculties: memo.faculties, rows: tableRows };
+  var ctx = { faculties: memo.faculties, rows: tableRows, kpt2Den: function (y) {
+    if (!cache.__den) cache.__den = getSS_().getSheetByName(SHEETS.KPT2_DEN) ? readTable_(SHEETS.KPT2_DEN).rows : [];
+    var n = 0;
+    cache.__den.forEach(function (r) { if (num_(r.tahun) === y) n += num_(r.bil_penyebut); });
+    return n;
+  } };
   var cards = KPIS.map(function (kpi) {
     return buildKpiCard_(kpi, tableRows(kpi.id), year, targets, ctx);
   });

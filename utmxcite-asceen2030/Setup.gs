@@ -21,6 +21,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
   ensureSheet_(ss, SHEETS.SESSIONS, SESSION_COLS, SESSION_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   ensureSheet_(ss, SHEETS.STUDENTS, STUDENT_COLS, STUDENT_COLS.map(function (k) { return { key: k, type: 'text' }; }));
+  ensureSheet_(ss, SHEETS.KPT2_DEN, DEN_COLS, DEN_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   renameColumns_(ss);
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet) return;
@@ -31,6 +32,7 @@ function setup() {
   listValidation_(ss.getSheetByName(SHEETS.USERS), 'aktif', YES_NO);
 
   seedIfEmpty_(ss, SHEETS.FACULTIES, FACULTY_COLS, FACULTY_SEED);
+  seedIfEmpty_(ss, SHEETS.KPT2_DEN, DEN_COLS, APP.YEARS.reduce(function (a, y) { return a.concat(FACULTY_SEED.map(function (f) { return [y, f[0], '', '', '']; })); }, []));
   seedIfEmpty_(ss, SHEETS.TARGETS, TARGET_COLS, buildTargetSeed_());
   addMissingTargetRows_(ss);
   seedIfEmpty_(ss, SHEETS.RISKS, RISK_COLS, RISK_SEED.map(function (r) { return [r[0], r[1], r[2], r[3], 'Terbuka', nowIso_()]; }));

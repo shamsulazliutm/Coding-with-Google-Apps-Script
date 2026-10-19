@@ -1155,7 +1155,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (k.id !== 'KPT2') assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR
@@ -1350,15 +1350,21 @@ test('KPT1: jualan agregat CKAI 7 tanpa geran / pembiayaan', () => {
   assert.strictEqual(card(dash(2026), 'KPT1').value, base + 250);
   assert.ok(!JSON.stringify(c).includes('KPT-M1') && !JSON.stringify(c).includes('990101'));
 });
-test('KPT2: % graduan usahawan = graduan / penyebut; senarai bernama tetapi paparan awam agregat', () => {
-  const grad = (o) => g.api_save(adminToken, 'KPT2', Object.assign({ jenis_rekod: 'Graduan usahawan', fakulti: 'FAI', nama: 'Siti Graduan', no_kp: '950505-05-5555', no_matrik: 'A20', tarikh_tamat: '2026-03-01', nama_perniagaan: 'Siti Enterprise', no_pendaftaran: 'SSM1', tarikh_penubuhan: '2026-06-01', kategori: 'Menubuhkan perniagaan berdaftar' }, o));
+test('KPT2: % graduan usahawan = graduan / penyebut (tab KPT2_Penyebut); senarai bernama tetapi paparan awam agregat', () => {
+  const grad = (o) => g.api_save(adminToken, 'KPT2', Object.assign({ tahun_graduan: 2026, fakulti: 'FAI', nama: 'Siti Graduan', no_kp: '950505-05-5555', no_matrik: 'A20', nama_perniagaan: 'Siti Enterprise', no_pendaftaran_ssm: 'SSM1', jenis_peniagaan: 'Makanan', pendapatan_kasar: 12000, bilangan_pekerja: 2, tarikh_pernigaan: '2026-06-01' }, o));
   ok(grad({}));
-  failF(grad({ nama: 'Siti Lagi' }), 'jenis_rekod');                              // no. KP sama = orang sama
+  failF(grad({ nama: 'Siti Lagi' }), 'no_kp');                                    // no. KP sama = orang sama
   ok(grad({ nama: 'Ali Graduan', no_kp: '960606-06-6666', no_matrik: 'A21' }));
-  failF(grad({ nama: 'Awal', no_kp: '970707-07-7777', tarikh_penubuhan: '2027-06-01' }), 'tarikh_penubuhan'); // penubuhan > 6 bulan sebelum tamat
-  ok(g.api_save(adminToken, 'KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: 'FAI', tahun: 2026, bil_penyebut: 40 }));
-  failF(g.api_save(adminToken, 'KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: 'FAI', tahun: 2026, bil_penyebut: 41 }), 'jenis_rekod');
-  ok(g.api_save(adminToken, 'KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: 'FC', tahun: 2026, bil_penyebut: 60 }));
+  const sh = g.getSheet_('KPT2_Graduan_Usahawan');
+  deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], ['id', 'tahun_graduan', 'fakulti', 'nama', 'no_kp', 'no_matrik', 'jantina', 'bangsa', 'bidang_pengajian', 'nama_perniagaan', 'no_pendaftaran_ssm', 'jenis_pemilikan', 'jenis_peniagaan', 'punca_modal', 'pendapatan_kasar', 'bilangan_pekerja', 'link_website', 'alamat_perniagaan', 'tarikh_pernigaan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
+  const den = g.getSheet_('KPT2_Penyebut');
+  assert.ok(den.getLastRow() > 1);
+  assert.strictEqual(card(dash(2026), 'KPT2').value, 0);                          // penyebut belum diisi
+  const hd = den.getRange(1, 1, 1, den.getLastColumn()).getValues()[0], all = den.getRange(2, 1, den.getLastRow() - 1, den.getLastColumn()).getValues();
+  const rowOf = (fak) => 2 + all.findIndex(r => String(r[0]) === '2026' && r[1] === fak);
+  den.getRange(rowOf('FAI'), hd.indexOf('bil_penyebut') + 1).setValue(40);
+  den.getRange(rowOf('FC'), hd.indexOf('bil_penyebut') + 1).setValue(60);
+  g.CacheService.getScriptCache().remove('dash:2026');
   const d = dash(2026), c = card(d, 'KPT2');
   assert.strictEqual(c.value, 2); assert.strictEqual(c.format, 'pct');          // 2 / 100
   const sj = JSON.stringify(d);

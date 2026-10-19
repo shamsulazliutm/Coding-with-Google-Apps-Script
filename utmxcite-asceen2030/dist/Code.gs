@@ -39,6 +39,7 @@ var SHEETS = {
   AUDIT: 'Log_Audit',
   STUDENTS: 'PELAJAR',
   SESSIONS: 'Sesi',
+  KPT2_DEN: 'KPT2_Penyebut',
   SETUP: 'Persediaan'
 };
 
@@ -49,6 +50,7 @@ var SYS_COLS = ['dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_ki
 var USER_COLS = ['emel', 'nama', 'peranan', 'fakulti', 'kpi_akses', 'aktif', 'dicipta_pada'];
 var TARGET_COLS = ['kpi', 'tahun', 'sasaran', 'q1', 'q2', 'q3', 'q4', 'jenis', 'bajet_rm', 'catatan'];
 var FACULTY_COLS = ['kod', 'nama'];
+var DEN_COLS = ['tahun', 'fakulti', 'bil_penyebut', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 var RISK_COLS = ['kpi', 'risiko', 'sumber', 'mitigasi', 'status', 'dikemas_kini_pada'];
 var AUDIT_COLS = ['masa', 'emel', 'tindakan', 'kpi', 'rekod_id', 'ringkasan'];
 
@@ -243,16 +245,13 @@ function addMonthsIso_(iso, n) {
   return y + '-' + ('0' + (m + 1)).slice(-2) + '-' + d;
 }
 
-/** KPT2: dua jenis rekod (graduan usahawan / penyebut tahunan bagi fakulti). Graduan dikira sekali (no. KP). */
-function kpt2Validate_(c, errors) {
+/** KPT2: seorang graduan dikira sekali (no. KP). Penyebut (usahawan pelajar tahun akhir) dalam tab KPT2_Penyebut. */
+function kpt2Validate_(c, errors, rows, existing) {
   icValidate_(c, errors);
-  var fak = c.fakulti || '';
-  if (c.jenis_rekod === 'Penyebut tahunan') {
-    c.kunci = 'p|' + c.tahun + '|' + fak;
-  } else {
-    c.kunci = 'g|' + String(c.no_kp || '').toLowerCase();
-    if (c.tarikh_tamat && c.tarikh_penubuhan && !errors.tarikh_penubuhan && c.tarikh_penubuhan > addMonthsIso_(c.tarikh_tamat, 6))
-      errors.tarikh_penubuhan = 'Perniagaan mesti ditubuhkan dalam tempoh 6 bulan selepas tamat pengajian (atau lebih awal).';
+  var kp = String(c.no_kp || '').toLowerCase();
+  if (kp && !errors.no_kp) {
+    var dup = (rows || []).filter(function (r) { return (!existing || r.id !== existing.id) && String(r.no_kp || '').replace(/^'/, '').toLowerCase() === kp; })[0];
+    if (dup) errors.no_kp = 'Sudah didaftarkan (' + dup.id + ').';
   }
 }
 
@@ -285,27 +284,27 @@ var KPIS = [
     id: 'KPT2', prefix: 'K2', sheet: 'KPT2_Graduan_Usahawan', group: 'KPT', teras: 't1', entry: 'faculty',
     title: 'KPT 2 · Peratus graduan yang menceburi keusahawanan dan mewujudkan peluang pekerjaan', short: '% graduan berusahawan',
     unit: '% graduan usahawan', measure: 'kpt2', jenis: 'minimum', valueFormat: 'pct',
-    listColumns: ['id', 'jenis_rekod', 'fakulti', 'nama', 'no_matrik', 'tarikh_tamat', 'kategori', 'tahun', 'bil_penyebut'],
-    statusField: 'jenis_rekod', unique: ['kunci'], validate: kpt2Validate_,
-    rules: [
-      { when: { field: 'jenis_rekod', in: ['Graduan usahawan'] }, require: ['nama', 'no_kp', 'no_matrik', 'tarikh_tamat', 'nama_perniagaan', 'no_pendaftaran', 'tarikh_penubuhan', 'kategori'] },
-      { when: { field: 'jenis_rekod', in: ['Penyebut tahunan'] }, require: ['tahun', 'bil_penyebut'] }
-    ],
+    listColumns: ['id', 'tahun_graduan', 'fakulti', 'nama', 'no_matrik', 'nama_perniagaan'],
+    statusField: null, validate: kpt2Validate_, rules: [],
     fields: [
-      F_('jenis_rekod', 'Jenis rekod', 'select', { required: true, sec: 'Rekod', options: ['Graduan usahawan', 'Penyebut tahunan'], hint: 'Penyebut tahunan = bilangan usahawan pelajar tahun akhir bagi fakulti anda (satu rekod setahun).' }),
+      F_('tahun_graduan', 'Tahun graduan', 'number', { required: true, min: 2026, max: 2030, sec: 'Graduan usahawan' }),
       F_('fakulti', 'Fakulti', 'faculty', { required: true }),
-      F_('nama', 'Nama graduan', 'text', { sec: 'Graduan usahawan' }),
-      F_('no_kp', 'No. KP / pasport', 'text'),
+      F_('nama', 'Nama graduan', 'text', { required: true }),
+      F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text'),
-      F_('tarikh_tamat', 'Tarikh tamat pengajian', 'date'),
-      F_('nama_perniagaan', 'Nama perniagaan', 'text'),
-      F_('no_pendaftaran', 'No. pendaftaran SSM / SKM / PBT', 'text'),
-      F_('tarikh_penubuhan', 'Tarikh penubuhan perniagaan', 'date'),
-      F_('kategori', 'Kategori', 'select', { options: ['Menubuhkan perniagaan berdaftar', 'Menjana peluang pekerjaan', 'Berkembang daripada projek pelajar', 'Model perniagaan inovatif (IP-based startup / gig bernilai tinggi)'] }),
-      F_('lampiran', 'Sijil SSM / SKM / lesen PBT (PDF)', 'file', { full: true }),
-      F_('tahun', 'Tahun', 'number', { min: 2026, max: 2030, sec: 'Penyebut tahunan' }),
-      F_('bil_penyebut', 'Bilangan usahawan pelajar tahun akhir', 'number', { min: 0 }),
-      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'jenis_rekod' })
+      F_('jantina', 'Jantina', 'text'),
+      F_('bangsa', 'Bangsa', 'text'),
+      F_('bidang_pengajian', 'Bidang pengajian', 'text'),
+      F_('nama_perniagaan', 'Nama perniagaan', 'text', { required: true, sec: 'Perniagaan' }),
+      F_('no_pendaftaran_ssm', 'No. pendaftaran SSM / SKM / PBT', 'text', { required: true }),
+      F_('jenis_pemilikan', 'Jenis pemilikan', 'text'),
+      F_('jenis_peniagaan', 'Jenis perniagaan', 'text'),
+      F_('punca_modal', 'Punca modal', 'text'),
+      F_('pendapatan_kasar', 'Pendapatan kasar (RM)', 'number', { min: 0 }),
+      F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
+      F_('link_website', 'Pautan laman web', 'text'),
+      F_('alamat_perniagaan', 'Alamat perniagaan', 'textarea', { full: true }),
+      F_('tarikh_pernigaan', 'Tarikh penubuhan perniagaan', 'date', { required: true })
     ]
   },
   {
@@ -914,7 +913,7 @@ var STUDENT_MAPS = {
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
   CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
-  KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp' },
+  KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
 };
 KPIS.forEach(function (k) {
@@ -922,7 +921,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti) {
+  if (!map.fakulti && k.id !== 'KPT2') {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
@@ -1283,6 +1282,7 @@ function setup() {
   ensureSheet_(ss, SHEETS.AUDIT, AUDIT_COLS, []);
   ensureSheet_(ss, SHEETS.SESSIONS, SESSION_COLS, SESSION_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   ensureSheet_(ss, SHEETS.STUDENTS, STUDENT_COLS, STUDENT_COLS.map(function (k) { return { key: k, type: 'text' }; }));
+  ensureSheet_(ss, SHEETS.KPT2_DEN, DEN_COLS, DEN_COLS.map(function (k) { return { key: k, type: 'text' }; }));
   renameColumns_(ss);
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet) return;
@@ -1293,6 +1293,7 @@ function setup() {
   listValidation_(ss.getSheetByName(SHEETS.USERS), 'aktif', YES_NO);
 
   seedIfEmpty_(ss, SHEETS.FACULTIES, FACULTY_COLS, FACULTY_SEED);
+  seedIfEmpty_(ss, SHEETS.KPT2_DEN, DEN_COLS, APP.YEARS.reduce(function (a, y) { return a.concat(FACULTY_SEED.map(function (f) { return [y, f[0], '', '', '']; })); }, []));
   seedIfEmpty_(ss, SHEETS.TARGETS, TARGET_COLS, buildTargetSeed_());
   addMissingTargetRows_(ss);
   seedIfEmpty_(ss, SHEETS.RISKS, RISK_COLS, RISK_SEED.map(function (r) { return [r[0], r[1], r[2], r[3], 'Terbuka', nowIso_()]; }));
@@ -2389,18 +2390,18 @@ var MEASURES = {
   },
 
   // KPT 2: % graduan usahawan (menubuhkan perniagaan berdaftar / menjana pekerjaan) daripada usahawan pelajar tahun akhir.
-  kpt2: function (kpi, rows, year) {
-    var grads = rows.filter(function (r) { return r.jenis_rekod === 'Graduan usahawan' && yearOf_(r.tarikh_tamat) === year; });
-    var den = 0;
-    rows.forEach(function (r) { if (r.jenis_rekod === 'Penyebut tahunan' && num_(r.tahun) === year) den += num_(r.bil_penyebut); });
+  // Penyebut: tab KPT2_Penyebut (tahun, fakulti, bil_penyebut), dijumlahkan bagi tahun dipilih.
+  kpt2: function (kpi, rows, year, ctx) {
+    var grads = rows.filter(function (r) { return num_(r.tahun_graduan) === year; });
+    var den = ctx.kpt2Den(year);
     var w = [];
-    if (!den && grads.length) w.push('Penyebut (bilangan usahawan pelajar tahun akhir) belum dilaporkan untuk tahun ini.');
+    if (!den && grads.length) w.push('Penyebut (bilangan usahawan pelajar tahun akhir) belum diisi dalam tab KPT2_Penyebut untuk tahun ini.');
     return {
       value: den ? round1_(grads.length * 100 / den) : 0,
       secondary: [{ label: 'Graduan usahawan', value: grads.length }, { label: 'Usahawan pelajar tahun akhir (penyebut)', value: den }],
       breakdown: [
-        { title: 'Graduan mengikut kategori', items: countBy_(grads, function (r) { return r.kategori; }) },
-        { title: 'Graduan mengikut fakulti', items: sortDesc_(countBy_(grads, function (r) { return r.fakulti; })) }
+        { title: 'Graduan mengikut fakulti', items: sortDesc_(countBy_(grads, function (r) { return r.fakulti; })) },
+        { title: 'Graduan mengikut jantina', items: sortDesc_(countBy_(grads, function (r) { return r.jantina; })) }
       ],
       warnings: w
     };
@@ -2908,7 +2909,12 @@ function computeDashboard_(year) {
     if (!k.sheet) return [];
     return cache[id] || (cache[id] = readTable_(k.sheet, typesFor_(k)).rows);
   }
-  var ctx = { faculties: memo.faculties, rows: tableRows };
+  var ctx = { faculties: memo.faculties, rows: tableRows, kpt2Den: function (y) {
+    if (!cache.__den) cache.__den = getSS_().getSheetByName(SHEETS.KPT2_DEN) ? readTable_(SHEETS.KPT2_DEN).rows : [];
+    var n = 0;
+    cache.__den.forEach(function (r) { if (num_(r.tahun) === y) n += num_(r.bil_penyebut); });
+    return n;
+  } };
   var cards = KPIS.map(function (kpi) {
     return buildKpiCard_(kpi, tableRows(kpi.id), year, targets, ctx);
   });
@@ -3100,7 +3106,7 @@ function getSetupInfo_(token) {
   check('Google Sheet laporan dijumpai', !!ss, ss ? '' : 'Jalankan setup() daripada editor Apps Script atau tekan "Jalankan persediaan".');
   if (ss) {
     var missingTabs = [], missingCols = [];
-    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS], [SHEETS.SESSIONS, SESSION_COLS]]
+    var specs = [[SHEETS.USERS, USER_COLS], [SHEETS.FACULTIES, FACULTY_COLS], [SHEETS.TARGETS, TARGET_COLS], [SHEETS.RISKS, RISK_COLS], [SHEETS.AUDIT, AUDIT_COLS], [SHEETS.STUDENTS, STUDENT_COLS], [SHEETS.SESSIONS, SESSION_COLS], [SHEETS.KPT2_DEN, DEN_COLS]]
       .concat(KPIS.filter(function (k) { return k.sheet; }).map(function (k) { return [k.sheet, kpiColumns_(k)]; }));
     specs.forEach(function (sp) {
       var sh = ss.getSheetByName(sp[0]);
