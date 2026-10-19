@@ -23,6 +23,7 @@ var APP = {
 /** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
 var JENIS_MILIKAN = ['MILIKAN TUNGGAL', 'PERKONGSIAN', 'SYARIKAT SENDIRIAN BERHAD', 'LAIN-LAIN'];
 var PUNCA_MODAL = ['MODAL SENDIRI', 'MODAL KELUARGA', 'GERAN', 'PINJAMAN', 'BANTUAN IPT', 'HADIAH PERTANDINGAN', 'AGENSI', 'NGO', 'LAIN-LAIN'];
+var JUMLAH_MODAL = ['KURANG DARI 499', '500-699', '700-899', '900-999', '1,000-1,999', '2,000-2,999', '3,000-3,999', '4,000-4,999', '5,000 DAN KE ATAS'];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PERIBUMI SARAWAK', 'PERIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -704,7 +705,7 @@ var KPIS = [
       F_('no_daftar_ssm', 'No. pendaftaran SSM', 'text', { hint: 'Wajib jika status SSM Berdaftar.' }),
       F_('link_website_perniagaaan', 'Pautan laman web perniagaan', 'text'),
       F_('punca_modal', 'Punca modal', 'select', { options: PUNCA_MODAL, sec: 'Kewangan' }),
-      F_('modal_awal', 'Modal awal (RM)', 'number', { min: 0 }),
+      F_('modal_awal', 'Jumlah modal awal (RM)', 'select', { options: JUMLAH_MODAL }),
       F_('jumlah_jualan', 'Jumlah jualan (RM)', 'number', { min: 0 }),
       F_('penyata_bank', 'Penyata bank (PDF)', 'file', { full: true, hint: 'PDF sahaja, maksimum 5 MB.' }),
       F_('tarikh_mula_perniagaan', 'Tarikh mula perniagaan', 'date'),
@@ -790,7 +791,7 @@ var KPIS = [
       F_('jenis_milikan', 'Jenis milikan', 'select', { options: JENIS_MILIKAN }),
       F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
       F_('punca_modal', 'Punca modal', 'select', { options: PUNCA_MODAL, sec: 'Kewangan' }),
-      F_('jumlah_modal', 'Jumlah modal (RM)', 'number', { min: 0 }),
+      F_('jumlah_modal', 'Jumlah modal awal (RM)', 'select', { options: JUMLAH_MODAL }),
       F_('pendapatan_bulanan', 'Pendapatan bulanan (RM)', 'number', { required: true, min: 0 }),
       F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
       F_('link_website', 'Pautan laman web', 'text'),
