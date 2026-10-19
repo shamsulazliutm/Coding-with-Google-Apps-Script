@@ -439,14 +439,14 @@ test('Program: laporan PDF pilihan; boleh dimuat naik dan dimuat turun oleh PIC 
   fail(g.api_uploadFile(ckaiPic, 'CKAI4', 'lampiran', { name: 'x.pdf', data: pdf }), /Akses ditolak/);
 });
 test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
-  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', jenis_perniagaan: 'Runcit', bil_rakan_kongsi: 3, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', no_daftar_ssm: 'SSM-0', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Aktif' };
+  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 3, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', no_daftar_ssm: 'SSM-0', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Aktif' };
   ok(g.api_save(adminToken, 'CKAI4', r));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat B', no_ssu: 'SSU-002', status: 'Tidak Aktif' })));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat C', no_ssu: 'SSU-003', tarikh_daftar: '2027-01-01' })));
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: '' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', jenis_perniagaan: 'Retail' })), /betulkan/); // bukan pilihan
-  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', jenis_perniagaan: 'Lain-lain' })), /betulkan/); // mesti dinamakan
-  ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-011', jenis_perniagaan: 'Lain-lain', jenis_perniagaan_lain: 'Akuaponik', tarikh_daftar: '2025-07-01' })));
+  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', jenis_perniagaan: 'Lain-lain' })), /betulkan/); // bukan pilihan
+  ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-011', jenis_perniagaan: 'Pusat tuisyen', jenis_perniagaan_lain: '', tarikh_daftar: '2025-07-01' })));
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', bil_rakan_kongsi: 0 })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', bil_rakan_kongsi: '' })), /betulkan/);
   fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { no_ssu: 'SSU-009', status_ssm: '' })), /betulkan/);
@@ -886,17 +886,17 @@ test('medan fail: pautan Drive ditulis dalam lajur *_pautan (Sheet sahaja, tidak
 
 test('CKAI 4: Penyata bank (PDF) disimpan dengan pautan Drive; lajur ikut senarai baharu', () => {
   const up = ok(g.api_uploadFile(adminToken, 'CKAI4', 'penyata_bank', { name: 'penyata.pdf', data: PDF('bank') }));
-  const r = ok(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'Pelajar SSM', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', no_daftar_ssm: 'SSM-1', penyata_bank: { id: up.id, name: up.name }, nama_syarikat: 'Syarikat SSM', no_ssu: 'SSU-777', tarikh_daftar: '2026-04-01', status: 'Aktif', modal_awal: '1,000-1,999', jumlah_jualan: 5000, bilangan_pekerja: '6-10 ORANG', jenis_milikan: 'PERKONGSIAN', punca_modal: 'GERAN' }));
+  const r = ok(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'Pelajar SSM', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', no_daftar_ssm: 'SSM-1', penyata_bank: { id: up.id, name: up.name }, nama_syarikat: 'Syarikat SSM', no_ssu: 'SSU-777', tarikh_daftar: '2026-04-01', status: 'Aktif', modal_awal: '1,000-1,999', jumlah_jualan: 5000, bilangan_pekerja: '6-10 ORANG', jenis_milikan: 'PERKONGSIAN', punca_modal: 'GERAN' }));
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI4_SSU');
   const hd = sh.data[0], row = sh.data.find(x => x[0] === r.id);
   assert.strictEqual(row[hd.indexOf('penyata_bank_pautan')], 'https://drive.google.com/file/d/' + up.id + '/view');
   deepEq(hd.slice(0, 10), ['id', 'fakulti', 'nama_pelajar', 'no_kp', 'no_matrik', 'emel', 'telefon', 'jantina', 'bangsa', 'bidang_pengajian']);
-  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-779', tarikh_daftar: '2026-04-01', status: 'Aktif', jenis_milikan: 'Koperasi' }), /betulkan/);
-  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-782', tarikh_daftar: '2026-04-01', status: 'Aktif', bilangan_pekerja: 8 }), /betulkan/);
-  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-781', tarikh_daftar: '2026-04-01', status: 'Aktif', modal_awal: '1000' }), /betulkan/);
-  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-780', tarikh_daftar: '2026-04-01', status: 'Aktif', punca_modal: 'Simpanan' }), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-779', tarikh_daftar: '2026-04-01', status: 'Aktif', jenis_milikan: 'Koperasi' }), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-782', tarikh_daftar: '2026-04-01', status: 'Aktif', bilangan_pekerja: 8 }), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-781', tarikh_daftar: '2026-04-01', status: 'Aktif', modal_awal: '1000' }), /betulkan/);
+  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', no_matrik: 'S77', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 2, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'M', no_ssu: 'SSU-780', tarikh_daftar: '2026-04-01', status: 'Aktif', punca_modal: 'Simpanan' }), /betulkan/);
   fail(g.api_uploadFile(adminToken, 'CKAI4', 'penyata_bank', { name: 'x.pdf', data: Buffer.from('bukan pdf').toString('base64') }), /PDF/);
-  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'P', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', nama_syarikat: 'X', no_ssu: 'SSU-778', tarikh_daftar: '2026-04-01', status: 'Aktif' }), /betulkan/); // no_daftar_ssm wajib
+  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'P', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', nama_syarikat: 'X', no_ssu: 'SSU-778', tarikh_daftar: '2026-04-01', status: 'Aktif' }), /betulkan/); // no_daftar_ssm wajib
 });
 test('Pelajar: bidang pengajian mesti daripada senarai (PELAJAR)', () => {
   const r = g.saveStudentsAs_({ peranan: 'Admin', emel: 'a@utm.my' }, [{ no_matrik: 'BP1', nama_pelajar: 'Ali', no_kp: '990101011298', fakulti: 'FC', bidang_pengajian: 'Sains Komputer' }], true);
@@ -904,7 +904,7 @@ test('Pelajar: bidang pengajian mesti daripada senarai (PELAJAR)', () => {
 });
 test('Pelajar: jantina dan bangsa daripada PELAJAR masuk ke CKAI 4 secara automatik', () => {
   g.saveStudentsAs_({ peranan: 'Admin', emel: 'a@utm.my' }, [{ no_matrik: 'JB1', nama_pelajar: 'Ali', no_kp: '990101011299', fakulti: 'FC', jantina: 'Lelaki', bangsa: 'MELAYU', bidang_pengajian: 'TEKNOLOGI MAKLUMAT DAN KOMUNIKASI' }], true);
-  const r = ok(g.api_save(adminToken, 'CKAI4', { no_matrik: 'JB1', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 1, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'JB', no_ssu: 'SSU-JB1', tarikh_daftar: '2026-04-01', status: 'Aktif' }));
+  const r = ok(g.api_save(adminToken, 'CKAI4', { no_matrik: 'JB1', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 1, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'JB', no_ssu: 'SSU-JB1', tarikh_daftar: '2026-04-01', status: 'Aktif' }));
   const row = ok(g.api_list(adminToken, 'CKAI4', {})).rows.find(x => x.id === r.id);
   assert.strictEqual(row.jantina, 'Lelaki'); assert.strictEqual(row.bangsa, 'MELAYU'); assert.strictEqual(row.bidang_pengajian, 'TEKNOLOGI MAKLUMAT DAN KOMUNIKASI');
 });
@@ -1366,7 +1366,7 @@ test('KPT1: jualan agregat = jumlah_jualan CKAI 7', () => {
   assert.ok(!JSON.stringify(c).includes('KPT-M1') && !JSON.stringify(c).includes('990101'));
 });
 test('KPT2: % graduan usahawan = graduan / penyebut (tab KPT2_Penyebut); senarai bernama tetapi paparan awam agregat', () => {
-  const grad = (o) => g.api_save(adminToken, 'KPT2', Object.assign({ tahun_graduan: 2026, fakulti: 'FAI', nama: 'Siti Graduan', no_kp: '950505-05-5555', no_matrik: 'A20', nama_perniagaan: 'Siti Enterprise', no_pendaftaran_ssm: 'SSM1', jenis_peniagaan: 'Makanan', pendapatan_kasar: 12000, bilangan_pekerja: '6-10 ORANG', tarikh_pernigaan: '2026-06-01' }, o));
+  const grad = (o) => g.api_save(adminToken, 'KPT2', Object.assign({ tahun_graduan: 2026, fakulti: 'FAI', nama: 'Siti Graduan', no_kp: '950505-05-5555', no_matrik: 'A20', nama_perniagaan: 'Siti Enterprise', no_pendaftaran_ssm: 'SSM1', jenis_peniagaan: 'Telekomunikasi', pendapatan_kasar: 12000, bilangan_pekerja: '6-10 ORANG', tarikh_pernigaan: '2026-06-01' }, o));
   ok(grad({}));
   failF(grad({ nama: 'Siti Lagi' }), 'no_kp');                                    // no. KP sama = orang sama
   ok(grad({ nama: 'Ali Graduan', no_kp: '960606-06-6666', no_matrik: 'A21' }));
@@ -1410,7 +1410,7 @@ test('KPT4: pelajar dikira sekali (no. matrik) merentas daftar dan CKAI 8 (TRL 1
   assert.ok(!JSON.stringify(dash(2026)).includes('Pelajar Dua'));
 });
 test('KPT5: SSU aktif berasaskan inovasi, TRL 4-6 (auto daripada CKAI 4)', () => {
-  const ssu = (o) => g.api_save(adminToken, 'CKAI4', Object.assign({ fakulti: 'FKE', nama_pelajar: 'Pemilik', no_kp: '010101-01-0101', no_matrik: 'S5', nama_syarikat: 'Tech Sdn', jenis_perniagaan: 'Runcit', bil_rakan_kongsi: 1, no_ssu: 'SSU-K5', tarikh_daftar: '2026-03-01', status_ssm: 'Tidak Berdaftar', status: 'Aktif', berasaskan_inovasi: 'Ya', trl_syarikat: 'TRL 5' }, o));
+  const ssu = (o) => g.api_save(adminToken, 'CKAI4', Object.assign({ fakulti: 'FKE', nama_pelajar: 'Pemilik', no_kp: '010101-01-0101', no_matrik: 'S5', nama_syarikat: 'Tech Sdn', jenis_perniagaan: 'Telekomunikasi', bil_rakan_kongsi: 1, no_ssu: 'SSU-K5', tarikh_daftar: '2026-03-01', status_ssm: 'Tidak Berdaftar', status: 'Aktif', berasaskan_inovasi: 'Ya', trl_syarikat: 'TRL 5' }, o));
   const base = card(dash(2026), 'KPT5').value;
   failF(ssu({ trl_syarikat: '' }), 'trl_syarikat');
   ok(ssu({ no_ssu: 'SSU-K5' })); ok(ssu({ no_ssu: 'SSU-K6', nama_syarikat: 'Bukan Inovasi', berasaskan_inovasi: 'Tidak', trl_syarikat: '' }));
