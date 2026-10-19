@@ -120,7 +120,7 @@ window.__demoSeed = function () {
       save('CKAI6', { tempoh: ym(m), no_matrik: 'SW' + p2(k + 1), nama_pelajar: 'Pelajar Penyewa Contoh ' + (k + 1), inkubator: inc, penyewa: 'Penyewa Contoh ' + (k + 1), jumlah_rm: 600 + k * 150, status_bayaran: late ? 'Belum dibayar' : 'Dibayar', tarikh_bayar: late ? '' : ymd(m, 7) });
     });
     biz.forEach(function (b, k) {
-      save('CKAI7', { fakulti: fac(k), Tahun: Y, Bulan: BULAN_MS[m - 1], nama_perniagaan: b, no_kp: '0401' + p2(k + 1) + '100' + ('000' + k).slice(-3), jantina: k % 2 ? 'Perempuan' : 'Lelaki', bangsa: BANGSA_OPTIONS[k % 6], bidang_pengajian: BIDANG_PENGAJIAN[k % 11], jenis_perniagaan: JENIS_PERNIAGAAN[(k * 5) % JENIS_PERNIAGAAN.length], pendapatan_bulanan: 700 + m * 130 + k * (k === 3 ? 1100 : 220), jumlah_jualan: 1200 + m * 160 + k * 250, bilangan_pekerja: BILANGAN_PEKERJA[k % 12] });
+      save('CKAI7', { fakulti: fac(k), Tahun: Y, Bulan: BULAN_MS[m - 1], nama_perniagaan: b, no_kp: '0401' + p2(k + 1) + '100' + ('000' + k).slice(-3), jantina: k % 2 ? 'Perempuan' : 'Lelaki', bangsa: BANGSA_OPTIONS[k % 6], bidang_pengajian: BIDANG_PENGAJIAN[k % 11], jenis_perniagaan: JENIS_PERNIAGAAN[(k * 5) % JENIS_PERNIAGAAN.length], pendapatan_bulanan: 700 + m * 130 + k * (k === 3 ? 1100 : 220), bilangan_pekerja: BILANGAN_PEKERJA[k % 12] });
     });
   }
 

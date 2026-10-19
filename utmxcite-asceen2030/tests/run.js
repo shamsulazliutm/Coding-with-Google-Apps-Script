@@ -1010,7 +1010,7 @@ test('CKAI 7: pendapatan bulanan boleh RM 0 (nombor 0 atau teks "0"); kosong dit
 });
 test('CKAI 7: lajur tab ikut senarai; jenis_pendapatan dan lokasi dropdown dibuang', () => {
   const sh = g.getSheet_('CKAI7_Pendapatan_Pelajar');
-  deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], ['id', 'fakulti', 'Tahun', 'Bulan', 'nama_pelajar', 'no_kp', 'no_matrik', 'jantina', 'bangsa', 'bidang_pengajian', 'nama_perniagaan', 'no_ssu', 'no_ssm', 'jenis_milikan', 'jenis_perniagaan', 'punca_modal', 'jumlah_modal', 'pendapatan_bulanan', 'bilangan_pekerja', 'link_website', 'jumlah_jualan', 'Penyata_bank', 'Penyata_bank_pautan', 'tarikh_mula_perniagaan', 'lokasi_perniagaan_lain', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
+  deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], ['id', 'fakulti', 'Tahun', 'Bulan', 'nama_pelajar', 'no_kp', 'no_matrik', 'jantina', 'bangsa', 'bidang_pengajian', 'nama_perniagaan', 'no_ssu', 'no_ssm', 'jenis_milikan', 'jenis_perniagaan', 'punca_modal', 'jumlah_modal', 'pendapatan_bulanan', 'bilangan_pekerja', 'link_website', 'Penyata_bank', 'Penyata_bank_pautan', 'tarikh_mula_perniagaan', 'lokasi_perniagaan_lain', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
 });
 
 test('setup(): data dalam lajur lama (tempoh, pendapatan_rm) disalin ke lajur baharu CKAI 7', () => {
@@ -1394,13 +1394,13 @@ test('KPT: PIC fakulti boleh diberi KPT2-KPT7 tetapi bukan KPT1/KPT5 (auto)', ()
   fail(g.api_save(adminToken, 'KPT5', {}), /Akses ditolak/);
   assert.strictEqual(ok(g.api_session(adminToken)).teras.length, 3);
 });
-test('KPT1: jualan agregat = jumlah_jualan CKAI 7', () => {
-  const sv = (o) => ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FM', ...mb('2026-02'), nama_perniagaan: 'Kopi KPT', no_kp: '990101-01-1111', no_matrik: 'KPT-M1', pendapatan_bulanan: 100, jumlah_jualan: 1000 }, o)));
-  sv({ ...mb('2026-03') }); sv({ pendapatan_bulanan: 5000, ...mb('2026-04'), jumlah_jualan: 0 });  // pendapatan bulanan bukan jualan
+test('KPT1: jualan agregat = jumlah pendapatan_bulanan CKAI 7', () => {
+  const sv = (o) => ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FM', ...mb('2026-02'), nama_perniagaan: 'Kopi KPT', no_kp: '990101-01-1111', no_matrik: 'KPT-M1', pendapatan_bulanan: 1000 }, o)));
+  sv({ ...mb('2026-03') });
   const c = card(dash(2026), 'KPT1');
   assert.ok(c.value >= 1000 && c.format === 'rm');
   const base = c.value;
-  sv({ ...mb('2026-05'), jumlah_jualan: 250 });
+  sv({ ...mb('2026-05'), pendapatan_bulanan: 250 });
   assert.strictEqual(card(dash(2026), 'KPT1').value, base + 250);
   assert.ok(!JSON.stringify(c).includes('KPT-M1') && !JSON.stringify(c).includes('990101'));
 });

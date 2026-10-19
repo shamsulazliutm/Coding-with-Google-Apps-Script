@@ -859,7 +859,6 @@ var KPIS = [
       F_('pendapatan_bulanan', 'Pendapatan bulanan (RM)', 'number', { required: true, min: 0 }),
       F_('bilangan_pekerja', 'Bilangan pekerja', 'select', { options: BILANGAN_PEKERJA }),
       F_('link_website', 'Pautan laman web', 'text'),
-      F_('jumlah_jualan', 'Jumlah jualan (RM)', 'number', { min: 0 }),
       F_('Penyata_bank', 'Penyata bank (PDF)', 'file', { full: true, sec: 'Dokumen', hint: 'PDF sahaja, maksimum 5 MB.' }),
       F_('tarikh_mula_perniagaan', 'Tarikh mula perniagaan', 'date'),
       F_('lokasi_perniagaan_lain', 'Lokasi perniagaan', 'text'),

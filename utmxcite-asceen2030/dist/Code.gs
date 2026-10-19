@@ -860,7 +860,6 @@ var KPIS = [
       F_('pendapatan_bulanan', 'Pendapatan bulanan (RM)', 'number', { required: true, min: 0 }),
       F_('bilangan_pekerja', 'Bilangan pekerja', 'select', { options: BILANGAN_PEKERJA }),
       F_('link_website', 'Pautan laman web', 'text'),
-      F_('jumlah_jualan', 'Jumlah jualan (RM)', 'number', { min: 0 }),
       F_('Penyata_bank', 'Penyata bank (PDF)', 'file', { full: true, sec: 'Dokumen', hint: 'PDF sahaja, maksimum 5 MB.' }),
       F_('tarikh_mula_perniagaan', 'Tarikh mula perniagaan', 'date'),
       F_('lokasi_perniagaan_lain', 'Lokasi perniagaan', 'text'),
@@ -2530,18 +2529,18 @@ function countedInYear_(rows, statuses, dateField, year) {
 
 var MEASURES = {
   // ---- KPT: KPI peringkat Kementerian (Kamus KPI Keusahawanan IPT 2026-2030). Paparan awam: agregat sahaja. ----
-  // KPT 1: jumlah jualan agregat usahawan pelajar = jumlah `jumlah_jualan` dalam CKAI 7 bagi tahun dipilih.
+  // KPT 1: jumlah jualan agregat usahawan pelajar = jumlah `pendapatan_bulanan` dalam CKAI 7 bagi tahun dipilih.
   kpt1: function (kpi, rows, year, ctx) {
     var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(ckai7Ym_(r)) === year; });
-    var total = sumOf_(sales, 'jumlah_jualan');
+    var total = sumOf_(sales, 'pendapatan_bulanan');
     return {
       value: round2_(total),
       secondary: [
-        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.filter(function (r) { return num_(r.jumlah_jualan) > 0; }).map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') }
+        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.filter(function (r) { return num_(r.pendapatan_bulanan) > 0; }).map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') }
       ],
       breakdown: [
-        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return num_(r.jumlah_jualan); })) },
-        { title: 'Jualan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.jumlah_jualan); })) }
+        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_bulanan); })) },
+        { title: 'Jualan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.pendapatan_bulanan); })) }
       ]
     };
   },
