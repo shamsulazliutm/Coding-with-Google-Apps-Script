@@ -21,6 +21,7 @@ var APP = {
 };
 
 /** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
+var JENIS_MILIKAN = ['MILIKAN TUNGGAL', 'PERKONGSIAN', 'SYARIKAT SENDIRIAN BERHAD', 'LAIN-LAIN'];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PERIBUMI SARAWAK', 'PERIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -304,7 +305,7 @@ var KPIS = [
       F_('bidang_pengajian', 'Bidang pengajian', 'text'),
       F_('nama_perniagaan', 'Nama perniagaan', 'text', { required: true, sec: 'Perniagaan' }),
       F_('no_pendaftaran_ssm', 'No. pendaftaran SSM / SKM / PBT', 'text', { required: true }),
-      F_('jenis_pemilikan', 'Jenis pemilikan', 'text'),
+      F_('jenis_pemilikan', 'Jenis pemilikan', 'select', { options: JENIS_MILIKAN }),
       F_('jenis_peniagaan', 'Jenis perniagaan', 'text'),
       F_('punca_modal', 'Punca modal', 'text'),
       F_('pendapatan_kasar', 'Pendapatan kasar (RM)', 'number', { min: 0 }),
@@ -692,7 +693,7 @@ var KPIS = [
       F_('nama_syarikat', 'Nama syarikat / perniagaan', 'text', { required: true, sec: 'Pendaftaran SSU' }),
       F_('jenis_perniagaan', 'Jenis perniagaan', 'select', { required: true, options: JENIS_PERNIAGAAN }),
       F_('jenis_perniagaan_lain', 'Nama jenis perniagaan lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
-      F_('jenis_milikan', 'Jenis milikan', 'text'),
+      F_('jenis_milikan', 'Jenis milikan', 'select', { options: JENIS_MILIKAN }),
       F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
       F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
@@ -785,7 +786,7 @@ var KPIS = [
       F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true, sec: 'Perniagaan' }),
       F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
       F_('no_ssm', 'No. pendaftaran SSM (jika ada)', 'text'),
-      F_('jenis_milikan', 'Jenis milikan', 'text'),
+      F_('jenis_milikan', 'Jenis milikan', 'select', { options: JENIS_MILIKAN }),
       F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
       F_('punca_modal', 'Punca modal', 'text', { sec: 'Kewangan' }),
       F_('jumlah_modal', 'Jumlah modal (RM)', 'number', { min: 0 }),
