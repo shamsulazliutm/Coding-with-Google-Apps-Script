@@ -309,11 +309,15 @@ test('KAI3: ruang ditawarkan (kumulatif) + penggunaan; sasaran +5 setahun', () =
   deepEq([2026, 2027, 2028, 2029, 2030].map(y => card(dash(y), 'KAI3').target), [25, 30, 35, 40, 45]);
 });
 test('KAI4/KAI5: pelajar mendaftar mengikut tahun; sasaran 20 dan 4', () => {
-  const mk = (n, st, d) => ok(g.api_save(adminToken, 'KAI4', { fakulti: 'FAI', nama_pelajar: n, no_kp: '990101-01-1234', no_matrik: n, status: st, tarikh_daftar: d }));
-  mk('a', 'Mendaftar', '2026-03-01'); mk('b', 'Tamat', '2026-03-02'); mk('c', 'Memohon', ''); mk('d', 'Mendaftar', '2027-01-05');
+  const mk = (n) => ok(g.api_save(adminToken, 'KAI4', { fakulti: 'FAI', nama_pelajar: n, no_kp: '990101-01-1234', no_matrik: n, bidang_gig: 'Reka bentuk', gig_pendapatan: 100 }));
+  const now0 = env.clock.now;
+  mk('a'); mk('b');
+  env.clock.now = Date.UTC(2027, 0, 5, 4); mk('d'); env.clock.now = now0;
   const c = card(dash(2026), 'KAI4');
   assert.strictEqual(c.value, 2); assert.strictEqual(c.target, 20);
   assert.strictEqual(card(dash(2027), 'KAI4').value, 1);
+  const shg = g.getSheet_('KAI4_GiGA');
+  deepEq(shg.getRange(1, 1, 1, shg.getLastColumn()).getValues()[0], ['id', 'fakulti', 'nama_pelajar', 'no_kp', 'no_matrik', 'emel', 'telefon', 'tahun_pengajian', 'program', 'bidang_gig', 'mentor_nama', 'gig_pendapatan', 'lampiran', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
   assert.strictEqual(card(dash(2026), 'KAI5').target, 4);
   assert.strictEqual(card(dash(2026), 'KAI5').quarterTarget, 2); // Q2 2026 = 2 (PDF: N/A, 2, N/A, 4)
   assert.strictEqual(card(dash(2026), 'KAI5').quarterStatus, 'Di bawah sasaran');
@@ -898,7 +902,7 @@ test('Pelajar: jantina dan bangsa daripada PELAJAR masuk ke CKAI 4 secara automa
 });
 
 test('KAI 4 (GiGA): No. KP / pasport wajib, disahkan dan sengkang dibuang', () => {
-  const b = { fakulti: 'FAI', nama_pelajar: 'Kp Uji', no_matrik: 'KP1', status: 'Memohon' };
+  const b = { fakulti: 'FAI', nama_pelajar: 'Kp Uji', no_matrik: 'KP1', };
   fail(g.api_save(adminToken, 'KAI4', b), /betulkan/);
   fail(g.api_save(adminToken, 'KAI4', Object.assign({}, b, { no_kp: '12' })), /betulkan/);
   const r = ok(g.api_save(adminToken, 'KAI4', Object.assign({}, b, { no_kp: '000101-10-1234' })));
@@ -1084,16 +1088,16 @@ test('PELAJAR: setup() mencipta tab dengan lajur no_matrik, no_kp, nama_pelajar,
 test('PELAJAR: hanya no. matrik dimasukkan; maklumat lain diambil daripada PELAJAR dan menggantikan nilai borang', () => {
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
   sh.appendRow(['PJ001', '010203105555', 'Nur Pelajar Satu', 'nur@graduate.utm.my', '0123456789', 'FAI', '', '']);
-  const r = ok(g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'pj001', nama_pelajar: 'Nama Palsu', no_kp: '111111111111', status: 'Memohon' }));
+  const r = ok(g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'pj001', nama_pelajar: 'Nama Palsu', no_kp: '111111111111' }));
   assert.strictEqual(r.no_matrik, 'PJ001'); assert.strictEqual(r.nama_pelajar, 'Nur Pelajar Satu');
   assert.strictEqual(String(r.no_kp).replace(/^'/, ''), '010203105555'); assert.strictEqual(r.emel, 'nur@graduate.utm.my'); assert.strictEqual(r.telefon, '0123456789');
 });
 test('PELAJAR: pelajar tiada atau tidak lengkap -> ralat dengan senarai `missing` (klien membuka tetingkap melengkapkan)', () => {
-  const r = g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'TIADA01', status: 'Memohon' });
+  const r = g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'TIADA01' });
   fail(r, /PELAJAR/); assert.strictEqual(r.missing[0].no_matrik, 'TIADA01'); assert.strictEqual(r.missing[0].found, false);
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
   sh.appendRow(['PJ002', '', 'Separuh Lengkap', '', '', '', '', '']);     // no. KP dan fakulti kosong
-  const r2 = g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ002', status: 'Memohon' });
+  const r2 = g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ002' });
   fail(r2, /PELAJAR/); deepEq(r2.missing[0].gaps, ['no_kp', 'fakulti']); assert.strictEqual(r2.missing[0].nama_pelajar, 'Separuh Lengkap');
 });
 test('PELAJAR: saveStudents melengkapkan data; selepas itu rekod boleh disimpan; pengesahan medan', () => {
@@ -1103,7 +1107,7 @@ test('PELAJAR: saveStudents melengkapkan data; selepas itu rekod boleh disimpan;
   assert.strictEqual(good.results[0].ok, true);
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR'), row = sh.data.find(r => r[0] === 'PJ002');
   assert.strictEqual(String(row[1]).replace(/^'/, ''), '020304106666');
-  ok(g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ002', status: 'Memohon' }));
+  ok(g.api_save(adminToken, 'KAI4', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ002' }));
   assert.ok(ok(g.api_listAudit(adminToken, 50)).some(a => a.tindakan === 'PELAJAR_KEMAS_KINI' && !/020304/.test(a.ringkasan)));
 });
 test('PELAJAR: PIC hanya mengisi medan kosong (data sah tidak ditimpa); carian tidak mendedahkan no. KP, e-mel, telefon kepada PIC', () => {
@@ -1158,7 +1162,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    if (!['KPT2', 'KPT4', 'KAI6'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR

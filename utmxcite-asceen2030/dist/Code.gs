@@ -514,11 +514,8 @@ var KPIS = [
     id: 'KAI4', prefix: 'G4', sheet: 'KAI4_GiGA', group: 'Transform', fungsi: 'latihan', entry: 'faculty',
     title: 'KAI 4 · Premium Gig Academy (GiGA)', short: 'GiGA',
     unit: 'pelajar mendaftar', measure: 'kai4', jenis: 'minimum', perFacultyTarget: 2,
-    listColumns: ['id', 'nama_pelajar', 'no_matrik', 'fakulti', 'status', 'bootcamp_status'],
-    statusField: 'status',
-    rules: [
-      { when: { field: 'status', in: ['Mendaftar', 'Tamat'] }, require: ['tarikh_daftar'] }
-    ],
+    listColumns: ['id', 'nama_pelajar', 'no_matrik', 'fakulti', 'program', 'bidang_gig'],
+    statusField: null, rules: [],
     validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
@@ -527,22 +524,10 @@ var KPIS = [
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
-      F_('program', 'Program', 'text'),
       F_('tahun_pengajian', 'Tahun pengajian', 'number', { min: 1, max: 8 }),
-      F_('tarikh_memohon', 'Tarikh memohon', 'date', { sec: 'Permohonan & pemilihan' }),
-      F_('bidang_gig', 'Bidang gig', 'text'),
-      F_('portfolio', 'Pautan portfolio', 'url'),
-      F_('status', 'Status', 'select', { required: true, options: ['Memohon', 'Dalam semakan', 'Mendaftar', 'Tamat', 'Tidak dipilih', 'Tarik diri'] }),
-      F_('tarikh_daftar', 'Tarikh mendaftar', 'date'),
-      F_('mentor_nama', 'Nama mentor', 'text', { sec: 'Mentor 1:1' }),
-      F_('mentor_organisasi', 'Organisasi mentor', 'text'),
-      F_('sesi_mentor', 'Bilangan sesi mentor', 'number', { min: 0 }),
-      F_('bootcamp_status', 'Status bootcamp 3+3', 'select', { sec: 'Bootcamp & pitching', options: ['Belum mula', 'Sedang berjalan', 'Tamat'] }),
-      F_('bootcamp_mula', 'Tarikh mula bootcamp', 'date'),
-      F_('bootcamp_tamat', 'Tarikh tamat bootcamp', 'date'),
-      F_('kehadiran', 'Kehadiran (%)', 'number', { min: 0, max: 100 }),
-      F_('gig_diperoleh', 'Gig diperoleh?', 'yesno', { sec: 'Hasil gig' }),
-      F_('gig_klien', 'Klien / platform', 'text'),
+      F_('program', 'Program', 'text'),
+      F_('bidang_gig', 'Bidang gig', 'text', { sec: 'GiGA' }),
+      F_('mentor_nama', 'Nama mentor', 'text'),
       F_('gig_pendapatan', 'Pendapatan gig (RM)', 'number', { min: 0 }),
       F_('lampiran', 'Pautan lampiran bukti', 'url', { sec: 'Pengurusan' }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
@@ -933,7 +918,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI6'].indexOf(k.id) < 0) {
+  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6'].indexOf(k.id) < 0) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
@@ -2783,16 +2768,16 @@ var MEASURES = {
 
   // KAI 4: pelajar mendaftar dalam GiGAUTM Ascend pada tahun itu.
   kai4: function (kpi, rows, year, ctx) {
-    var counted = countedInYear_(rows, ['Mendaftar', 'Tamat'], 'tarikh_daftar', year);
+    // Setiap rekod = pelajar GiGA; tahun pelaporan = tahun rekod dicipta (tiada medan status / tarikh).
+    var counted = rows.filter(function (r) { return yearOf_(r.dicipta_pada) === year; });
     return {
       value: counted.length,
       secondary: [
-        { label: 'Bootcamp tamat', value: counted.filter(function (r) { return r.bootcamp_status === 'Tamat'; }).length },
-        { label: 'Gig diperoleh', value: counted.filter(function (r) { return r.gig_diperoleh === 'Ya'; }).length }
+        { label: 'Jumlah pendapatan gig (RM)', value: rm_(sumOf_(counted.map(function (r) { return { v: num_(r.gig_pendapatan) }; }), 'v')) }
       ],
       breakdown: [
-        { title: 'Pelajar mendaftar mengikut fakulti (cadangan minimum 2 setiap fakulti)', items: perFacultyItems_(kpi, counted, ctx.faculties) },
-        { title: 'Semua permohonan mengikut status (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
+        { title: 'Pelajar mengikut fakulti (cadangan minimum 2 setiap fakulti)', items: perFacultyItems_(kpi, counted, ctx.faculties) },
+        { title: 'Pelajar mengikut bidang gig', items: sortDesc_(countBy_(counted, function (r) { return r.bidang_gig; })) }
       ]
     };
   },

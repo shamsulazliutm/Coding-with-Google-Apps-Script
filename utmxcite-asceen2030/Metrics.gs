@@ -460,16 +460,16 @@ var MEASURES = {
 
   // KAI 4: pelajar mendaftar dalam GiGAUTM Ascend pada tahun itu.
   kai4: function (kpi, rows, year, ctx) {
-    var counted = countedInYear_(rows, ['Mendaftar', 'Tamat'], 'tarikh_daftar', year);
+    // Setiap rekod = pelajar GiGA; tahun pelaporan = tahun rekod dicipta (tiada medan status / tarikh).
+    var counted = rows.filter(function (r) { return yearOf_(r.dicipta_pada) === year; });
     return {
       value: counted.length,
       secondary: [
-        { label: 'Bootcamp tamat', value: counted.filter(function (r) { return r.bootcamp_status === 'Tamat'; }).length },
-        { label: 'Gig diperoleh', value: counted.filter(function (r) { return r.gig_diperoleh === 'Ya'; }).length }
+        { label: 'Jumlah pendapatan gig (RM)', value: rm_(sumOf_(counted.map(function (r) { return { v: num_(r.gig_pendapatan) }; }), 'v')) }
       ],
       breakdown: [
-        { title: 'Pelajar mendaftar mengikut fakulti (cadangan minimum 2 setiap fakulti)', items: perFacultyItems_(kpi, counted, ctx.faculties) },
-        { title: 'Semua permohonan mengikut status (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
+        { title: 'Pelajar mengikut fakulti (cadangan minimum 2 setiap fakulti)', items: perFacultyItems_(kpi, counted, ctx.faculties) },
+        { title: 'Pelajar mengikut bidang gig', items: sortDesc_(countBy_(counted, function (r) { return r.bidang_gig; })) }
       ]
     };
   },

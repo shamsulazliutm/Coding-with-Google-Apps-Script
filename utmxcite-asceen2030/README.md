@@ -256,3 +256,7 @@ id, fakulti, mentor, nama_syarikat, no_pendaftaran_syarikat, nama_pemilik, no_kp
 ## KAI 6 · lajur tab `KAI6_AI_Startup`
 
 id, fakulti, nama, no_kp, no_matrik, nama_startup, nama_ahli_kumpulan, no_pendaftaran_SSM, bidang_ai (12 pilihan), ringkasan, mentor_industri, startup_ditubuhkan, status, lampiran (pautan), catatan, lajur sistem. Nama dan no. KP diambil daripada PELAJAR berdasarkan no. matrik. Tiada medan tarikh: pelajar berstatus Dalam latihan / Tamat latihan dikira pada tahun rekod dicipta (`dicipta_pada`).
+
+## KAI 4 · lajur tab `KAI4_GiGA`
+
+id, fakulti, nama_pelajar, no_kp, no_matrik, emel, telefon, tahun_pengajian, program, bidang_gig, mentor_nama, gig_pendapatan, lampiran, catatan, lajur sistem. Setiap rekod = satu pelajar GiGA, dikira pada tahun rekod dicipta (`dicipta_pada`; tiada medan status / tarikh). Pecahan: fakulti (minimum 2 setiap fakulti) dan bidang gig; jumlah pendapatan gig dipaparkan sebagai maklumat tambahan.
