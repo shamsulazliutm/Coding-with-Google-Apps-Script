@@ -71,7 +71,18 @@ function sanitizeText_(s) {
 function normalizeCell_(v, type) {
   if (v === null || v === undefined) return '';
   if (Object.prototype.toString.call(v) === '[object Date]') {
-    return isNaN(v.getTime()) ? '' : Utilities.formatDate(v, APP.TZ, 'yyyy-MM-dd');
+    return isNaN(v.getTime()) ? '' : Utilities.formatDate(v, APP.TZ, type === 'month' ? 'yyyy-MM' : 'yyyy-MM-dd');
+  }
+  // Tarikh / bulan yang ditaip tangan dalam Sheet (contoh 03/2026, 2026/3, 15/03/2026) diseragamkan kepada YYYY-MM(-DD).
+  if (typeof v === 'string' && (type === 'month' || type === 'date')) {
+    var s = v.trim(), m;
+    if (type === 'month') {
+      if ((m = /^(\d{1,2})[\/\-.](\d{4})$/.exec(s))) return m[2] + '-' + ('0' + m[1]).slice(-2);
+      if ((m = /^(\d{4})[\/\-.](\d{1,2})(?:[\/\-.]\d{1,2})?$/.exec(s))) return m[1] + '-' + ('0' + m[2]).slice(-2);
+    } else if ((m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s))) {
+      return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+    }
+    return s;
   }
   if (type === 'number') {
     if (v === '') return '';

@@ -337,8 +337,9 @@ var MEASURES = {
   // CKAI 6: pendapatan sewaan ruang niaga yang DITERIMA (status Dibayar) pada tahun itu.
   rent: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
-    var paid = inYear.filter(function (r) { return r.status_bayaran === 'Dibayar'; });
-    var due = inYear.filter(function (r) { return r.status_bayaran !== 'Dibayar'; });
+    function isPaid(r) { return String(r.status_bayaran || '').trim().toLowerCase() === 'dibayar'; }   // tahan terhadap huruf besar/kecil yang ditaip dalam Sheet
+    var paid = inYear.filter(isPaid);
+    var due = inYear.filter(function (r) { return !isPaid(r); });
     return {
       value: round2_(sumOf_(paid, 'jumlah_rm')),
       secondary: [

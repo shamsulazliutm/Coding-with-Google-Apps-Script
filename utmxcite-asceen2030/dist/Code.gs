@@ -1168,7 +1168,18 @@ function sanitizeText_(s) {
 function normalizeCell_(v, type) {
   if (v === null || v === undefined) return '';
   if (Object.prototype.toString.call(v) === '[object Date]') {
-    return isNaN(v.getTime()) ? '' : Utilities.formatDate(v, APP.TZ, 'yyyy-MM-dd');
+    return isNaN(v.getTime()) ? '' : Utilities.formatDate(v, APP.TZ, type === 'month' ? 'yyyy-MM' : 'yyyy-MM-dd');
+  }
+  // Tarikh / bulan yang ditaip tangan dalam Sheet (contoh 03/2026, 2026/3, 15/03/2026) diseragamkan kepada YYYY-MM(-DD).
+  if (typeof v === 'string' && (type === 'month' || type === 'date')) {
+    var s = v.trim(), m;
+    if (type === 'month') {
+      if ((m = /^(\d{1,2})[\/\-.](\d{4})$/.exec(s))) return m[2] + '-' + ('0' + m[1]).slice(-2);
+      if ((m = /^(\d{4})[\/\-.](\d{1,2})(?:[\/\-.]\d{1,2})?$/.exec(s))) return m[1] + '-' + ('0' + m[2]).slice(-2);
+    } else if ((m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s))) {
+      return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+    }
+    return s;
   }
   if (type === 'number') {
     if (v === '') return '';
@@ -2754,8 +2765,9 @@ var MEASURES = {
   // CKAI 6: pendapatan sewaan ruang niaga yang DITERIMA (status Dibayar) pada tahun itu.
   rent: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
-    var paid = inYear.filter(function (r) { return r.status_bayaran === 'Dibayar'; });
-    var due = inYear.filter(function (r) { return r.status_bayaran !== 'Dibayar'; });
+    function isPaid(r) { return String(r.status_bayaran || '').trim().toLowerCase() === 'dibayar'; }   // tahan terhadap huruf besar/kecil yang ditaip dalam Sheet
+    var paid = inYear.filter(isPaid);
+    var due = inYear.filter(function (r) { return !isPaid(r); });
     return {
       value: round2_(sumOf_(paid, 'jumlah_rm')),
       secondary: [

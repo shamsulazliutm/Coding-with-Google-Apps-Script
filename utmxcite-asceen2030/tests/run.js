@@ -1013,6 +1013,13 @@ test('setup(): data dalam lajur lama (tempoh, pendapatan_rm) disalin ke lajur ba
   const row = g.readTable_('CKAI7_Pendapatan_Pelajar', { pendapatan_bulanan: 'number' }).rows.find(r => r.id === 'PP-OLD');
   assert.strictEqual(row.bulan_pendapatan, '2031-02'); assert.strictEqual(row.pendapatan_bulanan, 2500.5);
 });
+test('Bacaan Sheet: bulan / tarikh ditaip tangan diseragamkan', () => {
+  const n = (v, ty) => g.normalizeCell_(v, ty);
+  assert.strictEqual(n('03/2026', 'month'), '2026-03'); assert.strictEqual(n('3-2026', 'month'), '2026-03'); assert.strictEqual(n('2026/3', 'month'), '2026-03');
+  assert.strictEqual(n('2026-04-15', 'month'), '2026-04'); assert.strictEqual(n('2026-05', 'month'), '2026-05');
+  assert.strictEqual(n('15/03/2026', 'date'), '2026-03-15'); assert.strictEqual(n('2026-03-15', 'date'), '2026-03-15');
+  assert.strictEqual(n(new Date(Date.UTC(2026, 2, 1, 4)), 'month'), '2026-03');
+});
 test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan; baki dikira; satu rekod setiap tabung setiap bulan; Admin sahaja', () => {
   const r = (extra) => g.api_save(adminToken, 'CKAI10', Object.assign({ tempoh: '2027-03', tabung: 'Tabung Induk UTM XCITE', peruntukan_awal: 118602.64, komitmen: 0, perbelanjaan: 57641.95 }, extra));
   const a = ok(r({}));
