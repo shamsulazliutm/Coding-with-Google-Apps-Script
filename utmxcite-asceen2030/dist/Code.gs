@@ -269,9 +269,17 @@ function kpt6Validate_(c, errors) {
   if (c.tarikh_mula && c.tarikh_akhir && c.tarikh_akhir < c.tarikh_mula && !errors.tarikh_akhir) errors.tarikh_akhir = 'Tarikh akhir tidak boleh sebelum tarikh mula.';
 }
 
-/** KPT7: satu syarikat/projek dikira sekali bagi setiap tahun pelaporan. */
-function kpt7Validate_(c, errors) {
-  c.kunci = String(c.tarikh || '').slice(0, 4) + '|' + String(c.nama_syarikat || '').trim().toLowerCase();
+/** KPT7: satu syarikat/projek dikira sekali bagi setiap tahun pelaporan (tahun daripada tarikh_mula_embiayaan). */
+function kpt7Validate_(c, errors, rows, existing) {
+  var kp = String(c.no_kp_pemilik || '').replace(/\s+/g, '').toUpperCase();
+  if (kp && !errors.no_kp_pemilik) {
+    if (/^\d{6}-?\d{2}-?\d{4}$/.test(kp)) kp = kp.replace(/-/g, '');
+    if (!/^[A-Z0-9-]{6,20}$/.test(kp)) errors.no_kp_pemilik = 'No. KP / pasport tidak sah.'; else c.no_kp_pemilik = kp;
+  }
+  var yr = String(c.tarikh_mula_embiayaan || '').slice(0, 4), nm = String(c.nama_syarikat || '').trim().toLowerCase();
+  if (!yr || !nm || errors.nama_syarikat) return;
+  var dup = (rows || []).filter(function (r) { return (!existing || r.id !== existing.id) && String(r.tarikh_mula_embiayaan || '').slice(0, 4) === yr && String(r.nama_syarikat || '').trim().toLowerCase() === nm; })[0];
+  if (dup) errors.nama_syarikat = 'Syarikat ini sudah didaftarkan bagi tahun ' + yr + ' (' + dup.id + ').';
 }
 
 var PROGRAM_DONE_REQUIRE = ['tarikh_mula', 'tarikh_tamat', 'lokasi', 'bil_peserta', 'bajet_rm', 'pendapatan_rm'];
@@ -389,16 +397,23 @@ var KPIS = [
     id: 'KPT7', prefix: 'K7', sheet: 'KPT7_Pembiayaan', group: 'KPT', teras: 't3', entry: 'faculty',
     title: 'KPT 7 · Jumlah syarikat, perusahaan atau projek perniagaan yang dibiayai', short: 'Syarikat atau projek dibiayai',
     unit: 'syarikat / projek dibiayai', measure: 'kpt7', jenis: 'minimum',
-    listColumns: ['id', 'nama_syarikat', 'jenis_pembiaya', 'jumlah_rm', 'fakulti', 'tarikh'],
-    statusField: 'jenis_pembiaya', unique: ['kunci'], validate: kpt7Validate_, rules: [],
+    listColumns: ['id', 'nama_syarikat', 'sumber_pembiayaan', 'jumlah_rm', 'fakulti', 'tarikh_mula_embiayaan'],
+    statusField: 'sumber_pembiayaan', validate: kpt7Validate_, rules: [],
     fields: [
-      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pembiayaan' }),
-      F_('nama_syarikat', 'Nama syarikat / perusahaan / projek', 'text', { required: true, full: true, errorOn: 'nama_syarikat' }),
-      F_('jenis_pembiaya', 'Jenis pembiayaan', 'select', { required: true, options: ['Pelabur budiman (angel investor)', 'Pemodal teroka (venture capital)', 'Entiti pendanaan awam', 'Geran agensi kerajaan', 'Hadiah pertandingan keusahawanan', 'Pembiayaan in-kind'] }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Syarikat' }),
+      F_('mentor', 'Mentor', 'text'),
+      F_('nama_syarikat', 'Nama syarikat / perusahaan / projek', 'text', { required: true, full: true }),
+      F_('no_pendaftaran_syarikat', 'No. pendaftaran syarikat', 'text'),
+      F_('nama_pemilik', 'Nama pemilik', 'text', { required: true }),
+      F_('no_kp_pemilik', 'No. KP / pasport pemilik', 'text'),
+      F_('bangsa', 'Bangsa', 'select', { options: BANGSA_OPTIONS }),
+      F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
+      F_('jenis_pembiaya', 'Jenis pembiaya', 'text', { sec: 'Pembiayaan' }),
+      F_('sumber_pembiayaan', 'Sumber pembiayaan', 'select', { required: true, options: ['ANGEL INVESTOR', 'VENTURE CAPITAL', 'ENTITI PENDANAAN AWAM', 'HADIAH PERTANDINGAN', 'LAIN-LAIN'] }),
       F_('jumlah_rm', 'Nilai pembiayaan (RM)', 'number', { required: true, min: 0 }),
-      F_('tarikh', 'Tarikh terima', 'date', { required: true }),
+      F_('tarikh_mula_embiayaan', 'Tarikh mula pembiayaan', 'date', { required: true }),
       F_('lampiran', 'Surat tawaran / rekod penerimaan / pengesahan (PDF)', 'file', { full: true, sec: 'Dokumen' }),
-      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'nama_syarikat' })
+      F_('catatatn', 'Catatan', 'textarea', { full: true })
     ]
   },
   {
@@ -2503,9 +2518,9 @@ var MEASURES = {
   // KPT 7: syarikat / projek dibiayai (unik setiap tahun). Sumber: daftar KPT 7 + hadiah pertandingan (CKAI 9, nilai hadiah > 0).
   kpt7: function (kpi, rows, year, ctx) {
     var items = [];
-    rows.forEach(function (r) { if (yearOf_(r.tarikh) === year) items.push({ name: r.nama_syarikat, jenis: r.jenis_pembiaya, rm: num_(r.jumlah_rm), fakulti: r.fakulti }); });
+    rows.forEach(function (r) { if (yearOf_(r.tarikh_mula_embiayaan) === year) items.push({ name: r.nama_syarikat, jenis: r.sumber_pembiayaan, rm: num_(r.jumlah_rm), fakulti: r.fakulti }); });
     ctx.rows('CKAI9').forEach(function (r) {
-      if (yearOf_(r.tarikh) === year && num_(r.nilai_hadiah_rm) > 0) items.push({ name: r.produk_projek || r.nama_anugerah, jenis: 'Hadiah pertandingan keusahawanan', rm: num_(r.nilai_hadiah_rm), fakulti: r.fakulti });
+      if (yearOf_(r.tarikh) === year && num_(r.nilai_hadiah_rm) > 0) items.push({ name: r.produk_projek || r.nama_anugerah, jenis: 'HADIAH PERTANDINGAN', rm: num_(r.nilai_hadiah_rm), fakulti: r.fakulti });
     });
     var seen = {}, uniq = [];
     items.forEach(function (x) { var k = String(x.name || '').trim().toLowerCase(); if (k && !seen[k]) { seen[k] = 1; uniq.push(x); } });
@@ -2513,7 +2528,7 @@ var MEASURES = {
       value: uniq.length,
       secondary: [{ label: 'Jumlah nilai pembiayaan', value: rm_(sumOf_(items, 'rm')) }],
       breakdown: [
-        { title: 'Mengikut jenis pembiayaan', items: sortDesc_(countBy_(items, function (x) { return x.jenis; })) },
+        { title: 'Mengikut sumber pembiayaan', items: sortDesc_(countBy_(items, function (x) { return x.jenis; })) },
         { title: 'Mengikut fakulti', items: sortDesc_(countBy_(uniq, function (x) { return x.fakulti; })) }
       ]
     };

@@ -1412,8 +1412,12 @@ test('KPT6: kolaborasi rasmi dikira mengikut tahun dokumen', () => {
   deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].slice(0, 9), ['id', 'fakulti', 'tajuk', 'rakan_institusi', 'bidang_kerjasama', 'jenis_dokumen', 'bil_projek_aktiviti_berkolabrasi', 'nama_projek', 'tarikh_mula']);
 });
 test('KPT7: syarikat dibiayai unik setahun; hadiah CKAI 9 (>RM0) turut dikira', () => {
-  const by = (o) => g.api_save(adminToken, 'KPT7', Object.assign({ fakulti: 'FM', nama_syarikat: 'Firma Dana', jenis_pembiaya: 'Geran agensi kerajaan', jumlah_rm: 10000, tarikh: '2026-03-01' }, o));
+  const by = (o) => g.api_save(adminToken, 'KPT7', Object.assign({ fakulti: 'FM', nama_syarikat: 'Firma Dana', nama_pemilik: 'Pemilik A', no_kp_pemilik: '800101-01-1010', bangsa: 'MELAYU', sumber_pembiayaan: 'ENTITI PENDANAAN AWAM', jumlah_rm: 10000, tarikh_mula_embiayaan: '2026-03-01' }, o));
   ok(by({})); failF(by({ jumlah_rm: 5000 }), 'nama_syarikat');
+  failF(by({ nama_syarikat: 'Lain', sumber_pembiayaan: 'Geran' }), 'sumber_pembiayaan');
+  failF(by({ nama_syarikat: 'Lain', bangsa: 'ARAB' }), 'bangsa');
+  const sh7 = g.getSheet_('KPT7_Pembiayaan');
+  deepEq(sh7.getRange(1, 1, 1, sh7.getLastColumn()).getValues()[0], ['id', 'fakulti', 'mentor', 'nama_syarikat', 'no_pendaftaran_syarikat', 'nama_pemilik', 'no_kp_pemilik', 'bangsa', 'jenis_perniagaan', 'jenis_pembiaya', 'sumber_pembiayaan', 'jumlah_rm', 'tarikh_mula_embiayaan', 'lampiran', 'lampiran_pautan', 'catatatn', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
   const up7 = (n) => { const r = ok(g.api_uploadFile(adminToken, 'CKAI9', 'sijil', { name: n + '.pdf', data: PDF(n) })); return { id: r.id, name: r.name }; };
   const base = card(dash(2026), 'KPT7').value;
   ok(g.api_save(adminToken, 'CKAI9', award({ nama_anugerah: 'Hadiah Besar', tarikh: '2026-06-01', produk_projek: 'Firma Dana', nilai_hadiah_rm: 2000, sijil: up7('k7') })));

@@ -175,9 +175,9 @@ var MEASURES = {
   // KPT 7: syarikat / projek dibiayai (unik setiap tahun). Sumber: daftar KPT 7 + hadiah pertandingan (CKAI 9, nilai hadiah > 0).
   kpt7: function (kpi, rows, year, ctx) {
     var items = [];
-    rows.forEach(function (r) { if (yearOf_(r.tarikh) === year) items.push({ name: r.nama_syarikat, jenis: r.jenis_pembiaya, rm: num_(r.jumlah_rm), fakulti: r.fakulti }); });
+    rows.forEach(function (r) { if (yearOf_(r.tarikh_mula_embiayaan) === year) items.push({ name: r.nama_syarikat, jenis: r.sumber_pembiayaan, rm: num_(r.jumlah_rm), fakulti: r.fakulti }); });
     ctx.rows('CKAI9').forEach(function (r) {
-      if (yearOf_(r.tarikh) === year && num_(r.nilai_hadiah_rm) > 0) items.push({ name: r.produk_projek || r.nama_anugerah, jenis: 'Hadiah pertandingan keusahawanan', rm: num_(r.nilai_hadiah_rm), fakulti: r.fakulti });
+      if (yearOf_(r.tarikh) === year && num_(r.nilai_hadiah_rm) > 0) items.push({ name: r.produk_projek || r.nama_anugerah, jenis: 'HADIAH PERTANDINGAN', rm: num_(r.nilai_hadiah_rm), fakulti: r.fakulti });
     });
     var seen = {}, uniq = [];
     items.forEach(function (x) { var k = String(x.name || '').trim().toLowerCase(); if (k && !seen[k]) { seen[k] = 1; uniq.push(x); } });
@@ -185,7 +185,7 @@ var MEASURES = {
       value: uniq.length,
       secondary: [{ label: 'Jumlah nilai pembiayaan', value: rm_(sumOf_(items, 'rm')) }],
       breakdown: [
-        { title: 'Mengikut jenis pembiayaan', items: sortDesc_(countBy_(items, function (x) { return x.jenis; })) },
+        { title: 'Mengikut sumber pembiayaan', items: sortDesc_(countBy_(items, function (x) { return x.jenis; })) },
         { title: 'Mengikut fakulti', items: sortDesc_(countBy_(uniq, function (x) { return x.fakulti; })) }
       ]
     };

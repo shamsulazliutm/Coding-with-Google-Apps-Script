@@ -248,3 +248,7 @@ id, fakulti, nama, no_kp, no_matrik, nama_syarikat, nama_ahli_kumpulan, no_penda
 ## KPT 6 · lajur tab `KPT6_Kolaborasi`
 
 id, fakulti, tajuk, rakan_institusi, bidang_kerjasama, jenis_dokumen, bil_projek_aktiviti_berkolabrasi, nama_projek, tarikh_mula, tarikh_akhir, penerangan_impak, laporan_kolabrasi (+ pautan), bukti_dokumen (pilihan: MoU, MoA, LoA, LoI, Geran Penyelidikan), lajur sistem, dan `skop` (Tempatan / Antarabangsa, kekal untuk pecahan KPT 6). Nilai KPT 6 = jumlah `bil_projek_aktiviti_berkolabrasi` bagi rekod yang `tarikh_mula`nya dalam tahun dipilih.
+
+## KPT 7 · lajur tab `KPT7_Pembiayaan`
+
+id, fakulti, mentor, nama_syarikat, no_pendaftaran_syarikat, nama_pemilik, no_kp_pemilik, bangsa, jenis_perniagaan, jenis_pembiaya, sumber_pembiayaan (ANGEL INVESTOR, VENTURE CAPITAL, ENTITI PENDANAAN AWAM, HADIAH PERTANDINGAN, LAIN-LAIN), jumlah_rm, tarikh_mula_embiayaan, lampiran (+ lampiran_pautan), catatatn, lajur sistem. Tahun pelaporan = tahun `tarikh_mula_embiayaan`; satu syarikat dikira sekali setahun. Pecahan dashboard mengikut `sumber_pembiayaan` (hadiah CKAI 9 dikira sebagai HADIAH PERTANDINGAN).

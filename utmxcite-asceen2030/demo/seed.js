@@ -169,8 +169,8 @@ window.__demoSeed = function () {
   [['FAI', 'MoU', 'Tempatan'], ['FC', 'MoA', 'Antarabangsa'], ['FKE', 'LoI', 'Tempatan'], ['MJIIT', 'Geran penyelidikan', 'Antarabangsa'], ['FKM', 'MoU', 'Tempatan']].forEach(function (a, k) {
     save('KPT6', { fakulti: a[0], tajuk: 'Kolaborasi contoh ' + (k + 1), rakan_institusi: 'Rakan Industri Contoh ' + (k + 1), bidang_kerjasama: ['AI', 'Keusahawanan', 'Penyelidikan'][k % 3], skop: a[2], jenis_dokumen: a[1], bil_projek_aktiviti_berkolabrasi: 1 + (k % 3), nama_projek: 'Projek kolaborasi contoh ' + (k + 1), tarikh_mula: ymd(2 + k, 12), penerangan_impak: 'Impak contoh.' });
   });
-  [['FAI', 'Pelabur budiman (angel investor)', 30000], ['FC', 'Geran agensi kerajaan', 50000], ['FKE', 'Pemodal teroka (venture capital)', 120000], ['MJIIT', 'Hadiah pertandingan keusahawanan', 5000]].forEach(function (a, k) {
-    save('KPT7', { fakulti: a[0], nama_syarikat: 'Syarikat Dibiayai Contoh ' + (k + 1), jenis_pembiaya: a[1], jumlah_rm: a[2], tarikh: ymd(3 + k, 9) });
+  [['FAI', 'ANGEL INVESTOR', 30000], ['FC', 'ENTITI PENDANAAN AWAM', 50000], ['FKE', 'VENTURE CAPITAL', 120000], ['MJIIT', 'HADIAH PERTANDINGAN', 5000]].forEach(function (a, k) {
+    save('KPT7', { fakulti: a[0], nama_syarikat: 'Syarikat Dibiayai Contoh ' + (k + 1), mentor: 'Mentor Contoh ' + (k + 1), nama_pemilik: nm('Pemilik Contoh', k + 1), no_kp_pemilik: '8001' + p2(k + 1) + '105' + ('000' + k).slice(-3), bangsa: BANGSA_OPTIONS[k % 6], jenis_perniagaan: 'Teknologi', sumber_pembiayaan: a[1], jumlah_rm: a[2], tarikh_mula_embiayaan: ymd(3 + k, 9) });
   });
   CacheService.getScriptCache().remove('sess:' + sha256Hex_(tok));
 };
