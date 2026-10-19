@@ -87,7 +87,7 @@ window.__demoSeed = function () {
   var minat = ['Tinggi', 'Sederhana', 'Rendah', 'Tinggi', 'Sederhana', 'Tiada minat'], ready = ['Ada idea', 'Belum ada idea', 'Ada prototaip / MVP', 'Ada idea', 'Sudah beroperasi', 'Belum ada idea'];
   var sumber = ['Tinjauan / soal selidik', 'Saringan fakulti', 'Pendaftaran minat', 'Rujukan pensyarah / mentor', 'Penyertaan program UTMXCITE'];
   for (i = 1; i <= 36; i++) {
-    save('CKAI1', { fakulti: fac(i), nama_pelajar: nm('Pelajar Profil Contoh', i), no_matrik: 'P24' + p2(i) + '0' + (i % 9 + 1), tarikh_profiling: ymd(1 + (i % lastM), 3 + (i % 20)), sumber_profiling: sumber[i % sumber.length], tahap_minat: minat[i % 6], tahap_kesediaan: ready[i % 6], pengalaman_perniagaan: i % 7 === 0 ? 'Sedang berniaga' : 'Tiada', persetujuan: 'Ya' });
+    save('CKAI1', { fakulti: fac(i), nama_pelajar: nm('Pelajar Profil Contoh', i), no_matrik: 'P24' + p2(i) + '0' + (i % 9 + 1), tarikh_profiling: ymd(1 + (i % lastM), 3 + (i % 20)), sumber_profiling: sumber[i % sumber.length], tahap_minat: minat[i % 6], tahap_kesediaan: ready[i % 6], pengalaman_perniagaan: i % 7 === 0 ? 'Sedang berniaga' : 'Tiada' });
   }
 
   // ---- CKAI 2 & 3 Program

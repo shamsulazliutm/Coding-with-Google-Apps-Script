@@ -586,7 +586,7 @@ function buildHtml() {
     await page.click('[data-action="dview"][data-view="level"]');
     await page.waitForSelector('.grp:has-text("KAI · PERINGKAT UNIVERSITI"), .grp:has-text("KAI · Peringkat Universiti")');
   });
-  await step('CKAI 1: daftar profiling pelajar (persetujuan PDPA wajib, satu profil bagi setiap no. matrik)', async () => {
+  await step('CKAI 1: daftar profiling pelajar (satu profil bagi setiap no. matrik)', async () => {
     await goNav('CKAI 1');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
@@ -597,10 +597,6 @@ function buildHtml() {
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
     await page.selectOption('#f_tahap_minat', 'Tinggi');
     await page.selectOption('#f_tahap_kesediaan', 'Ada idea');
-    await page.selectOption('#f_persetujuan', 'Tidak');
-    await page.click('#savebtn');
-    await page.waitForSelector('[data-field="persetujuan"].invalid .err:has-text("persetujuan pelajar")');
-    await page.selectOption('#f_persetujuan', 'Ya');
     await page.screenshot({ path: path.join(out, '15-borang-profiling.png'), fullPage: true });
     await page.click('#savebtn');
     await page.waitForSelector('td:has-text("Nur Profil")');
@@ -612,7 +608,6 @@ function buildHtml() {
     await page.fill('#f_tarikh_profiling', '2026-05-06');
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
     await page.selectOption('#f_tahap_minat', 'Rendah');
-    await page.selectOption('#f_persetujuan', 'Ya');
     await page.click('#savebtn');
     await page.waitForSelector('[data-field="no_matrik"].invalid .err:has-text("Sudah didaftarkan")');
     await page.click('[data-action="cancelform"]');

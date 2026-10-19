@@ -56,7 +56,7 @@
     m.innerHTML = '<div class="dlg" role="dialog" aria-modal="true"><h2>Cadangan aliran demo (10 minit)</h2><ol>' +
       '<li><b>Dashboard awam:</b> tanpa log masuk. Tukar tahun dan tukar paparan <i>Mengikut peringkat / Mengikut fungsi</i> (enam fungsi UTMXCITE). Buka "Butiran" pada beberapa kad.</li>' +
       '<li><b>Log masuk OTP:</b> tekan Log Masuk, masukkan <code>pic.fai@utm.my</code>. Kod OTP simulasi muncul di kanan bawah.</li>' +
-      '<li><b>PIC Fakulti AI:</b> sidebar hanya menunjukkan KPI yang dibenarkan. Buka <i>CKAI 1 Profiling</i> dan tambah satu profil (cuba persetujuan PDPA = Tidak).</li>' +
+      '<li><b>PIC Fakulti AI:</b> sidebar hanya menunjukkan KPI yang dibenarkan. Buka <i>CKAI 1 Profiling</i> dan tambah satu profil.</li>' +
       '<li><b>Daftar program (CKAI 2/3):</b> tambah program Selesai dan lihat medan wajib (tarikh, tempat, penyertaan, kos, pendapatan).</li>' +
       '<li><b>Anugerah (CKAI 9):</b> tambah beberapa pelajar, muat naik sijil PDF, kemudian muat turun semula.</li>' +
       '<li><b>Inovasi pelajar (CKAI 8):</b> tapis "Status peningkatan = Calon peningkatan" untuk melihat projek yang boleh dibawa ke peringkat lebih tinggi.</li>' +

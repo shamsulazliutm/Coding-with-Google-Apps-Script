@@ -100,10 +100,6 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     await page.fill('#f_tarikh_profiling', '2026-05-05');
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
     await page.selectOption('#f_tahap_minat', 'Tinggi');
-    await page.selectOption('#f_persetujuan', 'Tidak');
-    await page.click('#savebtn');
-    await page.waitForSelector('[data-field="persetujuan"].invalid');
-    await page.selectOption('#f_persetujuan', 'Ya');
     await page.click('#savebtn');
     await page.waitForSelector('td:has-text("Pelajar Demo Baharu")');
     assert.ok((await page.locator('tbody tr').count()) === before + 1);

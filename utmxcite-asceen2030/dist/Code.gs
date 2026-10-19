@@ -204,11 +204,6 @@ function programValidate_(c, errors) {
   }
 }
 
-/** Persetujuan data peribadi mesti Ya sebelum profil boleh disimpan. */
-function profilingValidate_(c, errors) {
-  if (c.persetujuan === 'Tidak' && !errors.persetujuan) errors.persetujuan = 'Profiling hanya boleh didaftarkan dengan persetujuan pelajar (PDPA).';
-}
-
 /** No. KP (12 digit, sengkang dibuang) atau no. pasport. */
 function icValidate_(c, errors) {
   var kp = String(c.no_kp || '').replace(/\s+/g, '').toUpperCase();
@@ -635,13 +630,12 @@ var KPIS = [
     listColumns: ['id', 'nama_pelajar', 'no_matrik', 'fakulti', 'tarikh_profiling', 'tahap_minat', 'tahap_kesediaan'],
     statusField: 'tahap_minat', filter2: 'tahap_kesediaan',
     unique: ['no_matrik'],
-    validate: profilingValidate_,
     rules: [],
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama_pelajar', 'Nama pelajar', 'text', { required: true }),
-      F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('no_kp', 'No. KP / pasport', 'text'),
+      F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
       F_('program', 'Program pengajian', 'text'),
@@ -653,9 +647,7 @@ var KPIS = [
       F_('pengalaman_perniagaan', 'Pengalaman perniagaan', 'select', { options: ['Tiada', 'Pernah berniaga', 'Sedang berniaga'] }),
       F_('tahap_kesediaan', 'Tahap kesediaan', 'select', { options: ['Belum ada idea', 'Ada idea', 'Ada prototaip / MVP', 'Sudah beroperasi'] }),
       F_('kemahiran', 'Kemahiran / bakat', 'textarea', { full: true }),
-      F_('cadangan_tindakan', 'Cadangan tindakan seterusnya', 'select', { options: ['Latihan keusahawanan', 'Sokongan pengideaan', 'Pembangunan startup', 'Tiada tindakan'] }),
-      F_('persetujuan', 'Persetujuan pelajar menggunakan data peribadi (PDPA)', 'yesno', { required: true, sec: 'Pengurusan' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true })
+      F_('catatan', 'Catatan', 'textarea', { full: true, sec: 'Pengurusan' })
     ]
   },
   {
@@ -918,7 +910,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6'].indexOf(k.id) < 0) {
+  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI1'].indexOf(k.id) < 0) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }

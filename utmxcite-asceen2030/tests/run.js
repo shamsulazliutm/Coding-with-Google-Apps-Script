@@ -712,17 +712,17 @@ test('CKAI 8: sijil anugerah PDF pilihan; paparan awam tiada tajuk, pelajar atau
 let profPic, profPicFc;
 const prof = (over = {}) => Object.assign({
   fakulti: 'FM', nama_pelajar: 'Profil Satu', no_matrik: 'A24PF0001', tarikh_profiling: '2026-04-01', sumber_profiling: 'Tinjauan / soal selidik',
-  tahap_minat: 'Tinggi', tahap_kesediaan: 'Ada idea', pengalaman_perniagaan: 'Tiada', emel: 'profil1@graduate.utm.my', persetujuan: 'Ya'
+  tahap_minat: 'Tinggi', tahap_kesediaan: 'Ada idea', pengalaman_perniagaan: 'Tiada', emel: 'profil1@graduate.utm.my'
 }, over);
-test('CKAI 1 (fungsi 1 Identify Interest): PIC fakulti mendaftar profiling; persetujuan PDPA wajib', () => {
+test('CKAI 1 (fungsi 1 Identify Interest): PIC fakulti mendaftar profiling', () => {
   ok(g.api_saveUser(adminToken, { emel: 'pic.profil@utm.my', nama: 'PIC FM', peranan: 'PIC', fakulti: 'FM', kpi_akses: 'CKAI1', aktif: 'Ya' }));
   ok(g.api_saveUser(adminToken, { emel: 'pic.profil2@utm.my', nama: 'PIC FS', peranan: 'PIC', fakulti: 'FS', kpi_akses: 'CKAI1', aktif: 'Ya' }));
   profPic = login('pic.profil@utm.my'); profPicFc = login('pic.profil2@utm.my');
   deepEq(ok(g.api_session(profPic)).kpis.map(k => k.id), ['CKAI1']);
   const a = ok(g.api_save(profPic, 'CKAI1', prof({ fakulti: 'FKE' })));
   assert.strictEqual(a.fakulti, 'FM'); assert.strictEqual(a.id.slice(0, 3), 'PF-');
-  const r = g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0002', persetujuan: 'Tidak' })); fail(r, /betulkan/); assert.match(r.fields.persetujuan, /persetujuan pelajar/);
-  const r2 = g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0002', persetujuan: '' })); fail(r2, /betulkan/); assert.ok(r2.fields.persetujuan);
+  const shp = g.getSheet_('CKAI1_Profiling_Pelajar');
+  deepEq(shp.getRange(1, 1, 1, shp.getLastColumn()).getValues()[0], ['id', 'fakulti', 'nama_pelajar', 'no_kp', 'no_matrik', 'emel', 'telefon', 'program', 'tahun_pengajian', 'tarikh_profiling', 'sumber_profiling', 'tahap_minat', 'minat_bidang', 'pengalaman_perniagaan', 'tahap_kesediaan', 'kemahiran', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
   ['tahap_minat', 'sumber_profiling', 'tarikh_profiling', 'no_matrik'].forEach(k => fail(g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0003', [k]: '' })), /betulkan/));
   fail(g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0004', tahap_minat: 'Sangat tinggi' })), /betulkan/);
     assert.strictEqual(ok(g.api_list(profPicFc, 'CKAI1', {})).rows.length, 0);
@@ -1151,7 +1151,7 @@ test('PELAJAR: muat naik pukal melaporkan baris dengan pelajar tiada dan menyena
 });
 test('PELAJAR: CKAI 1 ada medan no. KP (diambil daripada PELAJAR)', () => {
   assert.ok(g.KPIS.find(k => k.id === 'CKAI1').fields.some(f => f.key === 'no_kp' && f.derived));
-  const r = ok(g.api_save(adminToken, 'CKAI1', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ001', tarikh_profiling: '2026-03-01', sumber_profiling: 'Pendaftaran minat', tahap_minat: 'Tinggi', tahap_kesediaan: 'Ada idea', persetujuan: 'Ya' }));
+  const r = ok(g.api_save(adminToken, 'CKAI1', { __nostudent: 1, fakulti: 'FAI', no_matrik: 'PJ001', tarikh_profiling: '2026-03-01', sumber_profiling: 'Pendaftaran minat', tahap_minat: 'Tinggi', tahap_kesediaan: 'Ada idea' }));
   assert.strictEqual(String(r.no_kp).replace(/^'/, ''), '010203105555');
 });
 test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP (nama dan no. KP auto) serta no. matrik dan nama dalam senarai', () => {
@@ -1162,7 +1162,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI1'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR
