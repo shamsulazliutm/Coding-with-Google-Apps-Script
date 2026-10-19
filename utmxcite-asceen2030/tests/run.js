@@ -463,7 +463,7 @@ test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
   assert.match(c.title, /Sistem Syarikat Universiti/);
 });
 test('CKAI 7: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan disahkan', () => {
-  const r = { nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234' };
+  const r = { nama_perniagaan: 'Kedai A', no_kp: '990707-07-7777' };
   ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', ...mb('2026-03'), pendapatan_bulanan: 1500.5 }, r)));
   ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', ...mb('2026-04'), pendapatan_bulanan: 2000 }, r)));
   ok(g.api_save(ckaiPicFc, 'CKAI7', Object.assign({ fakulti: 'FC', ...mb('2026-04'), pendapatan_bulanan: 499.5, nama_perniagaan: 'Gig B', no_kp: '000202-02-2222' })));
@@ -472,12 +472,12 @@ test('CKAI 7: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan
   fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', ...mb('2026-05'), pendapatan_bulanan: -5 }, r)), /betulkan/);
   fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', ...mb('2026-05'), pendapatan_bulanan: 1, no_kp: '' })), /betulkan/);
   fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', ...mb('2026-05'), pendapatan_bulanan: 1, no_kp: '12' })), /betulkan/);
-  assert.ok(ok(g.api_list(ckaiPic, 'CKAI7', {})).rows.every(x => String(x.no_kp).replace(/^'/, '') === '990101011234'));
+  assert.ok(ok(g.api_list(ckaiPic, 'CKAI7', {})).rows.every(x => String(x.no_kp).replace(/^'/, '') === '990707077777'));
   const c = card(dash(2026), 'CKAI7');
   assert.strictEqual(c.value, 4000); assert.strictEqual(c.format, 'rm');
   assert.strictEqual(c.secondary[0].value, 2); // dua perniagaan unik
   assert.strictEqual(card(dash(2027), 'CKAI7').value, 100);
-  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI7', {})).rows.length, 2); // PIC FC hanya nampak rekod FC (2026-04 dan 2027-01), bukan FKE
+  assert.strictEqual(ok(g.api_list(ckaiPicFc, 'CKAI7', {})).rows.length, 1); // PIC FC hanya nampak rekod FC (2026-04); fakulti rekod Admin 2027-01 mengikut PELAJAR (FKE)
   assert.ok(ok(g.api_list(ckaiPicFc, 'CKAI7', {})).rows.every(r => r.fakulti === 'FC'));
   const byFak = c.breakdown[0].items; assert.strictEqual(byFak[0].label, 'FKE'); assert.strictEqual(byFak[0].value, 3500.5);
 });
@@ -986,7 +986,7 @@ test('Trend Infografik (awam): nilai agregat setiap tahun, tiada data peribadi',
 
 test('CKAI 7: lampiran Monthly Financial Report (PDF) disimpan, boleh dimuat turun, pautan Drive dalam Sheet', () => {
   const up = ok(g.api_uploadFile(ckaiPic, 'CKAI7', 'Penyata_bank', { name: 'laporan-mac.pdf', data: PDF('kewangan') }));
-  const rec = ok(g.api_save(ckaiPic, 'CKAI7', { fakulti: 'FKE', ...mb('2026-08'), nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234', pendapatan_bulanan: 10, Penyata_bank: { id: up.id, name: up.name } }));
+  const rec = ok(g.api_save(ckaiPic, 'CKAI7', { fakulti: 'FKE', ...mb('2026-08'), nama_perniagaan: 'Kedai A', no_kp: '990707-07-7777', pendapatan_bulanan: 10, Penyata_bank: { id: up.id, name: up.name } }));
   assert.strictEqual(ok(g.api_downloadFile(ckaiPic, 'CKAI7', rec.id, 'Penyata_bank')).base64, PDF('kewangan'));
   fail(g.api_downloadFile(ckaiPicFc, 'CKAI7', rec.id, 'Penyata_bank'), /fakulti lain/);
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI7_Pendapatan_Pelajar');
@@ -1000,6 +1000,13 @@ test('Semua KPI: statusField / filter2 mestilah medan pilihan (select) supaya se
     const f = k.fields.find(x => x.key === key);
     assert.ok(f && f.type === 'select' && f.options && f.options.length, k.id + ': ' + key);
   }));
+});
+test('CKAI 7: pendapatan bulanan boleh RM 0 (nombor 0 atau teks "0"); kosong ditolak', () => {
+  const base = { fakulti: 'FKE', nama_perniagaan: 'Kedai Sifar', no_kp: '990707-07-7777', ...mb('2026-06') };
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ pendapatan_bulanan: 0 }, base)));
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ pendapatan_bulanan: '0' }, base, mb('2026-07'))));
+  const kosong = g.api_save(ckaiPic, 'CKAI7', Object.assign({ pendapatan_bulanan: '' }, base, mb('2026-08')));
+  assert.ok(!kosong.ok && kosong.fields.pendapatan_bulanan);
 });
 test('CKAI 7: lajur tab ikut senarai; jenis_pendapatan dan lokasi dropdown dibuang', () => {
   const sh = g.getSheet_('CKAI7_Pendapatan_Pelajar');
@@ -1202,7 +1209,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI7'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR

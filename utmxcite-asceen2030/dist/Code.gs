@@ -977,7 +977,7 @@ var STUDENT_MAPS = {
   CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
-  CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
+  CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
 };
@@ -986,7 +986,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI7'].indexOf(k.id) < 0) {
+  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6'].indexOf(k.id) < 0) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
