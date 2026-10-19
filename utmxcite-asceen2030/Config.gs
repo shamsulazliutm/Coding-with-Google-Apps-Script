@@ -343,7 +343,7 @@ var KPIS = [
       F_('jenis_staf', 'Jenis staf', 'select', { required: true, options: ['Staf akademik', 'Staf bukan akademik'] }),
       F_('jantina', 'Jantina', 'select', { options: ['Lelaki', 'Perempuan'] }),
       F_('bumiputera', 'Bumiputera', 'select', { options: BANGSA_OPTIONS }),
-      F_('jawatan', 'Jawatan', 'text', { sec: 'Kompetensi' }),
+      F_('jawatan', 'Jawatan', 'select', { options: ['PENSYARAH', 'STAF PENTADBIRAN/PENGURUSAN', 'LAIN-LAIN'], sec: 'Kompetensi' }),
       F_('bidang_kepakaran', 'Bidang kepakaran mentor', 'select', { options: BIDANG_KEPAKARAN }),
       F_('pesijilan_profesional', 'Pesijilan profesional', 'text', { hint: 'Isi jika staf telah menjalani program peningkatan kompetensi / memiliki pesijilan; kosongkan jika belum.' }),
       F_('senarai_projek_mentee', 'Senarai projek mentee', 'textarea', { full: true }),
