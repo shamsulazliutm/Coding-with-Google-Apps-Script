@@ -1041,6 +1041,18 @@ test('CKAI 6: baris ditaip tangan dalam Sheet (tempoh 01/04/2029, status Dibayar
   assert.strictEqual(c.value, 400);
   assert.strictEqual(c.breakdown[0].items[0].label, '2029-04');
 });
+test('CKAI 7: data lama (tempoh + pendapatan_rm) masih dikira sebelum setup() dijalankan', () => {
+  const sh = g.getSheet_('CKAI7_Pendapatan_Pelajar'), lc = sh.getLastColumn(), hd = sh.getRange(1, 1, 1, lc).getValues()[0];
+  const tc = hd.indexOf('tempoh') + 1 || lc + 1, pc = hd.indexOf('pendapatan_rm') + 1 || lc + 2;
+  if (!hd.includes('tempoh')) sh.getRange(1, tc).setValue('tempoh');
+  if (!hd.includes('pendapatan_rm')) sh.getRange(1, pc).setValue('pendapatan_rm');
+  const r = sh.getLastRow() + 1;
+  sh.getRange(r, 1).setValue('PP-LAMA'); sh.getRange(r, hd.indexOf('nama_perniagaan') + 1).setValue('Kedai Lama 2'); sh.getRange(r, hd.indexOf('fakulti') + 1).setValue('FKE');
+  sh.getRange(r, tc).setValue('2029-09'); sh.getRange(r, pc).setValue(777);
+  g.CacheService.getScriptCache().remove('dash:2029');
+  const base = card(dash(2029), 'CKAI7').value;
+  assert.ok(base >= 777);
+});
 test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan; baki dikira; satu rekod setiap tabung setiap bulan; Admin sahaja', () => {
   const r = (extra) => g.api_save(adminToken, 'CKAI10', Object.assign({ tempoh: '2027-03', tabung: 'Tabung Induk UTM XCITE', peruntukan_awal: 118602.64, komitmen: 0, perbelanjaan: 57641.95 }, extra));
   const a = ok(r({}));

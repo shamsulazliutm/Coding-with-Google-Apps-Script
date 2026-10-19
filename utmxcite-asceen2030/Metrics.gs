@@ -35,6 +35,11 @@ function ckai7Ym_(r) {
   var legacy = String(r.bulan_pendapatan || r.tempoh || '');
   return /^\d{4}-\d{2}/.test(legacy) ? legacy.slice(0, 7) : '';
 }
+/** CKAI 7: pendapatan bulanan (RM); jika lajur baharu masih kosong, guna lajur lama pendapatan_rm. */
+function ckai7Rm_(r) {
+  var v = r.pendapatan_bulanan;
+  return num_(v === '' || v === undefined || v === null ? r.pendapatan_rm : v);
+}
 function byMonth_(items) { return items.sort(function (a, b) { return String(a.label).localeCompare(String(b.label)); }); }
 
 function countBy_(rows, keyFn) {
@@ -75,15 +80,15 @@ var MEASURES = {
   // KPT 1: jumlah jualan agregat usahawan pelajar = jumlah `pendapatan_bulanan` dalam CKAI 7 bagi tahun dipilih.
   kpt1: function (kpi, rows, year, ctx) {
     var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(ckai7Ym_(r)) === year; });
-    var total = sumOf_(sales, 'pendapatan_bulanan');
+    var total = sales.reduce(function (t, r) { return t + ckai7Rm_(r); }, 0);
     return {
       value: round2_(total),
       secondary: [
-        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.filter(function (r) { return num_(r.pendapatan_bulanan) > 0; }).map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') }
+        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.filter(function (r) { return ckai7Rm_(r) > 0; }).map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') }
       ],
       breakdown: [
-        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_bulanan); })) },
-        { title: 'Jualan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.pendapatan_bulanan); })) }
+        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return ckai7Rm_(r); })) },
+        { title: 'Jualan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_perniagaan; }, function (r) { return ckai7Rm_(r); })) }
       ]
     };
   },
@@ -306,7 +311,7 @@ var MEASURES = {
   // CKAI 7: jumlah pendapatan usahawan pelajar (RM) bagi bulan-bulan dalam tahun itu.
   income: function (kpi, rows, year) {
     var inYear = rows.filter(function (r) { return yearOf_(ckai7Ym_(r)) === year; });
-    var total = sumOf_(inYear, 'pendapatan_bulanan');
+    var total = inYear.reduce(function (t, r) { return t + ckai7Rm_(r); }, 0);
     return {
       value: round2_(total),
       secondary: [
@@ -314,9 +319,9 @@ var MEASURES = {
         { label: 'Purata setiap perniagaan', value: rm_(distinctCount_(inYear, 'nama_perniagaan') ? total / distinctCount_(inYear, 'nama_perniagaan') : 0) }
       ],
       breakdown: [
-        { title: 'Pendapatan (RM) mengikut fakulti', items: sortDesc_(sumBy_(inYear, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_bulanan); })) },
-        { title: 'Pendapatan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(inYear, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.pendapatan_bulanan); })) },
-        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return ckai7Ym_(r); }, function (r) { return num_(r.pendapatan_bulanan); })) }
+        { title: 'Pendapatan (RM) mengikut fakulti', items: sortDesc_(sumBy_(inYear, function (r) { return r.fakulti; }, function (r) { return ckai7Rm_(r); })) },
+        { title: 'Pendapatan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(inYear, function (r) { return r.jenis_perniagaan; }, function (r) { return ckai7Rm_(r); })) },
+        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return ckai7Ym_(r); }, function (r) { return ckai7Rm_(r); })) }
       ]
     };
   },
@@ -582,7 +587,7 @@ function premiumShare_(rows, year) {
     var key = String(r.no_kp || '').replace(/^'/, '').trim().toLowerCase() || String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
     if (key === '|') return;
     var p = people[key] || (people[key] = { sum: 0, months: {} });
-    p.sum += num_(r.pendapatan_bulanan); p.months[ckai7Ym_(r)] = 1;
+    p.sum += ckai7Rm_(r); p.months[ckai7Ym_(r)] = 1;
   });
   var total = 0, premium = 0;
   Object.keys(people).forEach(function (k) {
