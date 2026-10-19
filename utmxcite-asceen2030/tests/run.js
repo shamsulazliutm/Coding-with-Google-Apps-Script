@@ -1401,9 +1401,10 @@ test('KPT5: SSU aktif berasaskan inovasi, TRL 4-6 (auto daripada CKAI 4)', () =>
   assert.strictEqual(card(dash(2026), 'KPT5').value, base + 1);
 });
 test('KPT6: kolaborasi rasmi dikira mengikut tahun dokumen', () => {
-  const kr = (o) => g.api_save(adminToken, 'KPT6', Object.assign({ fakulti: 'FM', tajuk: 'Projek A', rakan_institusi: 'Syarikat X', bidang_kerjasama: 'AI', skop: 'Tempatan', jenis_dokumen: 'MoU', bil_projek_aktiviti_berkolabrasi: 1, tarikh_mula: '2026-04-01' }, o)), kb = (o) => ok(kr(o));
+  const kr = (o) => g.api_save(adminToken, 'KPT6', Object.assign({ fakulti: 'FM', tajuk: 'Projek A', rakan_institusi: 'Syarikat X', bidang_kerjasama: 'AI', skop: 'Tempatan', jenis_dokumen: 'MoU', bil_projek_aktiviti_berkolabrasi: 1, bukti_dokumen: 'MoU', tarikh_mula: '2026-04-01' }, o)), kb = (o) => ok(kr(o));
   kb({}); kb({ tajuk: 'Projek B', skop: 'Antarabangsa', bil_projek_aktiviti_berkolabrasi: 3, tarikh_mula: '2027-01-01' });
   failF(kr({ tajuk: 'Salah', tarikh_akhir: '2026-01-01' }), 'tarikh_akhir');
+  failF(kr({ tajuk: 'Bukti', bukti_dokumen: 'Surat' }), 'bukti_dokumen');
   failF(kr({ tajuk: 'Sifar', bil_projek_aktiviti_berkolabrasi: 0 }), 'bil_projek_aktiviti_berkolabrasi');
   const c = card(dash(2026), 'KPT6'); assert.strictEqual(c.value, 1);
   assert.strictEqual(card(dash(2027), 'KPT6').value, 3);                           // jumlah projek / aktiviti

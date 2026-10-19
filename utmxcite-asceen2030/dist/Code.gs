@@ -381,7 +381,7 @@ var KPIS = [
       F_('tarikh_akhir', 'Tarikh akhir', 'date'),
       F_('penerangan_impak', 'Penerangan impak', 'textarea', { full: true }),
       F_('laporan_kolabrasi', 'Laporan kolaborasi (PDF)', 'file', { full: true, sec: 'Dokumen' }),
-      F_('bukti_dokumen', 'Bukti dokumen rasmi (PDF)', 'file', { full: true }),
+      F_('bukti_dokumen', 'Bukti dokumen', 'select', { options: ['MoU', 'MoA', 'LoA', 'LoI', 'Geran Penyelidikan'] }),
       F_('skop', 'Tempatan atau antarabangsa', 'select', { required: true, options: ['Tempatan', 'Antarabangsa'], sec: 'Pengelasan' })
     ]
   },
