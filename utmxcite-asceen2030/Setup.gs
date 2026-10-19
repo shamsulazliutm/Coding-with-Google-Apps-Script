@@ -28,6 +28,8 @@ function setup() {
     ensureSheet_(ss, kpi.sheet, kpiColumns_(kpi), kpi.fields.concat([{ key: 'id', type: 'text' }].concat(SYS_COLS.map(function (k) { return { key: k, type: 'text' }; }))));
   });
 
+  migrateColumns_(ss);
+
   listValidation_(ss.getSheetByName(SHEETS.USERS), 'peranan', [ROLES.ADMIN, ROLES.PIC]);
   listValidation_(ss.getSheetByName(SHEETS.USERS), 'aktif', YES_NO);
 
@@ -264,6 +266,29 @@ function renameColumns_(ss) {
       if (!kpi.renamed.hasOwnProperty(old)) continue;
       var i = hdr.indexOf(old);
       if (i >= 0 && hdr.indexOf(kpi.renamed[old]) < 0) { sh.getRange(1, i + 1).setValue(kpi.renamed[old]); audit_(null, 'LAJUR_DINAMA_SEMULA', kpi.id, '', old + ' -> ' + kpi.renamed[old]); }
+    }
+  });
+}
+
+/**
+ * Selepas setup() menambah lajur baharu, salin nilai lajur lama (KPI.renamed) ke lajur baharu yang KOSONG.
+ * Lajur lama tidak dipadam. Selamat dijalankan berulang kali.
+ */
+function migrateColumns_(ss) {
+  KPIS.forEach(function (kpi) {
+    if (!kpi.sheet || !kpi.renamed) return;
+    var sh = ss.getSheetByName(kpi.sheet);
+    if (!sh || sh.getLastColumn() < 1 || sh.getLastRow() < 2) return;
+    var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), n = sh.getLastRow() - 1;
+    for (var old in kpi.renamed) {
+      if (!kpi.renamed.hasOwnProperty(old)) continue;
+      var oi = hdr.indexOf(old), ni = hdr.indexOf(kpi.renamed[old]);
+      if (oi < 0 || ni < 0 || oi === ni) continue;
+      var ov = sh.getRange(2, oi + 1, n, 1).getValues(), nv = sh.getRange(2, ni + 1, n, 1).getValues(), copied = 0;
+      for (var r = 0; r < n; r++) {
+        if ((nv[r][0] === '' || nv[r][0] === null) && ov[r][0] !== '' && ov[r][0] !== null) { nv[r][0] = ov[r][0]; copied++; }
+      }
+      if (copied) { sh.getRange(2, ni + 1, n, 1).setValues(nv); audit_(null, 'LAJUR_DISALIN', kpi.id, '', old + ' -> ' + kpi.renamed[old] + ' (' + copied + ' sel)'); }
     }
   });
 }

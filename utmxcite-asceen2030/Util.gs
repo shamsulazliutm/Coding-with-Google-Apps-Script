@@ -75,7 +75,8 @@ function normalizeCell_(v, type) {
   }
   if (type === 'number') {
     if (v === '') return '';
-    var n = Number(v);
+    // Terima juga teks seperti "RM 1,200.50" yang ditaip / ditampal dalam Sheet.
+    var n = Number(typeof v === 'string' ? v.replace(/rm|\s|,/gi, '') : v);
     return isFinite(n) ? n : '';
   }
   return typeof v === 'string' ? v.trim() : v;

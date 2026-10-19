@@ -1002,6 +1002,17 @@ test('CKAI 7: lajur tab ikut senarai; jenis_pendapatan dan lokasi dropdown dibua
   deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], ['id', 'fakulti', 'bulan_pendapatan', 'nama_pelajar', 'no_kp', 'no_matrik', 'jantina', 'bangsa', 'bidang_pengajian', 'nama_perniagaan', 'no_ssu', 'no_ssm', 'jenis_milikan', 'jenis_perniagaan', 'punca_modal', 'jumlah_modal', 'pendapatan_bulanan', 'bilangan_pekerja', 'link_website', 'jumlah_jualan', 'Penyata_bank', 'Penyata_bank_pautan', 'tarikh_mula_perniagaan', 'lokasi_perniagaan_lain', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
 });
 
+test('setup(): data dalam lajur lama (tempoh, pendapatan_rm) disalin ke lajur baharu CKAI 7', () => {
+  const sh = g.getSheet_('CKAI7_Pendapatan_Pelajar');
+  const lc = sh.getLastColumn(), lr = sh.getLastRow() + 1;
+  const hdr = sh.getRange(1, 1, 1, lc).getValues()[0];
+  sh.getRange(1, lc + 1).setValue('tempoh'); sh.getRange(1, lc + 2).setValue('pendapatan_rm');
+  sh.getRange(lr, 1).setValue('PP-OLD'); sh.getRange(lr, hdr.indexOf('nama_perniagaan') + 1).setValue('Kedai Lama'); sh.getRange(lr, hdr.indexOf('fakulti') + 1).setValue('FKE');
+  sh.getRange(lr, lc + 1).setValue('2031-02'); sh.getRange(lr, lc + 2).setValue('RM 2,500.50');
+  g.setup();
+  const row = g.readTable_('CKAI7_Pendapatan_Pelajar', { pendapatan_bulanan: 'number' }).rows.find(r => r.id === 'PP-OLD');
+  assert.strictEqual(row.bulan_pendapatan, '2031-02'); assert.strictEqual(row.pendapatan_bulanan, 2500.5);
+});
 test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan; baki dikira; satu rekod setiap tabung setiap bulan; Admin sahaja', () => {
   const r = (extra) => g.api_save(adminToken, 'CKAI10', Object.assign({ tempoh: '2027-03', tabung: 'Tabung Induk UTM XCITE', peruntukan_awal: 118602.64, komitmen: 0, perbelanjaan: 57641.95 }, extra));
   const a = ok(r({}));

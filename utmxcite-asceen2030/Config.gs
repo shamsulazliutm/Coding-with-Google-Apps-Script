@@ -1005,7 +1005,22 @@ KPIS.forEach(function (k) {
   });
 });
 
-KPIS.forEach(function (k) { k.level = k.id.replace(/\d+$/, ''); });
+/**
+ * Tajuk lajur lama -> baharu (selepas pengemaskinian senarai lajur). setup() menamakan semula tajuk, atau menyalin
+ * nilai lajur lama ke lajur baharu yang masih kosong supaya data sedia ada tidak hilang.
+ */
+var COLUMN_RENAMES = {
+  CKAI7: { tempoh: 'bulan_pendapatan', pendapatan_rm: 'pendapatan_bulanan', laporan_kewangan: 'Penyata_bank', laporan_kewangan_pautan: 'Penyata_bank_pautan' },
+  KPT2: { tarikh_penubuhan: 'tarikh_pernigaan', no_pendaftaran: 'no_pendaftaran_ssm' },
+  KPT4: { projek: 'nama_projek_inovasi', trl: 'level_TRL', lampiran: 'bukti_inovasi', lampiran_pautan: 'bukti_inovasi_pautan' },
+  KPT6: { rakan: 'rakan_institusi', tarikh: 'tarikh_mula', lampiran: 'laporan_kolabrasi', lampiran_pautan: 'laporan_kolabrasi_pautan' },
+  KPT7: { tarikh: 'tarikh_mula_embiayaan' },
+  KAI6: { nama_pelajar: 'nama', no_ssm: 'no_pendaftaran_SSM' }
+};
+KPIS.forEach(function (k) {
+  k.level = k.id.replace(/\d+$/, '');
+  if (COLUMN_RENAMES[k.id]) { k.renamed = k.renamed || {}; for (var o in COLUMN_RENAMES[k.id]) { if (COLUMN_RENAMES[k.id].hasOwnProperty(o)) k.renamed[o] = COLUMN_RENAMES[k.id][o]; } }
+});
 
 /** Baris milestone awal bagi KPI berasaskan kemajuan (pemberat boleh diubah Admin). */
 var MILESTONE_SEED = {
