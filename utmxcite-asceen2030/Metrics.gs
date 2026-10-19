@@ -61,19 +61,18 @@ function countedInYear_(rows, statuses, dateField, year) {
 
 var MEASURES = {
   // ---- KPT: KPI peringkat Kementerian (Kamus KPI Keusahawanan IPT 2026-2030). Paparan awam: agregat sahaja. ----
-  // KPT 1: jumlah jualan agregat usahawan pelajar (CKAI 7), tidak termasuk geran / pembiayaan.
+  // KPT 1: jumlah jualan agregat usahawan pelajar = jumlah `jumlah_jualan` dalam CKAI 7 bagi tahun dipilih.
   kpt1: function (kpi, rows, year, ctx) {
-    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.tempoh) === year && r.jenis_pendapatan !== 'Geran / Pembiayaan'; });
-    var total = sumOf_(sales, 'pendapatan_rm');
+    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.bulan_pendapatan) === year; });
+    var total = sumOf_(sales, 'jumlah_jualan');
     return {
       value: round2_(total),
       secondary: [
-        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') },
-        { label: 'Geran / pembiayaan (dikecualikan)', value: rm_(sumOf_(ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.tempoh) === year && r.jenis_pendapatan === 'Geran / Pembiayaan'; }), 'pendapatan_rm')) }
+        { label: 'Usahawan melaporkan jualan', value: distinctCount_(sales.filter(function (r) { return num_(r.jumlah_jualan) > 0; }).map(function (r) { return { k: r.no_kp || r.no_matrik || r.nama_perniagaan }; }), 'k') }
       ],
       breakdown: [
-        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_rm); })) },
-        { title: 'Jualan (RM) mengikut jenis pendapatan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_pendapatan; }, function (r) { return num_(r.pendapatan_rm); })) }
+        { title: 'Jualan (RM) mengikut fakulti', items: sortDesc_(sumBy_(sales, function (r) { return r.fakulti; }, function (r) { return num_(r.jumlah_jualan); })) },
+        { title: 'Jualan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(sales, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.jumlah_jualan); })) }
       ]
     };
   },
@@ -295,8 +294,8 @@ var MEASURES = {
 
   // CKAI 7: jumlah pendapatan usahawan pelajar (RM) bagi bulan-bulan dalam tahun itu.
   income: function (kpi, rows, year) {
-    var inYear = rows.filter(function (r) { return yearOf_(r.tempoh) === year; });
-    var total = sumOf_(inYear, 'pendapatan_rm');
+    var inYear = rows.filter(function (r) { return yearOf_(r.bulan_pendapatan) === year; });
+    var total = sumOf_(inYear, 'pendapatan_bulanan');
     return {
       value: round2_(total),
       secondary: [
@@ -304,9 +303,9 @@ var MEASURES = {
         { label: 'Purata setiap perniagaan', value: rm_(distinctCount_(inYear, 'nama_perniagaan') ? total / distinctCount_(inYear, 'nama_perniagaan') : 0) }
       ],
       breakdown: [
-        { title: 'Pendapatan (RM) mengikut fakulti', items: sortDesc_(sumBy_(inYear, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_rm); })) },
-        { title: 'Pendapatan (RM) mengikut jenis', items: sortDesc_(sumBy_(inYear, function (r) { return r.jenis_pendapatan; }, function (r) { return num_(r.pendapatan_rm); })) },
-        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.tempoh; }, function (r) { return num_(r.pendapatan_rm); })) }
+        { title: 'Pendapatan (RM) mengikut fakulti', items: sortDesc_(sumBy_(inYear, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_bulanan); })) },
+        { title: 'Pendapatan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(inYear, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.pendapatan_bulanan); })) },
+        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.bulan_pendapatan; }, function (r) { return num_(r.pendapatan_bulanan); })) }
       ]
     };
   },
@@ -567,11 +566,11 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
 function premiumShare_(rows, year) {
   var people = {};
   rows.forEach(function (r) {
-    if (yearOf_(r.tempoh) !== year) return;
+    if (yearOf_(r.bulan_pendapatan) !== year) return;
     var key = String(r.no_kp || '').replace(/^'/, '').trim().toLowerCase() || String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
     if (key === '|') return;
     var p = people[key] || (people[key] = { sum: 0, months: {} });
-    p.sum += num_(r.pendapatan_rm); p.months[r.tempoh] = 1;
+    p.sum += num_(r.pendapatan_bulanan); p.months[r.bulan_pendapatan] = 1;
   });
   var total = 0, premium = 0;
   Object.keys(people).forEach(function (k) {

@@ -769,24 +769,33 @@ var KPIS = [
     id: 'CKAI7', prefix: 'PP', sheet: 'CKAI7_Pendapatan_Pelajar', fungsi: 'prestasi', group: 'Center', entry: 'faculty',
     title: 'CKAI 7 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
     unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'tempoh', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_pendapatan', 'pendapatan_rm'],
-    statusField: 'jenis_pendapatan',
-    rules: [{ when: { field: 'lokasi_perniagaan', in: ['Lain-lain'] }, require: ['lokasi_perniagaan_lain'] }],
+    listColumns: ['id', 'bulan_pendapatan', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_perniagaan', 'pendapatan_bulanan'],
+    statusField: null,
+    rules: [],
     validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
-      F_('tempoh', 'Bulan', 'month', { required: true }),
-      F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true }),
-      F_('lokasi_perniagaan', 'Lokasi perniagaan', 'select', { options: LOKASI_PERNIAGAAN }),
-      F_('lokasi_perniagaan_lain', 'Nama lokasi lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
+      F_('bulan_pendapatan', 'Bulan', 'month', { required: true }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text'),
+      F_('jantina', 'Jantina', 'text'),
+      F_('bangsa', 'Bangsa', 'text'),
+      F_('bidang_pengajian', 'Bidang pengajian', 'text'),
+      F_('nama_perniagaan', 'Nama perniagaan / syarikat', 'text', { required: true, sec: 'Perniagaan' }),
       F_('no_ssu', 'No. pendaftaran SSU (jika ada)', 'text'),
-      F_('jenis_pendapatan', 'Jenis pendapatan', 'select', { required: true, options: ['Jualan produk', 'Perkhidmatan / Gig', 'Geran / Pembiayaan', 'Lain-lain'] }),
-      F_('pendapatan_rm', 'Pendapatan (RM)', 'number', { required: true, min: 0 }),
-      F_('laporan_kewangan', 'Attach your Monthly Financial Report', 'file', { full: true, sec: 'Dokumen', hint: 'Laporan kewangan bulanan dalam format PDF, maksimum 5 MB.' }),
-      F_('lampiran', 'Pautan lampiran bukti', 'url', {}),
+      F_('no_ssm', 'No. pendaftaran SSM (jika ada)', 'text'),
+      F_('jenis_milikan', 'Jenis milikan', 'text'),
+      F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
+      F_('punca_modal', 'Punca modal', 'text', { sec: 'Kewangan' }),
+      F_('jumlah_modal', 'Jumlah modal (RM)', 'number', { min: 0 }),
+      F_('pendapatan_bulanan', 'Pendapatan bulanan (RM)', 'number', { required: true, min: 0 }),
+      F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
+      F_('link_website', 'Pautan laman web', 'text'),
+      F_('jumlah_jualan', 'Jumlah jualan (RM)', 'number', { min: 0 }),
+      F_('Penyata_bank', 'Penyata bank (PDF)', 'file', { full: true, sec: 'Dokumen', hint: 'PDF sahaja, maksimum 5 MB.' }),
+      F_('tarikh_mula_perniagaan', 'Tarikh mula perniagaan', 'date'),
+      F_('lokasi_perniagaan_lain', 'Lokasi perniagaan', 'text'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
   },
@@ -900,7 +909,7 @@ var STUDENT_MAPS = {
   CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
-  CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
+  CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   KPT2: { nama_pelajar: 'nama', no_kp: 'no_kp', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   KPT4: { nama_pelajar: 'nama', no_kp: 'no_kp' }
 };
@@ -909,7 +918,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI1'].indexOf(k.id) < 0) {
+  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI1', 'CKAI7'].indexOf(k.id) < 0) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }

@@ -260,3 +260,7 @@ id, fakulti, nama, no_kp, no_matrik, nama_startup, nama_ahli_kumpulan, no_pendaf
 ## KAI 4 · lajur tab `KAI4_GiGA`
 
 id, fakulti, nama_pelajar, no_kp, no_matrik, emel, telefon, tahun_pengajian, program, bidang_gig, mentor_nama, gig_pendapatan, lampiran, catatan, lajur sistem. Setiap rekod = satu pelajar GiGA, dikira pada tahun rekod dicipta (`dicipta_pada`; tiada medan status / tarikh). Pecahan: fakulti (minimum 2 setiap fakulti) dan bidang gig; jumlah pendapatan gig dipaparkan sebagai maklumat tambahan.
+
+## CKAI 7 · lajur tab `CKAI7_Pendapatan_Pelajar`
+
+id, fakulti, bulan_pendapatan, nama_pelajar, no_kp, no_matrik, jantina, bangsa, bidang_pengajian, nama_perniagaan, no_ssu, no_ssm, jenis_milikan, jenis_perniagaan, punca_modal, jumlah_modal, pendapatan_bulanan, bilangan_pekerja, link_website, jumlah_jualan, Penyata_bank (+ Penyata_bank_pautan), tarikh_mula_perniagaan, lokasi_perniagaan_lain, catatan, lajur sistem. Nilai CKAI 7 dan ukuran Pekerjaan Premium (purata sebulan > RM4,000) guna `pendapatan_bulanan`; **KPT 1 (jualan agregat) guna `jumlah_jualan`**. Nama, no. KP, jantina, bangsa dan bidang pengajian diambil daripada PELAJAR. Medan `jenis_pendapatan`, `laporan_kewangan` dan `lokasi_perniagaan` (dropdown) dibuang.

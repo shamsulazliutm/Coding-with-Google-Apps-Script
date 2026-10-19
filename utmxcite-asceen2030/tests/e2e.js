@@ -302,14 +302,13 @@ function buildHtml() {
     await goNav('CKAI 7');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
-    await page.waitForSelector('#f_tempoh');
+    await page.waitForSelector('#f_bulan_pendapatan');
     await page.selectOption('#f_fakulti', 'FC');
-    await page.fill('#f_tempoh', '2026-05');
+    await page.fill('#f_bulan_pendapatan', '2026-05');
     await page.fill('#f_nama_perniagaan', 'Kedai E2E');
     await page.fill('#f_no_matrik', 'A24CS0001'); await page.press('#f_no_matrik', 'Tab');
     await page.waitForSelector('#stu_status.ok');
-    await page.selectOption('#f_jenis_pendapatan', 'Jualan produk');
-    await page.fill('#f_pendapatan_rm', '1500.5');
+    await page.fill('#f_pendapatan_bulanan', '1500.5');
     await page.screenshot({ path: path.join(out, '8-borang-ckai4.png'), fullPage: true });
     await page.click('#savebtn');
     await page.waitForSelector('td:has-text("Kedai E2E")');
