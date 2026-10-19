@@ -24,6 +24,17 @@ function distinctCount_(rows, field) {
   rows.forEach(function (r) { var v = String(r[field] || '').trim().toLowerCase(); if (v) seen[v] = 1; });
   return Object.keys(seen).length;
 }
+/** CKAI 7: bulan pelaporan 'YYYY-MM' daripada lajur Tahun + Bulan (nama atau nombor); rekod lama guna bulan_pendapatan / tempoh. */
+function ckai7Ym_(r) {
+  var y = num_(r.Tahun), mo = String(r.Bulan === undefined ? '' : r.Bulan).trim().toLowerCase(), idx = -1;
+  if (y && mo) {
+    if (/^\d{1,2}$/.test(mo)) idx = parseInt(mo, 10) - 1;
+    else for (var i = 0; i < BULAN_MS.length; i++) { if (BULAN_MS[i].toLowerCase() === mo || BULAN_MS[i].toLowerCase().slice(0, 3) === mo.slice(0, 3)) { idx = i; break; } }
+    if (idx >= 0 && idx < 12) return y + '-' + ('0' + (idx + 1)).slice(-2);
+  }
+  var legacy = String(r.bulan_pendapatan || r.tempoh || '');
+  return /^\d{4}-\d{2}/.test(legacy) ? legacy.slice(0, 7) : '';
+}
 function byMonth_(items) { return items.sort(function (a, b) { return String(a.label).localeCompare(String(b.label)); }); }
 
 function countBy_(rows, keyFn) {
@@ -63,7 +74,7 @@ var MEASURES = {
   // ---- KPT: KPI peringkat Kementerian (Kamus KPI Keusahawanan IPT 2026-2030). Paparan awam: agregat sahaja. ----
   // KPT 1: jumlah jualan agregat usahawan pelajar = jumlah `jumlah_jualan` dalam CKAI 7 bagi tahun dipilih.
   kpt1: function (kpi, rows, year, ctx) {
-    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.bulan_pendapatan) === year; });
+    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(ckai7Ym_(r)) === year; });
     var total = sumOf_(sales, 'jumlah_jualan');
     return {
       value: round2_(total),
@@ -294,7 +305,7 @@ var MEASURES = {
 
   // CKAI 7: jumlah pendapatan usahawan pelajar (RM) bagi bulan-bulan dalam tahun itu.
   income: function (kpi, rows, year) {
-    var inYear = rows.filter(function (r) { return yearOf_(r.bulan_pendapatan) === year; });
+    var inYear = rows.filter(function (r) { return yearOf_(ckai7Ym_(r)) === year; });
     var total = sumOf_(inYear, 'pendapatan_bulanan');
     return {
       value: round2_(total),
@@ -305,7 +316,7 @@ var MEASURES = {
       breakdown: [
         { title: 'Pendapatan (RM) mengikut fakulti', items: sortDesc_(sumBy_(inYear, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_bulanan); })) },
         { title: 'Pendapatan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(inYear, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.pendapatan_bulanan); })) },
-        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.bulan_pendapatan; }, function (r) { return num_(r.pendapatan_bulanan); })) }
+        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return ckai7Ym_(r); }, function (r) { return num_(r.pendapatan_bulanan); })) }
       ]
     };
   },
@@ -567,11 +578,11 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
 function premiumShare_(rows, year) {
   var people = {};
   rows.forEach(function (r) {
-    if (yearOf_(r.bulan_pendapatan) !== year) return;
+    if (yearOf_(ckai7Ym_(r)) !== year) return;
     var key = String(r.no_kp || '').replace(/^'/, '').trim().toLowerCase() || String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
     if (key === '|') return;
     var p = people[key] || (people[key] = { sum: 0, months: {} });
-    p.sum += num_(r.pendapatan_bulanan); p.months[r.bulan_pendapatan] = 1;
+    p.sum += num_(r.pendapatan_bulanan); p.months[ckai7Ym_(r)] = 1;
   });
   var total = 0, premium = 0;
   Object.keys(people).forEach(function (k) {

@@ -275,6 +275,7 @@ function renameColumns_(ss) {
  * Lajur lama tidak dipadam. Selamat dijalankan berulang kali.
  */
 function migrateColumns_(ss) {
+  migrateCkai7Month_(ss);
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);
@@ -291,4 +292,25 @@ function migrateColumns_(ss) {
       if (copied) { sh.getRange(2, ni + 1, n, 1).setValues(nv); audit_(null, 'LAJUR_DISALIN', kpi.id, '', old + ' -> ' + kpi.renamed[old] + ' (' + copied + ' sel)'); }
     }
   });
+}
+
+/** CKAI 7: isi Tahun dan Bulan (nama) daripada lajur lama bulan_pendapatan / tempoh (YYYY-MM) bagi baris yang Tahun/Bulan masih kosong. */
+function migrateCkai7Month_(ss) {
+  var kpi = getKpi_('CKAI7'), sh = ss.getSheetByName(kpi.sheet);
+  if (!sh || sh.getLastColumn() < 1 || sh.getLastRow() < 2) return;
+  var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), n = sh.getLastRow() - 1;
+  var ti = hdr.indexOf('Tahun'), bi = hdr.indexOf('Bulan');
+  var src = hdr.indexOf('bulan_pendapatan') >= 0 ? hdr.indexOf('bulan_pendapatan') : hdr.indexOf('tempoh');
+  if (ti < 0 || bi < 0 || src < 0) return;
+  var sv = sh.getRange(2, src + 1, n, 1).getValues(), tv = sh.getRange(2, ti + 1, n, 1).getValues(), bv = sh.getRange(2, bi + 1, n, 1).getValues(), changed = 0;
+  for (var r = 0; r < n; r++) {
+    if ((tv[r][0] !== '' && tv[r][0] !== null) || (bv[r][0] !== '' && bv[r][0] !== null)) continue;
+    var v = sv[r][0], iso = normalizeCell_(v, 'month'), mm = /^(\d{4})-(\d{2})$/.exec(String(iso));
+    if (!mm) continue;
+    tv[r][0] = parseInt(mm[1], 10); bv[r][0] = BULAN_MS[parseInt(mm[2], 10) - 1]; changed++;
+  }
+  if (changed) {
+    sh.getRange(2, ti + 1, n, 1).setValues(tv); sh.getRange(2, bi + 1, n, 1).setValues(bv);
+    audit_(null, 'LAJUR_DISALIN', 'CKAI7', '', 'bulan -> Tahun + Bulan (' + changed + ' baris)');
+  }
 }

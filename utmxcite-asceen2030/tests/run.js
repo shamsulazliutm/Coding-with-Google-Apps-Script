@@ -228,6 +228,8 @@ test('ID berjujukan tidak berulang selepas padam', () => {
 });
 
 console.log('Dashboard');
+const MBL = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+const mb = (ym) => { const p = String(ym).split('-'); return { Tahun: Number(p[0]), Bulan: p[1] && p[1].length === 2 ? (MBL[Number(p[1]) - 1] || p[1]) : p[1] }; };
 const dash = (y) => ok(g.api_dashboard(y));
 const card = (d, id) => d.kpis.find(k => k.id === id);
 test('dashboard awam tanpa log masuk: 7 KPT + 7 KPI + 10 CKAI', () => {
@@ -462,14 +464,14 @@ test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
 });
 test('CKAI 7: pendapatan RM dijumlahkan mengikut bulan dalam tahun; format bulan disahkan', () => {
   const r = { nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234' };
-  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', bulan_pendapatan: '2026-03', pendapatan_bulanan: 1500.5 }, r)));
-  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', bulan_pendapatan: '2026-04', pendapatan_bulanan: 2000 }, r)));
-  ok(g.api_save(ckaiPicFc, 'CKAI7', Object.assign({ fakulti: 'FC', bulan_pendapatan: '2026-04', pendapatan_bulanan: 499.5, nama_perniagaan: 'Gig B', no_kp: '000202-02-2222' })));
-  ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FC', bulan_pendapatan: '2027-01', pendapatan_bulanan: 100 }, r)));
-  ['2026-13', '2026-00', '26-03', '2026-3', 'bukan-bulan'].forEach(b => fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', bulan_pendapatan: b, pendapatan_bulanan: 1 }, r)), /betulkan/));
-  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', bulan_pendapatan: '2026-05', pendapatan_bulanan: -5 }, r)), /betulkan/);
-  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', bulan_pendapatan: '2026-05', pendapatan_bulanan: 1, no_kp: '' })), /betulkan/);
-  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', bulan_pendapatan: '2026-05', pendapatan_bulanan: 1, no_kp: '12' })), /betulkan/);
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', ...mb('2026-03'), pendapatan_bulanan: 1500.5 }, r)));
+  ok(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', ...mb('2026-04'), pendapatan_bulanan: 2000 }, r)));
+  ok(g.api_save(ckaiPicFc, 'CKAI7', Object.assign({ fakulti: 'FC', ...mb('2026-04'), pendapatan_bulanan: 499.5, nama_perniagaan: 'Gig B', no_kp: '000202-02-2222' })));
+  ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FC', ...mb('2027-01'), pendapatan_bulanan: 100 }, r)));
+  ['2026-13', '2026-00', '26-03', '2026-3', 'bukan-bulan'].forEach(b => fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', ...mb(b), pendapatan_bulanan: 1 }, r)), /betulkan/));
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({ fakulti: 'FKE', ...mb('2026-05'), pendapatan_bulanan: -5 }, r)), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', ...mb('2026-05'), pendapatan_bulanan: 1, no_kp: '' })), /betulkan/);
+  fail(g.api_save(ckaiPic, 'CKAI7', Object.assign({}, r, { fakulti: 'FKE', ...mb('2026-05'), pendapatan_bulanan: 1, no_kp: '12' })), /betulkan/);
   assert.ok(ok(g.api_list(ckaiPic, 'CKAI7', {})).rows.every(x => String(x.no_kp).replace(/^'/, '') === '990101011234'));
   const c = card(dash(2026), 'CKAI7');
   assert.strictEqual(c.value, 4000); assert.strictEqual(c.format, 'rm');
@@ -957,7 +959,7 @@ test('setup() menamakan semula lajur kolej_fakulti kepada lokasi dengan data dik
 });
 
 test('Ukuran Pekerjaan Premium Tier 1: purata pendapatan sebulan > RM4,000 dibahagi semua usahawan yang melaporkan (CKAI 7)', () => {
-  const rec = (n, m, rm, kp) => ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', bulan_pendapatan: m, nama_perniagaan: n, no_kp: kp, pendapatan_bulanan: rm }));
+  const rec = (n, m, rm, kp) => ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', ...mb(m), nama_perniagaan: n, no_kp: kp, pendapatan_bulanan: rm }));
   assert.deepStrictEqual(JSON.parse(JSON.stringify({ t: dash(2029).premium.total, p: dash(2029).premium.pct })), { t: 0, p: 0 }); // tiada data: 0%
   rec('Niaga A', '2029-01', 5000, '000000000001'); rec('Niaga A', '2029-02', 3500, '000000000001');   // purata 4250 > 4000: premium
   rec('Niaga B', '2029-01', 2000, '000000000002');                                            // 2000: bukan
@@ -978,13 +980,13 @@ test('Trend Infografik (awam): nilai agregat setiap tahun, tiada data peribadi',
   assert.strictEqual(tr[3].premiumTotal, 4); assert.strictEqual(tr[3].premiumPct, 50); // 2029: data ujian premium
   const sj = JSON.stringify(tr);
   ['Niaga A', 'Kedai A', '990101', 'pic.', 'admin@'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
-  ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', bulan_pendapatan: '2028-02', nama_perniagaan: 'Trend X', no_kp: '000000000009', pendapatan_bulanan: 5000 }));
+  ok(g.api_save(adminToken, 'CKAI7', { fakulti: 'FC', ...mb('2028-02'), nama_perniagaan: 'Trend X', no_kp: '000000000009', pendapatan_bulanan: 5000 }));
   assert.strictEqual(ok(g.api_trend())[2].premiumTotal, 1); // cache trend dibatalkan selepas tulis
 });
 
 test('CKAI 7: lampiran Monthly Financial Report (PDF) disimpan, boleh dimuat turun, pautan Drive dalam Sheet', () => {
   const up = ok(g.api_uploadFile(ckaiPic, 'CKAI7', 'Penyata_bank', { name: 'laporan-mac.pdf', data: PDF('kewangan') }));
-  const rec = ok(g.api_save(ckaiPic, 'CKAI7', { fakulti: 'FKE', bulan_pendapatan: '2026-08', nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234', pendapatan_bulanan: 10, Penyata_bank: { id: up.id, name: up.name } }));
+  const rec = ok(g.api_save(ckaiPic, 'CKAI7', { fakulti: 'FKE', ...mb('2026-08'), nama_perniagaan: 'Kedai A', no_kp: '990101-01-1234', pendapatan_bulanan: 10, Penyata_bank: { id: up.id, name: up.name } }));
   assert.strictEqual(ok(g.api_downloadFile(ckaiPic, 'CKAI7', rec.id, 'Penyata_bank')).base64, PDF('kewangan'));
   fail(g.api_downloadFile(ckaiPicFc, 'CKAI7', rec.id, 'Penyata_bank'), /fakulti lain/);
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI7_Pendapatan_Pelajar');
@@ -1001,7 +1003,7 @@ test('Semua KPI: statusField / filter2 mestilah medan pilihan (select) supaya se
 });
 test('CKAI 7: lajur tab ikut senarai; jenis_pendapatan dan lokasi dropdown dibuang', () => {
   const sh = g.getSheet_('CKAI7_Pendapatan_Pelajar');
-  deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], ['id', 'fakulti', 'bulan_pendapatan', 'nama_pelajar', 'no_kp', 'no_matrik', 'jantina', 'bangsa', 'bidang_pengajian', 'nama_perniagaan', 'no_ssu', 'no_ssm', 'jenis_milikan', 'jenis_perniagaan', 'punca_modal', 'jumlah_modal', 'pendapatan_bulanan', 'bilangan_pekerja', 'link_website', 'jumlah_jualan', 'Penyata_bank', 'Penyata_bank_pautan', 'tarikh_mula_perniagaan', 'lokasi_perniagaan_lain', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
+  deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], ['id', 'fakulti', 'Tahun', 'Bulan', 'nama_pelajar', 'no_kp', 'no_matrik', 'jantina', 'bangsa', 'bidang_pengajian', 'nama_perniagaan', 'no_ssu', 'no_ssm', 'jenis_milikan', 'jenis_perniagaan', 'punca_modal', 'jumlah_modal', 'pendapatan_bulanan', 'bilangan_pekerja', 'link_website', 'jumlah_jualan', 'Penyata_bank', 'Penyata_bank_pautan', 'tarikh_mula_perniagaan', 'lokasi_perniagaan_lain', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
 });
 
 test('setup(): data dalam lajur lama (tempoh, pendapatan_rm) disalin ke lajur baharu CKAI 7', () => {
@@ -1013,7 +1015,7 @@ test('setup(): data dalam lajur lama (tempoh, pendapatan_rm) disalin ke lajur ba
   sh.getRange(lr, lc + 1).setValue('2031-02'); sh.getRange(lr, lc + 2).setValue('RM 2,500.50');
   g.setup();
   const row = g.readTable_('CKAI7_Pendapatan_Pelajar', { pendapatan_bulanan: 'number' }).rows.find(r => r.id === 'PP-OLD');
-  assert.strictEqual(row.bulan_pendapatan, '2031-02'); assert.strictEqual(row.pendapatan_bulanan, 2500.5);
+  assert.strictEqual(row.pendapatan_bulanan, 2500.5); assert.strictEqual(row.Tahun, 2031); assert.strictEqual(row.Bulan, 'Februari');
 });
 test('Bacaan Sheet: bulan / tarikh ditaip tangan diseragamkan', () => {
   const n = (v, ty) => g.normalizeCell_(v, ty);
@@ -1386,12 +1388,12 @@ test('KPT: PIC fakulti boleh diberi KPT2-KPT7 tetapi bukan KPT1/KPT5 (auto)', ()
   assert.strictEqual(ok(g.api_session(adminToken)).teras.length, 3);
 });
 test('KPT1: jualan agregat = jumlah_jualan CKAI 7', () => {
-  const sv = (o) => ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FM', bulan_pendapatan: '2026-02', nama_perniagaan: 'Kopi KPT', no_kp: '990101-01-1111', no_matrik: 'KPT-M1', pendapatan_bulanan: 100, jumlah_jualan: 1000 }, o)));
-  sv({ bulan_pendapatan: '2026-03' }); sv({ pendapatan_bulanan: 5000, bulan_pendapatan: '2026-04', jumlah_jualan: 0 });  // pendapatan bulanan bukan jualan
+  const sv = (o) => ok(g.api_save(adminToken, 'CKAI7', Object.assign({ fakulti: 'FM', ...mb('2026-02'), nama_perniagaan: 'Kopi KPT', no_kp: '990101-01-1111', no_matrik: 'KPT-M1', pendapatan_bulanan: 100, jumlah_jualan: 1000 }, o)));
+  sv({ ...mb('2026-03') }); sv({ pendapatan_bulanan: 5000, ...mb('2026-04'), jumlah_jualan: 0 });  // pendapatan bulanan bukan jualan
   const c = card(dash(2026), 'KPT1');
   assert.ok(c.value >= 1000 && c.format === 'rm');
   const base = c.value;
-  sv({ bulan_pendapatan: '2026-05', jumlah_jualan: 250 });
+  sv({ ...mb('2026-05'), jumlah_jualan: 250 });
   assert.strictEqual(card(dash(2026), 'KPT1').value, base + 250);
   assert.ok(!JSON.stringify(c).includes('KPT-M1') && !JSON.stringify(c).includes('990101'));
 });

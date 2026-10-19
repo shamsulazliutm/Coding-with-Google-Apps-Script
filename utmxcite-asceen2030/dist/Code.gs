@@ -49,6 +49,7 @@ var BIDANG_PENGAJIAN = [
   'PERKHIDMATAN',
   'LAIN-LAIN'
 ];
+var BULAN_MS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -835,13 +836,14 @@ var KPIS = [
     id: 'CKAI7', prefix: 'PP', sheet: 'CKAI7_Pendapatan_Pelajar', fungsi: 'prestasi', group: 'Center', entry: 'faculty',
     title: 'CKAI 7 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
     unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'bulan_pendapatan', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_perniagaan', 'pendapatan_bulanan'],
+    listColumns: ['id', 'Tahun', 'Bulan', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_perniagaan', 'pendapatan_bulanan'],
     statusField: null,
     rules: [],
     validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
-      F_('bulan_pendapatan', 'Bulan', 'month', { required: true }),
+      F_('Tahun', 'Tahun', 'number', { required: true, min: 2026, max: 2030 }),
+      F_('Bulan', 'Bulan', 'select', { required: true, options: BULAN_MS }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text'),
@@ -1011,7 +1013,7 @@ KPIS.forEach(function (k) {
  * nilai lajur lama ke lajur baharu yang masih kosong supaya data sedia ada tidak hilang.
  */
 var COLUMN_RENAMES = {
-  CKAI7: { tempoh: 'bulan_pendapatan', pendapatan_rm: 'pendapatan_bulanan', laporan_kewangan: 'Penyata_bank', laporan_kewangan_pautan: 'Penyata_bank_pautan' },
+  CKAI7: { pendapatan_rm: 'pendapatan_bulanan', laporan_kewangan: 'Penyata_bank', laporan_kewangan_pautan: 'Penyata_bank_pautan' },
   KPT2: { tarikh_penubuhan: 'tarikh_pernigaan', no_pendaftaran: 'no_pendaftaran_ssm' },
   KPT4: { projek: 'nama_projek_inovasi', trl: 'level_TRL', lampiran: 'bukti_inovasi', lampiran_pautan: 'bukti_inovasi_pautan' },
   KPT6: { rakan: 'rakan_institusi', tarikh: 'tarikh_mula', lampiran: 'laporan_kolabrasi', lampiran_pautan: 'laporan_kolabrasi_pautan' },
@@ -1627,6 +1629,7 @@ function renameColumns_(ss) {
  * Lajur lama tidak dipadam. Selamat dijalankan berulang kali.
  */
 function migrateColumns_(ss) {
+  migrateCkai7Month_(ss);
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);
@@ -1643,6 +1646,27 @@ function migrateColumns_(ss) {
       if (copied) { sh.getRange(2, ni + 1, n, 1).setValues(nv); audit_(null, 'LAJUR_DISALIN', kpi.id, '', old + ' -> ' + kpi.renamed[old] + ' (' + copied + ' sel)'); }
     }
   });
+}
+
+/** CKAI 7: isi Tahun dan Bulan (nama) daripada lajur lama bulan_pendapatan / tempoh (YYYY-MM) bagi baris yang Tahun/Bulan masih kosong. */
+function migrateCkai7Month_(ss) {
+  var kpi = getKpi_('CKAI7'), sh = ss.getSheetByName(kpi.sheet);
+  if (!sh || sh.getLastColumn() < 1 || sh.getLastRow() < 2) return;
+  var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), n = sh.getLastRow() - 1;
+  var ti = hdr.indexOf('Tahun'), bi = hdr.indexOf('Bulan');
+  var src = hdr.indexOf('bulan_pendapatan') >= 0 ? hdr.indexOf('bulan_pendapatan') : hdr.indexOf('tempoh');
+  if (ti < 0 || bi < 0 || src < 0) return;
+  var sv = sh.getRange(2, src + 1, n, 1).getValues(), tv = sh.getRange(2, ti + 1, n, 1).getValues(), bv = sh.getRange(2, bi + 1, n, 1).getValues(), changed = 0;
+  for (var r = 0; r < n; r++) {
+    if ((tv[r][0] !== '' && tv[r][0] !== null) || (bv[r][0] !== '' && bv[r][0] !== null)) continue;
+    var v = sv[r][0], iso = normalizeCell_(v, 'month'), mm = /^(\d{4})-(\d{2})$/.exec(String(iso));
+    if (!mm) continue;
+    tv[r][0] = parseInt(mm[1], 10); bv[r][0] = BULAN_MS[parseInt(mm[2], 10) - 1]; changed++;
+  }
+  if (changed) {
+    sh.getRange(2, ti + 1, n, 1).setValues(tv); sh.getRange(2, bi + 1, n, 1).setValues(bv);
+    audit_(null, 'LAJUR_DISALIN', 'CKAI7', '', 'bulan -> Tahun + Bulan (' + changed + ' baris)');
+  }
 }
 
 // ===== Auth.gs =====
@@ -2458,6 +2482,17 @@ function distinctCount_(rows, field) {
   rows.forEach(function (r) { var v = String(r[field] || '').trim().toLowerCase(); if (v) seen[v] = 1; });
   return Object.keys(seen).length;
 }
+/** CKAI 7: bulan pelaporan 'YYYY-MM' daripada lajur Tahun + Bulan (nama atau nombor); rekod lama guna bulan_pendapatan / tempoh. */
+function ckai7Ym_(r) {
+  var y = num_(r.Tahun), mo = String(r.Bulan === undefined ? '' : r.Bulan).trim().toLowerCase(), idx = -1;
+  if (y && mo) {
+    if (/^\d{1,2}$/.test(mo)) idx = parseInt(mo, 10) - 1;
+    else for (var i = 0; i < BULAN_MS.length; i++) { if (BULAN_MS[i].toLowerCase() === mo || BULAN_MS[i].toLowerCase().slice(0, 3) === mo.slice(0, 3)) { idx = i; break; } }
+    if (idx >= 0 && idx < 12) return y + '-' + ('0' + (idx + 1)).slice(-2);
+  }
+  var legacy = String(r.bulan_pendapatan || r.tempoh || '');
+  return /^\d{4}-\d{2}/.test(legacy) ? legacy.slice(0, 7) : '';
+}
 function byMonth_(items) { return items.sort(function (a, b) { return String(a.label).localeCompare(String(b.label)); }); }
 
 function countBy_(rows, keyFn) {
@@ -2497,7 +2532,7 @@ var MEASURES = {
   // ---- KPT: KPI peringkat Kementerian (Kamus KPI Keusahawanan IPT 2026-2030). Paparan awam: agregat sahaja. ----
   // KPT 1: jumlah jualan agregat usahawan pelajar = jumlah `jumlah_jualan` dalam CKAI 7 bagi tahun dipilih.
   kpt1: function (kpi, rows, year, ctx) {
-    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(r.bulan_pendapatan) === year; });
+    var sales = ctx.rows('CKAI7').filter(function (r) { return yearOf_(ckai7Ym_(r)) === year; });
     var total = sumOf_(sales, 'jumlah_jualan');
     return {
       value: round2_(total),
@@ -2728,7 +2763,7 @@ var MEASURES = {
 
   // CKAI 7: jumlah pendapatan usahawan pelajar (RM) bagi bulan-bulan dalam tahun itu.
   income: function (kpi, rows, year) {
-    var inYear = rows.filter(function (r) { return yearOf_(r.bulan_pendapatan) === year; });
+    var inYear = rows.filter(function (r) { return yearOf_(ckai7Ym_(r)) === year; });
     var total = sumOf_(inYear, 'pendapatan_bulanan');
     return {
       value: round2_(total),
@@ -2739,7 +2774,7 @@ var MEASURES = {
       breakdown: [
         { title: 'Pendapatan (RM) mengikut fakulti', items: sortDesc_(sumBy_(inYear, function (r) { return r.fakulti; }, function (r) { return num_(r.pendapatan_bulanan); })) },
         { title: 'Pendapatan (RM) mengikut jenis perniagaan', items: sortDesc_(sumBy_(inYear, function (r) { return r.jenis_perniagaan; }, function (r) { return num_(r.pendapatan_bulanan); })) },
-        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return r.bulan_pendapatan; }, function (r) { return num_(r.pendapatan_bulanan); })) }
+        { title: 'Pendapatan (RM) mengikut bulan', items: byMonth_(sumBy_(inYear, function (r) { return ckai7Ym_(r); }, function (r) { return num_(r.pendapatan_bulanan); })) }
       ]
     };
   },
@@ -3001,11 +3036,11 @@ function buildKpiCard_(kpi, rows, year, targets, ctx) {
 function premiumShare_(rows, year) {
   var people = {};
   rows.forEach(function (r) {
-    if (yearOf_(r.bulan_pendapatan) !== year) return;
+    if (yearOf_(ckai7Ym_(r)) !== year) return;
     var key = String(r.no_kp || '').replace(/^'/, '').trim().toLowerCase() || String(r.no_matrik || '').replace(/^'/, '').trim().toLowerCase() || (String(r.nama_perniagaan || '').trim().toLowerCase() + '|' + String(r.fakulti || ''));
     if (key === '|') return;
     var p = people[key] || (people[key] = { sum: 0, months: {} });
-    p.sum += num_(r.pendapatan_bulanan); p.months[r.bulan_pendapatan] = 1;
+    p.sum += num_(r.pendapatan_bulanan); p.months[ckai7Ym_(r)] = 1;
   });
   var total = 0, premium = 0;
   Object.keys(people).forEach(function (k) {

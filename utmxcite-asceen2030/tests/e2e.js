@@ -302,9 +302,9 @@ function buildHtml() {
     await goNav('CKAI 7');
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
-    await page.waitForSelector('#f_bulan_pendapatan');
+    await page.waitForSelector('#f_Tahun');
     await page.selectOption('#f_fakulti', 'FC');
-    await page.fill('#f_bulan_pendapatan', '2026-05');
+    await page.fill('#f_Tahun', '2026'); await page.selectOption('#f_Bulan', 'Mei');
     await page.fill('#f_nama_perniagaan', 'Kedai E2E');
     await page.fill('#f_no_matrik', 'A24CS0001'); await page.press('#f_no_matrik', 'Tab');
     await page.waitForSelector('#stu_status.ok');

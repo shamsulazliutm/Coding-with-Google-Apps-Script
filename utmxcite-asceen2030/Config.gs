@@ -48,6 +48,7 @@ var BIDANG_PENGAJIAN = [
   'PERKHIDMATAN',
   'LAIN-LAIN'
 ];
+var BULAN_MS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -834,13 +835,14 @@ var KPIS = [
     id: 'CKAI7', prefix: 'PP', sheet: 'CKAI7_Pendapatan_Pelajar', fungsi: 'prestasi', group: 'Center', entry: 'faculty',
     title: 'CKAI 7 · Pendapatan usahawan pelajar', short: 'Pendapatan Usahawan',
     unit: 'RM pendapatan', measure: 'income', jenis: 'minimum', valueFormat: 'rm',
-    listColumns: ['id', 'bulan_pendapatan', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_perniagaan', 'pendapatan_bulanan'],
+    listColumns: ['id', 'Tahun', 'Bulan', 'nama_pelajar', 'no_matrik', 'nama_perniagaan', 'fakulti', 'jenis_perniagaan', 'pendapatan_bulanan'],
     statusField: null,
     rules: [],
     validate: icValidate_,
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pendapatan bulanan' }),
-      F_('bulan_pendapatan', 'Bulan', 'month', { required: true }),
+      F_('Tahun', 'Tahun', 'number', { required: true, min: 2026, max: 2030 }),
+      F_('Bulan', 'Bulan', 'select', { required: true, options: BULAN_MS }),
       F_('nama_pelajar', 'Nama pelajar', 'text'),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text'),
@@ -1010,7 +1012,7 @@ KPIS.forEach(function (k) {
  * nilai lajur lama ke lajur baharu yang masih kosong supaya data sedia ada tidak hilang.
  */
 var COLUMN_RENAMES = {
-  CKAI7: { tempoh: 'bulan_pendapatan', pendapatan_rm: 'pendapatan_bulanan', laporan_kewangan: 'Penyata_bank', laporan_kewangan_pautan: 'Penyata_bank_pautan' },
+  CKAI7: { pendapatan_rm: 'pendapatan_bulanan', laporan_kewangan: 'Penyata_bank', laporan_kewangan_pautan: 'Penyata_bank_pautan' },
   KPT2: { tarikh_penubuhan: 'tarikh_pernigaan', no_pendaftaran: 'no_pendaftaran_ssm' },
   KPT4: { projek: 'nama_projek_inovasi', trl: 'level_TRL', lampiran: 'bukti_inovasi', lampiran_pautan: 'bukti_inovasi_pautan' },
   KPT6: { rakan: 'rakan_institusi', tarikh: 'tarikh_mula', lampiran: 'laporan_kolabrasi', lampiran_pautan: 'laporan_kolabrasi_pautan' },

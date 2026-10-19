@@ -268,3 +268,5 @@ id, fakulti, bulan_pendapatan, nama_pelajar, no_kp, no_matrik, jantina, bangsa, 
 **Migrasi data lajur lama:** apabila senarai lajur sesuatu tab dikemas kini, `setup()` menyalin nilai lajur lama ke lajur baharu yang masih kosong (contoh CKAI 7: `tempoh` → `bulan_pendapatan`, `pendapatan_rm` → `pendapatan_bulanan`; KPT 4: `projek` → `nama_projek_inovasi`, `trl` → `level_TRL`; KPT 6: `rakan`, `tarikh`; KPT 7: `tarikh`; KPT 2; KAI 6). Lajur lama tidak dipadam; padam sendiri selepas disemak. Nombor seperti "RM 1,200.50" dalam Sheet turut dibaca.
 
 **CKAI 1 · fakulti:** `fakulti` diambil automatik daripada tab PELAJAR berdasarkan no. matrik (baca sahaja dalam borang). PIC fakulti hanya boleh merekod pelajar daripada fakultinya sendiri; Admin boleh merekod semua fakulti.
+
+**CKAI 7 · Tahun dan Bulan:** tempoh pelaporan kini dua lajur, `Tahun` (2026-2030) dan `Bulan` (Januari … Disember). `setup()` mengisi `Tahun` dan `Bulan` daripada lajur lama `bulan_pendapatan` / `tempoh` (format YYYY-MM atau hari/bulan/tahun) bagi baris yang masih kosong.
