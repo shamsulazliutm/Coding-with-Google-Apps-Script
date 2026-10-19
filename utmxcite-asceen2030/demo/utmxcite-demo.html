@@ -732,9 +732,12 @@ function kpt2Validate_(c, errors) {
 }
 
 /** KPT3: satu rekod bagi setiap staf setiap tahun. */
-function kpt3Validate_(c, errors) {
+function kpt3Validate_(c, errors, rows, existing) {
   icValidate_(c, errors);
-  c.kunci = String(c.tahun || '') + '|' + String(c.no_staf || '').trim().toLowerCase();
+  var staf = String(c.no_staf || '').trim().toLowerCase();
+  if (!staf || !c.tahun) return;
+  var dup = (rows || []).filter(function (r) { return (!existing || r.id !== existing.id) && String(r.tahun) === String(c.tahun) && String(r.no_staf || '').trim().toLowerCase() === staf; })[0];
+  if (dup) errors.no_staf = 'Sudah didaftarkan (' + dup.id + ').';
 }
 
 /** KPT7: satu syarikat/projek dikira sekali bagi setiap tahun pelaporan. */
@@ -784,22 +787,20 @@ var KPIS = [
     id: 'KPT3', prefix: 'K3', sheet: 'KPT3_Tenaga_Pengajar', group: 'KPT', teras: 't1', entry: 'faculty',
     title: 'KPT 3 · Peratus tenaga pengajar keusahawanan dalam program peningkatan kompetensi', short: '% tenaga pengajar terlibat',
     unit: '% tenaga pengajar terlibat', measure: 'kpt3', jenis: 'minimum', valueFormat: 'pct',
-    listColumns: ['id', 'tahun', 'fakulti', 'nama', 'no_staf', 'terlibat', 'program'],
-    statusField: 'terlibat', unique: ['kunci'], validate: kpt3Validate_,
-    rules: [{ when: { field: 'terlibat', in: ['Ya'] }, require: ['peranan', 'program', 'tarikh_program'] }],
+    listColumns: ['id', 'tahun', 'fakulti', 'nama', 'no_staf', 'jenis_staf', 'pesijilan_profesional'],
+    statusField: null, validate: kpt3Validate_, rules: [],
     fields: [
       F_('tahun', 'Tahun', 'number', { required: true, min: 2026, max: 2030, sec: 'Tenaga pengajar keusahawanan (berdaftar dengan Pusat)' }),
       F_('fakulti', 'Fakulti', 'faculty', { required: true }),
       F_('nama', 'Nama', 'text', { required: true }),
-      F_('no_staf', 'No. staf', 'text', { required: true, errorOn: 'no_staf' }),
+      F_('no_staf', 'No. staf', 'text', { required: true }),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('jenis_staf', 'Jenis staf', 'select', { required: true, options: ['Staf akademik', 'Staf bukan akademik'] }),
-      F_('terlibat', 'Terlibat dalam program peningkatan kompetensi?', 'yesno', { required: true, sec: 'Penglibatan' }),
-      F_('peranan', 'Peranan', 'select', { options: ['Mentor', 'Pengasas bersama', 'Penyelidik komersialisasi', 'Pembimbing inkubator'] }),
-      F_('program', 'Program', 'select', { options: ['Inkubator', 'Pemecut (accelerator)', 'Pemula', 'Spin-off', 'Kolaborasi industri'] }),
-      F_('tarikh_program', 'Tarikh penglibatan', 'date'),
-      F_('lampiran', 'Surat lantikan / sijil kompetensi (PDF)', 'file', { full: true }),
-      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'no_staf' })
+      F_('jantina', 'Jantina', 'select', { options: ['Lelaki', 'Perempuan'] }),
+      F_('bumiputera', 'Bumiputera?', 'yesno'),
+      F_('pesijilan_profesional', 'Pesijilan profesional', 'text', { sec: 'Kompetensi', hint: 'Isi jika staf telah menjalani program peningkatan kompetensi / memiliki pesijilan; kosongkan jika belum.' }),
+      F_('senarai_projek_mentee', 'Senarai projek mentee', 'textarea', { full: true }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
   },
   {
@@ -2868,17 +2869,17 @@ var MEASURES = {
     };
   },
 
-  // KPT 3: % tenaga pengajar keusahawanan yang terlibat dalam program peningkatan kompetensi.
+  // KPT 3: % tenaga pengajar keusahawanan yang berpesijilan profesional (pesijilan_profesional tidak kosong).
   kpt3: function (kpi, rows, year) {
     var all = rows.filter(function (r) { return num_(r.tahun) === year; });
-    var done = all.filter(function (r) { return r.terlibat === 'Ya'; });
+    var done = all.filter(function (r) { return String(r.pesijilan_profesional || '').trim() !== ''; });
     return {
       value: all.length ? round1_(done.length * 100 / all.length) : 0,
-      secondary: [{ label: 'Tenaga pengajar berdaftar', value: all.length }, { label: 'Terlibat dalam program', value: done.length }],
+      secondary: [{ label: 'Tenaga pengajar berdaftar', value: all.length }, { label: 'Berpesijilan profesional', value: done.length }],
       breakdown: [
-        { title: 'Terlibat mengikut program', items: sortDesc_(countBy_(done, function (r) { return r.program; })) },
-        { title: 'Terlibat mengikut peranan', items: sortDesc_(countBy_(done, function (r) { return r.peranan; })) },
-        { title: 'Terlibat mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) }
+        { title: 'Berpesijilan mengikut jenis staf', items: sortDesc_(countBy_(done, function (r) { return r.jenis_staf; })) },
+        { title: 'Berpesijilan mengikut jantina', items: sortDesc_(countBy_(done, function (r) { return r.jantina; })) },
+        { title: 'Berpesijilan mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) }
       ]
     };
   },
@@ -4011,7 +4012,7 @@ window.__demoSeed = function () {
   FAC.forEach(function (f, i) { save('KPT2', { jenis_rekod: 'Penyebut tahunan', fakulti: f, tahun: Y, bil_penyebut: 20 + i * 3 }); });
   for (i = 1; i <= 14; i++) save('KPT2', { jenis_rekod: 'Graduan usahawan', fakulti: fac(i), nama: nm('Graduan Usahawan Contoh', i), no_kp: '9501' + p2(i) + '105' + ('000' + i).slice(-3), no_matrik: 'GR' + p2(i) + '001', tarikh_tamat: ymd(2, 10 + (i % 10)), nama_perniagaan: 'Perniagaan Graduan ' + p2(i), no_pendaftaran: 'SSM-' + p2(i) + '0001', tarikh_penubuhan: ymd(3, 5 + (i % 10)), kategori: ['Menubuhkan perniagaan berdaftar', 'Menjana peluang pekerjaan', 'Berkembang daripada projek pelajar', 'Model perniagaan inovatif (IP-based startup / gig bernilai tinggi)'][i % 4] });
   for (i = 1; i <= 24; i++) save('KPT3', { tahun: Y, fakulti: fac(i), nama: nm('Tenaga Pengajar Contoh', i), no_staf: 'ST' + p2(i) + '01', no_kp: '7501' + p2(i) + '105' + ('000' + i).slice(-3), jenis_staf: i % 5 === 0 ? 'Staf bukan akademik' : 'Staf akademik',
-    terlibat: i <= 15 ? 'Ya' : 'Tidak', peranan: i <= 15 ? ['Mentor', 'Pengasas bersama', 'Penyelidik komersialisasi', 'Pembimbing inkubator'][i % 4] : '', program: i <= 15 ? ['Inkubator', 'Pemecut (accelerator)', 'Pemula', 'Spin-off', 'Kolaborasi industri'][i % 5] : '', tarikh_program: i <= 15 ? ymd(3, 3 + (i % 20)) : '' });
+    jantina: i % 2 ? 'Lelaki' : 'Perempuan', bumiputera: i % 3 ? 'Ya' : 'Tidak', pesijilan_profesional: i <= 15 ? ['Certified Entrepreneurship Educator', 'Pensijilan Mentor Keusahawanan', 'Certified Business Coach'][i % 3] : '', senarai_projek_mentee: i <= 15 ? 'Projek mentee contoh ' + i : '' });
   for (i = 1; i <= 9; i++) save('KPT4', { fakulti: fac(i), nama: nm('Pelajar Inovasi Contoh', i), no_kp: '0301' + p2(i) + '105' + ('000' + i).slice(-3), no_matrik: 'KP4' + p2(i) + '001', projek: 'Projek teknologi contoh ' + i, trl: ['TRL 1', 'TRL 2', 'TRL 3'][i % 3], tarikh: ymd(2 + (i % 3), 6 + i) });
   [['FAI', 'MoU', 'Tempatan'], ['FC', 'MoA', 'Antarabangsa'], ['FKE', 'LoI', 'Tempatan'], ['MJIIT', 'Geran penyelidikan', 'Antarabangsa'], ['FKM', 'MoU', 'Tempatan']].forEach(function (a, k) {
     save('KPT6', { fakulti: a[0], tajuk: 'Projek kolaborasi contoh ' + (k + 1), rakan: 'Rakan Industri Contoh ' + (k + 1), skop: a[2], jenis_dokumen: a[1], tarikh: ymd(2 + k, 12), penerangan_impak: 'Impak contoh.' });

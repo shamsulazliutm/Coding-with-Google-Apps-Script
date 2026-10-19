@@ -96,17 +96,17 @@ var MEASURES = {
     };
   },
 
-  // KPT 3: % tenaga pengajar keusahawanan yang terlibat dalam program peningkatan kompetensi.
+  // KPT 3: % tenaga pengajar keusahawanan yang berpesijilan profesional (pesijilan_profesional tidak kosong).
   kpt3: function (kpi, rows, year) {
     var all = rows.filter(function (r) { return num_(r.tahun) === year; });
-    var done = all.filter(function (r) { return r.terlibat === 'Ya'; });
+    var done = all.filter(function (r) { return String(r.pesijilan_profesional || '').trim() !== ''; });
     return {
       value: all.length ? round1_(done.length * 100 / all.length) : 0,
-      secondary: [{ label: 'Tenaga pengajar berdaftar', value: all.length }, { label: 'Terlibat dalam program', value: done.length }],
+      secondary: [{ label: 'Tenaga pengajar berdaftar', value: all.length }, { label: 'Berpesijilan profesional', value: done.length }],
       breakdown: [
-        { title: 'Terlibat mengikut program', items: sortDesc_(countBy_(done, function (r) { return r.program; })) },
-        { title: 'Terlibat mengikut peranan', items: sortDesc_(countBy_(done, function (r) { return r.peranan; })) },
-        { title: 'Terlibat mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) }
+        { title: 'Berpesijilan mengikut jenis staf', items: sortDesc_(countBy_(done, function (r) { return r.jenis_staf; })) },
+        { title: 'Berpesijilan mengikut jantina', items: sortDesc_(countBy_(done, function (r) { return r.jantina; })) },
+        { title: 'Berpesijilan mengikut fakulti', items: sortDesc_(countBy_(done, function (r) { return r.fakulti; })) }
       ]
     };
   },

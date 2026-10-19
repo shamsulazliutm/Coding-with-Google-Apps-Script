@@ -258,9 +258,12 @@ function kpt2Validate_(c, errors) {
 }
 
 /** KPT3: satu rekod bagi setiap staf setiap tahun. */
-function kpt3Validate_(c, errors) {
+function kpt3Validate_(c, errors, rows, existing) {
   icValidate_(c, errors);
-  c.kunci = String(c.tahun || '') + '|' + String(c.no_staf || '').trim().toLowerCase();
+  var staf = String(c.no_staf || '').trim().toLowerCase();
+  if (!staf || !c.tahun) return;
+  var dup = (rows || []).filter(function (r) { return (!existing || r.id !== existing.id) && String(r.tahun) === String(c.tahun) && String(r.no_staf || '').trim().toLowerCase() === staf; })[0];
+  if (dup) errors.no_staf = 'Sudah didaftarkan (' + dup.id + ').';
 }
 
 /** KPT7: satu syarikat/projek dikira sekali bagi setiap tahun pelaporan. */
@@ -310,22 +313,20 @@ var KPIS = [
     id: 'KPT3', prefix: 'K3', sheet: 'KPT3_Tenaga_Pengajar', group: 'KPT', teras: 't1', entry: 'faculty',
     title: 'KPT 3 · Peratus tenaga pengajar keusahawanan dalam program peningkatan kompetensi', short: '% tenaga pengajar terlibat',
     unit: '% tenaga pengajar terlibat', measure: 'kpt3', jenis: 'minimum', valueFormat: 'pct',
-    listColumns: ['id', 'tahun', 'fakulti', 'nama', 'no_staf', 'terlibat', 'program'],
-    statusField: 'terlibat', unique: ['kunci'], validate: kpt3Validate_,
-    rules: [{ when: { field: 'terlibat', in: ['Ya'] }, require: ['peranan', 'program', 'tarikh_program'] }],
+    listColumns: ['id', 'tahun', 'fakulti', 'nama', 'no_staf', 'jenis_staf', 'pesijilan_profesional'],
+    statusField: null, validate: kpt3Validate_, rules: [],
     fields: [
       F_('tahun', 'Tahun', 'number', { required: true, min: 2026, max: 2030, sec: 'Tenaga pengajar keusahawanan (berdaftar dengan Pusat)' }),
       F_('fakulti', 'Fakulti', 'faculty', { required: true }),
       F_('nama', 'Nama', 'text', { required: true }),
-      F_('no_staf', 'No. staf', 'text', { required: true, errorOn: 'no_staf' }),
+      F_('no_staf', 'No. staf', 'text', { required: true }),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('jenis_staf', 'Jenis staf', 'select', { required: true, options: ['Staf akademik', 'Staf bukan akademik'] }),
-      F_('terlibat', 'Terlibat dalam program peningkatan kompetensi?', 'yesno', { required: true, sec: 'Penglibatan' }),
-      F_('peranan', 'Peranan', 'select', { options: ['Mentor', 'Pengasas bersama', 'Penyelidik komersialisasi', 'Pembimbing inkubator'] }),
-      F_('program', 'Program', 'select', { options: ['Inkubator', 'Pemecut (accelerator)', 'Pemula', 'Spin-off', 'Kolaborasi industri'] }),
-      F_('tarikh_program', 'Tarikh penglibatan', 'date'),
-      F_('lampiran', 'Surat lantikan / sijil kompetensi (PDF)', 'file', { full: true }),
-      F_('kunci', 'Kunci', 'text', { hidden: true, errorOn: 'no_staf' })
+      F_('jantina', 'Jantina', 'select', { options: ['Lelaki', 'Perempuan'] }),
+      F_('bumiputera', 'Bumiputera?', 'yesno'),
+      F_('pesijilan_profesional', 'Pesijilan profesional', 'text', { sec: 'Kompetensi', hint: 'Isi jika staf telah menjalani program peningkatan kompetensi / memiliki pesijilan; kosongkan jika belum.' }),
+      F_('senarai_projek_mentee', 'Senarai projek mentee', 'textarea', { full: true }),
+      F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
   },
   {

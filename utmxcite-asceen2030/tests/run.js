@@ -1369,11 +1369,12 @@ test('KPT2: % graduan usahawan = graduan / penyebut; senarai bernama tetapi papa
   const sj = JSON.stringify(d);
   ['Siti Graduan', 'Ali Graduan', '950505', 'A20', 'Siti Enterprise'].forEach(x => assert.ok(!sj.includes(x), 'bocor: ' + x));
 });
-test('KPT3: % tenaga pengajar terlibat; seorang staf sekali setahun', () => {
-  const st = (o) => g.api_save(adminToken, 'KPT3', Object.assign({ tahun: 2026, fakulti: 'FAI', nama: 'Dr A', no_staf: 'S1', no_kp: '800101-01-1010', jenis_staf: 'Staf akademik', terlibat: 'Ya', peranan: 'Mentor', program: 'Inkubator', tarikh_program: '2026-04-01' }, o));
-  ok(st({})); failF(st({ nama: 'Dr A lagi' }), 'no_staf');
-  ok(st({ nama: 'Dr B', no_staf: 'S2', no_kp: '810202-02-2020', terlibat: 'Tidak', peranan: '', program: '', tarikh_program: '' }));
-  failF(st({ nama: 'Dr C', no_staf: 'S3', no_kp: '820303-03-3030', peranan: '' }), 'peranan');
+test('KPT3: % tenaga pengajar berpesijilan; seorang staf sekali setahun', () => {
+  const st = (o) => g.api_save(adminToken, 'KPT3', Object.assign({ tahun: 2026, fakulti: 'FAI', nama: 'Dr A', no_staf: 'S1', no_kp: '800101-01-1010', jenis_staf: 'Staf akademik', jantina: 'Lelaki', bumiputera: 'Ya', pesijilan_profesional: 'Certified Mentor', senarai_projek_mentee: 'P1', catatan: 'c' }, o));
+  const r = ok(st({})); failF(st({ nama: 'Dr A lagi' }), 'no_staf');
+  const sh = g.getSheet_('KPT3_Tenaga_Pengajar');
+  deepEq(sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], ['id', 'tahun', 'fakulti', 'nama', 'no_staf', 'no_kp', 'jenis_staf', 'jantina', 'bumiputera', 'pesijilan_profesional', 'senarai_projek_mentee', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
+  ok(st({ nama: 'Dr B', no_staf: 'S2', no_kp: '810202-02-2020', pesijilan_profesional: '' }));
   ok(st({ tahun: 2027 }));                                                   // tahun lain dibenarkan
   const c = card(dash(2026), 'KPT3');
   assert.strictEqual(c.value, 50);
