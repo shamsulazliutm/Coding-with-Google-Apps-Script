@@ -78,6 +78,7 @@ function normalizeCell_(v, type) {
     var s = v.trim(), m;
     if (type === 'month') {
       if ((m = /^(\d{1,2})[\/\-.](\d{4})$/.exec(s))) return m[2] + '-' + ('0' + m[1]).slice(-2);
+      if ((m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s))) return m[3] + '-' + ('0' + m[2]).slice(-2);   // 01/04/2026 (hari/bulan/tahun) -> 2026-04
       if ((m = /^(\d{4})[\/\-.](\d{1,2})(?:[\/\-.]\d{1,2})?$/.exec(s))) return m[1] + '-' + ('0' + m[2]).slice(-2);
     } else if ((m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s))) {
       return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);

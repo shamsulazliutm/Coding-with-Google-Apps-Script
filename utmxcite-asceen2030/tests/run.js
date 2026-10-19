@@ -1017,8 +1017,18 @@ test('Bacaan Sheet: bulan / tarikh ditaip tangan diseragamkan', () => {
   const n = (v, ty) => g.normalizeCell_(v, ty);
   assert.strictEqual(n('03/2026', 'month'), '2026-03'); assert.strictEqual(n('3-2026', 'month'), '2026-03'); assert.strictEqual(n('2026/3', 'month'), '2026-03');
   assert.strictEqual(n('2026-04-15', 'month'), '2026-04'); assert.strictEqual(n('2026-05', 'month'), '2026-05');
+  assert.strictEqual(n('01/04/2026', 'month'), '2026-04');
   assert.strictEqual(n('15/03/2026', 'date'), '2026-03-15'); assert.strictEqual(n('2026-03-15', 'date'), '2026-03-15');
   assert.strictEqual(n(new Date(Date.UTC(2026, 2, 1, 4)), 'month'), '2026-03');
+});
+test('CKAI 6: baris ditaip tangan dalam Sheet (tempoh 01/04/2029, status Dibayar) dikira dalam dashboard', () => {
+  const sh = g.getSheet_('CKAI6_Sewaan_Inkubator'), hd = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], r = sh.getLastRow() + 1;
+  const put = (k, v) => sh.getRange(r, hd.indexOf(k) + 1).setValue(v);
+  put('id', 'SI-901'); put('tempoh', '01/04/2029'); put('inkubator', 'LOT 1 STUDENT MALL'); put('penyewa', 'SERAYA BEAUTY'); put('jumlah_rm', 400); put('status_bayaran', 'dibayar'); put('tarikh_bayar', '11/03/2029');
+  g.CacheService.getScriptCache().remove('dash:2029');
+  const c = card(dash(2029), 'CKAI6');
+  assert.strictEqual(c.value, 400);
+  assert.strictEqual(c.breakdown[0].items[0].label, '2029-04');
 });
 test('CKAI 10 (Perbelanjaan operasi): tabung disenaraikan + Lain-lain dinamakan; baki dikira; satu rekod setiap tabung setiap bulan; Admin sahaja', () => {
   const r = (extra) => g.api_save(adminToken, 'CKAI10', Object.assign({ tempoh: '2027-03', tabung: 'Tabung Induk UTM XCITE', peruntukan_awal: 118602.64, komitmen: 0, perbelanjaan: 57641.95 }, extra));
