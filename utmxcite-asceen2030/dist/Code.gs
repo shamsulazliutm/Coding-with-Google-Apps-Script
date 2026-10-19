@@ -25,6 +25,7 @@ var APP = {
 var JENIS_MILIKAN = ['MILIKAN TUNGGAL', 'PERKONGSIAN', 'SYARIKAT SENDIRIAN BERHAD', 'LAIN-LAIN'];
 var PUNCA_MODAL = ['MODAL SENDIRI', 'MODAL KELUARGA', 'GERAN', 'PINJAMAN', 'BANTUAN IPT', 'HADIAH PERTANDINGAN', 'AGENSI', 'NGO', 'LAIN-LAIN'];
 var JUMLAH_MODAL = ['KURANG DARI 499', '500-699', '700-899', '900-999', '1,000-1,999', '2,000-2,999', '3,000-3,999', '4,000-4,999', '5,000 DAN KE ATAS'];
+var BILANGAN_PEKERJA = ['KURANG DARI 5', '6-10 ORANG', '11-15 ORANG', '16-30 ORANG', '31-40 ORANG', '41-50 ORANG', '51-60 ORANG', '61-70 ORANG', '71-80 ORANG', '81-90 ORANG', '91-100 ORANG', '101 DAN KE ATAS'];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PERIBUMI SARAWAK', 'PERIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -312,7 +313,7 @@ var KPIS = [
       F_('jenis_peniagaan', 'Jenis perniagaan', 'text'),
       F_('punca_modal', 'Punca modal', 'select', { options: PUNCA_MODAL }),
       F_('pendapatan_kasar', 'Pendapatan kasar (RM)', 'number', { min: 0 }),
-      F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
+      F_('bilangan_pekerja', 'Bilangan pekerja', 'select', { options: BILANGAN_PEKERJA }),
       F_('link_website', 'Pautan laman web', 'text'),
       F_('alamat_perniagaan', 'Alamat perniagaan', 'textarea', { full: true }),
       F_('tarikh_pernigaan', 'Tarikh penubuhan perniagaan', 'date', { required: true })
@@ -698,7 +699,7 @@ var KPIS = [
       F_('jenis_perniagaan_lain', 'Nama jenis perniagaan lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
       F_('jenis_milikan', 'Jenis milikan', 'select', { options: JENIS_MILIKAN }),
       F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
-      F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
+      F_('bilangan_pekerja', 'Bilangan pekerja', 'select', { options: BILANGAN_PEKERJA }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
@@ -794,7 +795,7 @@ var KPIS = [
       F_('punca_modal', 'Punca modal', 'select', { options: PUNCA_MODAL, sec: 'Kewangan' }),
       F_('jumlah_modal', 'Jumlah modal awal (RM)', 'select', { options: JUMLAH_MODAL }),
       F_('pendapatan_bulanan', 'Pendapatan bulanan (RM)', 'number', { required: true, min: 0 }),
-      F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
+      F_('bilangan_pekerja', 'Bilangan pekerja', 'select', { options: BILANGAN_PEKERJA }),
       F_('link_website', 'Pautan laman web', 'text'),
       F_('jumlah_jualan', 'Jumlah jualan (RM)', 'number', { min: 0 }),
       F_('Penyata_bank', 'Penyata bank (PDF)', 'file', { full: true, sec: 'Dokumen', hint: 'PDF sahaja, maksimum 5 MB.' }),
