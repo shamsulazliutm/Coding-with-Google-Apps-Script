@@ -35,6 +35,19 @@ var BIDANG_KEPAKARAN = [
   'Pengantarabangsaan (Export) khusus untuk membantu usahawan menembusi pasaran global, pematuhan standard perdagangan dan strategi eksport',
   'Penyelesaian Masalah & Inovasi'
 ];
+var BIDANG_PENGAJIAN = [
+  'PENDIDIKAN',
+  'SASTERA DAN KEMANUSIAAN',
+  'SAINS, SOSIAL, KEWARTAWANAN DAN MAKLUMAT',
+  'PERNIAGAAN, PENTADBIRAN DAN PERUNDANGAN',
+  'SAINS SEMULAJADI, MATEMATIK DAN STATISTIK',
+  'TEKNOLOGI MAKLUMAT DAN KOMUNIKASI',
+  'KEJURUTERAAN, PEMBUATAN DAN PEMBINAAN',
+  'PERTANIAN, PERHUTANAN, PERIKANAN DAN VETERINAR',
+  'KESIHATAN DAN KEBAJIKAN',
+  'PERKHIDMATAN',
+  'LAIN-LAIN'
+];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 

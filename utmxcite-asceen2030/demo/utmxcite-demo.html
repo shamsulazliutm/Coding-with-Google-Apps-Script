@@ -509,6 +509,19 @@ var BIDANG_KEPAKARAN = [
   'Pengantarabangsaan (Export) khusus untuk membantu usahawan menembusi pasaran global, pematuhan standard perdagangan dan strategi eksport',
   'Penyelesaian Masalah & Inovasi'
 ];
+var BIDANG_PENGAJIAN = [
+  'PENDIDIKAN',
+  'SASTERA DAN KEMANUSIAAN',
+  'SAINS, SOSIAL, KEWARTAWANAN DAN MAKLUMAT',
+  'PERNIAGAAN, PENTADBIRAN DAN PERUNDANGAN',
+  'SAINS SEMULAJADI, MATEMATIK DAN STATISTIK',
+  'TEKNOLOGI MAKLUMAT DAN KOMUNIKASI',
+  'KEJURUTERAAN, PEMBUATAN DAN PEMBINAAN',
+  'PERTANIAN, PERHUTANAN, PERIKANAN DAN VETERINAR',
+  'KESIHATAN DAN KEBAJIKAN',
+  'PERKHIDMATAN',
+  'LAIN-LAIN'
+];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -2253,6 +2266,7 @@ function sessionInfo_(token) {
     user: publicUser_(user),
     faculties: listFaculties_(),
     bangsa: BANGSA_OPTIONS,
+    bidang_pengajian: BIDANG_PENGAJIAN,
     levels: LEVELS,
     teras: TERAS,
     functions: FUNCTIONS,
@@ -2423,7 +2437,7 @@ function saveStudentsAs_(user, list, silent) {
       var emel = String(raw && raw.emel || '').trim().toLowerCase();
       var tel = String(raw && raw.telefon || '').trim();
       var fak = String(raw && raw.fakulti || '').trim();
-      var jan = String(raw && raw.jantina || '').trim(), bgs = String(raw && raw.bangsa || '').trim().slice(0, 40), bdg = sanitizeText_(String(raw && raw.bidang_pengajian || '').trim().slice(0, 120));
+      var jan = String(raw && raw.jantina || '').trim(), bgs = String(raw && raw.bangsa || '').trim().slice(0, 40), bdg = String(raw && raw.bidang_pengajian || '').trim();
       var keepOk = function (curVal, validNow) { return !isAdmin && cur && curVal && validNow; };
       var out = {
         nama_pelajar: keepOk(cur && cur.nama_pelajar, true) ? cur.nama_pelajar : nama,
@@ -2439,6 +2453,7 @@ function saveStudentsAs_(user, list, silent) {
       if (!validKp_(out.no_kp)) errs.no_kp = 'No. KP / pasport tidak sah.';
       if (faculties.indexOf(out.fakulti) < 0) errs.fakulti = 'Pilih fakulti.';
       if (out.jantina && ['Lelaki', 'Perempuan'].indexOf(out.jantina) < 0) errs.jantina = 'Pilih Lelaki atau Perempuan.';
+      if (out.bidang_pengajian && BIDANG_PENGAJIAN.indexOf(out.bidang_pengajian) < 0 && (isAdmin || !cur || cur.bidang_pengajian !== out.bidang_pengajian)) errs.bidang_pengajian = 'Pilih bidang pengajian daripada senarai.';
       if (out.emel && !isEmail_(out.emel)) errs.emel = 'E-mel tidak sah.';
       if (out.telefon && !validPhone_(out.telefon)) errs.telefon = 'Nombor telefon tidak sah.';
       if (Object.keys(errs).length) { results.push({ no_matrik: matrik, ok: false, fields: errs }); return; }
@@ -4008,7 +4023,7 @@ window.__demoSeed = function () {
       save('CKAI6', { tempoh: ym(m), no_matrik: 'SW' + p2(k + 1), nama_pelajar: 'Pelajar Penyewa Contoh ' + (k + 1), inkubator: inc, penyewa: 'Penyewa Contoh ' + (k + 1), jumlah_rm: 600 + k * 150, status_bayaran: late ? 'Belum dibayar' : 'Dibayar', tarikh_bayar: late ? '' : ymd(m, 7) });
     });
     biz.forEach(function (b, k) {
-      save('CKAI7', { fakulti: fac(k), bulan_pendapatan: ym(m), nama_perniagaan: b, no_kp: '0401' + p2(k + 1) + '100' + ('000' + k).slice(-3), jantina: k % 2 ? 'Perempuan' : 'Lelaki', bangsa: BANGSA_OPTIONS[k % 6], bidang_pengajian: 'Bidang contoh ' + (k % 4), jenis_perniagaan: k % 2 ? 'Perkhidmatan / Gig' : 'Jualan produk', pendapatan_bulanan: 700 + m * 130 + k * (k === 3 ? 1100 : 220), jumlah_jualan: 1200 + m * 160 + k * 250, bilangan_pekerja: BILANGAN_PEKERJA[k % 12] });
+      save('CKAI7', { fakulti: fac(k), bulan_pendapatan: ym(m), nama_perniagaan: b, no_kp: '0401' + p2(k + 1) + '100' + ('000' + k).slice(-3), jantina: k % 2 ? 'Perempuan' : 'Lelaki', bangsa: BANGSA_OPTIONS[k % 6], bidang_pengajian: BIDANG_PENGAJIAN[k % 11], jenis_perniagaan: k % 2 ? 'Perkhidmatan / Gig' : 'Jualan produk', pendapatan_bulanan: 700 + m * 130 + k * (k === 3 ? 1100 : 220), jumlah_jualan: 1200 + m * 160 + k * 250, bilangan_pekerja: BILANGAN_PEKERJA[k % 12] });
     });
   }
 
@@ -4050,7 +4065,7 @@ window.__demoSeed = function () {
     var den = getSheet_(SHEETS.KPT2_DEN), t = readTable_(SHEETS.KPT2_DEN), hc = den.getRange(1, 1, 1, den.getLastColumn()).getValues()[0].indexOf('bil_penyebut') + 1;
     t.rows.forEach(function (r) { if (num_(r.tahun) === Y) den.getRange(r._row, hc).setValue(20 + FAC.indexOf(r.fakulti) * 3); });
   })();
-  for (i = 1; i <= 14; i++) save('KPT2', { tahun_graduan: Y, fakulti: fac(i), nama: nm('Graduan Usahawan Contoh', i), no_kp: '9501' + p2(i) + '105' + ('000' + i).slice(-3), no_matrik: 'GR' + p2(i) + '001', jantina: i % 2 ? 'Lelaki' : 'Perempuan', bangsa: BANGSA_OPTIONS[i % 6], bidang_pengajian: 'Bidang contoh ' + (i % 4), nama_perniagaan: 'Perniagaan Graduan ' + p2(i), no_pendaftaran_ssm: 'SSM-' + p2(i) + '0001', jenis_pemilikan: JENIS_MILIKAN[0], jenis_peniagaan: 'Perkhidmatan', punca_modal: PUNCA_MODAL[0], pendapatan_kasar: 5000 + i * 800, bilangan_pekerja: BILANGAN_PEKERJA[i % 12], tarikh_pernigaan: ymd(3, 5 + (i % 10)) });
+  for (i = 1; i <= 14; i++) save('KPT2', { tahun_graduan: Y, fakulti: fac(i), nama: nm('Graduan Usahawan Contoh', i), no_kp: '9501' + p2(i) + '105' + ('000' + i).slice(-3), no_matrik: 'GR' + p2(i) + '001', jantina: i % 2 ? 'Lelaki' : 'Perempuan', bangsa: BANGSA_OPTIONS[i % 6], bidang_pengajian: BIDANG_PENGAJIAN[i % 11], nama_perniagaan: 'Perniagaan Graduan ' + p2(i), no_pendaftaran_ssm: 'SSM-' + p2(i) + '0001', jenis_pemilikan: JENIS_MILIKAN[0], jenis_peniagaan: 'Perkhidmatan', punca_modal: PUNCA_MODAL[0], pendapatan_kasar: 5000 + i * 800, bilangan_pekerja: BILANGAN_PEKERJA[i % 12], tarikh_pernigaan: ymd(3, 5 + (i % 10)) });
   for (i = 1; i <= 24; i++) save('KPT3', { tahun: Y, fakulti: fac(i), nama: nm('Tenaga Pengajar Contoh', i), no_staf: 'ST' + p2(i) + '01', no_kp: '7501' + p2(i) + '105' + ('000' + i).slice(-3), jenis_staf: i % 5 === 0 ? 'Staf bukan akademik' : 'Staf akademik',
     jantina: i % 2 ? 'Lelaki' : 'Perempuan', bumiputera: BANGSA_OPTIONS[i % 6], jawatan: i % 5 === 0 ? 'STAF PENTADBIRAN/PENGURUSAN' : 'PENSYARAH', bidang_kepakaran: BIDANG_KEPAKARAN[i % 8], pesijilan_profesional: i <= 15 ? ['Certified Entrepreneurship Educator', 'Pensijilan Mentor Keusahawanan', 'Certified Business Coach'][i % 3] : '', senarai_projek_mentee: i <= 15 ? 'Projek mentee contoh ' + i : '' });
   for (i = 1; i <= 9; i++) save('KPT4', { fakulti: fac(i), nama: nm('Pelajar Inovasi Contoh', i), no_kp: '0301' + p2(i) + '105' + ('000' + i).slice(-3), no_matrik: 'KP4' + p2(i) + '001', nama_syarikat: 'Syarikat Inovasi ' + p2(i), status_bumiputera: i % 2 ? 'Ya' : 'Tidak', 'nama_projek_inovasi': 'Projek teknologi contoh ' + i, level_TRL: ['TRL 1', 'TRL 2', 'TRL 3'][i % 3], penilaiain_CRL: 'CRL ' + (1 + i % 3), sipnopsis_inovasi: 'Sinopsis contoh ' + i });
@@ -4894,7 +4909,7 @@ window.__demoSeed = function () {
           f('no_kp', 'No. KP / pasport <span class="req">*</span>', 'text', v.no_kp, v.found && !v.no_kp && S.session.user.peranan !== 'Admin' ? '' : '') +
           f('emel', 'E-mel' + (v.gaps && v.gaps.indexOf('emel') >= 0 ? ' <span class="req">*</span>' : ''), 'email', v.emel) +
           f('telefon', 'No. telefon' + (v.gaps && v.gaps.indexOf('telefon') >= 0 ? ' <span class="req">*</span>' : ''), 'text', v.telefon) +
-          f('bidang_pengajian', 'Bidang pengajian', 'text', v.bidang_pengajian) +
+          '<div data-field="s' + i + 'bidang_pengajian" class="' + (er.bidang_pengajian ? 'invalid' : '') + '"><label for="sm_' + i + '_bidang_pengajian">Bidang pengajian</label><select id="sm_' + i + '_bidang_pengajian" data-si="' + i + '" data-sf="bidang_pengajian"><option value="">Pilih…</option>' + (S.session.bidang_pengajian || []).map(function (x) { return '<option' + (v.bidang_pengajian === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select><div class="err" role="alert">' + esc(er.bidang_pengajian || '') + '</div></div>' +
           '<div data-field="s' + i + 'jantina" class="' + (er.jantina ? 'invalid' : '') + '"><label for="sm_' + i + '_jantina">Jantina</label><select id="sm_' + i + '_jantina" data-si="' + i + '" data-sf="jantina"><option value="">Pilih…</option>' + ['Lelaki', 'Perempuan'].map(function (x) { return '<option' + (v.jantina === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select><div class="err" role="alert">' + esc(er.jantina || '') + '</div></div>' +
           '<div data-field="s' + i + 'bangsa"><label for="sm_' + i + '_bangsa">Bangsa</label><select id="sm_' + i + '_bangsa" data-si="' + i + '" data-sf="bangsa"><option value="">Pilih…</option>' + (S.session.bangsa || []).map(function (x) { return '<option' + (v.bangsa === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select><div class="err" role="alert"></div></div>' +
           '<div data-field="s' + i + 'fakulti" class="' + (er.fakulti ? 'invalid' : '') + '"><label for="sm_' + i + '_fakulti">Fakulti <span class="req">*</span></label><select id="sm_' + i + '_fakulti" data-si="' + i + '" data-sf="fakulti"><option value="">Pilih…</option>' +

@@ -14,6 +14,7 @@ function sessionInfo_(token) {
     user: publicUser_(user),
     faculties: listFaculties_(),
     bangsa: BANGSA_OPTIONS,
+    bidang_pengajian: BIDANG_PENGAJIAN,
     levels: LEVELS,
     teras: TERAS,
     functions: FUNCTIONS,
@@ -184,7 +185,7 @@ function saveStudentsAs_(user, list, silent) {
       var emel = String(raw && raw.emel || '').trim().toLowerCase();
       var tel = String(raw && raw.telefon || '').trim();
       var fak = String(raw && raw.fakulti || '').trim();
-      var jan = String(raw && raw.jantina || '').trim(), bgs = String(raw && raw.bangsa || '').trim().slice(0, 40), bdg = sanitizeText_(String(raw && raw.bidang_pengajian || '').trim().slice(0, 120));
+      var jan = String(raw && raw.jantina || '').trim(), bgs = String(raw && raw.bangsa || '').trim().slice(0, 40), bdg = String(raw && raw.bidang_pengajian || '').trim();
       var keepOk = function (curVal, validNow) { return !isAdmin && cur && curVal && validNow; };
       var out = {
         nama_pelajar: keepOk(cur && cur.nama_pelajar, true) ? cur.nama_pelajar : nama,
@@ -200,6 +201,7 @@ function saveStudentsAs_(user, list, silent) {
       if (!validKp_(out.no_kp)) errs.no_kp = 'No. KP / pasport tidak sah.';
       if (faculties.indexOf(out.fakulti) < 0) errs.fakulti = 'Pilih fakulti.';
       if (out.jantina && ['Lelaki', 'Perempuan'].indexOf(out.jantina) < 0) errs.jantina = 'Pilih Lelaki atau Perempuan.';
+      if (out.bidang_pengajian && BIDANG_PENGAJIAN.indexOf(out.bidang_pengajian) < 0 && (isAdmin || !cur || cur.bidang_pengajian !== out.bidang_pengajian)) errs.bidang_pengajian = 'Pilih bidang pengajian daripada senarai.';
       if (out.emel && !isEmail_(out.emel)) errs.emel = 'E-mel tidak sah.';
       if (out.telefon && !validPhone_(out.telefon)) errs.telefon = 'Nombor telefon tidak sah.';
       if (Object.keys(errs).length) { results.push({ no_matrik: matrik, ok: false, fields: errs }); return; }
