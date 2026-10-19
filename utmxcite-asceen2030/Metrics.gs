@@ -155,16 +155,19 @@ var MEASURES = {
 
   // KPT 6: projek / aktiviti berimpak daripada kolaborasi rasmi pada tahun itu.
   kpt6: function (kpi, rows, year) {
-    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh_mula) === year; });
+    function n(r) { return num_(r.bil_projek_aktiviti_berkolabrasi) || 1; }
+    function total(list) { return list.reduce(function (a, r) { return a + n(r); }, 0); }
+    function byKey(fn) { return sortDesc_(sumBy_(inYear, fn, n)); }
     return {
-      value: inYear.length,
+      value: total(inYear),
       secondary: [
-        { label: 'Tempatan', value: inYear.filter(function (r) { return r.skop === 'Tempatan'; }).length },
-        { label: 'Antarabangsa', value: inYear.filter(function (r) { return r.skop === 'Antarabangsa'; }).length }
+        { label: 'Tempatan', value: total(inYear.filter(function (r) { return r.skop === 'Tempatan'; })) },
+        { label: 'Antarabangsa', value: total(inYear.filter(function (r) { return r.skop === 'Antarabangsa'; })) }
       ],
       breakdown: [
-        { title: 'Mengikut dokumen rasmi', items: sortDesc_(countBy_(inYear, function (r) { return r.jenis_dokumen; })) },
-        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) }
+        { title: 'Mengikut dokumen rasmi', items: byKey(function (r) { return r.jenis_dokumen; }) },
+        { title: 'Mengikut fakulti', items: byKey(function (r) { return r.fakulti; }) }
       ]
     };
   },

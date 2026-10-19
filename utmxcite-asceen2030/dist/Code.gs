@@ -264,6 +264,11 @@ function kpt3Validate_(c, errors, rows, existing) {
   if (dup) errors.no_staf = 'Sudah didaftarkan (' + dup.id + ').';
 }
 
+/** KPT6: tarikh akhir tidak boleh sebelum tarikh mula. */
+function kpt6Validate_(c, errors) {
+  if (c.tarikh_mula && c.tarikh_akhir && c.tarikh_akhir < c.tarikh_mula && !errors.tarikh_akhir) errors.tarikh_akhir = 'Tarikh akhir tidak boleh sebelum tarikh mula.';
+}
+
 /** KPT7: satu syarikat/projek dikira sekali bagi setiap tahun pelaporan. */
 function kpt7Validate_(c, errors) {
   c.kunci = String(c.tarikh || '').slice(0, 4) + '|' + String(c.nama_syarikat || '').trim().toLowerCase();
@@ -362,17 +367,22 @@ var KPIS = [
     id: 'KPT6', prefix: 'K6', sheet: 'KPT6_Kolaborasi', group: 'KPT', teras: 't3', entry: 'faculty',
     title: 'KPT 6 · Bilangan projek / aktiviti berimpak daripada kolaborasi rasmi (tempatan dan antarabangsa)', short: 'Kolaborasi berimpak',
     unit: 'projek / aktiviti', measure: 'kpt6', jenis: 'minimum',
-    listColumns: ['id', 'tajuk', 'rakan', 'skop', 'jenis_dokumen', 'fakulti', 'tarikh'],
-    statusField: 'skop', rules: [],
+    listColumns: ['id', 'tajuk', 'rakan_institusi', 'skop', 'jenis_dokumen', 'fakulti', 'tarikh_mula'],
+    statusField: 'skop', rules: [], validate: kpt6Validate_,
     fields: [
-      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Projek / aktiviti' }),
-      F_('tajuk', 'Tajuk projek / aktiviti', 'text', { required: true, full: true }),
-      F_('rakan', 'Rakan kolaborasi', 'text', { required: true }),
-      F_('skop', 'Tempatan atau antarabangsa', 'select', { required: true, options: ['Tempatan', 'Antarabangsa'] }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Kolaborasi' }),
+      F_('tajuk', 'Tajuk kolaborasi', 'text', { required: true, full: true }),
+      F_('rakan_institusi', 'Rakan institusi', 'text', { required: true }),
+      F_('bidang_kerjasama', 'Bidang kerjasama', 'text'),
       F_('jenis_dokumen', 'Dokumen rasmi', 'select', { required: true, options: ['MoU', 'MoA', 'LoA', 'LoI', 'Geran penyelidikan'] }),
-      F_('tarikh', 'Tarikh dokumen / mula projek', 'date', { required: true }),
+      F_('bil_projek_aktiviti_berkolabrasi', 'Bilangan projek / aktiviti berkolaborasi', 'number', { required: true, min: 1, sec: 'Projek / aktiviti' }),
+      F_('nama_projek', 'Nama projek / aktiviti', 'text', { full: true }),
+      F_('tarikh_mula', 'Tarikh mula', 'date', { required: true }),
+      F_('tarikh_akhir', 'Tarikh akhir', 'date'),
       F_('penerangan_impak', 'Penerangan impak', 'textarea', { full: true }),
-      F_('lampiran', 'Dokumen rasmi / laporan / sijil (PDF)', 'file', { full: true, sec: 'Dokumen' })
+      F_('laporan_kolabrasi', 'Laporan kolaborasi (PDF)', 'file', { full: true, sec: 'Dokumen' }),
+      F_('bukti_dokumen', 'Bukti dokumen rasmi (PDF)', 'file', { full: true }),
+      F_('skop', 'Tempatan atau antarabangsa', 'select', { required: true, options: ['Tempatan', 'Antarabangsa'], sec: 'Pengelasan' })
     ]
   },
   {
@@ -2473,16 +2483,19 @@ var MEASURES = {
 
   // KPT 6: projek / aktiviti berimpak daripada kolaborasi rasmi pada tahun itu.
   kpt6: function (kpi, rows, year) {
-    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh) === year; });
+    var inYear = rows.filter(function (r) { return yearOf_(r.tarikh_mula) === year; });
+    function n(r) { return num_(r.bil_projek_aktiviti_berkolabrasi) || 1; }
+    function total(list) { return list.reduce(function (a, r) { return a + n(r); }, 0); }
+    function byKey(fn) { return sortDesc_(sumBy_(inYear, fn, n)); }
     return {
-      value: inYear.length,
+      value: total(inYear),
       secondary: [
-        { label: 'Tempatan', value: inYear.filter(function (r) { return r.skop === 'Tempatan'; }).length },
-        { label: 'Antarabangsa', value: inYear.filter(function (r) { return r.skop === 'Antarabangsa'; }).length }
+        { label: 'Tempatan', value: total(inYear.filter(function (r) { return r.skop === 'Tempatan'; })) },
+        { label: 'Antarabangsa', value: total(inYear.filter(function (r) { return r.skop === 'Antarabangsa'; })) }
       ],
       breakdown: [
-        { title: 'Mengikut dokumen rasmi', items: sortDesc_(countBy_(inYear, function (r) { return r.jenis_dokumen; })) },
-        { title: 'Mengikut fakulti', items: sortDesc_(countBy_(inYear, function (r) { return r.fakulti; })) }
+        { title: 'Mengikut dokumen rasmi', items: byKey(function (r) { return r.jenis_dokumen; }) },
+        { title: 'Mengikut fakulti', items: byKey(function (r) { return r.fakulti; }) }
       ]
     };
   },

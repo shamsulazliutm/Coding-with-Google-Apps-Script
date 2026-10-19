@@ -244,3 +244,7 @@ Lajur mengikut senarai terkini: id, fakulti, nama_pelajar, no_kp, no_matrik, eme
 ## KPT 4 · lajur tab `KPT4_Pelajar_Inovasi`
 
 id, fakulti, nama, no_kp, no_matrik, nama_syarikat, nama_ahli_kumpulan, no_pendaftaran_SSM, jenis_perniagaan, status_bumiputera, `nama_projek_inovasi`, level_TRL, penilaiain_CRL, pautan_website, sipnopsis_inovasi, bukti_inovasi (+ bukti_inovasi_pautan), lajur sistem. Tiada medan tarikh: pelajar dikira pada tahun rekod dicipta (`dicipta_pada`). Satu pelajar dikira sekali (no. matrik), termasuk pelajar daripada CKAI 8 (TRL 1-3).
+
+## KPT 6 · lajur tab `KPT6_Kolaborasi`
+
+id, fakulti, tajuk, rakan_institusi, bidang_kerjasama, jenis_dokumen, bil_projek_aktiviti_berkolabrasi, nama_projek, tarikh_mula, tarikh_akhir, penerangan_impak, laporan_kolabrasi (+ pautan), bukti_dokumen (+ pautan), lajur sistem, dan `skop` (Tempatan / Antarabangsa, kekal untuk pecahan KPT 6). Nilai KPT 6 = jumlah `bil_projek_aktiviti_berkolabrasi` bagi rekod yang `tarikh_mula`nya dalam tahun dipilih.
