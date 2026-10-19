@@ -333,17 +333,24 @@ var KPIS = [
     id: 'KPT4', prefix: 'K4', sheet: 'KPT4_Pelajar_Inovasi', group: 'KPT', teras: 't2', entry: 'faculty',
     title: 'KPT 4 · Jumlah pelajar yang memanfaatkan inovasi dan teknologi dalam keusahawanan', short: 'Pelajar inovasi dan teknologi',
     unit: 'pelajar', measure: 'kpt4', jenis: 'minimum',
-    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'projek', 'trl', 'tarikh'],
-    statusField: 'trl', unique: ['no_matrik'], validate: icValidate_, rules: [],
+    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'nama_projek_inovasi', 'level_TRL'],
+    statusField: 'level_TRL', unique: ['no_matrik'], validate: icValidate_, rules: [],
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
       F_('nama', 'Nama pelajar', 'text', { required: true }),
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('no_matrik', 'No. matrik', 'text', { required: true, hint: 'Setiap pelajar dikira sekali sahaja sepanjang pengajian.' }),
-      F_('projek', 'Inovasi / teknologi / projek', 'text', { required: true, sec: 'Inovasi dan teknologi' }),
-      F_('trl', 'Tahap kesediaan teknologi (TRL 1 hingga 3)', 'select', { required: true, options: ['TRL 1', 'TRL 2', 'TRL 3'], short: 'TRL' }),
-      F_('tarikh', 'Tarikh penyertaan', 'date', { required: true }),
-      F_('lampiran', 'Bukti penyertaan / penilaian TRL atau CRL (PDF)', 'file', { full: true, sec: 'Dokumen' })
+      F_('nama_syarikat', 'Nama syarikat', 'text'),
+      F_('nama_ahli_kumpulan', 'Nama ahli kumpulan', 'textarea', { full: true }),
+      F_('no_pendaftaran_SSM', 'No. pendaftaran SSM', 'text'),
+      F_('jenis_perniagaan', 'Jenis perniagaan', 'text'),
+      F_('status_bumiputera', 'Status Bumiputera', 'yesno'),
+      F_('nama_projek_inovasi', 'Nama projek / inovasi', 'text', { required: true, sec: 'Inovasi dan teknologi' }),
+      F_('level_TRL', 'Tahap kesediaan teknologi (TRL 1 hingga 3)', 'select', { required: true, options: ['TRL 1', 'TRL 2', 'TRL 3'], short: 'TRL' }),
+      F_('penilaiain_CRL', 'Penilaian CRL', 'text'),
+      F_('pautan_website', 'Pautan laman web', 'text'),
+      F_('sipnopsis_inovasi', 'Sinopsis inovasi', 'textarea', { full: true }),
+      F_('bukti_inovasi', 'Bukti inovasi / penilaian TRL atau CRL (PDF)', 'file', { full: true, sec: 'Dokumen' })
     ]
   },
   {
@@ -921,7 +928,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && k.id !== 'KPT2') {
+  if (!map.fakulti && k.id !== 'KPT2' && k.id !== 'KPT4') {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
@@ -2424,6 +2431,7 @@ var MEASURES = {
 
   // KPT 4: pelajar memanfaatkan inovasi dan teknologi (TRL 1-3), dikira sekali sahaja (tahun kemunculan pertama).
   // Sumber: daftar KPT 4 + pelajar dalam CKAI 8 (inovasi pelajar) yang TRL 1-3.
+  // Tahun pelaporan rekod daftar KPT 4 = tahun rekod dicipta (dicipta_pada); tiada medan tarikh.
   kpt4: function (kpi, rows, year, ctx) {
     var first = {};
     function add(key, y, fakulti, sumber) {
@@ -2431,7 +2439,7 @@ var MEASURES = {
       if (!key || !y) return;
       if (!first[key] || y < first[key].y) first[key] = { y: y, fakulti: fakulti, sumber: sumber };
     }
-    rows.forEach(function (r) { add(r.no_matrik, yearOf_(r.tarikh), r.fakulti, 'Daftar fakulti (KPT 4)'); });
+    rows.forEach(function (r) { add(r.no_matrik, yearOf_(r.dicipta_pada), r.fakulti, 'Daftar fakulti (KPT 4)'); });
     ctx.rows('CKAI8').forEach(function (r) {
       if (['TRL 1', 'TRL 2', 'TRL 3'].indexOf(r.trl) < 0) return;
       var p = parseJson_(r.pelajar, []);

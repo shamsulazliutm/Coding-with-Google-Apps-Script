@@ -477,10 +477,10 @@ function buildHtml() {
     const rowOf = (o) => order.map(k => '"' + (o[k] || '') + '"').join(',');
     const fp = path.join(out, 'pukal-kpt4.csv');
     fs.writeFileSync(fp, '﻿' + head + '\r\n' + [
-      rowOf({ fakulti: 'FAI', no_matrik: 'PK-A', projek: 'Projek A', trl: 'trl 1', tarikh: '15/03/2026' }),
-      rowOf({ fakulti: 'FC', no_matrik: 'PK-B', projek: 'Projek B', trl: 'TRL 2', tarikh: '2026-03-16' }),
-      rowOf({ fakulti: 'FC', no_matrik: 'PK-C', projek: 'Projek C', trl: 'TRL 9', tarikh: '2026-03-17' }),
-      rowOf({ fakulti: 'FC', no_matrik: 'PK-X', projek: 'Projek X', trl: 'TRL 1', tarikh: '2026-03-18' })].join('\r\n'));
+      rowOf({ fakulti: 'FAI', no_matrik: 'PK-A', nama_projek_inovasi: 'Projek A', level_TRL: 'trl 1' }),
+      rowOf({ fakulti: 'FC', no_matrik: 'PK-B', nama_projek_inovasi: 'Projek B', level_TRL: 'TRL 2' }),
+      rowOf({ fakulti: 'FC', no_matrik: 'PK-C', nama_projek_inovasi: 'Projek C', level_TRL: 'TRL 9' }),
+      rowOf({ fakulti: 'FC', no_matrik: 'PK-X', nama_projek_inovasi: 'Projek X', level_TRL: 'TRL 1' })].join('\r\n'));
     await page.setInputFiles('#bulkfile', fp);
     await page.waitForSelector('[data-action="bulkgo"]');
     assert.ok((await text('.cont')).includes('4 baris data dikesan'));

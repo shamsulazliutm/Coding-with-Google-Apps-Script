@@ -240,3 +240,7 @@ Laporan bulanan kedudukan kewangan tabung amanah UTMXCITE (berdasarkan laporan "
 ## CKAI 4 · lajur tab `CKAI4_SSU`
 
 Lajur mengikut senarai terkini: id, fakulti, nama_pelajar, no_kp, no_matrik, emel, telefon, jantina, bangsa, bidang_pengajian, nama_syarikat, jenis_perniagaan, jenis_perniagaan_lain, jenis_milikan, bil_rakan_kongsi, bilangan_pekerja, no_ssu, tarikh_daftar, status_ssm, tarikh_ssm, no_daftar_ssm, link_website_perniagaaan, punca_modal, modal_awal, jumlah_jualan, penyata_bank (+ penyata_bank_pautan), tarikh_mula_perniagaan, catatan; kemudian `status`, `berasaskan_inovasi`, `trl_syarikat` (kekal untuk KPT 5) dan lajur sistem. Pemilik: hanya no. matrik dimasukkan; fakulti, nama, no. KP, e-mel, telefon, jantina, bangsa dan bidang_pengajian diambil daripada tab PELAJAR (lajur `jantina`, `bangsa` dan `bidang_pengajian` ditambah ke PELAJAR oleh `setup()`; pilihan bangsa: MELAYU, CINA, INDIA, PERIBUMI SARAWAK, PERIBUMI SABAH, LAIN-LAIN). Senarai rakan kongsi dan lampiran sijil SSM dibuang.
+
+## KPT 4 · lajur tab `KPT4_Pelajar_Inovasi`
+
+id, fakulti, nama, no_kp, no_matrik, nama_syarikat, nama_ahli_kumpulan, no_pendaftaran_SSM, jenis_perniagaan, status_bumiputera, `nama_projek_inovasi`, level_TRL, penilaiain_CRL, pautan_website, sipnopsis_inovasi, bukti_inovasi (+ bukti_inovasi_pautan), lajur sistem. Tiada medan tarikh: pelajar dikira pada tahun rekod dicipta (`dicipta_pada`). Satu pelajar dikira sekali (no. matrik), termasuk pelajar daripada CKAI 8 (TRL 1-3).

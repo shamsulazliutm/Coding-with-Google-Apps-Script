@@ -1138,7 +1138,7 @@ test('PELAJAR: CKAI 8 menerima senarai pelajar (no. matrik sahaja) dan menyalin 
   fail(bad, /PELAJAR/); deepEq(bad.missing.map(m => m.no_matrik), ['GHAIB1']);
 });
 test('PELAJAR: muat naik pukal melaporkan baris dengan pelajar tiada dan menyenaraikan no. matrik', () => {
-  const row = (m) => ({ n: 2, rec: { fakulti: 'FAI', no_matrik: m, projek: 'P', trl: 'TRL 1', tarikh: '2026-03-01', __nostudent: 1 } });
+  const row = (m) => ({ n: 2, rec: { fakulti: 'FAI', no_matrik: m, 'nama_projek_inovasi': 'P', level_TRL: 'TRL 1', __nostudent: 1 } });
   const r = ok(g.api_bulkSave(adminToken, 'KPT4', [row('PJ011'), Object.assign(row('BULKX9'), { n: 3 })]));
   deepEq(r.results.map(x => x.ok), [true, false]); deepEq(r.results[1].missing, ['BULKX9']); assert.match(r.results[1].error, /BULKX9/);
 });
@@ -1155,7 +1155,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    if (k.id !== 'KPT2') assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (k.id !== 'KPT2' && k.id !== 'KPT4') assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR
@@ -1181,22 +1181,22 @@ test('KAI 3: penyewa melalui PELAJAR (no. matrik wajib bila Disewa; nama, no. KP
 console.log('Muat naik pukal');
 test('pukal: baris sah disimpan, baris gagal dilaporkan, unik dan akses dihormati', () => {
   const rows = [
-    { n: 2, rec: { fakulti: 'FAI', nama: 'Bulk Satu', no_kp: '000101105555', no_matrik: 'BK1', projek: 'P1', trl: 'TRL 1', tarikh: '2026-03-01' } },
-    { n: 3, rec: { fakulti: 'FAI', nama: 'Bulk Dua', no_kp: '000202106666', no_matrik: 'BK2', projek: 'P2', trl: 'TRL 9', tarikh: '2026-03-02', id: 'K4-001' } },   // TRL tidak sah; id diabaikan
-    { n: 4, rec: { fakulti: 'FAI', nama: 'Bulk Satu Lagi', no_kp: '000303107777', no_matrik: 'BK1', projek: 'P3', trl: 'TRL 2', tarikh: '2026-03-03' } },     // no. matrik pendua
-    { n: 5, rec: { fakulti: 'FC', nama: 'Bulk Tiga', no_kp: '000404108888', no_matrik: 'BK3', projek: 'P4', trl: 'TRL 3', tarikh: '2026-03-04' } }
+    { n: 2, rec: { fakulti: 'FAI', nama: 'Bulk Satu', no_kp: '000101105555', no_matrik: 'BK1', 'nama_projek_inovasi': 'P1', level_TRL: 'TRL 1' } },
+    { n: 3, rec: { fakulti: 'FAI', nama: 'Bulk Dua', no_kp: '000202106666', no_matrik: 'BK2', 'nama_projek_inovasi': 'P2', level_TRL: 'TRL 9', id: 'K4-001' } },   // TRL tidak sah; id diabaikan
+    { n: 4, rec: { fakulti: 'FAI', nama: 'Bulk Satu Lagi', no_kp: '000303107777', no_matrik: 'BK1', 'nama_projek_inovasi': 'P3', level_TRL: 'TRL 2' } },     // no. matrik pendua
+    { n: 5, rec: { fakulti: 'FC', nama: 'Bulk Tiga', no_kp: '000404108888', no_matrik: 'BK3', 'nama_projek_inovasi': 'P4', level_TRL: 'TRL 3' } }
   ];
   const r = ok(g.api_bulkSave(adminToken, 'KPT4', rows));
   assert.strictEqual(r.saved, 2);
   deepEq(r.results.map(x => x.ok), [true, false, false, true]);
-  assert.ok(r.results[1].fields.trl && r.results[2].fields.no_matrik);
+  assert.ok(r.results[1].fields.level_TRL && r.results[2].fields.no_matrik);
   const list = ok(g.api_list(adminToken, 'KPT4', {})).rows;
   assert.ok(list.some(x => x.no_matrik === 'BK3') && !list.some(x => x.nama === 'Bulk Dua'));
   assert.ok(ok(g.api_listAudit(adminToken, 50)).some(a => a.tindakan === 'MUAT_NAIK_PUKAL' && a.kpi === 'KPT4'));
   // PIC: fakulti dipaksa kepada fakulti sendiri; KPI tanpa akses ditolak; KPI auto ditolak
   ok(g.api_saveUser(adminToken, { emel: 'pic.bulk.fai@utm.my', nama: 'PIC Bulk', peranan: 'PIC', fakulti: 'FAI', kpi_akses: 'KPT4', aktif: 'Ya' }));
   const t = login('pic.bulk.fai@utm.my');
-  const r2 = ok(g.api_bulkSave(t, 'KPT4', [{ n: 2, rec: { fakulti: 'FC', nama: 'PIC Bulk', no_kp: '000505109999', no_matrik: 'BK9', projek: 'P', trl: 'TRL 1', tarikh: '2026-03-05' } }]));
+  const r2 = ok(g.api_bulkSave(t, 'KPT4', [{ n: 2, rec: { fakulti: 'FC', nama: 'PIC Bulk', no_kp: '000505109999', no_matrik: 'BK9', 'nama_projek_inovasi': 'P', level_TRL: 'TRL 1' } }]));
   assert.strictEqual(r2.saved, 1);
   assert.strictEqual(ok(g.api_list(t, 'KPT4', {})).rows.find(x => x.no_matrik === 'BK9').fakulti, 'FAI');
   fail(g.api_bulkSave(t, 'KPT1', rows), /Akses ditolak/);
@@ -1383,7 +1383,7 @@ test('KPT3: % tenaga pengajar berpesijilan; seorang staf sekali setahun', () => 
   assert.ok(!JSON.stringify(dash(2026)).includes('Dr A'));
 });
 test('KPT4: pelajar dikira sekali (no. matrik) merentas daftar dan CKAI 8 (TRL 1-3)', () => {
-  const kp = (o) => g.api_save(adminToken, 'KPT4', Object.assign({ fakulti: 'FAI', nama: 'Pelajar Satu', no_kp: '000101-01-0101', no_matrik: 'K4-1', projek: 'Aplikasi', trl: 'TRL 2', tarikh: '2026-02-01' }, o));
+  const kp = (o) => g.api_save(adminToken, 'KPT4', Object.assign({ fakulti: 'FAI', nama: 'Pelajar Satu', no_kp: '000101-01-0101', no_matrik: 'K4-1', 'nama_projek_inovasi': 'Aplikasi', level_TRL: 'TRL 2' }, o));
   const base = card(dash(2026), 'KPT4').value;
   ok(kp({})); failF(kp({ tarikh: '2027-02-01' }), 'no_matrik');
   assert.strictEqual(card(dash(2026), 'KPT4').value, base + 1);

@@ -113,6 +113,7 @@ var MEASURES = {
 
   // KPT 4: pelajar memanfaatkan inovasi dan teknologi (TRL 1-3), dikira sekali sahaja (tahun kemunculan pertama).
   // Sumber: daftar KPT 4 + pelajar dalam CKAI 8 (inovasi pelajar) yang TRL 1-3.
+  // Tahun pelaporan rekod daftar KPT 4 = tahun rekod dicipta (dicipta_pada); tiada medan tarikh.
   kpt4: function (kpi, rows, year, ctx) {
     var first = {};
     function add(key, y, fakulti, sumber) {
@@ -120,7 +121,7 @@ var MEASURES = {
       if (!key || !y) return;
       if (!first[key] || y < first[key].y) first[key] = { y: y, fakulti: fakulti, sumber: sumber };
     }
-    rows.forEach(function (r) { add(r.no_matrik, yearOf_(r.tarikh), r.fakulti, 'Daftar fakulti (KPT 4)'); });
+    rows.forEach(function (r) { add(r.no_matrik, yearOf_(r.dicipta_pada), r.fakulti, 'Daftar fakulti (KPT 4)'); });
     ctx.rows('CKAI8').forEach(function (r) {
       if (['TRL 1', 'TRL 2', 'TRL 3'].indexOf(r.trl) < 0) return;
       var p = parseJson_(r.pelajar, []);
