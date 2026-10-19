@@ -26,6 +26,16 @@ var JENIS_MILIKAN = ['MILIKAN TUNGGAL', 'PERKONGSIAN', 'SYARIKAT SENDIRIAN BERHA
 var PUNCA_MODAL = ['MODAL SENDIRI', 'MODAL KELUARGA', 'GERAN', 'PINJAMAN', 'BANTUAN IPT', 'HADIAH PERTANDINGAN', 'AGENSI', 'NGO', 'LAIN-LAIN'];
 var JUMLAH_MODAL = ['KURANG DARI 499', '500-699', '700-899', '900-999', '1,000-1,999', '2,000-2,999', '3,000-3,999', '4,000-4,999', '5,000 DAN KE ATAS'];
 var BILANGAN_PEKERJA = ['KURANG DARI 5', '6-10 ORANG', '11-15 ORANG', '16-30 ORANG', '31-40 ORANG', '41-50 ORANG', '51-60 ORANG', '61-70 ORANG', '71-80 ORANG', '81-90 ORANG', '91-100 ORANG', '101 DAN KE ATAS'];
+var BIDANG_KEPAKARAN = [
+  'Pembangunan Model Perniagaan & Strategi Pasaran',
+  'Pengurusan Kewangan & Literasi (merangkumi pengurusan aliran tunai, belanjawan, penetapan harga, dan analisis keuntungan)',
+  'Pemasaran & Penjenamaan (Branding) termasuk pemasaran digital dan teknik komunikasi berkesan',
+  'Operasi & Pengurusan Pasukan termasuk mengurus inventori dan pembekal',
+  'Rangkaian (Networking) & Hubungan Industri',
+  'Pembangunan Diri & Ketahanan Emosi (Resilience) bagi membina kekuatan mental untuk menghadapi cabaran perniagaan, pengurusan masa, dan penetapan matlamat',
+  'Pengantarabangsaan (Export) khusus untuk membantu usahawan menembusi pasaran global, pematuhan standard perdagangan dan strategi eksport',
+  'Penyelesaian Masalah & Inovasi'
+];
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PERIBUMI SARAWAK', 'PERIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -335,7 +345,7 @@ var KPIS = [
       F_('jantina', 'Jantina', 'select', { options: ['Lelaki', 'Perempuan'] }),
       F_('bumiputera', 'Bumiputera', 'select', { options: BANGSA_OPTIONS }),
       F_('jawatan', 'Jawatan', 'text', { sec: 'Kompetensi' }),
-      F_('bidang_kepakaran', 'Bidang kepakaran', 'text'),
+      F_('bidang_kepakaran', 'Bidang kepakaran mentor', 'select', { options: BIDANG_KEPAKARAN }),
       F_('pesijilan_profesional', 'Pesijilan profesional', 'text', { hint: 'Isi jika staf telah menjalani program peningkatan kompetensi / memiliki pesijilan; kosongkan jika belum.' }),
       F_('senarai_projek_mentee', 'Senarai projek mentee', 'textarea', { full: true }),
       F_('catatan', 'Catatan', 'textarea', { full: true })
