@@ -888,10 +888,10 @@ test('CKAI 4: Penyata bank (PDF) disimpan dengan pautan Drive; lajur ikut senara
   fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'P', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', nama_syarikat: 'X', no_ssu: 'SSU-778', tarikh_daftar: '2026-04-01', status: 'Aktif' }), /betulkan/); // no_daftar_ssm wajib
 });
 test('Pelajar: jantina dan bangsa daripada PELAJAR masuk ke CKAI 4 secara automatik', () => {
-  g.saveStudentsAs_({ peranan: 'Admin', emel: 'a@utm.my' }, [{ no_matrik: 'JB1', nama_pelajar: 'Ali', no_kp: '990101011299', fakulti: 'FC', jantina: 'Lelaki', bangsa: 'MELAYU' }], true);
+  g.saveStudentsAs_({ peranan: 'Admin', emel: 'a@utm.my' }, [{ no_matrik: 'JB1', nama_pelajar: 'Ali', no_kp: '990101011299', fakulti: 'FC', jantina: 'Lelaki', bangsa: 'MELAYU', bidang_pengajian: 'Sains Komputer' }], true);
   const r = ok(g.api_save(adminToken, 'CKAI4', { no_matrik: 'JB1', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 1, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'JB', no_ssu: 'SSU-JB1', tarikh_daftar: '2026-04-01', status: 'Aktif' }));
   const row = ok(g.api_list(adminToken, 'CKAI4', {})).rows.find(x => x.id === r.id);
-  assert.strictEqual(row.jantina, 'Lelaki'); assert.strictEqual(row.bangsa, 'MELAYU');
+  assert.strictEqual(row.jantina, 'Lelaki'); assert.strictEqual(row.bangsa, 'MELAYU'); assert.strictEqual(row.bidang_pengajian, 'Sains Komputer');
 });
 
 test('KAI 4 (GiGA): No. KP / pasport wajib, disahkan dan sengkang dibuang', () => {

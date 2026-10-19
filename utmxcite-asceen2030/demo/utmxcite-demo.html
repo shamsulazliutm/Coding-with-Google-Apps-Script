@@ -496,7 +496,7 @@ var APP = {
 
 /** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PERIBUMI SARAWAK', 'PERIBUMI SABAH', 'LAIN-LAIN'];
-var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
+var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
 /** Sheet luar bagi CKAI 5: borang permohonan penggunaan peralatan (tab DATA). ID boleh ditukar melalui Script Property MAKERSPACE_SHEET_ID. */
 var MAKERSPACE_SRC = { id: '1meTCl-xyxqeLZhf3CeGjgT8oIfe62pNU7PSJFLaChdo', tab: 'DATA' };
@@ -1383,7 +1383,7 @@ var STUDENT_MAPS = {
   KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   KAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
-  CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa' },
+  CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
   CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
@@ -2331,7 +2331,7 @@ function studentNeeds_(kpi) {
 /** Ringkasan awam bagi klien: tiada no. KP, e-mel atau telefon kepada pengguna bukan Admin. */
 function studentView_(user, matrik, s, need) {
   var gaps = studentGaps_(s, need);
-  var out = { no_matrik: matrik, found: !!s, complete: !!s && !gaps.length, gaps: gaps, nama_pelajar: s ? s.nama_pelajar : '', fakulti: s ? s.fakulti : '', jantina: s ? s.jantina || '' : '', bangsa: s ? s.bangsa || '' : '' };
+  var out = { no_matrik: matrik, found: !!s, complete: !!s && !gaps.length, gaps: gaps, nama_pelajar: s ? s.nama_pelajar : '', fakulti: s ? s.fakulti : '', jantina: s ? s.jantina || '' : '', bangsa: s ? s.bangsa || '' : '', bidang_pengajian: s ? s.bidang_pengajian || '' : '' };
   if (s && user.peranan === ROLES.ADMIN) { out.no_kp = s.no_kp; out.emel = s.emel; out.telefon = s.telefon; }
   else if (s && s.no_kp) out.kp_mask = '••••••••' + normKp_(s.no_kp).slice(-4);   // bukan Admin: no. KP disamarkan
   return out;
@@ -2410,7 +2410,7 @@ function saveStudentsAs_(user, list, silent) {
       var emel = String(raw && raw.emel || '').trim().toLowerCase();
       var tel = String(raw && raw.telefon || '').trim();
       var fak = String(raw && raw.fakulti || '').trim();
-      var jan = String(raw && raw.jantina || '').trim(), bgs = String(raw && raw.bangsa || '').trim().slice(0, 40);
+      var jan = String(raw && raw.jantina || '').trim(), bgs = String(raw && raw.bangsa || '').trim().slice(0, 40), bdg = sanitizeText_(String(raw && raw.bidang_pengajian || '').trim().slice(0, 120));
       var keepOk = function (curVal, validNow) { return !isAdmin && cur && curVal && validNow; };
       var out = {
         nama_pelajar: keepOk(cur && cur.nama_pelajar, true) ? cur.nama_pelajar : nama,
@@ -2419,7 +2419,8 @@ function saveStudentsAs_(user, list, silent) {
         telefon: keepOk(cur && cur.telefon, cur && validPhone_(cur.telefon)) ? cur.telefon : tel,
         fakulti: keepOk(cur && cur.fakulti, cur && faculties.indexOf(cur.fakulti) >= 0) ? cur.fakulti : fak,
         jantina: keepOk(cur && cur.jantina, true) ? cur.jantina : jan,
-        bangsa: keepOk(cur && cur.bangsa, true) ? cur.bangsa : bgs
+        bangsa: keepOk(cur && cur.bangsa, true) ? cur.bangsa : bgs,
+        bidang_pengajian: keepOk(cur && cur.bidang_pengajian, true) ? cur.bidang_pengajian : bdg
       };
       if (!out.nama_pelajar) errs.nama_pelajar = 'Nama wajib diisi.';
       if (!validKp_(out.no_kp)) errs.no_kp = 'No. KP / pasport tidak sah.';
@@ -2428,14 +2429,14 @@ function saveStudentsAs_(user, list, silent) {
       if (out.emel && !isEmail_(out.emel)) errs.emel = 'E-mel tidak sah.';
       if (out.telefon && !validPhone_(out.telefon)) errs.telefon = 'Nombor telefon tidak sah.';
       if (Object.keys(errs).length) { results.push({ no_matrik: matrik, ok: false, fields: errs }); return; }
-      var obj = { no_matrik: cur ? cur.no_matrik : matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti, jantina: out.jantina, bangsa: out.bangsa, dikemas_kini_pada: nowIso_(), dikemas_kini_oleh: user.emel };
+      var obj = { no_matrik: cur ? cur.no_matrik : matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti, jantina: out.jantina, bangsa: out.bangsa, bidang_pengajian: out.bidang_pengajian, dikemas_kini_pada: nowIso_(), dikemas_kini_oleh: user.emel };
       var headers = hdrCache || (hdrCache = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String));
       // padankan nama lajur tanpa mengira huruf besar/kecil
       var o2 = {};
       headers.forEach(function (h) { var lk = h.trim().toLowerCase(); if (obj.hasOwnProperty(lk)) o2[h] = obj[lk]; });
       writeRow_(sh, cur ? cur._row : null, o2);
       if (!silent) audit_(user, cur ? 'PELAJAR_KEMAS_KINI' : 'PELAJAR_TAMBAH', '', '', 'no_matrik=' + obj.no_matrik);
-      idx[matrik] = { _row: cur ? cur._row : -1, no_matrik: obj.no_matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti, jantina: out.jantina, bangsa: out.bangsa };
+      idx[matrik] = { _row: cur ? cur._row : -1, no_matrik: obj.no_matrik, no_kp: out.no_kp, nama_pelajar: out.nama_pelajar, emel: out.emel, telefon: out.telefon, fakulti: out.fakulti, jantina: out.jantina, bangsa: out.bangsa, bidang_pengajian: out.bidang_pengajian };
       results.push({ no_matrik: matrik, ok: true });
     });
     STUDENT_MEMO_ = null;
@@ -4869,6 +4870,7 @@ window.__demoSeed = function () {
           f('no_kp', 'No. KP / pasport <span class="req">*</span>', 'text', v.no_kp, v.found && !v.no_kp && S.session.user.peranan !== 'Admin' ? '' : '') +
           f('emel', 'E-mel' + (v.gaps && v.gaps.indexOf('emel') >= 0 ? ' <span class="req">*</span>' : ''), 'email', v.emel) +
           f('telefon', 'No. telefon' + (v.gaps && v.gaps.indexOf('telefon') >= 0 ? ' <span class="req">*</span>' : ''), 'text', v.telefon) +
+          f('bidang_pengajian', 'Bidang pengajian', 'text', v.bidang_pengajian) +
           '<div data-field="s' + i + 'jantina" class="' + (er.jantina ? 'invalid' : '') + '"><label for="sm_' + i + '_jantina">Jantina</label><select id="sm_' + i + '_jantina" data-si="' + i + '" data-sf="jantina"><option value="">Pilih…</option>' + ['Lelaki', 'Perempuan'].map(function (x) { return '<option' + (v.jantina === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select><div class="err" role="alert">' + esc(er.jantina || '') + '</div></div>' +
           '<div data-field="s' + i + 'bangsa"><label for="sm_' + i + '_bangsa">Bangsa</label><select id="sm_' + i + '_bangsa" data-si="' + i + '" data-sf="bangsa"><option value="">Pilih…</option>' + (S.session.bangsa || []).map(function (x) { return '<option' + (v.bangsa === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select><div class="err" role="alert"></div></div>' +
           '<div data-field="s' + i + 'fakulti" class="' + (er.fakulti ? 'invalid' : '') + '"><label for="sm_' + i + '_fakulti">Fakulti <span class="req">*</span></label><select id="sm_' + i + '_fakulti" data-si="' + i + '" data-sf="fakulti"><option value="">Pilih…</option>' +
