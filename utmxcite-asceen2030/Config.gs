@@ -21,7 +21,8 @@ var APP = {
 };
 
 /** Data asas pelajar (tab PELAJAR). Semua KPI yang menyimpan data pelajar hanya meminta no. matrik; selebihnya diambil dari sini. */
-var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
+var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PERIBUMI SARAWAK', 'PERIBUMI SABAH', 'LAIN-LAIN'];
+var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
 /** Sheet luar bagi CKAI 5: borang permohonan penggunaan peralatan (tab DATA). ID boleh ditukar melalui Script Property MAKERSPACE_SHEET_ID. */
 var MAKERSPACE_SRC = { id: '1meTCl-xyxqeLZhf3CeGjgT8oIfe62pNU7PSJFLaChdo', tab: 'DATA' };
@@ -224,9 +225,6 @@ function kai3Validate_(c, errors) {
 
 function ssuValidate_(c, errors) {
   icValidate_(c, errors);
-  var partners = parseJson_(c.rakan_kongsi, []) || [];
-  if (partners.length && Number(c.bil_rakan_kongsi) && !errors.rakan_kongsi && !errors.bil_rakan_kongsi && partners.length > Number(c.bil_rakan_kongsi) - 1)
-    errors.rakan_kongsi = 'Bilangan rakan kongsi yang disenaraikan (' + partners.length + ') melebihi bilangan rakan kongsi tolak pemilik (' + (Number(c.bil_rakan_kongsi) - 1) + ').';
 }
 
 function makerspaceValidate_(c, errors) {
@@ -323,7 +321,7 @@ var KPIS = [
       F_('no_kp', 'No. KP / pasport', 'text', { required: true }),
       F_('jenis_staf', 'Jenis staf', 'select', { required: true, options: ['Staf akademik', 'Staf bukan akademik'] }),
       F_('jantina', 'Jantina', 'select', { options: ['Lelaki', 'Perempuan'] }),
-      F_('bumiputera', 'Bumiputera', 'select', { options: ['MELAYU', 'CINA', 'INDIA', 'PERIBUMI SARAWAK', 'PERIBUMI SABAH', 'LAIN-LAIN'] }),
+      F_('bumiputera', 'Bumiputera', 'select', { options: BANGSA_OPTIONS }),
       F_('jawatan', 'Jawatan', 'text', { sec: 'Kompetensi' }),
       F_('bidang_kepakaran', 'Bidang kepakaran', 'text'),
       F_('pesijilan_profesional', 'Pesijilan profesional', 'text', { hint: 'Isi jika staf telah menjalani program peningkatan kompetensi / memiliki pesijilan; kosongkan jika belum.' }),
@@ -690,7 +688,7 @@ var KPIS = [
     listColumns: ['id', 'nama_syarikat', 'nama_pelajar', 'no_matrik', 'fakulti', 'tarikh_daftar', 'status'],
     statusField: 'status',
     rules: [{ when: { field: 'jenis_perniagaan', in: ['Lain-lain'] }, require: ['jenis_perniagaan_lain'] },
-      { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm'] },
+      { when: { field: 'status_ssm', in: ['Berdaftar'] }, require: ['tarikh_ssm', 'no_daftar_ssm'] },
       { when: { field: 'berasaskan_inovasi', in: ['Ya'] }, require: ['trl_syarikat'] }],
     validate: ssuValidate_,
     fields: [
@@ -700,20 +698,30 @@ var KPIS = [
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('emel', 'E-mel', 'email'),
       F_('telefon', 'No. telefon', 'text'),
+      F_('jantina', 'Jantina', 'text'),
+      F_('bangsa', 'Bangsa', 'text'),
+      F_('bidang_pengajian', 'Bidang pengajian', 'text'),
       F_('nama_syarikat', 'Nama syarikat / perniagaan', 'text', { required: true, sec: 'Pendaftaran SSU' }),
       F_('jenis_perniagaan', 'Jenis perniagaan', 'select', { required: true, options: JENIS_PERNIAGAAN }),
       F_('jenis_perniagaan_lain', 'Nama jenis perniagaan lain', 'text', { hint: 'Wajib jika memilih Lain-lain.' }),
+      F_('jenis_milikan', 'Jenis milikan', 'text'),
       F_('bil_rakan_kongsi', 'Bilangan rakan kongsi perniagaan (termasuk pemilik / ketua pasukan)', 'number', { required: true, min: 1, max: 13 }),
-      F_('rakan_kongsi', 'Rakan kongsi lain (no. matrik)', 'people', { full: true, max: 12, noun: 'rakan kongsi' }),
+      F_('bilangan_pekerja', 'Bilangan pekerja', 'number', { min: 0 }),
       F_('no_ssu', 'No. pendaftaran SSU', 'text', { required: true }),
       F_('tarikh_daftar', 'Tarikh pendaftaran', 'date', { required: true }),
       F_('status_ssm', 'Status pendaftaran SSM', 'select', { required: true, options: ['Berdaftar', 'Tidak Berdaftar'] }),
       F_('tarikh_ssm', 'Tarikh pendaftaran SSM', 'date', { hint: 'Wajib jika status SSM Berdaftar.' }),
-      F_('sijil_ssm', 'Attachment SSM (PDF)', 'file', { full: true, hint: 'Sijil / bukti pendaftaran SSM. PDF sahaja, maksimum 5 MB.' }),
-      F_('status', 'Status', 'select', { required: true, options: ['Aktif', 'Tidak Aktif'] }),
-      F_('berasaskan_inovasi', 'Berasaskan inovasi dan teknologi?', 'yesno', { sec: 'KPT 5 · inovasi dan teknologi' }),
-      F_('trl_syarikat', 'TRL syarikat (TRL 4 hingga 6)', 'select', { options: ['TRL 4', 'TRL 5', 'TRL 6'], short: 'TRL' }),
-      F_('catatan', 'Catatan', 'textarea', { full: true, sec: 'Pengurusan' })
+      F_('no_daftar_ssm', 'No. pendaftaran SSM', 'text', { hint: 'Wajib jika status SSM Berdaftar.' }),
+      F_('link_website_perniagaaan', 'Pautan laman web perniagaan', 'text'),
+      F_('punca_modal', 'Punca modal', 'text', { sec: 'Kewangan' }),
+      F_('modal_awal', 'Modal awal (RM)', 'number', { min: 0 }),
+      F_('jumlah_jualan', 'Jumlah jualan (RM)', 'number', { min: 0 }),
+      F_('penyata_bank', 'Penyata bank (PDF)', 'file', { full: true, hint: 'PDF sahaja, maksimum 5 MB.' }),
+      F_('tarikh_mula_perniagaan', 'Tarikh mula perniagaan', 'date'),
+      F_('catatan', 'Catatan', 'textarea', { full: true, sec: 'Pengurusan' }),
+      F_('status', 'Status', 'select', { required: true, options: ['Aktif', 'Tidak Aktif'], sec: 'KPT 5 · inovasi dan teknologi' }),
+      F_('berasaskan_inovasi', 'Berasaskan inovasi dan teknologi?', 'yesno'),
+      F_('trl_syarikat', 'TRL syarikat (TRL 4 hingga 6)', 'select', { options: ['TRL 4', 'TRL 5', 'TRL 6'], short: 'TRL' })
     ]
   },
   {
@@ -901,7 +909,7 @@ var STUDENT_MAPS = {
   KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   KAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
-  CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
+  CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
   CKAI7: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },

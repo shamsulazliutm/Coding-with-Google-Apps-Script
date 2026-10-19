@@ -432,7 +432,7 @@ test('Program: laporan PDF pilihan; boleh dimuat naik dan dimuat turun oleh PIC 
   fail(g.api_uploadFile(ckaiPic, 'CKAI4', 'lampiran', { name: 'x.pdf', data: pdf }), /Akses ditolak/);
 });
 test('CKAI 4 (SSU): Admin sahaja; dikira mengikut tarikh pendaftaran', () => {
-  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', jenis_perniagaan: 'Runcit', bil_rakan_kongsi: 3, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Aktif' };
+  const r = { fakulti: 'FC', nama_pelajar: 'Pelajar SSU', no_kp: '990101-01-1234', no_matrik: 'S1', jenis_perniagaan: 'Runcit', bil_rakan_kongsi: 3, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', no_daftar_ssm: 'SSM-0', nama_syarikat: 'Syarikat A', no_ssu: 'SSU-001', tarikh_daftar: '2026-02-01', status: 'Aktif' };
   ok(g.api_save(adminToken, 'CKAI4', r));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat B', no_ssu: 'SSU-002', status: 'Tidak Aktif' })));
   ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, r, { nama_syarikat: 'Syarikat C', no_ssu: 'SSU-003', tarikh_daftar: '2027-01-01' })));
@@ -877,26 +877,21 @@ test('medan fail: pautan Drive ditulis dalam lajur *_pautan (Sheet sahaja, tidak
   assert.strictEqual(sh.data.find(r => r[0] === saved.id)[col], 'https://drive.google.com/file/d/' + up.id + '/view');
 });
 
-test('CKAI 4: lampiran Sijil SSM (PDF) disimpan dengan pautan Drive dalam Sheet', () => {
-  const up = ok(g.api_uploadFile(adminToken, 'CKAI4', 'sijil_ssm', { name: 'sijil-ssm.pdf', data: PDF('ssm') }));
-  const r = ok(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'Pelajar SSM', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', sijil_ssm: { id: up.id, name: up.name }, nama_syarikat: 'Syarikat SSM', no_ssu: 'SSU-777', tarikh_daftar: '2026-04-01', status: 'Aktif' }));
+test('CKAI 4: Penyata bank (PDF) disimpan dengan pautan Drive; lajur ikut senarai baharu', () => {
+  const up = ok(g.api_uploadFile(adminToken, 'CKAI4', 'penyata_bank', { name: 'penyata.pdf', data: PDF('bank') }));
+  const r = ok(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'Pelajar SSM', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', no_daftar_ssm: 'SSM-1', penyata_bank: { id: up.id, name: up.name }, nama_syarikat: 'Syarikat SSM', no_ssu: 'SSU-777', tarikh_daftar: '2026-04-01', status: 'Aktif', modal_awal: 1000, jumlah_jualan: 5000, bilangan_pekerja: 2, jenis_milikan: 'Perkongsian' }));
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('CKAI4_SSU');
-  const row = sh.data.find(x => x[0] === r.id);
-  assert.strictEqual(row[sh.data[0].indexOf('sijil_ssm_pautan')], 'https://drive.google.com/file/d/' + up.id + '/view');
-  fail(g.api_uploadFile(adminToken, 'CKAI4', 'sijil_ssm', { name: 'x.pdf', data: Buffer.from('bukan pdf').toString('base64') }), /PDF/);
+  const hd = sh.data[0], row = sh.data.find(x => x[0] === r.id);
+  assert.strictEqual(row[hd.indexOf('penyata_bank_pautan')], 'https://drive.google.com/file/d/' + up.id + '/view');
+  deepEq(hd.slice(0, 10), ['id', 'fakulti', 'nama_pelajar', 'no_kp', 'no_matrik', 'emel', 'telefon', 'jantina', 'bangsa', 'bidang_pengajian']);
+  fail(g.api_uploadFile(adminToken, 'CKAI4', 'penyata_bank', { name: 'x.pdf', data: Buffer.from('bukan pdf').toString('base64') }), /PDF/);
+  fail(g.api_save(adminToken, 'CKAI4', { fakulti: 'FC', nama_pelajar: 'P', no_kp: '990101011234', no_matrik: 'S77', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 2, status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', nama_syarikat: 'X', no_ssu: 'SSU-778', tarikh_daftar: '2026-04-01', status: 'Aktif' }), /betulkan/); // no_daftar_ssm wajib
 });
-
-test('CKAI 4: rakan kongsi (nama, no. matrik, no. KP), maksimum 12, selaras dengan bilangan rakan kongsi', () => {
-  const base = { fakulti: 'FC', nama_pelajar: 'Pemilik', no_kp: '990101011234', no_matrik: 'S90', jenis_perniagaan: 'Pembinaan', status_ssm: 'Berdaftar', tarikh_ssm: '2026-01-15', nama_syarikat: 'Syarikat RK', tarikh_daftar: '2026-04-02', status: 'Aktif' };
-  const p = (n) => Array.from({ length: n }, (_, i) => ({ nama: 'Rakan ' + (i + 1), matrik: 'RK' + (i + 1), nokp: '0001010' + (10000 + i) }));
-  const r = ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-801', bil_rakan_kongsi: 13, rakan_kongsi: p(12) })));
+test('Pelajar: jantina dan bangsa daripada PELAJAR masuk ke CKAI 4 secara automatik', () => {
+  g.saveStudentsAs_({ peranan: 'Admin', emel: 'a@utm.my' }, [{ no_matrik: 'JB1', nama_pelajar: 'Ali', no_kp: '990101011299', fakulti: 'FC', jantina: 'Lelaki', bangsa: 'MELAYU' }], true);
+  const r = ok(g.api_save(adminToken, 'CKAI4', { no_matrik: 'JB1', jenis_perniagaan: 'Pertanian', bil_rakan_kongsi: 1, status_ssm: 'Tidak Berdaftar', nama_syarikat: 'JB', no_ssu: 'SSU-JB1', tarikh_daftar: '2026-04-01', status: 'Aktif' }));
   const row = ok(g.api_list(adminToken, 'CKAI4', {})).rows.find(x => x.id === r.id);
-  assert.strictEqual(JSON.parse(row.rakan_kongsi).length, 12);
-  assert.strictEqual(JSON.parse(row.rakan_kongsi)[0].nokp, '000101010000');
-  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-802', bil_rakan_kongsi: 13, rakan_kongsi: p(13) })), /betulkan/); // lebih 12
-  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-803', bil_rakan_kongsi: 14 })), /betulkan/); // lebih 13
-  fail(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-804', bil_rakan_kongsi: 3, rakan_kongsi: p(3) })), /betulkan/); // 3 > 3-1
-    ok(g.api_save(adminToken, 'CKAI4', Object.assign({}, base, { no_ssu: 'SSU-806', bil_rakan_kongsi: 1 }))); // pemilik tunggal, tanpa senarai
+  assert.strictEqual(row.jantina, 'Lelaki'); assert.strictEqual(row.bangsa, 'MELAYU');
 });
 
 test('KAI 4 (GiGA): No. KP / pasport wajib, disahkan dan sengkang dibuang', () => {
