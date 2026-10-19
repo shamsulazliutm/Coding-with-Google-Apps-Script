@@ -91,7 +91,7 @@ const file = 'file://' + path.join(__dirname, '..', 'demo', 'utmxcite-demo.html'
     const before = await page.locator('tbody tr').count();
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_no_matrik');
-    assert.ok(await page.locator('#f_fakulti').isDisabled()); // dikunci kepada FAI
+    assert.ok(await page.locator('#f_fakulti[readonly]').isVisible()); // fakulti auto daripada PELAJAR (baca sahaja)
     assert.ok(await page.locator('#f_nama_pelajar[readonly]').isVisible()); // nama dan no. KP auto (baca sahaja)
     await page.fill('#f_no_matrik', 'DEMO0001'); await page.press('#f_no_matrik', 'Tab');
     await page.waitForSelector('.mdl');                                     // pelajar baharu: lengkapkan dalam tetingkap

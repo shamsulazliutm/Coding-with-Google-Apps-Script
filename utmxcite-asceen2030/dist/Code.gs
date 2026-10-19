@@ -971,7 +971,7 @@ var STUDENT_MAPS = {
   KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   KAI6: { nama_pelajar: 'nama', no_kp: 'no_kp' },
-  CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
+  CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI6: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp' },
@@ -984,7 +984,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI1', 'CKAI7'].indexOf(k.id) < 0) {
+  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI7'].indexOf(k.id) < 0) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
@@ -2014,6 +2014,11 @@ function applyStudents_(user, kpi, input) {
   }
   if (single) {
     var s1 = idx[single];
+    // KPI fakulti yang mengambil fakulti daripada PELAJAR (contoh CKAI 1): PIC hanya boleh merekod pelajar fakultinya sendiri.
+    if (kpi.entry === 'faculty' && kpi.student.map.fakulti === 'fakulti' && user.peranan !== ROLES.ADMIN && s1.fakulti !== user.fakulti) {
+      var ef = {}; ef[kpi.student.matrik] = 'Pelajar ini bukan daripada fakulti anda (' + user.fakulti + ').';
+      throw userError_('Sila betulkan medan yang bertanda.', { fields: ef });
+    }
     input[kpi.student.matrik] = s1.no_matrik;
     for (var col in kpi.student.map) {
       if (!kpi.student.map.hasOwnProperty(col)) continue;

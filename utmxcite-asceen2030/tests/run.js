@@ -719,7 +719,9 @@ test('CKAI 1 (fungsi 1 Identify Interest): PIC fakulti mendaftar profiling', () 
   ok(g.api_saveUser(adminToken, { emel: 'pic.profil2@utm.my', nama: 'PIC FS', peranan: 'PIC', fakulti: 'FS', kpi_akses: 'CKAI1', aktif: 'Ya' }));
   profPic = login('pic.profil@utm.my'); profPicFc = login('pic.profil2@utm.my');
   deepEq(ok(g.api_session(profPic)).kpis.map(k => k.id), ['CKAI1']);
-  const a = ok(g.api_save(profPic, 'CKAI1', prof({ fakulti: 'FKE' })));
+  const wrong = g.api_save(profPic, 'CKAI1', prof({ fakulti: 'FKE', no_matrik: 'A24PF0099', nama_pelajar: 'Fakulti Lain' }));   // fakulti diambil daripada PELAJAR; PIC hanya fakulti sendiri
+  fail(wrong, /betulkan/); assert.match(wrong.fields.no_matrik, /bukan daripada fakulti anda/);
+  const a = ok(g.api_save(profPic, 'CKAI1', prof()));
   assert.strictEqual(a.fakulti, 'FM'); assert.strictEqual(a.id.slice(0, 3), 'PF-');
   const shp = g.getSheet_('CKAI1_Profiling_Pelajar');
   deepEq(shp.getRange(1, 1, 1, shp.getLastColumn()).getValues()[0], ['id', 'fakulti', 'nama_pelajar', 'no_kp', 'no_matrik', 'emel', 'telefon', 'program', 'tahun_pengajian', 'tarikh_profiling', 'sumber_profiling', 'tahap_minat', 'minat_bidang', 'pengalaman_perniagaan', 'tahap_kesediaan', 'kemahiran', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
@@ -730,7 +732,7 @@ test('CKAI 1 (fungsi 1 Identify Interest): PIC fakulti mendaftar profiling', () 
 test('CKAI 1: satu profil bagi setiap no. matrik (tidak peka huruf besar/kecil); ID rekod fakulti lain tidak didedahkan', () => {
   const dup = g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'a24pf0001' })); fail(dup, /betulkan/); assert.match(dup.fields.no_matrik, /Sudah didaftarkan \(PF-001\)/);
   const other = g.api_save(profPicFc, 'CKAI1', prof({ fakulti: 'FS', no_matrik: 'A24PF0001', nama_pelajar: 'Cuba duplikasi' })); fail(other, /betulkan/);
-  assert.match(other.fields.no_matrik, /^Sudah didaftarkan\.$/); // tiada ID kerana rekod milik fakulti lain
+  assert.ok(!/PF-/.test(other.fields.no_matrik)); // tiada ID rekod fakulti lain didedahkan
   const first = ok(g.api_list(profPic, 'CKAI1', {})).rows[0];
   ok(g.api_save(profPic, 'CKAI1', Object.assign({}, prof(), { id: first.id, tahap_minat: 'Sederhana' }))); // mengemas kini rekod sendiri tidak dianggap duplikasi
   ok(g.api_save(profPic, 'CKAI1', prof({ no_matrik: 'A24PF0005', nama_pelajar: 'Profil Dua', tahap_kesediaan: 'Ada prototaip / MVP', tahap_minat: 'Rendah', sumber_profiling: 'Saringan fakulti' })));
@@ -1198,7 +1200,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI1', 'CKAI7'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6', 'CKAI7'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR

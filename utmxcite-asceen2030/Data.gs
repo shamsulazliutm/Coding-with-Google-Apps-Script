@@ -148,6 +148,11 @@ function applyStudents_(user, kpi, input) {
   }
   if (single) {
     var s1 = idx[single];
+    // KPI fakulti yang mengambil fakulti daripada PELAJAR (contoh CKAI 1): PIC hanya boleh merekod pelajar fakultinya sendiri.
+    if (kpi.entry === 'faculty' && kpi.student.map.fakulti === 'fakulti' && user.peranan !== ROLES.ADMIN && s1.fakulti !== user.fakulti) {
+      var ef = {}; ef[kpi.student.matrik] = 'Pelajar ini bukan daripada fakulti anda (' + user.fakulti + ').';
+      throw userError_('Sila betulkan medan yang bertanda.', { fields: ef });
+    }
     input[kpi.student.matrik] = s1.no_matrik;
     for (var col in kpi.student.map) {
       if (!kpi.student.map.hasOwnProperty(col)) continue;

@@ -590,7 +590,6 @@ function buildHtml() {
     await page.waitForSelector('table');
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_no_matrik');
-    await page.selectOption('#f_fakulti', 'FC');
     await page.fill('#f_no_matrik', 'A24PF9001');
     await page.fill('#f_tarikh_profiling', '2026-05-05');
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
@@ -602,7 +601,6 @@ function buildHtml() {
     // no. matrik yang sama ditolak
     await page.click('[data-action="new"]');
     await page.waitForSelector('#f_no_matrik');
-    await page.selectOption('#f_fakulti', 'FC');
     await page.fill('#f_no_matrik', 'a24pf9001');
     await page.fill('#f_tarikh_profiling', '2026-05-06');
     await page.selectOption('#f_sumber_profiling', 'Pendaftaran minat');
