@@ -98,9 +98,9 @@
 <div class="sticky" id="hdr">
   <header class="hero">
     <div class="hero-in">
-      <? if (logoUrl) { ?><div class="logo-box"><img src="<?= logoUrl ?>" alt="UTMXCITE - Universiti Teknologi Malaysia"></div><? } ?>
+      <div class="logo-box" id="logoBox" hidden><img id="logoImg" alt="UTMXCITE - Universiti Teknologi Malaysia"></div>
       <div class="hero-t">
-        <? if (!logoUrl) { ?><div class="eyebrow">UNIVERSITI TEKNOLOGI MALAYSIA &middot; UTMXCITE</div><? } ?>
+        <div class="eyebrow" id="eyebrow">UNIVERSITI TEKNOLOGI MALAYSIA &middot; UTMXCITE</div>
         <h1>PROFIL KEUSAHAWANAN PELAJAR<span class="en">Student Entrepreneurship Profiling</span></h1>
       </div>
     </div>
@@ -157,6 +157,16 @@
 </div>
 
 <script>
+// The logo is set from JavaScript: Apps Script rewrites data: URLs written into src attributes by scriptlets.
+var LOGO_URL = <?!= JSON.stringify(logoUrl || '') ?>;
+(function () {
+  if (!LOGO_URL) return;
+  var img = document.getElementById('logoImg'), box = document.getElementById('logoBox'), eb = document.getElementById('eyebrow');
+  img.onload = function () { box.hidden = false; if (eb) eb.hidden = true; };
+  img.onerror = function () { box.hidden = true; if (eb) eb.hidden = false; };
+  img.src = LOGO_URL;
+})();
+
 var FACULTIES = <?!= JSON.stringify(faculties) ?>;
 var EMAIL_DOMAINS = <?!= JSON.stringify(emailDomains) ?>;
 

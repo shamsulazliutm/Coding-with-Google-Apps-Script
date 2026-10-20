@@ -73,7 +73,7 @@
 
 <header class="bar">
   <div class="in">
-    <? if (logoUrl) { ?><div class="logo-box"><img src="<?= logoUrl ?>" alt="UTMXCITE - Universiti Teknologi Malaysia"></div><? } ?>
+    <div class="logo-box" id="logoBox" hidden><img id="logoImg" alt="UTMXCITE - Universiti Teknologi Malaysia"></div>
     <h1>Dashboard Profil Keusahawanan Pelajar <span class="en">/ Student Entrepreneurship Profiling</span></h1>
     <div class="who" id="who" hidden>
       <div id="whoName"></div>
@@ -156,6 +156,16 @@
 </dialog>
 
 <script>
+// The logo is set from JavaScript: Apps Script rewrites data: URLs written into src attributes by scriptlets.
+var LOGO_URL = <?!= JSON.stringify(logoUrl || '') ?>;
+(function () {
+  if (!LOGO_URL) return;
+  var img = document.getElementById('logoImg'), box = document.getElementById('logoBox'), eb = null;
+  img.onload = function () { box.hidden = false; if (eb) eb.hidden = true; };
+  img.onerror = function () { box.hidden = true; if (eb) eb.hidden = false; };
+  img.src = LOGO_URL;
+})();
+
 var COLS = [
   ['timestamp', 'Tarikh / Date'], ['refId', 'Rujukan / Ref'], ['matric', 'No. Matrik / Matric'], ['name', 'Nama / Name'], ['email', 'Emel / Email'],
   ['phone', 'Telefon / Phone'], ['facultyCode', 'Fakulti / Faculty'], ['program', 'Program'], ['ic', 'IC / Passport'],
