@@ -16,6 +16,14 @@
   .en { display:block; font-style:italic; color:var(--mute); font-weight:400; }
   h1 .en, h2 .en { text-transform:none; letter-spacing:0; }
   .intro p { margin:0 0 12px; }
+  .tabs { display:flex; gap:6px; overflow-x:auto; position:sticky; top:0; z-index:5; background:var(--bg); padding:4px 0 10px; margin-bottom:6px; scrollbar-width:thin; }
+  .tab { flex:0 0 auto; padding:6px 14px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink); font-size:.88rem; line-height:1.25; text-align:left; }
+  .tab b { display:inline-block; min-width:1.4em; height:1.4em; line-height:1.4em; text-align:center; border-radius:50%; background:var(--line); margin-right:4px; font-size:.78rem; }
+  .tab .en { font-size:.74rem; color:inherit; opacity:.8; margin-left:2.1em; }
+  .tab.active { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .tab.active b { background:#fff; color:var(--brand); }
+  .tab.done { border-color:var(--brand); color:var(--brand); }
+  .tab.done b { background:var(--brand); color:#fff; }
   .logo { display:block; max-width:260px; width:60%; height:auto; margin:0 auto 12px; }
   .addr { font-size:.9rem; color:var(--mute); }
   .req { color:var(--err); }
@@ -54,7 +62,9 @@
 <body>
 <div class="wrap">
 
-  <div class="card top intro">
+  <nav class="tabs" id="tabs" aria-label="Bahagian / Sections"></nav>
+
+  <div class="card top intro" id="intro">
     <? if (logoUrl) { ?><img class="logo" src="<?= logoUrl ?>" alt="UTM &amp; UTMXCITE"><? } ?>
     <h1>PROFIL KEUSAHAWANAN PELAJAR<span class="en">STUDENT ENTREPRENEURSHIP PROFILING</span></h1>
     <p style="margin-top:14px">Assalamualaikum WBT dan Salam Sejahtera,<span class="en">Assalamualaikum WBT and Good day to you,</span></p>
@@ -100,7 +110,7 @@ function bi(bm, en) { return { bm: bm, en: en }; }
 var YES = { v: 'Yes', l: bi('Ya', 'Yes') }, NO = { v: 'No', l: bi('Tidak', 'No') };
 
 var STEPS = [
-  { title: bi('Bahagian 1 - Profil Pelajar', 'Section 1 - Students Profile'), fields: [
+  { tab: bi('Profil Pelajar', 'Student Profile'), title: bi('Bahagian 1 - Profil Pelajar', 'Section 1 - Students Profile'), fields: [
     { id: 'name', type: 'text', req: true, upper: true, auto: 'name', label: bi('Nama Penuh (HURUF BESAR)', 'Full Name (in CAPITAL LETTERS)') },
     { id: 'email', type: 'email', req: true, auto: 'email', label: bi('Alamat Emel', 'Email Address'),
       hint: bi('Mesti emel UTM (@graduate.utm.my atau @utm.my)', 'Must be a UTM email (@graduate.utm.my or @utm.my)') },
@@ -111,15 +121,15 @@ var STEPS = [
     { id: 'hometown', type: 'text', label: bi('Kampung Halaman', 'Hometown') },
     { id: 'familyBiz', type: 'radio', req: true, label: bi('Adakah mana-mana ahli keluarga anda terlibat dalam perniagaan?', 'Does any of your family members involve in business?'), options: [YES, NO] }
   ]},
-  { title: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), show: function (a) { return a.familyBiz === 'Yes'; }, fields: [
+  { tab: bi('Latar Belakang', 'Background'), title: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), show: function (a) { return a.familyBiz === 'Yes'; }, fields: [
     { id: 'familyList', type: 'area', label: bi('SENARAIKAN SEMUA AHLI KELUARGA YANG MENJALANKAN PERNIAGAAN DAN NYATAKAN JENIS PERNIAGAAN', 'LIST ALL YOUR FAMILY MEMBERS THAT RUN THE BUSINESS AND STATE THE TYPE OF BUSINESS'),
       hint: bi('Contoh:\n1) Bapa - Percetakan\n2) Kakak - Fesyen\n3) Abang - Bengkel', 'E.g.:\n1) Father - Printing\n2) Sister - Fashion\n3) Brother - Workshop') },
     { id: 'familyDuration', type: 'area', label: bi('BERAPA LAMA SETIAP AHLI KELUARGA MENJALANKAN PERNIAGAAN? (Mengikut soalan di atas)', 'HOW LONG EACH OF THE FAMILY MEMBERS RUN THE BUSINESS? (According to the question above)') }
   ]},
-  { title: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), fields: [
+  { tab: bi('Pengalaman', 'Experience'), title: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), fields: [
     { id: 'ownBiz', type: 'radio', req: true, label: bi('ADAKAH ANDA SENDIRI PERNAH MENJALANKAN SEBARANG JENIS PERNIAGAAN?', 'HAVE YOU YOURSELF EVER RUN ANY TYPE OF BUSINESS?'), options: [YES, NO] }
   ]},
-  { title: bi('Profil Perniagaan', 'Business Profile'), show: function (a) { return a.ownBiz === 'Yes'; }, fields: [
+  { tab: bi('Profil Perniagaan', 'Business Profile'), title: bi('Profil Perniagaan', 'Business Profile'), show: function (a) { return a.ownBiz === 'Yes'; }, fields: [
     { id: 'bizType', type: 'text', label: bi('NYATAKAN JENIS PERNIAGAAN YANG ANDA JALANKAN (Berdasarkan soalan sebelum ini)', 'STATE THE TYPE OF BUSINESS THAT YOU RUN (Based on the previous question)') },
     { id: 'bizDuration', type: 'radio', label: bi('TEMPOH MENJALANKAN PERNIAGAAN', 'DURATION OF RUNNING THE BUSINESS'), options: [
       { v: '0 - 1 year', l: bi('0 - 1 tahun', '0 - 1 year') },
@@ -130,10 +140,10 @@ var STEPS = [
       { v: 'Passionate to learn doing business', l: bi('Minat untuk belajar berniaga', 'Passionate to learn doing business') },
       { v: 'Encouragement from others', l: bi('Galakan daripada orang lain', 'Encouragement from others') }] }
   ]},
-  { title: bi('Minat dalam Perniagaan', 'Interests in Business'), fields: [
+  { tab: bi('Minat', 'Interest'), title: bi('Minat dalam Perniagaan', 'Interests in Business'), fields: [
     { id: 'interest', type: 'radio', req: true, label: bi('ADAKAH ANDA BERMINAT UNTUK MENJALANKAN PERNIAGAAN?', 'DO YOU HAVE AN INTEREST TO RUN A BUSINESS?'), options: [YES, NO] }
   ]},
-  { title: bi('Minat dalam Perniagaan (Butiran)', 'Interest in Business (Details)'), show: function (a) { return a.interest === 'Yes'; }, fields: [
+  { tab: bi('Butiran Minat', 'Interest Details'), title: bi('Minat dalam Perniagaan (Butiran)', 'Interest in Business (Details)'), show: function (a) { return a.interest === 'Yes'; }, fields: [
     { id: 'interestType', type: 'text', req: true, label: bi('JENIS PERNIAGAAN YANG ANDA MINATI (JIKA ADA)', 'TYPE OF BUSINESS OF YOUR INTEREST (IF ANY)') },
     { id: 'campus', type: 'radio', req: true, label: bi('ADAKAH ANDA MAHU MENJALANKAN PERNIAGAAN DI KAMPUS SEMASA PENGAJIAN?', 'DO YOU WANT TO RUN A BUSINESS ON CAMPUS DURING YOUR STUDY?'), options: [
       YES, NO, { v: 'Maybe', l: bi('Mungkin', 'Maybe') }] },
@@ -149,6 +159,7 @@ var STEPS = [
   ]}
 ];
 
+var done = {};         // steps the student has completed
 var ans = {};          // all answers
 var idx = 0;           // index into STEPS
 var busy = false;
@@ -224,7 +235,7 @@ function render() {
     stage.appendChild(q);
   });
 
-  $('bar').style.width = Math.round(((pos + 1) / vis.length) * 100) + '%';
+  $('intro').hidden = pos !== 0;   // intro text belongs to the first page only
   updateNav();
   window.scrollTo(0, 0);
 }
@@ -234,31 +245,77 @@ function updateNav() {
   $('back').style.visibility = pos === 0 ? 'hidden' : 'visible';
   $('next').innerHTML = last ? 'Hantar <i>/ Submit</i>' : 'Seterusnya <i>/ Next</i> &rarr;';
   $('bar').style.width = Math.round(((pos + 1) / vis.length) * 100) + '%';
+  renderTabs();
 }
 
-function fail(f, bm, en) {
-  var q = $('q_' + f.id); q.classList.add('bad');
-  q.querySelector('.err').innerHTML = esc(bm) + ' <i>/ ' + esc(en) + '</i>';
-  return q;
+// Returns the validation problems of one step without touching the DOM.
+function problems(si) {
+  var out = [];
+  STEPS[si].fields.forEach(function (f) {
+    var v = ans[f.id];
+    var empty = v == null || String(v).trim() === '';
+    var bad = null;
+    if (f.req && empty) bad = ['Sila isi ruangan ini.', 'This question is required.'];
+    else if (f.id === 'email' && !empty) {
+      var m = /^[^\s@]+@([^\s@]+\.[^\s@]+)$/.exec(String(v).trim().toLowerCase());
+      if (!m) bad = ['Alamat emel tidak sah.', 'Invalid email address.'];
+      else if (EMAIL_DOMAINS.indexOf(m[1]) === -1) bad = ['Mesti emel UTM (@graduate.utm.my atau @utm.my).', 'Must be a UTM email (@graduate.utm.my or @utm.my).'];
+    } else if (f.id === 'phone' && !empty && !/^[0-9+\-\s]{7,20}$/.test(v)) bad = ['Nombor telefon tidak sah.', 'Invalid phone number.'];
+    else if (f.id === 'ic' && !empty && !/^[A-Za-z0-9\-\s]{5,20}$/.test(v)) bad = ['No. KP / pasport tidak sah.', 'Invalid IC / passport number.'];
+    if (bad) out.push({ f: f, bm: bad[0], en: bad[1] });
+  });
+  return out;
+}
+
+// Marks the problems on the step that is currently rendered.
+function showProblems(list) {
+  document.querySelectorAll('.q.bad').forEach(function (q) { q.classList.remove('bad'); });
+  var first = null;
+  list.forEach(function (p) {
+    var q = $('q_' + p.f.id); q.classList.add('bad');
+    q.querySelector('.err').innerHTML = esc(p.bm) + ' <i>/ ' + esc(p.en) + '</i>';
+    if (!first) first = q;
+  });
+  if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function validate() {
-  var firstBad = null;
-  document.querySelectorAll('.q.bad').forEach(function (q) { q.classList.remove('bad'); });
-  STEPS[idx].fields.forEach(function (f) {
-    var v = ans[f.id], q = null;
-    var empty = v == null || String(v).trim() === '';
-    if (f.req && empty) q = fail(f, 'Sila isi ruangan ini.', 'This question is required.');
-    else if (f.id === 'email' && !empty) {
-      var m = /^[^\s@]+@([^\s@]+\.[^\s@]+)$/.exec(String(v).trim().toLowerCase());
-      if (!m) q = fail(f, 'Alamat emel tidak sah.', 'Invalid email address.');
-      else if (EMAIL_DOMAINS.indexOf(m[1]) === -1) q = fail(f, 'Mesti emel UTM (@graduate.utm.my atau @utm.my).', 'Must be a UTM email (@graduate.utm.my or @utm.my).');
-    } else if (f.id === 'phone' && !empty && !/^[0-9+\-\s]{7,20}$/.test(v)) q = fail(f, 'Nombor telefon tidak sah.', 'Invalid phone number.');
-    else if (f.id === 'ic' && !empty && !/^[A-Za-z0-9\-\s]{5,20}$/.test(v)) q = fail(f, 'No. KP / pasport tidak sah.', 'Invalid IC / passport number.');
-    if (q && !firstBad) firstBad = q;
+  var list = problems(idx);
+  showProblems(list);
+  return !list.length;
+}
+
+// Tab click: going back is free; going forward needs every step in between to be valid.
+function goTo(target) {
+  if (busy || target === idx) return;
+  var vis = visible(), cur = vis.indexOf(idx), tp = vis.indexOf(target);
+  if (tp < cur) { idx = target; render(); return; }
+  for (var k = cur; k < tp; k++) {
+    var list = problems(vis[k]);
+    if (list.length) {
+      if (vis[k] !== idx) { idx = vis[k]; render(); }
+      showProblems(list);
+      return;
+    }
+    done[vis[k]] = true;
+  }
+  idx = target; render();
+}
+
+function renderTabs() {
+  var vis = visible(), nav = $('tabs');
+  nav.innerHTML = '';
+  vis.forEach(function (si, n) {
+    var b = el('button', 'tab' + (si === idx ? ' active' : '') + (done[si] && si !== idx ? ' done' : ''));
+    b.type = 'button';
+    b.title = STEPS[si].tab.en;
+    b.setAttribute('aria-current', si === idx ? 'step' : 'false');
+    b.innerHTML = '<b>' + (n + 1) + '</b> ' + esc(STEPS[si].tab.bm) + '<span class="en">' + esc(STEPS[si].tab.en) + '</span>';
+    b.addEventListener('click', function () { goTo(si); });
+    nav.appendChild(b);
   });
-  if (firstBad) firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  return !firstBad;
+  var act = nav.querySelector('.active');
+  if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
 
 function banner(msg) { var b = $('banner'); b.style.display = msg ? 'block' : 'none'; b.textContent = msg || ''; }
@@ -292,6 +349,7 @@ function submit() {
 $('next').addEventListener('click', function () {
   if (busy || !validate()) return;
   var vis = visible(), pos = vis.indexOf(idx);
+  done[idx] = true;
   if (pos === vis.length - 1) return submit();
   idx = vis[pos + 1];
   render();
