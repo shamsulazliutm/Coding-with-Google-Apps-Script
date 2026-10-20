@@ -868,6 +868,7 @@ label .req{color:var(--bad)}
   // Sel senarai: pelajar = nama sahaja (no. KP tidak dipaparkan dalam jadual); fail = butang muat turun.
   function listCell(k, r, c) {
     var fd = fieldDef(k, c), v = r[c] === undefined ? '' : r[c];
+    if (fd && fd.type === 'people' && fd.format === 'numbered') return esc(String(v).replace(/\r?\n/g, ' · '));
     if (fd && fd.type === 'people') {
       var ps = parseJson(v, []);
       return esc(ps.map(function (p) { return p.nama; }).join(', '));
@@ -989,11 +990,18 @@ label .req{color:var(--bad)}
     }
   }
 
+  // Teks bernombor "1. NAMA (NO. MATRIK)" setiap baris -> senarai {nama, matrik}
+  function parseNumbered(v) {
+    return String(v || '').split(/\r?\n/).map(function (ln) {
+      var m = /^\s*\d+\.\s*(.*?)\s*\(([^()]+)\)\s*$/.exec(ln);
+      return m ? { nama: m[1], matrik: m[2] } : null;
+    }).filter(Boolean);
+  }
   function renderForm(k) {
     var rec = S.editing || {};
     S.people = {}; S.files = {}; S.peopleKp = {};
     k.fields.forEach(function (fd) {
-      if (fd.type === 'people') { S.peopleKp[fd.key] = fd.kp !== false; var ps = parseJson(rec[fd.key], []); S.people[fd.key] = ps.length ? ps.map(function (p) { return { nama: p.nama || '', matrik: p.matrik || '', nokp: p.nokp || '', fakulti: p.fakulti || '' }; }) : [{ nama: '', matrik: '', nokp: '', fakulti: '' }]; }
+      if (fd.type === 'people') { S.peopleKp[fd.key] = fd.kp !== false; var ps = fd.format === 'numbered' ? parseNumbered(rec[fd.key]) : parseJson(rec[fd.key], []); S.people[fd.key] = ps.length ? ps.map(function (p) { return { nama: p.nama || '', matrik: p.matrik || '', nokp: p.nokp || '', fakulti: p.fakulti || '' }; }) : [{ nama: '', matrik: '', nokp: '', fakulti: '' }]; }
       if (fd.type === 'file') { var f = parseJson(rec[fd.key], null); S.files[fd.key] = f && f.id ? f : null; }
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';

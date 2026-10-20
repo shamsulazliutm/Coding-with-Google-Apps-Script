@@ -279,7 +279,10 @@ function validateRecord_(kpi, rec, faculties, user, existing, rows, opts) {
           if (miss.length) bad.push(noun.charAt(0).toUpperCase() + noun.slice(1) + ' ' + (i + 1) + ': ' + miss.join(', ') + ' tidak sah'); else people.push({ nama: nama, matrik: matrik, nokp: kp, fakulti: facCodes.indexOf(String(p && p.fakulti || '')) >= 0 ? String(p.fakulti) : '' });
         });
         if (bad.length) { errors[f.key] = bad.join('; ') + '.'; break; }
-        clean[f.key] = JSON.stringify(people);
+        // format 'numbered': teks "1. NAMA (NO. MATRIK)" setiap baris (contoh nama ahli kumpulan KAI 6); selainnya JSON.
+        clean[f.key] = f.format === 'numbered'
+          ? people.map(function (p, i) { return (i + 1) + '. ' + String(p.nama).toUpperCase() + ' (' + p.matrik + ')'; }).join('\n')
+          : JSON.stringify(people);
         break;
       case 'file':
         var fv = typeof v === 'string' ? parseJson_(v, null) : v;

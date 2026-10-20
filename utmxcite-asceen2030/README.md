@@ -270,3 +270,5 @@ id, fakulti, bulan_pendapatan, nama_pelajar, no_kp, no_matrik, jantina, bangsa, 
 **CKAI 1 · fakulti:** `fakulti` diambil automatik daripada tab PELAJAR berdasarkan no. matrik (baca sahaja dalam borang). PIC fakulti hanya boleh merekod pelajar daripada fakultinya sendiri; Admin boleh merekod semua fakulti.
 
 **CKAI 7 · Tahun dan Bulan:** tempoh pelaporan kini dua lajur, `Tahun` (2026-2030) dan `Bulan` (Januari … Disember). `setup()` mengisi `Tahun` dan `Bulan` daripada lajur lama `bulan_pendapatan` / `tempoh` (format YYYY-MM atau hari/bulan/tahun) bagi baris yang masih kosong.
+
+**KAI 6 · ahli kumpulan dan fakulti:** `fakulti` diambil daripada PELAJAR (PIC hanya pelajar fakultinya; had fakulti KAI 6 kekal). `nama_ahli_kumpulan` dimasukkan sebagai senarai no. matrik (maksimum 10); nama diambil daripada PELAJAR dan disimpan dalam Sheet sebagai teks bernombor, satu baris setiap ahli: `1. NAMA (NO. MATRIK)`.

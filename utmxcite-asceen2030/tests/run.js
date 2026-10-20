@@ -203,7 +203,7 @@ test('Admin merekod bagi fakulti lain dan melihat semua', () => {
 test('KAI6 terhad kepada FAI, FC, FKE, MJIIT', () => {
   const base = { nama: 'Ali', no_matrik: 'A1', status: 'Dipilih' };
   fail(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKA' }, base)), /betulkan/);
-  ok(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKE' }, base)));
+  ok(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKE' }, base, { no_matrik: 'A2' })));
   // PIC FC tidak diberi KAI6 dan PIC FKA bukan fakulti KAI6
   fail(g.api_list(pic2Token, 'KAI6', {}), /Akses ditolak/);
 });
@@ -330,6 +330,15 @@ test('KAI4/KAI5: pelajar mendaftar mengikut tahun; sasaran 20 dan 4', () => {
   g.api_save(adminToken, 'KAI5', { fakulti: 'FC', nama_pelajar: 'Q3b', no_matrik: 'Q3b', status: 'Dicalonkan' });
   const fac = c.breakdown[0].items;
   assert.ok(fac.length >= 13 && fac.every(i => i.target === 2));
+});
+test('KAI6: ahli kumpulan dimasukkan melalui no. matrik; disimpan sebagai teks bernombor "1. NAMA (NO. MATRIK)"', () => {
+  const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
+  sh.appendRow(['AH0', '040506107701', 'Ketua Satu', '', '', 'FAI', '', '', '', '', '']);
+  sh.appendRow(['AH1', '040506107702', 'Ahli Satu', '', '', 'FC', '', '', '', '', '']); sh.appendRow(['AH2', '040506107703', 'Ahli Dua', '', '', 'FKE', '', '', '', '', '']);
+  const r = ok(g.api_save(adminToken, 'KAI6', { __nostudent: 1, no_matrik: 'AH0', status: 'Dipilih', nama_ahli_kumpulan: [{ matrik: 'ah1' }, { matrik: 'AH2' }] }));
+  assert.strictEqual(r.fakulti, 'FAI');                                   // fakulti daripada PELAJAR
+  assert.strictEqual(r.nama_ahli_kumpulan, '1. AHLI SATU (AH1)\n2. AHLI DUA (AH2)');
+  const bad = g.api_save(adminToken, 'KAI6', { __nostudent: 1, no_matrik: 'AH0', status: 'Dipilih', nama_ahli_kumpulan: [{ matrik: 'TIADA9' }] }); fail(bad, /PELAJAR/);
 });
 test('KAI6: sasaran 20, minimum 5 setiap fakulti (4 fakulti), startup unik', () => {
   const mk = (f, n, s) => ok(g.api_save(adminToken, 'KAI6', { fakulti: f, nama: n, no_matrik: n, status: 'Dalam latihan', nama_startup: s }));
@@ -1221,7 +1230,7 @@ test('Piawai pelajar: setiap KPI berdata pelajar ada no. matrik, nama dan no. KP
     assert.ok(f(k.student.matrik) && !f(k.student.matrik).derived, k.id + ': no. matrik');
     assert.ok(f(mp.nama_pelajar) && f(mp.nama_pelajar).derived && f(mp.nama_pelajar).autoShow === 'nama_pelajar', k.id + ': nama auto');
     assert.ok(mp.no_kp && f(mp.no_kp) && f(mp.no_kp).derived && f(mp.no_kp).autoShow === 'no_kp', k.id + ': no_kp auto');
-    if (!['KPT2', 'KPT4', 'KAI4', 'KAI6'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
+    if (!['KPT2', 'KPT4', 'KAI4'].includes(k.id)) assert.ok(mp.fakulti && f(mp.fakulti) && f(mp.fakulti).derived && f(mp.fakulti).autoShow === 'fakulti', k.id + ': fakulti auto');
     assert.ok(k.listColumns.includes(k.student.matrik) && k.listColumns.includes(mp.nama_pelajar), k.id + ': senarai');
   });
   // senarai ramai pelajar: setiap orang disalin nama, no. KP dan fakulti daripada PELAJAR

@@ -643,7 +643,7 @@ var KPIS = [
       F_('no_kp', 'No. KP / pasport', 'text'),
       F_('no_matrik', 'No. matrik', 'text', { required: true }),
       F_('nama_startup', 'Nama startup AI', 'text', { sec: 'Pasukan / startup' }),
-      F_('nama_ahli_kumpulan', 'Nama ahli kumpulan', 'textarea', { full: true }),
+      F_('nama_ahli_kumpulan', 'Ahli kumpulan (no. matrik)', 'people', { full: true, kp: false, format: 'numbered', noun: 'ahli kumpulan', max: 10 }),
       F_('no_pendaftaran_SSM', 'No. pendaftaran SSM', 'text'),
       F_('bidang_ai', 'Bidang AI', 'select', { options: ['Pendidikan dan Pembelajaran', 'Pentadbiran dan Pengurusan', 'Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Penulisan dan Penjanaan Kandungan', 'Reka Bentuk dan Multimedia', 'Pemasaran dan Komunikasi', 'Perniagaan dan Keusahawanan', 'Penyelidikan dan Inovasi', 'Pengaturcaraan dan Pembangunan Sistem', 'Khidmat Pelanggan dan Chatbot', 'Lain-lain'] }),
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
@@ -970,7 +970,7 @@ var STUDENT_MAPS = {
   KAI3: { nama_pelajar: 'penyewa_nama', no_kp: 'penyewa_kp' },
   KAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon' },
   KAI5: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
-  KAI6: { nama_pelajar: 'nama', no_kp: 'no_kp' },
+  KAI6: { nama_pelajar: 'nama', no_kp: 'no_kp', fakulti: 'fakulti' },
   CKAI1: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
   CKAI4: { nama_pelajar: 'nama_pelajar', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti', jantina: 'jantina', bangsa: 'bangsa', bidang_pengajian: 'bidang_pengajian' },
   CKAI5: { nama_pelajar: 'nama', no_kp: 'no_kp', emel: 'emel', telefon: 'telefon', fakulti: 'fakulti' },
@@ -984,7 +984,7 @@ KPIS.forEach(function (k) {
   if (!map) return;
   // Fakulti pelajar (daripada PELAJAR). KPI fakulti: medan berasingan `fakulti_pelajar` (medan `fakulti` kekal unit pelapor PIC).
   // KPI Admin: medan `fakulti` sendiri diambil daripada PELAJAR (ditambah jika belum ada, contoh CKAI 6).
-  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4', 'KAI6'].indexOf(k.id) < 0) {
+  if (!map.fakulti && ['KPT2', 'KPT4', 'KAI4'].indexOf(k.id) < 0) {
     var hasFak = k.fields.some(function (f) { return f.key === 'fakulti'; });
     var at = k.fields.map(function (f) { return f.key; }).indexOf(map.no_kp);
     if (hasFak && k.entry === 'faculty') { map.fakulti = 'fakulti_pelajar'; k.fields.splice(at + 1, 0, F_('fakulti_pelajar', 'Fakulti pelajar', 'faculty')); }
