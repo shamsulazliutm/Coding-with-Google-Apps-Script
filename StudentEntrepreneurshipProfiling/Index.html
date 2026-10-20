@@ -183,6 +183,12 @@ var PROFILE = {
   program: { id: 'program', type: 'text', label: bi('Nama Program Akademik (Program Ijazah)', 'Name of Academic Program (Degree Program)') },
   ic: { id: 'ic', type: 'text', label: bi('No. Kad Pengenalan / Pasport', 'IC / Passport Number') }
 };
+var STATE_OPTS = [
+  ['Johor'], ['Kedah'], ['Kelantan'], ['Melaka', 'Malacca'], ['Negeri Sembilan'], ['Pahang'], ['Perak'], ['Perlis'],
+  ['Pulau Pinang', 'Penang'], ['Sabah'], ['Sarawak'], ['Selangor'], ['Terengganu'],
+  ['W.P. Kuala Lumpur', 'Federal Territory of Kuala Lumpur'], ['W.P. Labuan', 'Federal Territory of Labuan'],
+  ['W.P. Putrajaya', 'Federal Territory of Putrajaya'], ['Luar Negara', 'Overseas']
+].map(function (s) { return { v: s[0], l: s[1] ? s[0] + ' (' + s[1] + ')' : s[0] }; });
 var PROFILE_ORDER = ['name', 'email', 'phone', 'facultyCode', 'program', 'ic'];
 
 var STEPS = [
@@ -198,7 +204,7 @@ var STEPS = [
       label: bi('4 digit akhir No. Kad Pengenalan / Pasport', 'Last 4 digits of IC / Passport Number'),
       hint: bi('Untuk mengesahkan identiti anda. Tekan Semak untuk mengambil maklumat anda daripada rekod universiti.', 'To confirm your identity. Press Check to load your details from the university record.'),
       placeholder: '1234' },
-    { id: 'hometown', type: 'text', label: bi('Kampung Halaman', 'Hometown') },
+    { id: 'hometown', type: 'select', opts: STATE_OPTS, label: bi('Negeri Kampung Halaman', 'Hometown State') },
     { id: 'familyBiz', type: 'radio', req: true, label: bi('Adakah mana-mana ahli keluarga anda terlibat dalam perniagaan?', 'Does any of your family members involve in business?'), options: [YES, NO] }
   ]},
   { tab: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), title: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), show: function (a) { return a.familyBiz === 'Yes'; }, fields: [
@@ -312,7 +318,8 @@ function render() {
     } else if (f.type === 'select') {
       var s = el('select'); s.id = f.id;
       s.appendChild(new Option('-- Pilih / Select --', ''));
-      FACULTIES.forEach(function (x) { s.appendChild(new Option(x.code + ' - ' + x.name, x.code)); });
+      (f.opts || FACULTIES.map(function (x) { return { v: x.code, l: x.code + ' - ' + x.name }; }))
+        .forEach(function (o) { s.appendChild(new Option(o.l, o.v)); });
       s.value = ans[f.id] || '';
       s.addEventListener('change', function () { ans[f.id] = s.value; });
       q.appendChild(s);

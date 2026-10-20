@@ -78,6 +78,17 @@ var STUDENT_ALIASES = {
   hometown: ['hometown', 'kampunghalaman', 'kampung']
 };
 
+// Hometown is a state: stored as the Malay name. Aliases let the student list use other spellings.
+var STATES = ['Johor', 'Kedah', 'Kelantan', 'Melaka', 'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 'Pulau Pinang',
+  'Sabah', 'Sarawak', 'Selangor', 'Terengganu', 'W.P. Kuala Lumpur', 'W.P. Labuan', 'W.P. Putrajaya', 'Luar Negara'];
+var STATE_ALIASES = {
+  'MALACCA': 'Melaka', 'PENANG': 'Pulau Pinang', 'P. PINANG': 'Pulau Pinang', 'KUALA LUMPUR': 'W.P. Kuala Lumpur',
+  'WP KUALA LUMPUR': 'W.P. Kuala Lumpur', 'WILAYAH PERSEKUTUAN KUALA LUMPUR': 'W.P. Kuala Lumpur', 'KL': 'W.P. Kuala Lumpur',
+  'LABUAN': 'W.P. Labuan', 'WP LABUAN': 'W.P. Labuan', 'WILAYAH PERSEKUTUAN LABUAN': 'W.P. Labuan',
+  'PUTRAJAYA': 'W.P. Putrajaya', 'WP PUTRAJAYA': 'W.P. Putrajaya', 'WILAYAH PERSEKUTUAN PUTRAJAYA': 'W.P. Putrajaya',
+  'N. SEMBILAN': 'Negeri Sembilan', 'OVERSEAS': 'Luar Negara', 'ABROAD': 'Luar Negara'
+};
+
 var YES_NO = ['Yes', 'No'];
 var BIZ_DURATION = ['0 - 1 year', '1 - 3 years', 'More than 3 years'];
 var MOTIVATION = ['Extra pocket money', 'Passionate to learn doing business', 'Encouragement from others'];
@@ -381,7 +392,10 @@ function cleanProfile_(k, raw) {
       return f ? f[0] : '';
     case 'program': return v.length >= 2 && v.length <= 200 ? v : '';
     case 'ic': return /^[A-Za-z0-9\-\s]{5,20}$/.test(v) ? v : '';
-    case 'hometown': return v.substring(0, 200);
+    case 'hometown':
+      var key = v.toUpperCase().replace(/\./g, '').replace(/\s+/g, ' ');
+      var hit = STATES.filter(function (s) { return s.toUpperCase().replace(/\./g, '') === key; })[0];
+      return hit || STATE_ALIASES[v.toUpperCase().replace(/\s+/g, ' ')] || STATE_ALIASES[key] || '';
   }
   return '';
 }
