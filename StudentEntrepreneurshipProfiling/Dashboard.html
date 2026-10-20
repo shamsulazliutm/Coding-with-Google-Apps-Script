@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Dashboard Admin</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --brand:#7a1f3d; --brand-d:#5c1730; --bg:#f5f1f2; --card:#fff; --ink:#1f1a1c; --mute:#6b6266; --line:#ddd3d6; --err:#c0262d; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .en { font-style:italic; color:var(--mute); font-weight:400; }
+  .wrap { max-width:1280px; margin:0 auto; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  header.bar { background:var(--brand); color:#fff; }
+  header.bar .in { max-width:1280px; margin:0 auto; padding:12px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  header.bar h1 { margin:0; font-size:1.1rem; }
+  header.bar .en { color:#e8cdd6; }
+  .who { font-size:.85rem; text-align:right; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; background:#fff; color:var(--brand); font-weight:600; font-size:.78rem; }
+  button { font:inherit; padding:8px 16px; border-radius:8px; border:1px solid var(--brand); cursor:pointer; background:var(--brand); color:#fff; }
+  button.ghost { background:#fff; color:var(--brand); }
+  button:disabled { opacity:.55; cursor:default; }
+  input, select { font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); max-width:100%; }
+  input:focus, select:focus { outline:2px solid var(--brand); outline-offset:1px; }
+  /* login */
+  #login { max-width:420px; margin:48px auto; }
+  #login h2 { margin:0 0 4px; color:var(--brand-d); }
+  #login label { display:block; margin:14px 0 4px; font-weight:600; }
+  #login input { width:100%; }
+  #code { letter-spacing:.4em; text-align:center; font-size:1.4rem; }
+  .msg { margin-top:12px; font-size:.9rem; min-height:1.2em; }
+  .msg.bad { color:var(--err); } .msg.ok { color:#1b6e3a; }
+  .row { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .row button { flex:1; }
+  /* filters */
+  .filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; align-items:end; }
+  .filters label { display:block; font-size:.78rem; color:var(--mute); margin-bottom:2px; }
+  .filters input, .filters select { width:100%; }
+  /* kpis */
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .kpi b { display:block; font-size:1.7rem; color:var(--brand-d); line-height:1.1; }
+  .kpi span { font-size:.82rem; color:var(--mute); }
+  /* charts */
+  .charts { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin-bottom:16px; }
+  .chart { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .chart h3 { margin:0 0 8px; font-size:.95rem; }
+  .chart .cv { position:relative; height:240px; }
+  /* table */
+  .tools { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+  .tw { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:.86rem; }
+  th, td { padding:7px 9px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+  th { background:#faf6f7; position:sticky; top:0; }
+  tbody tr:hover { background:#faf6f7; cursor:pointer; }
+  .pg { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:10px; font-size:.88rem; }
+  .empty { padding:24px; text-align:center; color:var(--mute); }
+  dialog { border:1px solid var(--line); border-radius:12px; max-width:640px; width:92%; padding:18px; }
+  dialog::backdrop { background:rgba(0,0,0,.4); }
+  dl { display:grid; grid-template-columns:170px 1fr; gap:6px 12px; margin:12px 0; font-size:.9rem; }
+  dt { color:var(--mute); } dd { margin:0; white-space:pre-wrap; word-break:break-word; }
+  [hidden] { display:none !important; }
+  @media (max-width:560px){ dl { grid-template-columns:1fr; } dt { margin-top:6px; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="in">
+    <h1>Dashboard Profil Keusahawanan Pelajar <span class="en">/ Student Entrepreneurship Profiling</span></h1>
+    <div class="who" id="who" hidden>
+      <div id="whoName"></div>
+      <div><span class="badge" id="whoRole"></span> <span id="whoFac"></span></div>
+      <button class="ghost" id="logout" style="margin-top:6px;padding:4px 12px">Log keluar <i>/ Logout</i></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card" id="login">
+    <h2>Log Masuk Admin <span class="en">/ Admin Login</span></h2>
+    <div class="en">Gunakan emel UTM yang berdaftar. <i>Use your registered UTM email.</i></div>
+    <div id="step1">
+      <label for="email">Emel UTM <span class="en">/ UTM email</span></label>
+      <input type="email" id="email" autocomplete="username" placeholder="nama@utm.my">
+      <div class="row"><button id="sendOtp">Hantar OTP <i>/ Send OTP</i></button></div>
+    </div>
+    <div id="step2" hidden>
+      <label for="code">Kod OTP 6 digit <span class="en">/ 6-digit OTP</span></label>
+      <input type="text" id="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+      <div class="row">
+        <button class="ghost" id="resend">Hantar semula <i>/ Resend</i></button>
+        <button id="verify">Sahkan <i>/ Verify</i></button>
+      </div>
+    </div>
+    <div class="msg" id="loginMsg" role="status"></div>
+  </div>
+
+  <div id="app" hidden>
+    <div class="card">
+      <div class="filters">
+        <div id="facBox"><label>Fakulti <i>/ Faculty</i></label><select id="fFac"></select></div>
+        <div><label>Dari tarikh <i>/ From</i></label><input type="date" id="fFrom"></div>
+        <div><label>Hingga <i>/ To</i></label><input type="date" id="fTo"></div>
+        <div><label>Keluarga berniaga <i>/ Family biz</i></label><select id="fFam"><option value="">Semua</option><option>Yes</option><option>No</option></select></div>
+        <div><label>Pernah berniaga <i>/ Ran a biz</i></label><select id="fOwn"><option value="">Semua</option><option>Yes</option><option>No</option></select></div>
+        <div><label>Berminat <i>/ Interested</i></label><select id="fInt"><option value="">Semua</option><option>Yes</option><option>No</option></select></div>
+        <div><label>Berniaga di kampus <i>/ On campus</i></label><select id="fCam"><option value="">Semua</option><option>Yes</option><option>No</option><option>Maybe</option></select></div>
+        <div><label>Aliran <i>/ Stream</i></label><select id="fStr"><option value="">Semua</option><option>Sole proprietor</option><option>Social entrepreneurship</option><option>Technology startup</option><option>High Value GiG</option></select></div>
+        <div><label>Carian <i>/ Search</i></label><input type="search" id="fQ" placeholder="Nama, emel, program..."></div>
+        <div><button class="ghost" id="reset" style="width:100%">Set semula <i>/ Reset</i></button></div>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="charts">
+      <div class="chart" id="cFacBox"><h3>Responden mengikut fakulti <span class="en">/ Respondents by faculty</span></h3><div class="cv"><canvas id="cFac"></canvas></div></div>
+      <div class="chart"><h3>Ahli keluarga berniaga <span class="en">/ Family in business</span></h3><div class="cv"><canvas id="cFam"></canvas></div></div>
+      <div class="chart"><h3>Pernah berniaga sendiri <span class="en">/ Ran own business</span></h3><div class="cv"><canvas id="cOwn"></canvas></div></div>
+      <div class="chart"><h3>Berminat berniaga <span class="en">/ Interested</span></h3><div class="cv"><canvas id="cInt"></canvas></div></div>
+      <div class="chart"><h3>Aliran pilihan <span class="en">/ Preferred stream</span></h3><div class="cv"><canvas id="cStr"></canvas></div></div>
+      <div class="chart"><h3>Berniaga di kampus <span class="en">/ Business on campus</span></h3><div class="cv"><canvas id="cCam"></canvas></div></div>
+      <div class="chart"><h3>Motivasi <span class="en">/ Motivation</span></h3><div class="cv"><canvas id="cMot"></canvas></div></div>
+      <div class="chart"><h3>Tempoh berniaga <span class="en">/ Business duration</span></h3><div class="cv"><canvas id="cDur"></canvas></div></div>
+    </div>
+
+    <div class="card">
+      <div class="tools">
+        <strong id="count"></strong>
+        <button id="export">Eksport CSV <i>/ Export CSV</i></button>
+      </div>
+      <div class="tw"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+      <div class="empty" id="empty" hidden>Tiada data. <i>No data.</i></div>
+      <div class="pg">
+        <button class="ghost" id="prev">&larr;</button>
+        <span id="pgInfo"></span>
+        <button class="ghost" id="nextp">&rarr;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <strong id="dlgTitle"></strong>
+  <dl id="dlgBody"></dl>
+  <button class="ghost" id="dlgClose">Tutup <i>/ Close</i></button>
+</dialog>
+
+<script>
+var COLS = [
+  ['timestamp', 'Tarikh / Date'], ['refId', 'Rujukan / Ref'], ['name', 'Nama / Name'], ['email', 'Emel / Email'],
+  ['phone', 'Telefon / Phone'], ['facultyCode', 'Fakulti / Faculty'], ['program', 'Program'], ['ic', 'IC / Passport'],
+  ['hometown', 'Kampung / Hometown'], ['familyBiz', 'Keluarga berniaga / Family biz'], ['familyList', 'Senarai keluarga / Family list'],
+  ['familyDuration', 'Tempoh keluarga / Family duration'], ['ownBiz', 'Pernah berniaga / Ran biz'], ['bizType', 'Jenis perniagaan / Biz type'],
+  ['bizDuration', 'Tempoh / Duration'], ['motivation', 'Motivasi / Motivation'], ['motivationOther', 'Motivasi lain / Other motivation'],
+  ['interest', 'Berminat / Interested'], ['interestType', 'Jenis diminati / Interest type'], ['campus', 'Kampus / Campus'], ['stream', 'Aliran / Stream']
+];
+var TABLE_COLS = ['timestamp', 'name', 'facultyCode', 'program', 'phone', 'ic', 'familyBiz', 'ownBiz', 'interest', 'campus', 'stream'];
+var PAGE = 25;
+var PALETTE = ['#7a1f3d', '#c9892b', '#2f7f8c', '#6a8d3a', '#b0485f', '#4b5d9e', '#8a6d5b', '#999'];
+
+var S = { token: null, user: null, rows: [], filtered: [], page: 1, charts: {}, email: '' };
+
+function $(id) { return document.getElementById(id); }
+function msg(t, cls) { var m = $('loginMsg'); m.textContent = t || ''; m.className = 'msg ' + (cls || ''); }
+function store(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+function errText(e) { return String(e && e.message || e).replace(/^Error:\s*/, ''); }
+
+/* ---------- login ---------- */
+var cooldownTimer;
+function cooldown() {
+  var n = 60, b = $('resend'); b.disabled = true;
+  clearInterval(cooldownTimer);
+  cooldownTimer = setInterval(function () {
+    n--; b.disabled = n > 0;
+    b.innerHTML = n > 0 ? 'Hantar semula (' + n + 's)' : 'Hantar semula <i>/ Resend</i>';
+    if (n <= 0) clearInterval(cooldownTimer);
+  }, 1000);
+}
+function sendOtp() {
+  var email = $('email').value.trim().toLowerCase();
+  if (!email) { msg('Sila masukkan emel. / Please enter your email.', 'bad'); return; }
+  S.email = email; $('sendOtp').disabled = true; msg('Menghantar... / Sending...');
+  google.script.run.withSuccessHandler(function (r) {
+    $('sendOtp').disabled = false;
+    if (!r.ok) { msg(r.message, 'bad'); return; }
+    msg(r.message, 'ok');
+    $('step1').hidden = true; $('step2').hidden = false; $('code').value = ''; $('code').focus(); cooldown();
+  }).withFailureHandler(function (e) { $('sendOtp').disabled = false; msg(errText(e), 'bad'); }).requestOtp(email);
+}
+function resend() {
+  $('resend').disabled = true;
+  google.script.run.withSuccessHandler(function (r) { msg(r.message, r.ok ? 'ok' : 'bad'); if (r.ok) cooldown(); else $('resend').disabled = false; })
+    .withFailureHandler(function (e) { msg(errText(e), 'bad'); $('resend').disabled = false; }).requestOtp(S.email);
+}
+function verify() {
+  var code = $('code').value.trim();
+  if (!/^\d{6}$/.test(code)) { msg('Masukkan 6 digit. / Enter 6 digits.', 'bad'); return; }
+  $('verify').disabled = true; msg('Mengesahkan... / Verifying...');
+  google.script.run.withSuccessHandler(function (r) {
+    $('verify').disabled = false;
+    if (!r.ok) { msg(r.message, 'bad'); return; }
+    S.token = r.token; store('sep_token', r.token); msg('');
+    loadData();
+  }).withFailureHandler(function (e) { $('verify').disabled = false; msg(errText(e), 'bad'); }).verifyOtp(S.email, code);
+}
+function showLogin(note) {
+  S.token = null; store('sep_token', null);
+  $('app').hidden = true; $('who').hidden = true; $('login').hidden = false;
+  $('step1').hidden = false; $('step2').hidden = true; msg(note || '', note ? 'bad' : '');
+}
+function doLogout() {
+  var t = S.token; showLogin();
+  if (t) google.script.run.logout(t);
+}
+
+/* ---------- data ---------- */
+function loadData() {
+  google.script.run.withSuccessHandler(function (d) {
+    S.user = d.user; S.rows = d.rows;
+    $('login').hidden = true; $('app').hidden = false; $('who').hidden = false;
+    $('whoName').textContent = d.user.name || d.user.email;
+    $('whoRole').textContent = d.user.role === 'SUPER' ? 'Super Admin' : 'PIC Fakulti';
+    $('whoFac').textContent = d.user.facultyName;
+    var sel = $('fFac'); sel.innerHTML = '';
+    var isSuper = d.user.role === 'SUPER';
+    $('facBox').hidden = !isSuper; $('cFacBox').hidden = !isSuper;
+    if (isSuper) {
+      sel.appendChild(new Option('Semua / All', ''));
+      d.faculties.forEach(function (f) { sel.appendChild(new Option(f.code + ' - ' + f.name, f.code)); });
+    }
+    renderHead(); applyFilters();
+  }).withFailureHandler(function (e) {
+    if (/AUTH/.test(errText(e))) showLogin('Sesi tamat. Sila log masuk semula. / Session expired. Please log in again.');
+    else { showLogin(); msg(errText(e), 'bad'); }
+  }).getDashboardData(S.token);
+}
+
+/* ---------- filters ---------- */
+var FILTERS = { fFam: 'familyBiz', fOwn: 'ownBiz', fInt: 'interest', fCam: 'campus', fStr: 'stream' };
+function applyFilters() {
+  var fac = $('fFac').value, from = $('fFrom').value, to = $('fTo').value, q = $('fQ').value.trim().toLowerCase();
+  S.filtered = S.rows.filter(function (r) {
+    if (fac && r.facultyCode !== fac) return false;
+    var d = r.timestamp.slice(0, 10);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    for (var id in FILTERS) { var v = $(id).value; if (v && r[FILTERS[id]] !== v) return false; }
+    if (q) {
+      var hay = [r.name, r.email, r.program, r.facultyCode, r.bizType, r.interestType, r.refId].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  S.page = 1; renderKpis(); renderCharts(); renderTable();
+}
+
+/* ---------- KPIs ---------- */
+function pct(n, t) { return t ? Math.round(n * 100 / t) + '%' : '-'; }
+function count(rows, f) { return rows.filter(f).length; }
+function renderKpis() {
+  var r = S.filtered, t = r.length;
+  var k = [
+    [t, 'Jumlah responden / Total respondents'],
+    [pct(count(r, function (x) { return x.familyBiz === 'Yes'; }), t), 'Keluarga berniaga / Family in business'],
+    [pct(count(r, function (x) { return x.ownBiz === 'Yes'; }), t), 'Pernah berniaga / Ran a business'],
+    [pct(count(r, function (x) { return x.interest === 'Yes'; }), t), 'Berminat berniaga / Interested'],
+    [count(r, function (x) { return x.campus === 'Yes'; }), 'Mahu berniaga di kampus / Want campus biz']
+  ];
+  var box = $('kpis'); box.innerHTML = '';
+  k.forEach(function (x) {
+    var d = document.createElement('div'); d.className = 'kpi';
+    var b = document.createElement('b'); b.textContent = x[0];
+    var s = document.createElement('span'); s.textContent = x[1];
+    d.appendChild(b); d.appendChild(s); box.appendChild(d);
+  });
+}
+
+/* ---------- charts ---------- */
+function tally(rows, key, multi, order) {
+  var m = {};
+  rows.forEach(function (r) {
+    var v = r[key]; if (!v) return;
+    (multi ? v.split('; ') : [v]).forEach(function (x) { if (x) m[x] = (m[x] || 0) + 1; });
+  });
+  var labels = order ? order.filter(function (o) { return m[o]; }) : Object.keys(m).sort(function (a, b) { return m[b] - m[a]; });
+  return { labels: labels, data: labels.map(function (l) { return m[l]; }) };
+}
+function draw(id, type, t, horizontal) {
+  if (S.charts[id]) S.charts[id].destroy();
+  var isBar = type === 'bar';
+  S.charts[id] = new Chart($(id), {
+    type: type,
+    data: { labels: t.labels, datasets: [{ data: t.data, backgroundColor: isBar ? PALETTE[0] : t.labels.map(function (_, i) { return PALETTE[i % PALETTE.length]; }), borderWidth: isBar ? 0 : 1, borderColor: '#fff' }] },
+    options: {
+      indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: !isBar, position: 'bottom' } },
+      scales: isBar ? { x: { ticks: { precision: 0 } }, y: { ticks: { precision: 0 } } } : {}
+    }
+  });
+}
+function renderCharts() {
+  if (typeof Chart === 'undefined') return;
+  var r = S.filtered, yn = ['Yes', 'No'];
+  if (S.user.role === 'SUPER') draw('cFac', 'bar', tally(r, 'facultyCode'), true);
+  draw('cFam', 'doughnut', tally(r, 'familyBiz', false, yn));
+  draw('cOwn', 'doughnut', tally(r, 'ownBiz', false, yn));
+  draw('cInt', 'doughnut', tally(r, 'interest', false, yn));
+  draw('cStr', 'bar', tally(r, 'stream'), true);
+  draw('cCam', 'doughnut', tally(r, 'campus', false, ['Yes', 'No', 'Maybe']));
+  draw('cMot', 'bar', tally(r, 'motivation', true), true);
+  draw('cDur', 'bar', tally(r, 'bizDuration', false, ['0 - 1 year', '1 - 3 years', 'More than 3 years']));
+}
+
+/* ---------- table ---------- */
+var LABEL = {}; COLS.forEach(function (c) { LABEL[c[0]] = c[1]; });
+function renderHead() {
+  var tr = document.createElement('tr');
+  TABLE_COLS.forEach(function (k) { var th = document.createElement('th'); th.textContent = LABEL[k]; tr.appendChild(th); });
+  var h = $('thead'); h.innerHTML = ''; h.appendChild(tr);
+}
+function renderTable() {
+  var rows = S.filtered, pages = Math.max(1, Math.ceil(rows.length / PAGE));
+  if (S.page > pages) S.page = pages;
+  var slice = rows.slice((S.page - 1) * PAGE, S.page * PAGE);
+  var tb = $('tbody'); tb.innerHTML = '';
+  slice.forEach(function (r) {
+    var tr = document.createElement('tr');
+    TABLE_COLS.forEach(function (k) {
+      var td = document.createElement('td');
+      td.textContent = k === 'timestamp' ? r[k].replace('T', ' ') : r[k];
+      tr.appendChild(td);
+    });
+    tr.addEventListener('click', function () { openDetail(r); });
+    tb.appendChild(tr);
+  });
+  $('empty').hidden = rows.length > 0;
+  $('count').textContent = rows.length + ' rekod / records';
+  $('pgInfo').textContent = S.page + ' / ' + pages;
+  $('prev').disabled = S.page <= 1; $('nextp').disabled = S.page >= pages;
+}
+function openDetail(r) {
+  $('dlgTitle').textContent = r.name + ' (' + r.refId + ')';
+  var dl = $('dlgBody'); dl.innerHTML = '';
+  COLS.forEach(function (c) {
+    if (c[0] === 'facultyCode') { add('Fakulti / Faculty', r.facultyCode + ' - ' + r.facultyName); return; }
+    add(c[1], r[c[0]]);
+  });
+  function add(l, v) {
+    var dt = document.createElement('dt'); dt.textContent = l;
+    var dd = document.createElement('dd'); dd.textContent = v || '-';
+    dl.appendChild(dt); dl.appendChild(dd);
+  }
+  $('dlg').showModal();
+}
+
+/* ---------- export ---------- */
+function csvCell(v) {
+  v = String(v == null ? '' : v);
+  if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;   // block spreadsheet formula injection
+  return '"' + v.replace(/"/g, '""') + '"';
+}
+function exportCsv() {
+  var keys = COLS.map(function (c) { return c[0]; }).concat(['facultyName']);
+  var head = keys.map(function (k) { return csvCell(LABEL[k] || 'Nama Fakulti / Faculty name'); }).join(',');
+  var lines = S.filtered.map(function (r) { return keys.map(function (k) { return csvCell(r[k]); }).join(','); });
+  var blob = new Blob(['﻿' + head + '\n' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'profil-keusahawanan-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+/* ---------- wiring ---------- */
+$('sendOtp').addEventListener('click', sendOtp);
+$('email').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendOtp(); });
+$('resend').addEventListener('click', resend);
+$('verify').addEventListener('click', verify);
+$('code').addEventListener('keydown', function (e) { if (e.key === 'Enter') verify(); });
+$('logout').addEventListener('click', doLogout);
+['fFac', 'fFrom', 'fTo', 'fFam', 'fOwn', 'fInt', 'fCam', 'fStr'].forEach(function (id) { $(id).addEventListener('change', applyFilters); });
+$('fQ').addEventListener('input', applyFilters);
+$('reset').addEventListener('click', function () {
+  ['fFac', 'fFrom', 'fTo', 'fFam', 'fOwn', 'fInt', 'fCam', 'fStr', 'fQ'].forEach(function (id) { $(id).value = ''; });
+  applyFilters();
+});
+$('prev').addEventListener('click', function () { S.page--; renderTable(); });
+$('nextp').addEventListener('click', function () { S.page++; renderTable(); });
+$('export').addEventListener('click', exportCsv);
+$('dlgClose').addEventListener('click', function () { $('dlg').close(); });
+
+var saved = load('sep_token');
+if (saved) { S.token = saved; loadData(); }
+</script>
+</body>
+</html>

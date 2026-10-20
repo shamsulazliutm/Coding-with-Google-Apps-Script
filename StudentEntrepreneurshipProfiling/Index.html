@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Student Entrepreneurship Profiling</title>
+<style>
+  :root { --brand:#7a1f3d; --brand-d:#5c1730; --bg:#f5f1f2; --card:#fff; --ink:#1f1a1c; --mute:#6b6266; --line:#ddd3d6; --err:#c0262d; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .wrap { max-width:760px; margin:0 auto; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .top { border-top:8px solid var(--brand); }
+  h1 { font-size:1.35rem; margin:0 0 4px; color:var(--brand-d); }
+  h2 { font-size:1.05rem; margin:0 0 16px; color:var(--brand-d); text-transform:uppercase; letter-spacing:.02em; }
+  .en { display:block; font-style:italic; color:var(--mute); font-weight:400; }
+  h1 .en, h2 .en { text-transform:none; letter-spacing:0; }
+  .intro p { margin:0 0 12px; }
+  .logo { display:block; max-width:260px; width:60%; height:auto; margin:0 auto 12px; }
+  .addr { font-size:.9rem; color:var(--mute); }
+  .req { color:var(--err); }
+  .q { margin-bottom:22px; }
+  .q > label.t { display:block; font-weight:600; margin-bottom:6px; }
+  .q > label.t .en { font-weight:400; }
+  .hint { font-size:.88rem; color:var(--mute); white-space:pre-line; margin:-2px 0 6px; }
+  input[type=text], input[type=email], input[type=tel], select, textarea {
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font:inherit; background:#fff; color:var(--ink);
+  }
+  textarea { min-height:110px; resize:vertical; }
+  input:focus, select:focus, textarea:focus { outline:2px solid var(--brand); outline-offset:1px; }
+  .opt { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; cursor:pointer; }
+  .opt input { margin-top:5px; accent-color:var(--brand); }
+  .opt .en { font-size:.92rem; }
+  .opt .desc { font-size:.88rem; color:var(--mute); display:block; margin-top:2px; }
+  .other { margin-top:6px; }
+  .err { color:var(--err); font-size:.88rem; margin-top:4px; display:none; }
+  .q.bad .err { display:block; }
+  .q.bad input[type=text], .q.bad input[type=email], .q.bad input[type=tel], .q.bad select, .q.bad textarea { border-color:var(--err); }
+  .nav { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+  button { font:inherit; padding:11px 22px; border-radius:8px; border:1px solid var(--brand); cursor:pointer; }
+  .primary { background:var(--brand); color:#fff; }
+  .primary:hover { background:var(--brand-d); }
+  .ghost { background:#fff; color:var(--brand); }
+  button:disabled { opacity:.55; cursor:default; }
+  .progress { height:6px; background:var(--line); border-radius:3px; margin-bottom:16px; overflow:hidden; }
+  .progress > i { display:block; height:100%; background:var(--brand); width:0; transition:width .2s; }
+  .hp { position:absolute; left:-9999px; height:0; overflow:hidden; }
+  .banner { background:#fdecee; color:var(--err); border:1px solid #f3c2c6; border-radius:8px; padding:10px 12px; margin-bottom:12px; display:none; }
+  .thanks { text-align:center; padding:28px 12px; }
+  .ref { display:inline-block; margin-top:10px; padding:6px 12px; border:1px dashed var(--brand); border-radius:6px; font-family:ui-monospace,Menlo,monospace; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card top intro">
+    <? if (logoUrl) { ?><img class="logo" src="<?= logoUrl ?>" alt="UTM &amp; UTMXCITE"><? } ?>
+    <h1>PROFIL KEUSAHAWANAN PELAJAR<span class="en">STUDENT ENTREPRENEURSHIP PROFILING</span></h1>
+    <p style="margin-top:14px">Assalamualaikum WBT dan Salam Sejahtera,<span class="en">Assalamualaikum WBT and Good day to you,</span></p>
+    <p>Pusat Inovasi Mahasiswa dan Keusahawanan Teknologi UTM (UTMXCITE) bertanggungjawab membangunkan, membimbing dan melatih usahawan pelajar di UTM. Borang tinjauan ini membolehkan universiti melalui UTMXCITE mewujudkan pangkalan data keusahawanan yang berkesan serta peluang keusahawanan bagi mereka yang berminat menjadi usahawan.
+      <span class="en">The UTM Centre for Student Innovation and Technology Entrepreneurship (UTMXCITE) is responsible for developing, guiding, and training student entrepreneurs at UTM. This survey form allows the university via UTMXCITE to create effective entrepreneurship profiling and eventually to provide effective entrepreneurship database for the university as well as entrepreneurship opportunity for those who are interested to become an entrepreneur.</span></p>
+    <p>Terima kasih atas kerjasama anda menyertai tinjauan ini. Semoga berjaya.
+      <span class="en">Thank you for your cooperation in participating in this survey. Wishing you all the best.</span></p>
+    <p>Jika memerlukan bantuan lanjut, sila hubungi kami.
+      <span class="en">If you need any further assistance, feel free to ask!</span></p>
+    <p><strong>"MALAYSIA MADANI"<br>"BERKHIDMAT UNTUK NEGARA KERANA ALLAH"</strong></p>
+    <p class="addr">Saya yang menjalankan amanah,<br><br>
+      Pusat Inovasi Mahasiswa dan Keusahawanan Teknologi (UTMXICTE),<br>
+      d/a: Aras 2, Pejabat Hal Ehwal Pelajar dan Alumni,<br>
+      Bangunan Persatuan Pelajar (SUB),<br>
+      Jabatan Timbalan Naib Canselor (Hal Ehwal Pelajar dan Alumni),<br>
+      Universiti Teknologi Malaysia, 81310 UTM Johor Bahru, Skudai, Johor, MALAYSIA.<br>
+      Hotline: +6018-967 0791 &middot; Email: utmxcite@utm.my</p>
+    <p class="addr"><span class="req">*</span> Soalan wajib <i>/ Indicates required question</i></p>
+  </div>
+
+  <form id="frm" class="card" novalidate autocomplete="on">
+    <div class="progress"><i id="bar"></i></div>
+    <div class="banner" id="banner"></div>
+    <div id="stage"></div>
+    <div class="hp"><label>Website <input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></label></div>
+    <div class="nav">
+      <button type="button" class="ghost" id="back">&larr; Kembali <i>/ Back</i></button>
+      <button type="button" class="primary" id="next">Seterusnya <i>/ Next</i> &rarr;</button>
+    </div>
+  </form>
+
+  <div class="card thanks" id="thanks" hidden>
+    <h2>TERIMA KASIH ATAS MAKLUM BALAS ANDA DAN KAMI MENGUCAPKAN SEMOGA BERJAYA DALAM PENGAJIAN<span class="en">THANK YOU FOR YOUR FEEDBACK AND WE WISH YOU ALL THE BEST IN YOUR STUDY</span></h2>
+    <div>No. rujukan <i>/ Reference no.</i><br><span class="ref" id="ref"></span></div>
+  </div>
+</div>
+
+<script>
+var FACULTIES = <?!= JSON.stringify(faculties) ?>;
+var EMAIL_DOMAINS = <?!= JSON.stringify(emailDomains) ?>;
+
+function bi(bm, en) { return { bm: bm, en: en }; }
+var YES = { v: 'Yes', l: bi('Ya', 'Yes') }, NO = { v: 'No', l: bi('Tidak', 'No') };
+
+var STEPS = [
+  { title: bi('Bahagian 1 - Profil Pelajar', 'Section 1 - Students Profile'), fields: [
+    { id: 'name', type: 'text', req: true, upper: true, auto: 'name', label: bi('Nama Penuh (HURUF BESAR)', 'Full Name (in CAPITAL LETTERS)') },
+    { id: 'email', type: 'email', req: true, auto: 'email', label: bi('Alamat Emel', 'Email Address'),
+      hint: bi('Mesti emel UTM (@graduate.utm.my atau @utm.my)', 'Must be a UTM email (@graduate.utm.my or @utm.my)') },
+    { id: 'phone', type: 'tel', req: true, auto: 'tel', label: bi('Nombor Telefon', 'Phone Number') },
+    { id: 'facultyCode', type: 'select', req: true, label: bi('Nama Fakulti', 'Name of Faculty') },
+    { id: 'program', type: 'text', req: true, label: bi('Nama Program Akademik (Program Ijazah)', 'Name of Academic Program (Degree Program)') },
+    { id: 'ic', type: 'text', req: true, label: bi('No. Kad Pengenalan / Pasport', 'IC / Passport Number') },
+    { id: 'hometown', type: 'text', label: bi('Kampung Halaman', 'Hometown') },
+    { id: 'familyBiz', type: 'radio', req: true, label: bi('Adakah mana-mana ahli keluarga anda terlibat dalam perniagaan?', 'Does any of your family members involve in business?'), options: [YES, NO] }
+  ]},
+  { title: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), show: function (a) { return a.familyBiz === 'Yes'; }, fields: [
+    { id: 'familyList', type: 'area', label: bi('SENARAIKAN SEMUA AHLI KELUARGA YANG MENJALANKAN PERNIAGAAN DAN NYATAKAN JENIS PERNIAGAAN', 'LIST ALL YOUR FAMILY MEMBERS THAT RUN THE BUSINESS AND STATE THE TYPE OF BUSINESS'),
+      hint: bi('Contoh:\n1) Bapa - Percetakan\n2) Kakak - Fesyen\n3) Abang - Bengkel', 'E.g.:\n1) Father - Printing\n2) Sister - Fashion\n3) Brother - Workshop') },
+    { id: 'familyDuration', type: 'area', label: bi('BERAPA LAMA SETIAP AHLI KELUARGA MENJALANKAN PERNIAGAAN? (Mengikut soalan di atas)', 'HOW LONG EACH OF THE FAMILY MEMBERS RUN THE BUSINESS? (According to the question above)') }
+  ]},
+  { title: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), fields: [
+    { id: 'ownBiz', type: 'radio', req: true, label: bi('ADAKAH ANDA SENDIRI PERNAH MENJALANKAN SEBARANG JENIS PERNIAGAAN?', 'HAVE YOU YOURSELF EVER RUN ANY TYPE OF BUSINESS?'), options: [YES, NO] }
+  ]},
+  { title: bi('Profil Perniagaan', 'Business Profile'), show: function (a) { return a.ownBiz === 'Yes'; }, fields: [
+    { id: 'bizType', type: 'text', label: bi('NYATAKAN JENIS PERNIAGAAN YANG ANDA JALANKAN (Berdasarkan soalan sebelum ini)', 'STATE THE TYPE OF BUSINESS THAT YOU RUN (Based on the previous question)') },
+    { id: 'bizDuration', type: 'radio', label: bi('TEMPOH MENJALANKAN PERNIAGAAN', 'DURATION OF RUNNING THE BUSINESS'), options: [
+      { v: '0 - 1 year', l: bi('0 - 1 tahun', '0 - 1 year') },
+      { v: '1 - 3 years', l: bi('1 - 3 tahun', '1 - 3 years') },
+      { v: 'More than 3 years', l: bi('Lebih daripada 3 tahun', 'More than 3 years') }] },
+    { id: 'motivation', type: 'check', other: true, label: bi('APA YANG MEMOTIVASIKAN ANDA UNTUK BERNIAGA?', 'WHAT MOTIVATE YOU TO RUN THE BUSINESS?'), options: [
+      { v: 'Extra pocket money', l: bi('Wang poket tambahan', 'Extra pocket money') },
+      { v: 'Passionate to learn doing business', l: bi('Minat untuk belajar berniaga', 'Passionate to learn doing business') },
+      { v: 'Encouragement from others', l: bi('Galakan daripada orang lain', 'Encouragement from others') }] }
+  ]},
+  { title: bi('Minat dalam Perniagaan', 'Interests in Business'), fields: [
+    { id: 'interest', type: 'radio', req: true, label: bi('ADAKAH ANDA BERMINAT UNTUK MENJALANKAN PERNIAGAAN?', 'DO YOU HAVE AN INTEREST TO RUN A BUSINESS?'), options: [YES, NO] }
+  ]},
+  { title: bi('Minat dalam Perniagaan (Butiran)', 'Interest in Business (Details)'), show: function (a) { return a.interest === 'Yes'; }, fields: [
+    { id: 'interestType', type: 'text', req: true, label: bi('JENIS PERNIAGAAN YANG ANDA MINATI (JIKA ADA)', 'TYPE OF BUSINESS OF YOUR INTEREST (IF ANY)') },
+    { id: 'campus', type: 'radio', req: true, label: bi('ADAKAH ANDA MAHU MENJALANKAN PERNIAGAAN DI KAMPUS SEMASA PENGAJIAN?', 'DO YOU WANT TO RUN A BUSINESS ON CAMPUS DURING YOUR STUDY?'), options: [
+      YES, NO, { v: 'Maybe', l: bi('Mungkin', 'Maybe') }] },
+    { id: 'stream', type: 'radio', req: true, label: bi('JIKA ANDA MEMPUNYAI PELUANG MENYERTAI PROGRAM UTMXCITE ATAU MENJALANKAN PERNIAGAAN SEMASA PENGAJIAN, ALIRAN MANA YANG ANDA PILIH?', 'IF YOU HAVE THE OPPORTUNITY TO JOIN THE PROGRAM BY UTMXCITE OR RUN ANY BUSINESS DURING STUDY, WHICH STREAMS DO YOU PREFER TO?'), options: [
+      { v: 'Sole proprietor', l: bi('Pemilik tunggal / perusahaan - perniagaan biasa / tradisional', 'Sole proprietor / enterprise - usual / traditional business') },
+      { v: 'Social entrepreneurship', l: bi('Keusahawanan sosial', 'Social entrepreneurship'),
+        d: bi('Keusahawanan sosial ialah amalan membina usaha berteraskan misi yang menggunakan kemahiran perniagaan untuk menyelesaikan masalah sosial dan alam sekitar. Tidak seperti perniagaan tradisional, perusahaan sosial melaburkan semula keuntungan untuk memperluas impak sosial dan bukannya mengagihkan dividen kepada pemegang saham. Usaha ini menyasarkan perubahan sosial yang kekal dan kemampanan, menangani isu seperti kemiskinan, ketidaksamaan dan perubahan iklim.',
+              'Social entrepreneurship is the practice of building mission-driven ventures that use business skills to solve social and environmental problems. Unlike traditional businesses, social enterprises reinvest their profits to further their social impact instead of distributing dividends to shareholders. These ventures aim for permanent social change and sustainability, addressing issues such as poverty, inequality, and climate change.') },
+      { v: 'Technology startup', l: bi('Syarikat permulaan teknologi - perniagaan berasaskan teknologi', 'Technology startup - Tech-based business') },
+      { v: 'High Value GiG', l: bi('High Value GiG', 'High Value GiG'),
+        d: bi('Pekerjaan sementara, kontrak atau pekerja bebas yang memerlukan kemahiran dan kepakaran khusus, menawarkan pampasan kewangan yang tinggi (berpotensi setara pendapatan sepenuh masa), serta memberi peluang pertumbuhan profesional dan pembinaan portfolio.',
+              'A temporary, contract, or freelance job that requires specialized skills and expertise, offers significant monetary compensation (potentially a full-time income equivalent), and provides opportunities for a worker\'s professional growth and portfolio building.') }] }
+  ]}
+];
+
+var ans = {};          // all answers
+var idx = 0;           // index into STEPS
+var busy = false;
+
+function $(id) { return document.getElementById(id); }
+function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
+function biHtml(b) { return esc(b.bm) + '<span class="en">' + esc(b.en) + '</span>'; }
+
+function visible() {
+  var out = [];
+  STEPS.forEach(function (s, i) { if (!s.show || s.show(ans)) out.push(i); });
+  return out;
+}
+
+function render() {
+  var vis = visible();
+  var pos = vis.indexOf(idx);
+  var step = STEPS[idx];
+  var stage = $('stage');
+  stage.innerHTML = '';
+  stage.appendChild(el('h2', '', biHtml(step.title)));
+
+  step.fields.forEach(function (f) {
+    var q = el('div', 'q'); q.id = 'q_' + f.id;
+    q.appendChild(el('label', 't', biHtml(f.label) + (f.req ? ' <span class="req">*</span>' : '')));
+    if (f.hint) q.appendChild(el('div', 'hint', esc(f.hint.bm) + '\n' + esc(f.hint.en)));
+    if (f.type === 'text' || f.type === 'email' || f.type === 'tel') {
+      var i = el('input'); i.type = f.type; i.id = f.id; i.value = ans[f.id] || '';
+      if (f.auto) i.autocomplete = f.auto;
+      i.addEventListener('input', function () { ans[f.id] = f.upper ? i.value.toUpperCase() : i.value; if (f.upper) i.value = ans[f.id]; });
+      q.appendChild(i);
+    } else if (f.type === 'area') {
+      var t = el('textarea'); t.id = f.id; t.value = ans[f.id] || '';
+      t.addEventListener('input', function () { ans[f.id] = t.value; });
+      q.appendChild(t);
+    } else if (f.type === 'select') {
+      var s = el('select'); s.id = f.id;
+      s.appendChild(new Option('-- Pilih / Select --', ''));
+      FACULTIES.forEach(function (x) { s.appendChild(new Option(x.code + ' - ' + x.name, x.code)); });
+      s.value = ans[f.id] || '';
+      s.addEventListener('change', function () { ans[f.id] = s.value; });
+      q.appendChild(s);
+    } else if (f.type === 'radio' || f.type === 'check') {
+      var isCheck = f.type === 'check';
+      var cur = isCheck ? (ans[f.id] || []) : ans[f.id];
+      f.options.forEach(function (o) {
+        var lab = el('label', 'opt');
+        var inp = el('input'); inp.type = isCheck ? 'checkbox' : 'radio'; inp.name = f.id; inp.value = o.v;
+        inp.checked = isCheck ? cur.indexOf(o.v) !== -1 : cur === o.v;
+        inp.addEventListener('change', function () {
+          if (isCheck) {
+            var list = (ans[f.id] || []).filter(function (x) { return x !== o.v; });
+            if (inp.checked) list.push(o.v);
+            ans[f.id] = list;
+          } else { ans[f.id] = o.v; updateNav(); }
+        });
+        lab.appendChild(inp);
+        var txt = el('span', '', esc(o.l.bm) + (o.l.en !== o.l.bm ? '<span class="en">' + esc(o.l.en) + '</span>' : '') +
+          (o.d ? '<span class="desc">' + esc(o.d.bm) + '<span class="en">' + esc(o.d.en) + '</span></span>' : ''));
+        lab.appendChild(txt);
+        q.appendChild(lab);
+      });
+      if (isCheck && f.other) {
+        var ot = el('input', 'other'); ot.type = 'text'; ot.placeholder = 'Lain-lain / Other';
+        ot.value = ans[f.id + 'Other'] || '';
+        ot.addEventListener('input', function () { ans[f.id + 'Other'] = ot.value; });
+        q.appendChild(ot);
+      }
+    }
+    q.appendChild(el('div', 'err', ''));
+    stage.appendChild(q);
+  });
+
+  $('bar').style.width = Math.round(((pos + 1) / vis.length) * 100) + '%';
+  updateNav();
+  window.scrollTo(0, 0);
+}
+
+function updateNav() {
+  var vis = visible(), pos = vis.indexOf(idx), last = pos === vis.length - 1;
+  $('back').style.visibility = pos === 0 ? 'hidden' : 'visible';
+  $('next').innerHTML = last ? 'Hantar <i>/ Submit</i>' : 'Seterusnya <i>/ Next</i> &rarr;';
+  $('bar').style.width = Math.round(((pos + 1) / vis.length) * 100) + '%';
+}
+
+function fail(f, bm, en) {
+  var q = $('q_' + f.id); q.classList.add('bad');
+  q.querySelector('.err').innerHTML = esc(bm) + ' <i>/ ' + esc(en) + '</i>';
+  return q;
+}
+
+function validate() {
+  var firstBad = null;
+  document.querySelectorAll('.q.bad').forEach(function (q) { q.classList.remove('bad'); });
+  STEPS[idx].fields.forEach(function (f) {
+    var v = ans[f.id], q = null;
+    var empty = v == null || String(v).trim() === '';
+    if (f.req && empty) q = fail(f, 'Sila isi ruangan ini.', 'This question is required.');
+    else if (f.id === 'email' && !empty) {
+      var m = /^[^\s@]+@([^\s@]+\.[^\s@]+)$/.exec(String(v).trim().toLowerCase());
+      if (!m) q = fail(f, 'Alamat emel tidak sah.', 'Invalid email address.');
+      else if (EMAIL_DOMAINS.indexOf(m[1]) === -1) q = fail(f, 'Mesti emel UTM (@graduate.utm.my atau @utm.my).', 'Must be a UTM email (@graduate.utm.my or @utm.my).');
+    } else if (f.id === 'phone' && !empty && !/^[0-9+\-\s]{7,20}$/.test(v)) q = fail(f, 'Nombor telefon tidak sah.', 'Invalid phone number.');
+    else if (f.id === 'ic' && !empty && !/^[A-Za-z0-9\-\s]{5,20}$/.test(v)) q = fail(f, 'No. KP / pasport tidak sah.', 'Invalid IC / passport number.');
+    if (q && !firstBad) firstBad = q;
+  });
+  if (firstBad) firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return !firstBad;
+}
+
+function banner(msg) { var b = $('banner'); b.style.display = msg ? 'block' : 'none'; b.textContent = msg || ''; }
+
+function submit() {
+  var vis = visible();
+  // Send only answers from steps that are shown, matching the original skip logic.
+  var payload = { website: $('website').value };
+  vis.forEach(function (i) {
+    STEPS[i].fields.forEach(function (f) {
+      payload[f.id] = ans[f.id] == null ? '' : ans[f.id];
+      if (f.other) payload[f.id + 'Other'] = ans[f.id + 'Other'] || '';
+    });
+  });
+  busy = true; $('next').disabled = true; banner('');
+  google.script.run
+    .withSuccessHandler(function (r) {
+      busy = false;
+      $('frm').hidden = true;
+      $('ref').textContent = r.refId;
+      $('thanks').hidden = false;
+      window.scrollTo(0, 0);
+    })
+    .withFailureHandler(function (e) {
+      busy = false; $('next').disabled = false;
+      banner('Gagal menghantar / Submission failed: ' + String(e && e.message || e).replace(/^Error:\s*/, ''));
+    })
+    .submitForm(payload);
+}
+
+$('next').addEventListener('click', function () {
+  if (busy || !validate()) return;
+  var vis = visible(), pos = vis.indexOf(idx);
+  if (pos === vis.length - 1) return submit();
+  idx = vis[pos + 1];
+  render();
+});
+$('back').addEventListener('click', function () {
+  var vis = visible(), pos = vis.indexOf(idx);
+  if (pos > 0) { idx = vis[pos - 1]; render(); }
+});
+$('frm').addEventListener('submit', function (e) { e.preventDefault(); });
+
+render();
+</script>
+</body>
+</html>
