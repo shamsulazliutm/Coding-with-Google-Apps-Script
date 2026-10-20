@@ -4976,6 +4976,19 @@ window.__demoSeed = function () {
       return m ? { nama: m[1], matrik: m[2] } : null;
     }).filter(Boolean);
   }
+  // Susunan borang: KPI berdata pelajar meletakkan No. matrik di atas, diikuti medan auto (nama, no. KP, fakulti) daripada PELAJAR.
+  function formFields(k) {
+    if (!k.student) return k.fields;
+    var fs = k.fields.map(function (f) { return Object.assign({}, f); });
+    var mk = fs.filter(function (f) { return f.key === k.student.matrik; })[0];
+    if (!mk) return k.fields;
+    var first = fs[0] !== mk ? fs[0] : null;
+    if (!mk.sec && first && first.sec) { mk.sec = first.sec; first.sec = undefined; }
+    var rest = fs.filter(function (f) { return f !== mk; }), order = ['nama_pelajar', 'no_kp', 'fakulti'];
+    var autos = rest.filter(function (f) { return f.derived && f.autoShow; }).sort(function (a, b) { return order.indexOf(a.autoShow) - order.indexOf(b.autoShow); });
+    var others = rest.filter(function (f) { return autos.indexOf(f) < 0; });
+    return [mk].concat(autos, others);
+  }
   function renderForm(k) {
     var rec = S.editing || {};
     S.people = {}; S.files = {}; S.peopleKp = {};
@@ -4984,7 +4997,7 @@ window.__demoSeed = function () {
       if (fd.type === 'file') { var f = parseJson(rec[fd.key], null); S.files[fd.key] = f && f.id ? f : null; }
     });
     var h = '<form class="form" id="kform" novalidate><div class="fgrid">';
-    k.fields.forEach(function (fd) {
+    formFields(k).forEach(function (fd) {
       if (fd.hidden || (fd.derived && !fd.autoShow)) return;
       if (fd.sec) h += '<div class="fsec">' + esc(fd.sec) + '</div>';
       h += '<div class="' + (fd.full ? 'full' : '') + '" data-field="' + fd.key + '"><label for="f_' + fd.key + '">' + esc(fd.label) + (fd.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>' +

@@ -276,3 +276,5 @@ id, fakulti, bulan_pendapatan, nama_pelajar, no_kp, no_matrik, jantina, bangsa, 
 **KAI 6 · peringkat pembangunan startup:** medan `status` ialah *Peringkat pembangunan startup*: Idea/konsep, Prototaip, Validasi pasaran, Pelancaran, Pertumbuhan. Semua peringkat dikira dalam KAI 6. `setup()` menukar nilai lama: Ideasi / Dalam latihan → Idea/konsep; Prototaip / MVP / Tamat latihan → Prototaip (Dicalonkan, Dipilih dan Tarik diri tidak disentuh; betulkan sendiri).
 
 **KAI 6 · link profil:** lajur baharu `link_profil` (pautan https sahaja) selepas `no_pendaftaran_SSM`; dipaparkan sebagai pautan "Buka pautan" dalam senarai.
+
+**Susunan borang data pelajar:** pada semua KPI berdata pelajar, **No. matrik** dipaparkan sebagai medan pertama, diikuti medan automatik daripada PELAJAR (nama, no. KP, fakulti). Susunan ini hanya pada borang; susunan lajur dalam Sheet tidak berubah.
