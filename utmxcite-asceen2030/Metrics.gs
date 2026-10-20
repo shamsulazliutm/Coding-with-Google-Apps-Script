@@ -521,7 +521,7 @@ var MEASURES = {
   // KAI 6: pelajar dilatih membentuk startup AI pada tahun itu; minimum 5 setiap fakulti (FAI, FC, FKE, MJIIT).
   kai6: function (kpi, rows, year, ctx) {
     // Tahun pelaporan = tahun rekod dicipta (tiada medan tarikh mula latihan).
-    var okStatus = PERINGKAT_STARTUP.slice(1).concat(['Dalam latihan', 'Tamat latihan']);
+    var okStatus = PERINGKAT_STARTUP.concat(['Ideasi', 'Prototaip / MVP', 'Dalam latihan', 'Tamat latihan']);   // nilai lama dikira sehingga setup() menukarnya
     var counted = rows.filter(function (r) { return okStatus.indexOf(String(r.status || '').trim()) >= 0 && createdYear_(r, ['tarikh_mula_latihan']) === year; });   // lazim lama dikira sehingga setup() menukarnya
     var startups = {};
     counted.forEach(function (r) { if (r.nama_startup) startups[String(r.nama_startup).toLowerCase()] = 1; });

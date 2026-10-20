@@ -276,7 +276,7 @@ function renameColumns_(ss) {
  */
 function migrateColumns_(ss) {
   migrateCkai7Month_(ss);
-  migrateValues_(ss, 'KAI6', 'status', { 'Dipilih': 'Dicalonkan', 'Dalam latihan': 'Ideasi', 'Tamat latihan': 'Prototaip / MVP' });
+  migrateValues_(ss, 'KAI6', 'status', { 'Ideasi': 'Idea/konsep', 'Dalam latihan': 'Idea/konsep', 'Prototaip / MVP': 'Prototaip', 'Tamat latihan': 'Prototaip' });
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);

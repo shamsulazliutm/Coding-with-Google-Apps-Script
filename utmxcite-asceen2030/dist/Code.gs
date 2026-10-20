@@ -50,7 +50,7 @@ var BIDANG_PENGAJIAN = [
   'LAIN-LAIN'
 ];
 var BULAN_MS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
-var PERINGKAT_STARTUP = ['Dicalonkan', 'Ideasi', 'Prototaip / MVP', 'Validasi pasaran', 'Pelancaran', 'Pertumbuhan'];   // KAI 6: Dicalonkan tidak dikira; Ideasi ke Pertumbuhan dikira
+var PERINGKAT_STARTUP = ['Idea/konsep', 'Prototaip', 'Validasi pasaran', 'Pelancaran', 'Pertumbuhan'];   // KAI 6: semua peringkat dikira
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -1630,7 +1630,7 @@ function renameColumns_(ss) {
  */
 function migrateColumns_(ss) {
   migrateCkai7Month_(ss);
-  migrateValues_(ss, 'KAI6', 'status', { 'Dipilih': 'Dicalonkan', 'Dalam latihan': 'Ideasi', 'Tamat latihan': 'Prototaip / MVP' });
+  migrateValues_(ss, 'KAI6', 'status', { 'Ideasi': 'Idea/konsep', 'Dalam latihan': 'Idea/konsep', 'Prototaip / MVP': 'Prototaip', 'Tamat latihan': 'Prototaip' });
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);
@@ -2994,7 +2994,7 @@ var MEASURES = {
   // KAI 6: pelajar dilatih membentuk startup AI pada tahun itu; minimum 5 setiap fakulti (FAI, FC, FKE, MJIIT).
   kai6: function (kpi, rows, year, ctx) {
     // Tahun pelaporan = tahun rekod dicipta (tiada medan tarikh mula latihan).
-    var okStatus = PERINGKAT_STARTUP.slice(1).concat(['Dalam latihan', 'Tamat latihan']);
+    var okStatus = PERINGKAT_STARTUP.concat(['Ideasi', 'Prototaip / MVP', 'Dalam latihan', 'Tamat latihan']);   // nilai lama dikira sehingga setup() menukarnya
     var counted = rows.filter(function (r) { return okStatus.indexOf(String(r.status || '').trim()) >= 0 && createdYear_(r, ['tarikh_mula_latihan']) === year; });   // lazim lama dikira sehingga setup() menukarnya
     var startups = {};
     counted.forEach(function (r) { if (r.nama_startup) startups[String(r.nama_startup).toLowerCase()] = 1; });

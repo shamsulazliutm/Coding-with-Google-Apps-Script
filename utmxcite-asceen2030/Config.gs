@@ -49,7 +49,7 @@ var BIDANG_PENGAJIAN = [
   'LAIN-LAIN'
 ];
 var BULAN_MS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
-var PERINGKAT_STARTUP = ['Dicalonkan', 'Ideasi', 'Prototaip / MVP', 'Validasi pasaran', 'Pelancaran', 'Pertumbuhan'];   // KAI 6: Dicalonkan tidak dikira; Ideasi ke Pertumbuhan dikira
+var PERINGKAT_STARTUP = ['Idea/konsep', 'Prototaip', 'Validasi pasaran', 'Pelancaran', 'Pertumbuhan'];   // KAI 6: semua peringkat dikira
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
