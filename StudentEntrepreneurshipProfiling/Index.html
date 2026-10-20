@@ -174,7 +174,8 @@ function render() {
 
   step.fields.forEach(function (f) {
     var q = el('div', 'q'); q.id = 'q_' + f.id;
-    q.appendChild(el('label', 't', biHtml(f.label) + (f.req ? ' <span class="req">*</span>' : '')));
+    q.appendChild(el('label', 't', esc(f.label.bm) + (f.req ? ' <span class="req">*</span>' : '') +
+      '<span class="en">' + esc(f.label.en) + '</span>'));
     if (f.hint) q.appendChild(el('div', 'hint', esc(f.hint.bm) + '\n' + esc(f.hint.en)));
     if (f.type === 'text' || f.type === 'email' || f.type === 'tel') {
       var i = el('input'); i.type = f.type; i.id = f.id; i.value = ans[f.id] || '';

@@ -46,7 +46,9 @@
   .charts { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin-bottom:16px; }
   .chart { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
   .chart h3 { margin:0 0 8px; font-size:.95rem; }
-  .chart .cv { position:relative; height:240px; }
+  .chart .cv { position:relative; height:260px; }
+  #cFacBox .cv { height:360px; }
+  #cFacBox { grid-row:span 2; }
   /* table */
   .tools { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
   .tw { overflow-x:auto; }
@@ -290,16 +292,25 @@ function tally(rows, key, multi, order) {
   var labels = order ? order.filter(function (o) { return m[o]; }) : Object.keys(m).sort(function (a, b) { return m[b] - m[a]; });
   return { labels: labels, data: labels.map(function (l) { return m[l]; }) };
 }
+function wrap(s, n) {
+  var lines = [], cur = '';
+  s.split(' ').forEach(function (w) {
+    if (cur && (cur + ' ' + w).length > n) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w;
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
 function draw(id, type, t, horizontal) {
   if (S.charts[id]) S.charts[id].destroy();
   var isBar = type === 'bar';
+  var labels = horizontal ? t.labels.map(function (l) { return wrap(l, 20); }) : t.labels;
   S.charts[id] = new Chart($(id), {
     type: type,
-    data: { labels: t.labels, datasets: [{ data: t.data, backgroundColor: isBar ? PALETTE[0] : t.labels.map(function (_, i) { return PALETTE[i % PALETTE.length]; }), borderWidth: isBar ? 0 : 1, borderColor: '#fff' }] },
+    data: { labels: labels, datasets: [{ data: t.data, backgroundColor: isBar ? PALETTE[0] : t.labels.map(function (_, i) { return PALETTE[i % PALETTE.length]; }), borderWidth: isBar ? 0 : 1, borderColor: '#fff' }] },
     options: {
       indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: !isBar, position: 'bottom' } },
-      scales: isBar ? { x: { ticks: { precision: 0 } }, y: { ticks: { precision: 0 } } } : {}
+      scales: isBar ? { x: { ticks: { precision: 0, autoSkip: false } }, y: { ticks: { precision: 0, autoSkip: false } } } : {}
     }
   });
 }
