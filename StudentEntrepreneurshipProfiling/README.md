@@ -12,8 +12,10 @@ Web app Google Apps Script untuk UTMXCITE. Borang pelajar dwibahasa (BM, *Englis
 1. Pergi ke <https://script.google.com> dan buat projek baharu.
 2. Salin `Code.gs`, `Index.html`, `Dashboard.html` dan kandungan `appsscript.json`
    (Project Settings → *Show "appsscript.json" manifest file*).
-3. Jalankan fungsi **`setup`** sekali dan beri kebenaran. Ia mencipta Spreadsheet dengan 3 sheet:
-   `Responses`, `Admins`, `Faculties`. URL Spreadsheet dipaparkan dalam Execution log.
+3. Sheet yang digunakan ditetapkan dalam `CONFIG.SPREADSHEET_ID` (`Code.gs`). Akaun yang deploy mesti ada akses **Editor** pada sheet itu.
+   Jalankan fungsi **`setup`** sekali dan beri kebenaran. Ia menambah tab yang belum ada (`Responses`, `Admins`, `Students`, `Faculties`)
+   tanpa memadam atau mengubah tab dan data sedia ada. Nama tab mesti sama seperti di atas.
+   Jika `CONFIG.SPREADSHEET_ID` dikosongkan, `setup()` mencipta spreadsheet baharu dan URLnya dipaparkan dalam Execution log.
 4. Isi sheet **Students** (senarai induk pelajar). Pelajar hanya masukkan No. Matrik, dan profil dibaca dari sini:
 
    | Matric | Name | Email | Phone | FacultyCode | Program | IC | Hometown |

@@ -11,6 +11,9 @@
 
 var CONFIG = {
   TITLE: 'Student Entrepreneurship Profiling',
+  // Spreadsheet that holds Responses, Students, Admins and Faculties. The account that deploys the
+  // web app needs edit access to it. Leave empty to let setup() create a new spreadsheet instead.
+  SPREADSHEET_ID: '1kxFT--8ES0YbPw33Onng5ykNnd777hqkXxe1_WKyRZo',
   TZ: 'Asia/Kuala_Lumpur',
   // Logo UTM + UTMXCITE: paste a public image URL (e.g. Drive file shared as "Anyone with the link",
   // use https://drive.google.com/thumbnail?id=FILE_ID&sz=w600). Empty = no logo shown.
@@ -104,43 +107,61 @@ function doGet(e) {
 /** Creates the spreadsheet, sheets, faculty list and a first super admin. */
 function setup() {
   var props = PropertiesService.getScriptProperties();
-  var ss;
-  var id = props.getProperty('SHEET_ID');
-  if (id) {
-    ss = SpreadsheetApp.openById(id);
+  var ss, created = false;
+  if (CONFIG.SPREADSHEET_ID) {
+    ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  } else if (props.getProperty('SHEET_ID')) {
+    ss = SpreadsheetApp.openById(props.getProperty('SHEET_ID'));
   } else {
     ss = SpreadsheetApp.create(CONFIG.TITLE);
     props.setProperty('SHEET_ID', ss.getId());
+    created = true;
   }
   if (!props.getProperty('OTP_SALT')) props.setProperty('OTP_SALT', Utilities.getUuid());
 
-  var resp = getOrCreateSheet_(ss, CONFIG.SHEETS.RESPONSES);
-  if (resp.getLastRow() === 0) resp.appendRow(HEADERS);
-  // Plain text keeps leading zeros (IC, phone) and stops "=" / "+" being read as formulas.
-  resp.getRange(1, 1, resp.getMaxRows(), HEADERS.length).setNumberFormat('@');
-  resp.setFrozenRows(1);
+  // Existing sheets and their data are never cleared or reformatted, except the generated Faculties list.
+  var resp = ss.getSheetByName(CONFIG.SHEETS.RESPONSES);
+  if (!resp) {
+    resp = ss.insertSheet(CONFIG.SHEETS.RESPONSES);
+    resp.appendRow(HEADERS);
+    // Plain text keeps leading zeros (IC, phone) and stops "=" / "+" being read as formulas.
+    resp.getRange(1, 1, resp.getMaxRows(), HEADERS.length).setNumberFormat('@');
+    resp.setFrozenRows(1);
+  } else if (resp.getLastRow() === 0) {
+    resp.appendRow(HEADERS);
+    resp.setFrozenRows(1);
+  } else {
+    var have = resp.getRange(1, 1, 1, Math.max(resp.getLastColumn(), 1)).getValues()[0];
+    if (have.join('|') !== HEADERS.slice(0, have.length).join('|') || have.length < HEADERS.length) {
+      Logger.log('WARNING: the header row of "' + CONFIG.SHEETS.RESPONSES + '" does not match the expected columns: ' +
+        HEADERS.join(', ') + '. Rename or delete that sheet and run setup() again.');
+    }
+  }
 
   var fac = getOrCreateSheet_(ss, CONFIG.SHEETS.FACULTIES);
   fac.clear();
   fac.getRange(1, 1, FACULTIES.length + 1, 2).setValues([['Code', 'Name']].concat(FACULTIES));
   fac.setFrozenRows(1);
 
-  var adm = getOrCreateSheet_(ss, CONFIG.SHEETS.ADMINS);
-  if (adm.getLastRow() === 0) {
+  var adm = ss.getSheetByName(CONFIG.SHEETS.ADMINS);
+  if (!adm) {
+    adm = ss.insertSheet(CONFIG.SHEETS.ADMINS);
     adm.appendRow(ADMIN_HEADERS);
     var me = Session.getEffectiveUser().getEmail();
     if (me) adm.appendRow([me, 'Super Admin', 'SUPER', '', 'Yes']);
-    adm.appendRow(['pic.fc@utm.my', 'Contoh PIC FC (padam/ubah)', 'PIC', 'FC', 'No']);
+    adm.setFrozenRows(1);
   }
-  adm.setFrozenRows(1);
 
-  var stu = getOrCreateSheet_(ss, CONFIG.SHEETS.STUDENTS);
-  if (stu.getLastRow() === 0) stu.appendRow(STUDENT_HEADERS);
-  stu.getRange(1, 1, stu.getMaxRows(), STUDENT_HEADERS.length).setNumberFormat('@');
-  stu.setFrozenRows(1);
+  var stu = ss.getSheetByName(CONFIG.SHEETS.STUDENTS);
+  if (!stu && !CONFIG.STUDENTS.SPREADSHEET_ID) {
+    stu = ss.insertSheet(CONFIG.SHEETS.STUDENTS);
+    stu.appendRow(STUDENT_HEADERS);
+    stu.getRange(1, 1, stu.getMaxRows(), STUDENT_HEADERS.length).setNumberFormat('@');
+    stu.setFrozenRows(1);
+  }
 
   var def = ss.getSheetByName('Sheet1');
-  if (def && ss.getSheets().length > 1) ss.deleteSheet(def);
+  if (created && def && ss.getSheets().length > 1) ss.deleteSheet(def);
 
   Logger.log('Spreadsheet: ' + ss.getUrl());
 }
@@ -150,7 +171,7 @@ function getOrCreateSheet_(ss, name) {
 }
 
 function getSpreadsheet_() {
-  var id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  var id = CONFIG.SPREADSHEET_ID || PropertiesService.getScriptProperties().getProperty('SHEET_ID');
   if (!id) throw new Error('Run setup() first.');
   return SpreadsheetApp.openById(id);
 }
