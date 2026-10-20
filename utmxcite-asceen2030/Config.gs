@@ -621,7 +621,7 @@ var KPIS = [
       F_('bidang', 'Bidang', 'text'),
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
       F_('penyelia_li', 'Penyelia LI (staf akademik)', 'text'),
-      F_('mentor_industri', 'Mentor universiti/industri', 'text'),
+      F_('mentor_industri', 'Mentor industri', 'text'),
       F_('status', 'Status program', 'select', { required: true, options: ['Dicalonkan', 'Dalam kelulusan', 'Mendaftar', 'Tamat', 'Tarik diri'] }),
       F_('tarikh_daftar', 'Tarikh mendaftar', 'date'),
       F_('tarikh_mula_li', 'Tarikh mula LI', 'date'),
