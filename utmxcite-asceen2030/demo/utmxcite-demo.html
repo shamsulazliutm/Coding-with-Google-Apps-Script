@@ -2992,6 +2992,21 @@ function ckai7Rm_(r) {
   var v = r.pendapatan_bulanan;
   return num_(v === '' || v === undefined || v === null ? r.pendapatan_rm : v);
 }
+/**
+ * Tahun pelaporan bagi KPI yang tiada medan tarikh sendiri: tahun tarikh lama (jika ada), jika tidak tahun dicipta_pada,
+ * kemudian dikemas_kini_pada. Menerima YYYY-MM-DD(...) dan hari/bulan/tahun (06/10/2026) yang ditaip dalam Sheet.
+ */
+function createdYear_(r, legacyKeys) {
+  function yr(v) {
+    var s = String(v === undefined || v === null ? '' : v).trim(), mm;
+    if ((mm = /^(\d{4})-\d{1,2}/.exec(s))) return parseInt(mm[1], 10);
+    if ((mm = /^\d{1,2}[\/\-.]\d{1,2}[\/\-.](\d{4})/.exec(s))) return parseInt(mm[1], 10);
+    return null;
+  }
+  var ks = (legacyKeys || []).concat(['dicipta_pada', 'dikemas_kini_pada']);
+  for (var i = 0; i < ks.length; i++) { var y = yr(r[ks[i]]); if (y) return y; }
+  return null;
+}
 function byMonth_(items) { return items.sort(function (a, b) { return String(a.label).localeCompare(String(b.label)); }); }
 
 function countBy_(rows, keyFn) {
@@ -3088,7 +3103,7 @@ var MEASURES = {
       if (!key || !y) return;
       if (!first[key] || y < first[key].y) first[key] = { y: y, fakulti: fakulti, sumber: sumber };
     }
-    rows.forEach(function (r) { add(r.no_matrik, yearOf_(r.dicipta_pada), r.fakulti, 'Daftar fakulti (KPT 4)'); });
+    rows.forEach(function (r) { add(r.no_matrik, createdYear_(r, ['tarikh']), r.fakulti, 'Daftar fakulti (KPT 4)'); });
     ctx.rows('CKAI8').forEach(function (r) {
       if (['TRL 1', 'TRL 2', 'TRL 3'].indexOf(r.trl) < 0) return;
       var p = parseJson_(r.pelajar, []);
@@ -3429,7 +3444,7 @@ var MEASURES = {
   // KAI 4: pelajar mendaftar dalam GiGAUTM Ascend pada tahun itu.
   kai4: function (kpi, rows, year, ctx) {
     // Setiap rekod = pelajar GiGA; tahun pelaporan = tahun rekod dicipta (tiada medan status / tarikh).
-    var counted = rows.filter(function (r) { return yearOf_(r.dicipta_pada) === year; });
+    var counted = rows.filter(function (r) { return createdYear_(r, ['tarikh_daftar']) === year; });
     return {
       value: counted.length,
       secondary: [
@@ -3458,7 +3473,8 @@ var MEASURES = {
   // KAI 6: pelajar dilatih membentuk startup AI pada tahun itu; minimum 5 setiap fakulti (FAI, FC, FKE, MJIIT).
   kai6: function (kpi, rows, year, ctx) {
     // Tahun pelaporan = tahun rekod dicipta (tiada medan tarikh mula latihan).
-    var counted = countedInYear_(rows, PERINGKAT_STARTUP.slice(1).concat(['Dalam latihan', 'Tamat latihan']), 'dicipta_pada', year);   // lazim lama dikira sehingga setup() menukarnya
+    var okStatus = PERINGKAT_STARTUP.slice(1).concat(['Dalam latihan', 'Tamat latihan']);
+    var counted = rows.filter(function (r) { return okStatus.indexOf(String(r.status || '').trim()) >= 0 && createdYear_(r, ['tarikh_mula_latihan']) === year; });   // lazim lama dikira sehingga setup() menukarnya
     var startups = {};
     counted.forEach(function (r) { if (r.nama_startup) startups[String(r.nama_startup).toLowerCase()] = 1; });
     return {

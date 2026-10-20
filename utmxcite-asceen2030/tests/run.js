@@ -340,6 +340,15 @@ test('KAI6: ahli kumpulan dimasukkan melalui no. matrik; disimpan sebagai teks b
   assert.strictEqual(r.nama_ahli_kumpulan, '1. AHLI SATU (AH1)\n2. AHLI DUA (AH2)');
   const bad = g.api_save(adminToken, 'KAI6', { __nostudent: 1, no_matrik: 'AH0', status: 'Dicalonkan', nama_ahli_kumpulan: [{ matrik: 'TIADA9' }] }); fail(bad, /PELAJAR/);
 });
+test('KAI6/KAI4/KPT4: tahun daripada dicipta_pada hari/bulan/tahun (06/10/2029) dan tarikh lama', () => {
+  const put = (shName, vals) => { const sh = g.getSheet_(shName), hd = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], r = sh.getLastRow() + 1; Object.keys(vals).forEach(k => sh.getRange(r, hd.indexOf(k) + 1).setValue(vals[k])); };
+  put('KAI6_AI_Startup', { id: 'A6-T1', fakulti: 'FAI', nama: 'T1', no_matrik: 'T1', status: 'Ideasi', dicipta_pada: '06/10/2029' });
+  put('KAI6_AI_Startup', { id: 'A6-T2', fakulti: 'FC', nama: 'T2', no_matrik: 'T2', status: 'Dalam latihan', dicipta_pada: '', dikemas_kini_pada: '2029-03-02T10:00:00' });
+  put('KAI4_GiGA', { id: 'G4-T1', fakulti: 'FAI', nama_pelajar: 'T1', no_matrik: 'T1', dicipta_pada: '06/10/2029' });
+  g.CacheService.getScriptCache().remove('dash:2029');
+  const d = dash(2029);
+  assert.strictEqual(card(d, 'KAI6').value, 2); assert.strictEqual(card(d, 'KAI4').value, 1);
+});
 test('KAI6: sasaran 20, minimum 5 setiap fakulti (4 fakulti), startup unik', () => {
   const mk = (f, n, s) => ok(g.api_save(adminToken, 'KAI6', { fakulti: f, nama: n, no_matrik: n, status: 'Ideasi', nama_startup: s }));
   mk('FAI', 'p1', 'StartupA'); mk('FAI', 'p2', 'startupa'); mk('FC', 'p3', 'StartupB');
