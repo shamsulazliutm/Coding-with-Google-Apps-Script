@@ -498,7 +498,7 @@ var MEASURES = {
       secondary: [{ label: 'Kertas konsep diluluskan', value: rows.filter(function (r) { return r.kertas_konsep_status === 'Diluluskan'; }).length }],
       breakdown: [
         { title: 'Pelajar mendaftar mengikut fakulti', items: sortDesc_(countBy_(counted, function (r) { return r.fakulti; })) },
-        { title: 'Semua pelajar mengikut status (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
+        { title: 'Semua pelajar mengikut peringkat (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
       ]
     };
   },
@@ -506,7 +506,7 @@ var MEASURES = {
   // KAI 6: pelajar dilatih membentuk startup AI pada tahun itu; minimum 5 setiap fakulti (FAI, FC, FKE, MJIIT).
   kai6: function (kpi, rows, year, ctx) {
     // Tahun pelaporan = tahun rekod dicipta (tiada medan tarikh mula latihan).
-    var counted = countedInYear_(rows, ['Dalam latihan', 'Tamat latihan'], 'dicipta_pada', year);
+    var counted = countedInYear_(rows, PERINGKAT_STARTUP.slice(1).concat(['Dalam latihan', 'Tamat latihan']), 'dicipta_pada', year);   // lazim lama dikira sehingga setup() menukarnya
     var startups = {};
     counted.forEach(function (r) { if (r.nama_startup) startups[String(r.nama_startup).toLowerCase()] = 1; });
     return {

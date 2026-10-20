@@ -50,6 +50,7 @@ var BIDANG_PENGAJIAN = [
   'LAIN-LAIN'
 ];
 var BULAN_MS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+var PERINGKAT_STARTUP = ['Dicalonkan', 'Ideasi', 'Prototaip / MVP', 'Validasi pasaran', 'Pelancaran', 'Pertumbuhan'];   // KAI 6: Dicalonkan tidak dikira; Ideasi ke Pertumbuhan dikira
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -650,7 +651,7 @@ var KPIS = [
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
       F_('mentor_industri', 'Mentor universiti/industri', 'text'),
       F_('startup_ditubuhkan', 'Startup ditubuhkan?', 'yesno'),
-      F_('status', 'Status', 'select', { required: true, options: ['Dicalonkan', 'Dipilih', 'Dalam latihan', 'Tamat latihan', 'Tarik diri'], sec: 'Pengurusan' }),
+      F_('status', 'Peringkat pembangunan startup', 'select', { required: true, options: PERINGKAT_STARTUP, sec: 'Pengurusan' }),
       F_('lampiran', 'Pautan lampiran bukti', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
@@ -1629,6 +1630,7 @@ function renameColumns_(ss) {
  */
 function migrateColumns_(ss) {
   migrateCkai7Month_(ss);
+  migrateValues_(ss, 'KAI6', 'status', { 'Dipilih': 'Dicalonkan', 'Dalam latihan': 'Ideasi', 'Tamat latihan': 'Prototaip / MVP' });
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);
@@ -1666,6 +1668,17 @@ function migrateCkai7Month_(ss) {
     sh.getRange(2, ti + 1, n, 1).setValues(tv); sh.getRange(2, bi + 1, n, 1).setValues(bv);
     audit_(null, 'LAJUR_DISALIN', 'CKAI7', '', 'bulan -> Tahun + Bulan (' + changed + ' baris)');
   }
+}
+
+/** Tukar nilai lama dalam satu lajur kepada nilai baharu (peta {lama: baharu}). Nilai lain tidak disentuh. */
+function migrateValues_(ss, kpiId, col, map) {
+  var sh = ss.getSheetByName(getKpi_(kpiId).sheet);
+  if (!sh || sh.getLastColumn() < 1 || sh.getLastRow() < 2) return;
+  var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), ci = hdr.indexOf(col), n = sh.getLastRow() - 1;
+  if (ci < 0) return;
+  var vals = sh.getRange(2, ci + 1, n, 1).getValues(), changed = 0;
+  for (var r = 0; r < n; r++) { var v = String(vals[r][0]).trim(); if (map.hasOwnProperty(v)) { vals[r][0] = map[v]; changed++; } }
+  if (changed) { sh.getRange(2, ci + 1, n, 1).setValues(vals); audit_(null, 'NILAI_DITUKAR', kpiId, '', col + ': ' + changed + ' baris'); }
 }
 
 // ===== Auth.gs =====
@@ -2958,7 +2971,7 @@ var MEASURES = {
       secondary: [{ label: 'Kertas konsep diluluskan', value: rows.filter(function (r) { return r.kertas_konsep_status === 'Diluluskan'; }).length }],
       breakdown: [
         { title: 'Pelajar mendaftar mengikut fakulti', items: sortDesc_(countBy_(counted, function (r) { return r.fakulti; })) },
-        { title: 'Semua pelajar mengikut status (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
+        { title: 'Semua pelajar mengikut peringkat (keseluruhan)', items: countBy_(rows, function (r) { return r.status; }) }
       ]
     };
   },
@@ -2966,7 +2979,7 @@ var MEASURES = {
   // KAI 6: pelajar dilatih membentuk startup AI pada tahun itu; minimum 5 setiap fakulti (FAI, FC, FKE, MJIIT).
   kai6: function (kpi, rows, year, ctx) {
     // Tahun pelaporan = tahun rekod dicipta (tiada medan tarikh mula latihan).
-    var counted = countedInYear_(rows, ['Dalam latihan', 'Tamat latihan'], 'dicipta_pada', year);
+    var counted = countedInYear_(rows, PERINGKAT_STARTUP.slice(1).concat(['Dalam latihan', 'Tamat latihan']), 'dicipta_pada', year);   // lazim lama dikira sehingga setup() menukarnya
     var startups = {};
     counted.forEach(function (r) { if (r.nama_startup) startups[String(r.nama_startup).toLowerCase()] = 1; });
     return {

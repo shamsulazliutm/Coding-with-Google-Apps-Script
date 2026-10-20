@@ -49,6 +49,7 @@ var BIDANG_PENGAJIAN = [
   'LAIN-LAIN'
 ];
 var BULAN_MS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+var PERINGKAT_STARTUP = ['Dicalonkan', 'Ideasi', 'Prototaip / MVP', 'Validasi pasaran', 'Pelancaran', 'Pertumbuhan'];   // KAI 6: Dicalonkan tidak dikira; Ideasi ke Pertumbuhan dikira
 var BANGSA_OPTIONS = ['MELAYU', 'CINA', 'INDIA', 'PRIBUMI SARAWAK', 'PRIBUMI SABAH', 'LAIN-LAIN'];
 var STUDENT_COLS = ['no_matrik', 'no_kp', 'nama_pelajar', 'emel', 'telefon', 'fakulti', 'jantina', 'bangsa', 'bidang_pengajian', 'dikemas_kini_pada', 'dikemas_kini_oleh'];
 
@@ -649,7 +650,7 @@ var KPIS = [
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
       F_('mentor_industri', 'Mentor universiti/industri', 'text'),
       F_('startup_ditubuhkan', 'Startup ditubuhkan?', 'yesno'),
-      F_('status', 'Status', 'select', { required: true, options: ['Dicalonkan', 'Dipilih', 'Dalam latihan', 'Tamat latihan', 'Tarik diri'], sec: 'Pengurusan' }),
+      F_('status', 'Peringkat pembangunan startup', 'select', { required: true, options: PERINGKAT_STARTUP, sec: 'Pengurusan' }),
       F_('lampiran', 'Pautan lampiran bukti', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]

@@ -201,7 +201,7 @@ test('Admin merekod bagi fakulti lain dan melihat semua', () => {
   assert.strictEqual(ok(g.api_list(adminToken, 'KAI1', { q: 'co-work' })).rows.length, 1);
 });
 test('KAI6 terhad kepada FAI, FC, FKE, MJIIT', () => {
-  const base = { nama: 'Ali', no_matrik: 'A1', status: 'Dipilih' };
+  const base = { nama: 'Ali', no_matrik: 'A1', status: 'Dicalonkan' };
   fail(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKA' }, base)), /betulkan/);
   ok(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKE' }, base, { no_matrik: 'A2' })));
   // PIC FC tidak diberi KAI6 dan PIC FKA bukan fakulti KAI6
@@ -335,13 +335,13 @@ test('KAI6: ahli kumpulan dimasukkan melalui no. matrik; disimpan sebagai teks b
   const sh = env.spreadsheets[env.props.SHEET_ID].getSheetByName('PELAJAR');
   sh.appendRow(['AH0', '040506107701', 'Ketua Satu', '', '', 'FAI', '', '', '', '', '']);
   sh.appendRow(['AH1', '040506107702', 'Ahli Satu', '', '', 'FC', '', '', '', '', '']); sh.appendRow(['AH2', '040506107703', 'Ahli Dua', '', '', 'FKE', '', '', '', '', '']);
-  const r = ok(g.api_save(adminToken, 'KAI6', { __nostudent: 1, no_matrik: 'AH0', status: 'Dipilih', nama_ahli_kumpulan: [{ matrik: 'ah1' }, { matrik: 'AH2' }] }));
+  const r = ok(g.api_save(adminToken, 'KAI6', { __nostudent: 1, no_matrik: 'AH0', status: 'Dicalonkan', nama_ahli_kumpulan: [{ matrik: 'ah1' }, { matrik: 'AH2' }] }));
   assert.strictEqual(r.fakulti, 'FAI');                                   // fakulti daripada PELAJAR
   assert.strictEqual(r.nama_ahli_kumpulan, '1. AHLI SATU (AH1)\n2. AHLI DUA (AH2)');
-  const bad = g.api_save(adminToken, 'KAI6', { __nostudent: 1, no_matrik: 'AH0', status: 'Dipilih', nama_ahli_kumpulan: [{ matrik: 'TIADA9' }] }); fail(bad, /PELAJAR/);
+  const bad = g.api_save(adminToken, 'KAI6', { __nostudent: 1, no_matrik: 'AH0', status: 'Dicalonkan', nama_ahli_kumpulan: [{ matrik: 'TIADA9' }] }); fail(bad, /PELAJAR/);
 });
 test('KAI6: sasaran 20, minimum 5 setiap fakulti (4 fakulti), startup unik', () => {
-  const mk = (f, n, s) => ok(g.api_save(adminToken, 'KAI6', { fakulti: f, nama: n, no_matrik: n, status: 'Dalam latihan', nama_startup: s }));
+  const mk = (f, n, s) => ok(g.api_save(adminToken, 'KAI6', { fakulti: f, nama: n, no_matrik: n, status: 'Ideasi', nama_startup: s }));
   mk('FAI', 'p1', 'StartupA'); mk('FAI', 'p2', 'startupa'); mk('FC', 'p3', 'StartupB');
   const c = card(dash(2026), 'KAI6');
   assert.strictEqual(c.value, 3); assert.strictEqual(c.target, 20);
@@ -350,7 +350,18 @@ test('KAI6: sasaran 20, minimum 5 setiap fakulti (4 fakulti), startup unik', () 
   assert.ok(c.breakdown[0].items.every(i => i.target === 5));
   const sh6 = g.getSheet_('KAI6_AI_Startup');
   deepEq(sh6.getRange(1, 1, 1, sh6.getLastColumn()).getValues()[0], ['id', 'fakulti', 'nama', 'no_kp', 'no_matrik', 'nama_startup', 'nama_ahli_kumpulan', 'no_pendaftaran_SSM', 'bidang_ai', 'ringkasan', 'mentor_industri', 'startup_ditubuhkan', 'status', 'lampiran', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
-  const bad = g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: 'Z', no_matrik: 'z9', status: 'Dalam latihan', bidang_ai: 'Memasak' }); fail(bad, /betulkan/); assert.ok(bad.fields.bidang_ai);
+  const bad = g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: 'Z', no_matrik: 'z9', status: 'Ideasi', bidang_ai: 'Memasak' }); fail(bad, /betulkan/); assert.ok(bad.fields.bidang_ai);
+});
+test('KAI6: peringkat pembangunan startup; Dicalonkan tidak dikira; nilai lama ditukar oleh setup()', () => {
+  const mk = (n, st) => g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: n, no_matrik: n, status: st, nama_startup: 'PS' + n });
+  const bad = mk('ps0', 'Tarik diri'); fail(bad, /betulkan/); assert.ok(bad.fields.status);
+  const before = card(dash(2026), 'KAI6').value;
+  ok(mk('ps1', 'Dicalonkan')); assert.strictEqual(card(dash(2026), 'KAI6').value, before);
+  ['Ideasi', 'Prototaip / MVP', 'Validasi pasaran', 'Pelancaran', 'Pertumbuhan'].forEach((p, i) => { ok(mk('pt' + i, p)); assert.strictEqual(card(dash(2026), 'KAI6').value, before + i + 1); });
+  const sh = g.getSheet_('KAI6_AI_Startup'), hd = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0], r = sh.getLastRow() + 1;
+  sh.getRange(r, 1).setValue('A6-LAMA'); sh.getRange(r, hd.indexOf('status') + 1).setValue('Dalam latihan');
+  g.setup();
+  assert.strictEqual(sh.getRange(r, hd.indexOf('status') + 1).getValue(), 'Ideasi');
 });
 test('DKAI1: siap 100% pada 2026 sahaja', () => {
   const c = card(dash(2026), 'DKAI1');

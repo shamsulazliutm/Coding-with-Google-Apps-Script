@@ -276,6 +276,7 @@ function renameColumns_(ss) {
  */
 function migrateColumns_(ss) {
   migrateCkai7Month_(ss);
+  migrateValues_(ss, 'KAI6', 'status', { 'Dipilih': 'Dicalonkan', 'Dalam latihan': 'Ideasi', 'Tamat latihan': 'Prototaip / MVP' });
   KPIS.forEach(function (kpi) {
     if (!kpi.sheet || !kpi.renamed) return;
     var sh = ss.getSheetByName(kpi.sheet);
@@ -313,4 +314,15 @@ function migrateCkai7Month_(ss) {
     sh.getRange(2, ti + 1, n, 1).setValues(tv); sh.getRange(2, bi + 1, n, 1).setValues(bv);
     audit_(null, 'LAJUR_DISALIN', 'CKAI7', '', 'bulan -> Tahun + Bulan (' + changed + ' baris)');
   }
+}
+
+/** Tukar nilai lama dalam satu lajur kepada nilai baharu (peta {lama: baharu}). Nilai lain tidak disentuh. */
+function migrateValues_(ss, kpiId, col, map) {
+  var sh = ss.getSheetByName(getKpi_(kpiId).sheet);
+  if (!sh || sh.getLastColumn() < 1 || sh.getLastRow() < 2) return;
+  var hdr = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), ci = hdr.indexOf(col), n = sh.getLastRow() - 1;
+  if (ci < 0) return;
+  var vals = sh.getRange(2, ci + 1, n, 1).getValues(), changed = 0;
+  for (var r = 0; r < n; r++) { var v = String(vals[r][0]).trim(); if (map.hasOwnProperty(v)) { vals[r][0] = map[v]; changed++; } }
+  if (changed) { sh.getRange(2, ci + 1, n, 1).setValues(vals); audit_(null, 'NILAI_DITUKAR', kpiId, '', col + ': ' + changed + ' baris'); }
 }
