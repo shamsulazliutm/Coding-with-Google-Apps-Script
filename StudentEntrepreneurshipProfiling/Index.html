@@ -16,7 +16,7 @@
   .en { display:block; font-style:italic; color:var(--mute); font-weight:400; }
   h1 .en, h2 .en { text-transform:none; letter-spacing:0; }
   .intro p { margin:0 0 12px; }
-  .tabs { display:flex; gap:6px; overflow-x:auto; position:sticky; top:0; z-index:5; background:var(--bg); padding:4px 0 10px; margin-bottom:6px; scrollbar-width:thin; }
+  .tabs { display:flex; gap:6px; overflow-x:auto; padding:10px 0 8px; scrollbar-width:thin; }
   .tab { flex:0 0 auto; padding:6px 14px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink); font-size:.88rem; line-height:1.25; text-align:left; }
   .tab b { display:inline-block; min-width:1.4em; height:1.4em; line-height:1.4em; text-align:center; border-radius:50%; background:var(--line); margin-right:4px; font-size:.78rem; }
   .tab .en { font-size:.74rem; color:inherit; opacity:.8; margin-left:2.1em; }
@@ -37,7 +37,26 @@
   dialog::backdrop { background:rgba(0,0,0,.45); }
   dialog p { margin:0 0 14px; }
   @media (max-width:520px){ .pbox dl { grid-template-columns:1fr; } .mrow { flex-direction:column; } }
-  .logo { display:block; max-width:260px; width:60%; height:auto; margin:0 auto 12px; }
+  .sticky { position:sticky; top:0; z-index:10; background:var(--bg); box-shadow:0 2px 6px rgba(0,0,0,.08); }
+  .hero { background:linear-gradient(135deg,var(--brand-d),var(--brand)); color:#fff; border-bottom:4px solid #c9892b; }
+  .hero-in { max-width:760px; margin:0 auto; padding:16px; display:flex; align-items:center; gap:16px; transition:padding .15s; }
+  .logo-box { flex:0 0 auto; background:#fff; border-radius:10px; padding:8px 12px; display:flex; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .logo-box img { display:block; height:58px; width:auto; max-width:220px; transition:height .15s; }
+  .hero-t { min-width:0; }
+  .eyebrow { font-size:.74rem; letter-spacing:.14em; opacity:.85; margin-bottom:2px; }
+  .hero h1 { margin:0; font-size:1.45rem; line-height:1.2; color:#fff; transition:font-size .15s; }
+  .hero h1 .en { color:#f0d9e0; font-size:1.02rem; margin-top:2px; }
+  .sticky.compact .hero-in { padding:8px 16px; }
+  .sticky.compact .logo-box img { height:34px; }
+  .sticky.compact .hero h1 { font-size:1.02rem; }
+  .sticky.compact .hero h1 .en, .sticky.compact .eyebrow { display:none; }
+  .tabwrap { padding-top:0; padding-bottom:0; }
+  @media (max-width:560px) {
+    .hero-in { flex-direction:column; align-items:flex-start; gap:10px; }
+    .hero h1 { font-size:1.2rem; }
+    .logo-box img { height:46px; max-width:100%; }
+    .sticky.compact .hero-in { flex-direction:row; align-items:center; }
+  }
   .addr { font-size:.9rem; color:var(--mute); }
   .req { color:var(--err); }
   .q { margin-bottom:22px; }
@@ -73,14 +92,23 @@
 </style>
 </head>
 <body>
+<div class="sticky" id="hdr">
+  <header class="hero">
+    <div class="hero-in">
+      <? if (logoUrl) { ?><div class="logo-box"><img src="<?= logoUrl ?>" alt="UTMXCITE - Universiti Teknologi Malaysia"></div><? } ?>
+      <div class="hero-t">
+        <? if (!logoUrl) { ?><div class="eyebrow">UNIVERSITI TEKNOLOGI MALAYSIA &middot; UTMXCITE</div><? } ?>
+        <h1>PROFIL KEUSAHAWANAN PELAJAR<span class="en">Student Entrepreneurship Profiling</span></h1>
+      </div>
+    </div>
+  </header>
+  <div class="wrap tabwrap"><nav class="tabs" id="tabs" aria-label="Bahagian / Sections"></nav></div>
+</div>
+
 <div class="wrap">
 
-  <nav class="tabs" id="tabs" aria-label="Bahagian / Sections"></nav>
-
   <div class="card top intro" id="intro">
-    <? if (logoUrl) { ?><img class="logo" src="<?= logoUrl ?>" alt="UTM &amp; UTMXCITE"><? } ?>
-    <h1>PROFIL KEUSAHAWANAN PELAJAR<span class="en">STUDENT ENTREPRENEURSHIP PROFILING</span></h1>
-    <p style="margin-top:14px">Assalamualaikum WBT dan Salam Sejahtera,<span class="en">Assalamualaikum WBT and Good day to you,</span></p>
+    <p>Assalamualaikum WBT dan Salam Sejahtera,<span class="en">Assalamualaikum WBT and Good day to you,</span></p>
     <p>Pusat Inovasi Mahasiswa dan Keusahawanan Teknologi UTM (UTMXCITE) bertanggungjawab membangunkan, membimbing dan melatih usahawan pelajar di UTM. Borang tinjauan ini membolehkan universiti melalui UTMXCITE mewujudkan pangkalan data keusahawanan yang berkesan serta peluang keusahawanan bagi mereka yang berminat menjadi usahawan.
       <span class="en">The UTM Centre for Student Innovation and Technology Entrepreneurship (UTMXCITE) is responsible for developing, guiding, and training student entrepreneurs at UTM. This survey form allows the university via UTMXCITE to create effective entrepreneurship profiling and eventually to provide effective entrepreneurship database for the university as well as entrepreneurship opportunity for those who are interested to become an entrepreneur.</span></p>
     <p>Terima kasih atas kerjasama anda menyertai tinjauan ini. Semoga berjaya.
@@ -541,6 +569,12 @@ $('back').addEventListener('click', function () {
   var vis = visible(), pos = vis.indexOf(idx);
   if (pos > 0) { idx = vis[pos - 1]; render(); }
 });
+var compact = false;
+window.addEventListener('scroll', function () {
+  var y = window.scrollY || document.documentElement.scrollTop;
+  if (!compact && y > 90) compact = true; else if (compact && y < 20) compact = false; else return;
+  $('hdr').classList.toggle('compact', compact);
+}, { passive: true });
 $('pmSave').addEventListener('click', saveModal);
 $('pmCancel').addEventListener('click', function () { $('pm').close(); });
 $('frm').addEventListener('submit', function (e) { e.preventDefault(); });

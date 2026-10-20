@@ -12,7 +12,10 @@
   .en { font-style:italic; color:var(--mute); font-weight:400; }
   .wrap { max-width:1280px; margin:0 auto; padding:16px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
-  header.bar { background:var(--brand); color:#fff; }
+  header.bar { background:linear-gradient(135deg,var(--brand-d),var(--brand)); color:#fff; border-bottom:4px solid #c9892b; }
+  header.bar .logo-box { background:#fff; border-radius:10px; padding:6px 10px; display:flex; align-items:center; }
+  header.bar .logo-box img { display:block; height:44px; width:auto; max-width:180px; }
+  header.bar h1 { flex:1 1 260px; }
   header.bar .in { max-width:1280px; margin:0 auto; padding:12px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
   header.bar h1 { margin:0; font-size:1.1rem; }
   header.bar .en { color:#e8cdd6; }
@@ -70,6 +73,7 @@
 
 <header class="bar">
   <div class="in">
+    <? if (logoUrl) { ?><div class="logo-box"><img src="<?= logoUrl ?>" alt="UTMXCITE - Universiti Teknologi Malaysia"></div><? } ?>
     <h1>Dashboard Profil Keusahawanan Pelajar <span class="en">/ Student Entrepreneurship Profiling</span></h1>
     <div class="who" id="who" hidden>
       <div id="whoName"></div>

@@ -41,8 +41,8 @@ Web app Google Apps Script untuk UTMXCITE. Borang pelajar dwibahasa (BM, *Englis
    - Kod fakulti: AHIBS, FABU, FAI, FC, FEST, FKA, FKE, FKM, FKT, FM, FS, FSSK, MJIIT, SPACE, UTMXCITE.
    - Tukar `Active` kepada `No` untuk mematikan akses serta-merta.
 6. **Deploy → New deployment → Web app**: *Execute as: Me*, *Who has access: Anyone*.
-7. (Pilihan) Letak logo UTM + UTMXCITE: muat naik ke Drive, kongsi *Anyone with the link*, kemudian isi
-   `CONFIG.LOGO_URL` dalam `Code.gs` dengan `https://drive.google.com/thumbnail?id=FILE_ID&sz=w600`.
+7. (Pilihan) Letak logo UTMXCITE (satu imej, sudah termasuk logo UTM) pada header borang dan dashboard: muat naik ke Drive, kongsi *Anyone with the link*, kemudian isi
+   `CONFIG.LOGO_URL` dalam `Code.gs` dengan `https://drive.google.com/thumbnail?id=FILE_ID&sz=w600`. Tanpa logo, header memaparkan teks "UNIVERSITI TEKNOLOGI MALAYSIA · UTMXCITE".
 
 Selepas mengubah kod, deploy semula (*Manage deployments → Edit → New version*).
 
