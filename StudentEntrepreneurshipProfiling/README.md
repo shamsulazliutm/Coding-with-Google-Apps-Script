@@ -10,7 +10,7 @@ Web app Google Apps Script untuk UTMXCITE. Borang pelajar dwibahasa (BM, *Englis
 ## Pemasangan
 
 1. Pergi ke <https://script.google.com> dan buat projek baharu.
-2. Salin `Code.gs`, `Index.html`, `Dashboard.html` dan kandungan `appsscript.json`
+2. Salin `Code.gs`, `Index.html`, `Dashboard.html`, `Logo.html` (logo UTMXCITE sebagai data URI) dan kandungan `appsscript.json`
    (Project Settings → *Show "appsscript.json" manifest file*).
 3. Sheet yang digunakan ditetapkan dalam `CONFIG.SPREADSHEET_ID` (`Code.gs`). Akaun yang deploy mesti ada akses **Editor** pada sheet itu.
    Jalankan fungsi **`setup`** sekali dan beri kebenaran. Ia menambah tab yang belum ada (`Responses`, `Admins`, `Students`, `Faculties`)
@@ -41,8 +41,9 @@ Web app Google Apps Script untuk UTMXCITE. Borang pelajar dwibahasa (BM, *Englis
    - Kod fakulti: AHIBS, FABU, FAI, FC, FEST, FKA, FKE, FKM, FKT, FM, FS, FSSK, MJIIT, SPACE, UTMXCITE.
    - Tukar `Active` kepada `No` untuk mematikan akses serta-merta.
 6. **Deploy → New deployment → Web app**: *Execute as: Me*, *Who has access: Anyone*.
-7. (Pilihan) Letak logo UTMXCITE (satu imej, sudah termasuk logo UTM) pada header borang dan dashboard: muat naik ke Drive, kongsi *Anyone with the link*, kemudian isi
-   `CONFIG.LOGO_URL` dalam `Code.gs` dengan `https://drive.google.com/thumbnail?id=FILE_ID&sz=w600`. Tanpa logo, header memaparkan teks "UNIVERSITI TEKNOLOGI MALAYSIA · UTMXCITE".
+7. Logo UTMXCITE (sudah termasuk logo UTM) dipaparkan pada header borang dan dashboard daripada fail `Logo.html`, jadi tidak perlu Drive.
+   Untuk guna imej lain, isi `CONFIG.LOGO_URL` dalam `Code.gs` dengan URL awam. Jika `Logo.html` tiada dan `LOGO_URL` kosong,
+   header memaparkan teks "UNIVERSITI TEKNOLOGI MALAYSIA · UTMXCITE".
 
 Selepas mengubah kod, deploy semula (*Manage deployments → Edit → New version*).
 

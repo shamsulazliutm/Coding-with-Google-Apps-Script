@@ -15,8 +15,8 @@ var CONFIG = {
   // web app needs edit access to it. Leave empty to let setup() create a new spreadsheet instead.
   SPREADSHEET_ID: '1kxFT--8ES0YbPw33Onng5ykNnd777hqkXxe1_WKyRZo',
   TZ: 'Asia/Kuala_Lumpur',
-  // Logo UTM + UTMXCITE: paste a public image URL (e.g. Drive file shared as "Anyone with the link",
-  // use https://drive.google.com/thumbnail?id=FILE_ID&sz=w600). Empty = no logo shown.
+  // Logo shown in the header. Empty = use the logo embedded in Logo.html (UTM + UTMXCITE).
+  // To use another image, paste a public URL here (e.g. https://drive.google.com/thumbnail?id=FILE_ID&sz=w600).
   LOGO_URL: '',
   STUDENT_EMAIL_DOMAINS: ['graduate.utm.my', 'utm.my'],
   OTP_TTL: 300,            // seconds a code stays valid
@@ -93,11 +93,20 @@ function doGet(e) {
   var tpl = HtmlService.createTemplateFromFile(page);
   tpl.faculties = FACULTIES.map(function (f) { return { code: f[0], name: f[1] }; });
   tpl.emailDomains = CONFIG.STUDENT_EMAIL_DOMAINS;
-  tpl.logoUrl = CONFIG.LOGO_URL;
+  tpl.logoUrl = CONFIG.LOGO_URL || embeddedLogo_();
   return tpl.evaluate()
     .setTitle(CONFIG.TITLE)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
+}
+
+/** Logo.html holds the logo as a data URI, so no Drive sharing or external host is needed. */
+function embeddedLogo_() {
+  try {
+    return HtmlService.createHtmlOutputFromFile('Logo').getContent().trim();
+  } catch (e) {
+    return '';
+  }
 }
 
 /* ------------------------------------------------------------------ */
