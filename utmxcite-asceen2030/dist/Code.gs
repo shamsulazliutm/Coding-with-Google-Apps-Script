@@ -652,7 +652,7 @@ var KPIS = [
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
       F_('mentor_industri', 'Mentor universiti/industri', 'text'),
       F_('startup_ditubuhkan', 'Startup ditubuhkan?', 'yesno'),
-      F_('status', 'Peringkat pembangunan startup', 'select', { required: true, options: PERINGKAT_STARTUP, sec: 'Pengurusan' }),
+      F_('status', 'Peringkat', 'select', { required: true, options: PERINGKAT_STARTUP, sec: 'Pengurusan' }),
       F_('lampiran', 'Pautan lampiran bukti', 'url'),
       F_('catatan', 'Catatan', 'textarea', { full: true })
     ]
