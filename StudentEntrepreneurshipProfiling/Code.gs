@@ -21,7 +21,10 @@ var CONFIG = {
   OTP_RESEND_SECONDS: 60,  // minimum gap between code requests
   LOCKOUT_SECONDS: 900,
   SESSION_TTL: 21600,      // 6 hours (CacheService maximum)
-  SHEETS: { RESPONSES: 'Responses', ADMINS: 'Admins', FACULTIES: 'Faculties' }
+  SHEETS: { RESPONSES: 'Responses', ADMINS: 'Admins', FACULTIES: 'Faculties', STUDENTS: 'Students' },
+  // Student master list (matric -> profile). Leave SPREADSHEET_ID empty to use the 'Students' sheet
+  // in this project's spreadsheet, or paste the ID of another spreadsheet that holds the list.
+  STUDENTS: { SPREADSHEET_ID: '', SHEET: 'Students' }
 };
 
 var FACULTIES = [
@@ -44,13 +47,28 @@ var FACULTIES = [
 
 // Column keys in Responses sheet order.
 var HEADERS = [
-  'timestamp', 'refId', 'name', 'email', 'phone', 'facultyCode', 'facultyName',
-  'program', 'ic', 'hometown', 'familyBiz', 'familyList', 'familyDuration',
+  'timestamp', 'refId', 'matric', 'name', 'email', 'phone', 'facultyCode', 'facultyName',
+  'program', 'ic', 'hometown', 'profileSource', 'familyBiz', 'familyList', 'familyDuration',
   'ownBiz', 'bizType', 'bizDuration', 'motivation', 'motivationOther',
   'interest', 'interestType', 'campus', 'stream'
 ];
 
 var ADMIN_HEADERS = ['Email', 'Name', 'Role', 'FacultyCode', 'Active'];
+
+// Profile fields read from the student master list (hometown is optional and asked on the form).
+var PROFILE_FIELDS = ['name', 'email', 'phone', 'facultyCode', 'program', 'ic'];
+var STUDENT_HEADERS = ['Matric', 'Name', 'Email', 'Phone', 'FacultyCode', 'Program', 'IC', 'Hometown'];
+// Accepted header names in the master sheet (compared lower-case, letters and digits only).
+var STUDENT_ALIASES = {
+  matric: ['matric', 'matricno', 'matricnumber', 'nomatrik', 'nomatriks', 'matrik'],
+  name: ['name', 'nama', 'fullname', 'namapenuh'],
+  email: ['email', 'emel', 'emailaddress'],
+  phone: ['phone', 'phoneno', 'phonenumber', 'telefon', 'notelefon', 'notel', 'hp'],
+  facultyCode: ['facultycode', 'faculty', 'fakulti', 'kodfakulti', 'namafakulti'],
+  program: ['program', 'programme', 'academicprogram', 'namaprogram'],
+  ic: ['ic', 'icno', 'icpassport', 'nokp', 'nokadpengenalan', 'passport', 'nopasport'],
+  hometown: ['hometown', 'kampunghalaman', 'kampung']
+};
 
 var YES_NO = ['Yes', 'No'];
 var BIZ_DURATION = ['0 - 1 year', '1 - 3 years', 'More than 3 years'];
@@ -111,6 +129,11 @@ function setup() {
   }
   adm.setFrozenRows(1);
 
+  var stu = getOrCreateSheet_(ss, CONFIG.SHEETS.STUDENTS);
+  if (stu.getLastRow() === 0) stu.appendRow(STUDENT_HEADERS);
+  stu.getRange(1, 1, stu.getMaxRows(), STUDENT_HEADERS.length).setNumberFormat('@');
+  stu.setFrozenRows(1);
+
   var def = ss.getSheetByName('Sheet1');
   if (def && ss.getSheets().length > 1) ss.deleteSheet(def);
 
@@ -145,26 +168,23 @@ function submitForm(p) {
     return v;
   };
 
-  a.name = str('name').toUpperCase();
-  a.email = str('email', 120).toLowerCase();
-  a.phone = str('phone', 20);
-  a.facultyCode = str('facultyCode', 20);
-  a.program = str('program');
-  a.ic = str('ic', 20);
-  a.hometown = str('hometown');
-
-  if (!a.name) throw new Error('Full name is required.');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email)) throw new Error('Invalid email.');
-  var domain = a.email.split('@')[1];
-  if (CONFIG.STUDENT_EMAIL_DOMAINS.indexOf(domain) === -1) {
-    throw new Error('Email must be @graduate.utm.my or @utm.my.');
-  }
-  if (!/^[0-9+\-\s]{7,20}$/.test(a.phone)) throw new Error('Invalid phone number.');
-  var fac = FACULTIES.filter(function (f) { return f[0] === a.facultyCode; })[0];
-  if (!fac) throw new Error('Invalid faculty.');
-  a.facultyName = fac[1];
-  if (!a.program) throw new Error('Program is required.');
-  if (!/^[A-Za-z0-9\-\s]{5,20}$/.test(a.ic)) throw new Error('Invalid IC / passport number.');
+  // Profile comes from the student master list. The browser only supplies values the list lacks,
+  // so it can never overwrite what the university already holds.
+  a.matric = cleanMatric_(p.matric);
+  if (!a.matric) throw new Error('Invalid matric number.');
+  var master = findStudent_(a.matric);
+  var manual = p.manual && typeof p.manual === 'object' ? p.manual : {};
+  var fromMaster = 0, fromManual = 0;
+  PROFILE_FIELDS.forEach(function (k) {
+    var v = master ? cleanProfile_(k, master[k]) : '';
+    if (v) { a[k] = v; fromMaster++; return; }
+    v = cleanProfile_(k, manual[k]);
+    if (!v) throw new Error('Missing or invalid: ' + k);
+    a[k] = v; fromManual++;
+  });
+  a.hometown = cleanProfile_('hometown', p.hometown) || (master ? cleanProfile_('hometown', master.hometown) : '');
+  a.profileSource = !fromManual ? 'Students sheet' : (fromMaster ? 'Students sheet + manual' : 'Manual');
+  a.facultyName = FACULTIES.filter(function (f) { return f[0] === a.facultyCode; })[0][1];
 
   // Skip logic mirrors the original form: Q8 No -> Q11, Q11 No -> Q15, Q15 No -> end.
   a.familyBiz = oneOf('familyBiz', YES_NO, true);
@@ -209,6 +229,96 @@ function submitForm(p) {
     lock.releaseLock();
   }
   return { ok: true, refId: a.refId };
+}
+
+/* ------------------------------------------------------------------ */
+/* Student master list                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Looks a matric number up in the master list. Only masked data goes back to the browser;
+ * `missing` lists the profile fields the student must fill in manually.
+ */
+function lookupStudent(matric) {
+  var m = cleanMatric_(matric);
+  if (!m) return { ok: false, message: 'No. matrik tidak sah. / Invalid matric number.' };
+  var s = findStudent_(m);
+  var missing = [], preview = {};
+  PROFILE_FIELDS.forEach(function (k) {
+    var v = s ? cleanProfile_(k, s[k]) : '';
+    if (!v) { missing.push(k); return; }
+    if (k === 'name') preview.name = maskName_(v);
+    else if (k === 'email') preview.email = maskEmail_(v);
+    else if (k === 'phone') preview.phone = mask_(v, 3);
+    else if (k === 'facultyCode') {
+      preview.faculty = v + ' - ' + FACULTIES.filter(function (f) { return f[0] === v; })[0][1];
+    } else if (k === 'program') preview.program = v;
+  });
+  return { ok: true, matric: m, found: !!s, missing: missing, preview: preview };
+}
+
+function findStudent_(matric) {
+  var ss = CONFIG.STUDENTS.SPREADSHEET_ID ? SpreadsheetApp.openById(CONFIG.STUDENTS.SPREADSHEET_ID) : getSpreadsheet_();
+  var sh = ss.getSheetByName(CONFIG.STUDENTS.SHEET);
+  if (!sh || sh.getLastRow() < 2 || sh.getLastColumn() < 1) return null;
+
+  var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+    .map(function (h) { return String(h).toLowerCase().replace(/[^a-z0-9]/g, ''); });
+  var col = {};
+  Object.keys(STUDENT_ALIASES).forEach(function (k) {
+    for (var i = 0; i < STUDENT_ALIASES[k].length; i++) {
+      var ix = head.indexOf(STUDENT_ALIASES[k][i]);
+      if (ix !== -1) { col[k] = ix; return; }
+    }
+  });
+  if (col.matric == null) return null;
+
+  // Read the matric column first, then only the matching row (the list can be thousands of rows).
+  var ids = sh.getRange(2, col.matric + 1, sh.getLastRow() - 1, 1).getValues();
+  for (var r = 0; r < ids.length; r++) {
+    if (cleanMatric_(ids[r][0]) !== matric) continue;
+    var row = sh.getRange(r + 2, 1, 1, sh.getLastColumn()).getDisplayValues()[0];
+    var o = {};
+    Object.keys(col).forEach(function (k) { o[k] = row[col[k]]; });
+    return o;
+  }
+  return null;
+}
+
+function cleanMatric_(v) {
+  v = String(v == null ? '' : v).replace(/\s+/g, '').toUpperCase();
+  return /^[A-Z0-9]{6,15}$/.test(v) ? v : '';
+}
+
+/** Returns the cleaned value, or '' when it is empty or invalid. */
+function cleanProfile_(k, raw) {
+  var v = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
+  switch (k) {
+    case 'name': return v && v.length <= 200 ? v.toUpperCase() : '';
+    case 'email':
+      v = v.toLowerCase();
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && CONFIG.STUDENT_EMAIL_DOMAINS.indexOf(v.split('@')[1]) !== -1 ? v : '';
+    case 'phone': return /^[0-9+\-\s]{7,20}$/.test(v) ? v : '';
+    case 'facultyCode':
+      var up = v.toUpperCase();
+      var f = FACULTIES.filter(function (x) { return x[0] === up || x[1].toUpperCase() === up; })[0];
+      return f ? f[0] : '';
+    case 'program': return v.length >= 2 && v.length <= 200 ? v : '';
+    case 'ic': return /^[A-Za-z0-9\-\s]{5,20}$/.test(v) ? v : '';
+    case 'hometown': return v.substring(0, 200);
+  }
+  return '';
+}
+
+function maskName_(s) {
+  return String(s).split(' ').map(function (w) {
+    return w.length <= 2 ? w : w.substring(0, 2) + new Array(Math.min(w.length - 2, 5) + 1).join('*');
+  }).join(' ');
+}
+
+function maskEmail_(s) {
+  var i = s.indexOf('@');
+  return s.substring(0, Math.min(2, i)) + '***' + s.substring(i);
 }
 
 /* ------------------------------------------------------------------ */

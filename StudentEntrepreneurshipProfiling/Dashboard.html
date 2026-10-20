@@ -111,7 +111,7 @@
         <div><label>Berminat <i>/ Interested</i></label><select id="fInt"><option value="">Semua</option><option>Yes</option><option>No</option></select></div>
         <div><label>Berniaga di kampus <i>/ On campus</i></label><select id="fCam"><option value="">Semua</option><option>Yes</option><option>No</option><option>Maybe</option></select></div>
         <div><label>Aliran <i>/ Stream</i></label><select id="fStr"><option value="">Semua</option><option>Sole proprietor</option><option>Social entrepreneurship</option><option>Technology startup</option><option>High Value GiG</option></select></div>
-        <div><label>Carian <i>/ Search</i></label><input type="search" id="fQ" placeholder="Nama, emel, program..."></div>
+        <div><label>Carian <i>/ Search</i></label><input type="search" id="fQ" placeholder="Nama, matrik, emel..."></div>
         <div><button class="ghost" id="reset" style="width:100%">Set semula <i>/ Reset</i></button></div>
       </div>
     </div>
@@ -153,14 +153,14 @@
 
 <script>
 var COLS = [
-  ['timestamp', 'Tarikh / Date'], ['refId', 'Rujukan / Ref'], ['name', 'Nama / Name'], ['email', 'Emel / Email'],
+  ['timestamp', 'Tarikh / Date'], ['refId', 'Rujukan / Ref'], ['matric', 'No. Matrik / Matric'], ['name', 'Nama / Name'], ['email', 'Emel / Email'],
   ['phone', 'Telefon / Phone'], ['facultyCode', 'Fakulti / Faculty'], ['program', 'Program'], ['ic', 'IC / Passport'],
-  ['hometown', 'Kampung / Hometown'], ['familyBiz', 'Keluarga berniaga / Family biz'], ['familyList', 'Senarai keluarga / Family list'],
+  ['hometown', 'Kampung / Hometown'], ['profileSource', 'Sumber profil / Profile source'], ['familyBiz', 'Keluarga berniaga / Family biz'], ['familyList', 'Senarai keluarga / Family list'],
   ['familyDuration', 'Tempoh keluarga / Family duration'], ['ownBiz', 'Pernah berniaga / Ran biz'], ['bizType', 'Jenis perniagaan / Biz type'],
   ['bizDuration', 'Tempoh / Duration'], ['motivation', 'Motivasi / Motivation'], ['motivationOther', 'Motivasi lain / Other motivation'],
   ['interest', 'Berminat / Interested'], ['interestType', 'Jenis diminati / Interest type'], ['campus', 'Kampus / Campus'], ['stream', 'Aliran / Stream']
 ];
-var TABLE_COLS = ['timestamp', 'name', 'facultyCode', 'program', 'phone', 'ic', 'familyBiz', 'ownBiz', 'interest', 'campus', 'stream'];
+var TABLE_COLS = ['timestamp', 'matric', 'name', 'facultyCode', 'program', 'phone', 'ic', 'familyBiz', 'ownBiz', 'interest', 'campus', 'stream'];
 var PAGE = 25;
 var PALETTE = ['#7a1f3d', '#c9892b', '#2f7f8c', '#6a8d3a', '#b0485f', '#4b5d9e', '#8a6d5b', '#999'];
 
@@ -253,7 +253,7 @@ function applyFilters() {
     if (to && d > to) return false;
     for (var id in FILTERS) { var v = $(id).value; if (v && r[FILTERS[id]] !== v) return false; }
     if (q) {
-      var hay = [r.name, r.email, r.program, r.facultyCode, r.bizType, r.interestType, r.refId].join(' ').toLowerCase();
+      var hay = [r.name, r.matric, r.email, r.program, r.facultyCode, r.bizType, r.interestType, r.refId].join(' ').toLowerCase();
       if (hay.indexOf(q) === -1) return false;
     }
     return true;

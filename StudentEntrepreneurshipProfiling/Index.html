@@ -24,6 +24,19 @@
   .tab.active b { background:#fff; color:var(--brand); }
   .tab.done { border-color:var(--brand); color:var(--brand); }
   .tab.done b { background:var(--brand); color:#fff; }
+  .mrow { display:flex; gap:8px; }
+  .mrow input { flex:1; text-transform:uppercase; }
+  .mrow button { white-space:nowrap; }
+  .pbox { display:none; margin-top:10px; padding:12px; border:1px solid var(--line); border-radius:10px; background:#faf6f7; }
+  .pbox.ok { border-color:#2e7d4f; background:#f1f8f3; }
+  .pbox.warn { border-color:#c9892b; background:#fdf7ec; }
+  .pbox dl { display:grid; grid-template-columns:150px 1fr; gap:4px 12px; margin:10px 0; font-size:.9rem; }
+  .pbox dt { color:var(--mute); } .pbox dd { margin:0; word-break:break-word; }
+  .pbox button { padding:6px 14px; }
+  dialog { border:1px solid var(--line); border-radius:12px; width:min(560px,94vw); max-height:90vh; padding:20px; color:var(--ink); }
+  dialog::backdrop { background:rgba(0,0,0,.45); }
+  dialog p { margin:0 0 14px; }
+  @media (max-width:520px){ .pbox dl { grid-template-columns:1fr; } .mrow { flex-direction:column; } }
   .logo { display:block; max-width:260px; width:60%; height:auto; margin:0 auto 12px; }
   .addr { font-size:.9rem; color:var(--mute); }
   .req { color:var(--err); }
@@ -96,6 +109,16 @@
     </div>
   </form>
 
+  <dialog id="pm">
+    <h2>Maklumat Pelajar<span class="en">Student Information</span></h2>
+    <p id="pmIntro"></p>
+    <div id="pmBody"></div>
+    <div class="nav">
+      <button type="button" class="ghost" id="pmCancel">Batal <i>/ Cancel</i></button>
+      <button type="button" class="primary" id="pmSave">Simpan <i>/ Save</i></button>
+    </div>
+  </dialog>
+
   <div class="card thanks" id="thanks" hidden>
     <h2>TERIMA KASIH ATAS MAKLUM BALAS ANDA DAN KAMI MENGUCAPKAN SEMOGA BERJAYA DALAM PENGAJIAN<span class="en">THANK YOU FOR YOUR FEEDBACK AND WE WISH YOU ALL THE BEST IN YOUR STUDY</span></h2>
     <div>No. rujukan <i>/ Reference no.</i><br><span class="ref" id="ref"></span></div>
@@ -109,16 +132,23 @@ var EMAIL_DOMAINS = <?!= JSON.stringify(emailDomains) ?>;
 function bi(bm, en) { return { bm: bm, en: en }; }
 var YES = { v: 'Yes', l: bi('Ya', 'Yes') }, NO = { v: 'No', l: bi('Tidak', 'No') };
 
+// Profile fields read from the student list; students only type these when the list lacks them.
+var PROFILE = {
+  name: { id: 'name', type: 'text', upper: true, auto: 'name', label: bi('Nama Penuh (HURUF BESAR)', 'Full Name (in CAPITAL LETTERS)') },
+  email: { id: 'email', type: 'email', auto: 'email', label: bi('Alamat Emel', 'Email Address'),
+    hint: bi('Mesti emel UTM (@graduate.utm.my atau @utm.my)', 'Must be a UTM email (@graduate.utm.my or @utm.my)') },
+  phone: { id: 'phone', type: 'tel', auto: 'tel', label: bi('Nombor Telefon', 'Phone Number') },
+  facultyCode: { id: 'facultyCode', type: 'select', label: bi('Nama Fakulti', 'Name of Faculty') },
+  program: { id: 'program', type: 'text', label: bi('Nama Program Akademik (Program Ijazah)', 'Name of Academic Program (Degree Program)') },
+  ic: { id: 'ic', type: 'text', label: bi('No. Kad Pengenalan / Pasport', 'IC / Passport Number') }
+};
+var PROFILE_ORDER = ['name', 'email', 'phone', 'facultyCode', 'program', 'ic'];
+
 var STEPS = [
   { tab: bi('Arahan', 'Instructions'), intro: true, title: bi('Arahan', 'Instructions'), fields: [] },
   { tab: bi('Profil Pelajar', 'Students Profile'), title: bi('Bahagian 1 - Profil Pelajar', 'Section 1 - Students Profile'), fields: [
-    { id: 'name', type: 'text', req: true, upper: true, auto: 'name', label: bi('Nama Penuh (HURUF BESAR)', 'Full Name (in CAPITAL LETTERS)') },
-    { id: 'email', type: 'email', req: true, auto: 'email', label: bi('Alamat Emel', 'Email Address'),
-      hint: bi('Mesti emel UTM (@graduate.utm.my atau @utm.my)', 'Must be a UTM email (@graduate.utm.my or @utm.my)') },
-    { id: 'phone', type: 'tel', req: true, auto: 'tel', label: bi('Nombor Telefon', 'Phone Number') },
-    { id: 'facultyCode', type: 'select', req: true, label: bi('Nama Fakulti', 'Name of Faculty') },
-    { id: 'program', type: 'text', req: true, label: bi('Nama Program Akademik (Program Ijazah)', 'Name of Academic Program (Degree Program)') },
-    { id: 'ic', type: 'text', req: true, label: bi('No. Kad Pengenalan / Pasport', 'IC / Passport Number') },
+    { id: 'matric', type: 'matric', req: true, label: bi('No. Matrik', 'Matric Number'),
+      hint: bi('Masukkan no. matrik anda dan tekan Semak. Maklumat lain diambil daripada rekod universiti.', 'Enter your matric number and press Check. Your other details are read from the university record.') },
     { id: 'hometown', type: 'text', label: bi('Kampung Halaman', 'Hometown') },
     { id: 'familyBiz', type: 'radio', req: true, label: bi('Adakah mana-mana ahli keluarga anda terlibat dalam perniagaan?', 'Does any of your family members involve in business?'), options: [YES, NO] }
   ]},
@@ -165,6 +195,8 @@ INTRO.parentNode.removeChild(INTRO);
 INTRO.className = 'intro';
 INTRO.hidden = false;
 
+var prof = { matric: '', ready: false, found: false, missing: [], preview: {}, manual: {} };
+var looking = false;
 var done = {};         // steps the student has completed
 var ans = {};          // all answers
 var idx = 0;           // index into STEPS
@@ -200,6 +232,19 @@ function render() {
       if (f.auto) i.autocomplete = f.auto;
       i.addEventListener('input', function () { ans[f.id] = f.upper ? i.value.toUpperCase() : i.value; if (f.upper) i.value = ans[f.id]; });
       q.appendChild(i);
+    } else if (f.type === 'matric') {
+      var mr = el('div', 'mrow');
+      var mi = el('input'); mi.type = 'text'; mi.id = 'matric'; mi.value = ans.matric || ''; mi.autocomplete = 'off';
+      mi.maxLength = 15; mi.placeholder = 'cth / e.g. A24CS0001';
+      mi.addEventListener('input', function () {
+        ans.matric = mi.value.replace(/\s+/g, '').toUpperCase(); mi.value = ans.matric;
+        if (prof.matric !== ans.matric) { prof = { matric: '', ready: false, found: false, missing: [], preview: {}, manual: {} }; renderProfBox(); }
+      });
+      mi.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); checkProfile(); } });
+      var mb = el('button', 'primary', 'Semak <i>/ Check</i>'); mb.type = 'button'; mb.id = 'chk';
+      mb.addEventListener('click', function () { checkProfile(); });
+      mr.appendChild(mi); mr.appendChild(mb); q.appendChild(mr);
+      q.appendChild(el('div', 'pbox', '')).id = 'profBox';
     } else if (f.type === 'area') {
       var t = el('textarea'); t.id = f.id; t.value = ans[f.id] || '';
       t.addEventListener('input', function () { ans[f.id] = t.value; });
@@ -242,6 +287,7 @@ function render() {
     stage.appendChild(q);
   });
 
+  renderProfBox();
   updateNav();
   window.scrollTo(0, 0);
 }
@@ -254,20 +300,27 @@ function updateNav() {
   renderTabs();
 }
 
+// Returns [bm, en] when a value is not acceptable, otherwise null.
+function fieldBad(id, v, req) {
+  var empty = v == null || String(v).trim() === '';
+  if (req && empty) return ['Sila isi ruangan ini.', 'This question is required.'];
+  if (empty) return null;
+  if (id === 'email') {
+    var m = /^[^\s@]+@([^\s@]+\.[^\s@]+)$/.exec(String(v).trim().toLowerCase());
+    if (!m) return ['Alamat emel tidak sah.', 'Invalid email address.'];
+    if (EMAIL_DOMAINS.indexOf(m[1]) === -1) return ['Mesti emel UTM (@graduate.utm.my atau @utm.my).', 'Must be a UTM email (@graduate.utm.my or @utm.my).'];
+  } else if (id === 'phone' && !/^[0-9+\-\s]{7,20}$/.test(v)) return ['Nombor telefon tidak sah.', 'Invalid phone number.'];
+  else if (id === 'ic' && !/^[A-Za-z0-9\-\s]{5,20}$/.test(v)) return ['No. KP / pasport tidak sah.', 'Invalid IC / passport number.'];
+  else if (id === 'matric' && !/^[A-Za-z0-9]{6,15}$/.test(v)) return ['No. matrik tidak sah.', 'Invalid matric number.'];
+  else if (id === 'matric' && !(prof.matric === v && prof.ready)) return ['Sila tekan Semak untuk mengesahkan no. matrik anda.', 'Please press Check to confirm your matric number.'];
+  return null;
+}
+
 // Returns the validation problems of one step without touching the DOM.
 function problems(si) {
   var out = [];
   STEPS[si].fields.forEach(function (f) {
-    var v = ans[f.id];
-    var empty = v == null || String(v).trim() === '';
-    var bad = null;
-    if (f.req && empty) bad = ['Sila isi ruangan ini.', 'This question is required.'];
-    else if (f.id === 'email' && !empty) {
-      var m = /^[^\s@]+@([^\s@]+\.[^\s@]+)$/.exec(String(v).trim().toLowerCase());
-      if (!m) bad = ['Alamat emel tidak sah.', 'Invalid email address.'];
-      else if (EMAIL_DOMAINS.indexOf(m[1]) === -1) bad = ['Mesti emel UTM (@graduate.utm.my atau @utm.my).', 'Must be a UTM email (@graduate.utm.my or @utm.my).'];
-    } else if (f.id === 'phone' && !empty && !/^[0-9+\-\s]{7,20}$/.test(v)) bad = ['Nombor telefon tidak sah.', 'Invalid phone number.'];
-    else if (f.id === 'ic' && !empty && !/^[A-Za-z0-9\-\s]{5,20}$/.test(v)) bad = ['No. KP / pasport tidak sah.', 'Invalid IC / passport number.'];
+    var bad = fieldBad(f.id, ans[f.id], f.req);
     if (bad) out.push({ f: f, bm: bad[0], en: bad[1] });
   });
   return out;
@@ -289,6 +342,96 @@ function validate() {
   var list = problems(idx);
   showProblems(list);
   return !list.length;
+}
+
+function profileStepActive() { return STEPS[idx].fields.some(function (f) { return f.type === 'matric'; }); }
+
+function checkProfile(after) {
+  var m = ans.matric || '';
+  if (!/^[A-Za-z0-9]{6,15}$/.test(m)) { showProblems(problems(idx)); return; }
+  if (prof.matric === m && prof.ready) { if (after) after(); return; }
+  if (looking) return;
+  looking = true; banner(''); $('chk').disabled = true;
+  google.script.run
+    .withSuccessHandler(function (r) {
+      looking = false; var b = $('chk'); if (b) b.disabled = false;
+      if (!r.ok) { banner(r.message); return; }
+      if (r.matric !== ans.matric) return;          // the student kept typing
+      prof = { matric: r.matric, found: r.found, missing: r.missing, preview: r.preview, manual: {}, ready: !r.missing.length, after: after };
+      renderProfBox();
+      if (prof.ready) { if (after) after(); } else openModal();
+    })
+    .withFailureHandler(function (e) {
+      looking = false; var b = $('chk'); if (b) b.disabled = false;
+      banner('Gagal menyemak / Lookup failed: ' + String(e && e.message || e).replace(/^Error:\s*/, ''));
+    })
+    .lookupStudent(m);
+}
+
+function row(dl, l, v) { var dt = el('dt', '', ''); dt.textContent = l; var dd = el('dd', '', ''); dd.textContent = v; dl.appendChild(dt); dl.appendChild(dd); }
+
+function renderProfBox() {
+  var box = $('profBox'); if (!box) return;
+  box.innerHTML = ''; box.className = 'pbox';
+  if (prof.matric !== ans.matric || !prof.matric) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  var complete = prof.ready;
+  box.classList.add(complete ? 'ok' : 'warn');
+  var title = !prof.found ? 'No. matrik tidak ditemui dalam rekod <i>/ Matric number not found in the record</i>'
+    : prof.missing.length ? 'Rekod dijumpai, sebahagian maklumat tiada <i>/ Record found, some details missing</i>'
+    : 'Rekod anda dijumpai <i>/ Your record was found</i>';
+  box.appendChild(el('strong', '', (complete ? '&#10003; ' : '&#9888; ') + title));
+  var dl = el('dl'); var p = prof.preview, m = prof.manual;
+  row(dl, 'No. Matrik / Matric', prof.matric);
+  if (p.name) row(dl, 'Nama / Name', p.name);
+  if (p.faculty) row(dl, 'Fakulti / Faculty', p.faculty);
+  if (p.program) row(dl, 'Program', p.program);
+  if (p.email) row(dl, 'Emel / Email', p.email);
+  if (p.phone) row(dl, 'Telefon / Phone', p.phone);
+  PROFILE_ORDER.forEach(function (k) {
+    if (m[k]) row(dl, PROFILE[k].label.bm + ' / ' + PROFILE[k].label.en, k === 'facultyCode' ? facName(m[k]) : (k === 'ic' ? '********' : m[k]));
+  });
+  box.appendChild(dl);
+  if (prof.missing.length) {
+    var eb = el('button', 'ghost', complete ? 'Ubah maklumat <i>/ Edit details</i>' : 'Isi maklumat <i>/ Fill in details</i>');
+    eb.type = 'button'; eb.addEventListener('click', openModal); box.appendChild(eb);
+  }
+}
+
+function facName(code) { var f = FACULTIES.filter(function (x) { return x.code === code; })[0]; return f ? f.code + ' - ' + f.name : code; }
+
+function openModal() {
+  var dlg = $('pm'), body = $('pmBody'); body.innerHTML = '';
+  $('pmIntro').innerHTML = (prof.found
+      ? 'Sebahagian maklumat anda belum ada dalam rekod universiti. Sila lengkapkan di bawah.<span class="en">Some of your details are not in the university record yet. Please complete them below.</span>'
+      : 'No. matrik <b>' + esc(prof.matric) + '</b> tidak ditemui dalam rekod. Sila isi maklumat anda di bawah.<span class="en">Matric number <b>' + esc(prof.matric) + '</b> was not found in the record. Please fill in your details below.</span>');
+  prof.missing.forEach(function (k) {
+    var f = PROFILE[k], q = el('div', 'q'); q.id = 'pm_' + k;
+    q.appendChild(el('label', 't', esc(f.label.bm) + ' <span class="req">*</span><span class="en">' + esc(f.label.en) + '</span>'));
+    if (f.hint) q.appendChild(el('div', 'hint', esc(f.hint.bm) + '\n' + esc(f.hint.en)));
+    var inp;
+    if (f.type === 'select') {
+      inp = el('select'); inp.appendChild(new Option('-- Pilih / Select --', ''));
+      FACULTIES.forEach(function (x) { inp.appendChild(new Option(x.code + ' - ' + x.name, x.code)); });
+    } else { inp = el('input'); inp.type = f.type; if (f.auto) inp.autocomplete = f.auto; }
+    inp.id = 'pmf_' + k; inp.value = prof.manual[k] || '';
+    if (f.upper) inp.addEventListener('input', function () { inp.value = inp.value.toUpperCase(); });
+    q.appendChild(inp); q.appendChild(el('div', 'err', '')); body.appendChild(q);
+  });
+  if (!dlg.open) dlg.showModal();
+}
+
+function saveModal() {
+  var vals = {}, bad = false;
+  prof.missing.forEach(function (k) {
+    var v = $('pmf_' + k).value.trim(), q = $('pm_' + k), e = fieldBad(k, v, true);
+    q.classList.toggle('bad', !!e);
+    if (e) { q.querySelector('.err').innerHTML = esc(e[0]) + ' <i>/ ' + esc(e[1]) + '</i>'; bad = true; } else vals[k] = v;
+  });
+  if (bad) return;
+  prof.manual = vals; prof.ready = true;
+  $('pm').close(); renderProfBox();
+  var after = prof.after; prof.after = null; if (after) after();
 }
 
 // Tab click: going back is free; going forward needs every step in between to be valid.
@@ -329,7 +472,7 @@ function banner(msg) { var b = $('banner'); b.style.display = msg ? 'block' : 'n
 function submit() {
   var vis = visible();
   // Send only answers from steps that are shown, matching the original skip logic.
-  var payload = { website: $('website').value };
+  var payload = { website: $('website').value, manual: prof.manual };
   vis.forEach(function (i) {
     STEPS[i].fields.forEach(function (f) {
       payload[f.id] = ans[f.id] == null ? '' : ans[f.id];
@@ -353,7 +496,11 @@ function submit() {
 }
 
 $('next').addEventListener('click', function () {
-  if (busy || !validate()) return;
+  if (busy) return;
+  if (profileStepActive() && /^[A-Za-z0-9]{6,15}$/.test(ans.matric || '') && !(prof.matric === ans.matric && prof.ready)) {
+    return checkProfile(function () { $('next').click(); });
+  }
+  if (!validate()) return;
   var vis = visible(), pos = vis.indexOf(idx);
   done[idx] = true;
   if (pos === vis.length - 1) return submit();
@@ -364,6 +511,8 @@ $('back').addEventListener('click', function () {
   var vis = visible(), pos = vis.indexOf(idx);
   if (pos > 0) { idx = vis[pos - 1]; render(); }
 });
+$('pmSave').addEventListener('click', saveModal);
+$('pmCancel').addEventListener('click', function () { $('pm').close(); });
 $('frm').addEventListener('submit', function (e) { e.preventDefault(); });
 
 render();

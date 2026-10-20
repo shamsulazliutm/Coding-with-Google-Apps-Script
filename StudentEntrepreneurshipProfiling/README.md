@@ -14,7 +14,20 @@ Web app Google Apps Script untuk UTMXCITE. Borang pelajar dwibahasa (BM, *Englis
    (Project Settings → *Show "appsscript.json" manifest file*).
 3. Jalankan fungsi **`setup`** sekali dan beri kebenaran. Ia mencipta Spreadsheet dengan 3 sheet:
    `Responses`, `Admins`, `Faculties`. URL Spreadsheet dipaparkan dalam Execution log.
-4. Isi sheet **Admins**:
+4. Isi sheet **Students** (senarai induk pelajar). Pelajar hanya masukkan No. Matrik, dan profil dibaca dari sini:
+
+   | Matric | Name | Email | Phone | FacultyCode | Program | IC | Hometown |
+   |---|---|---|---|---|---|---|---|
+   | A24CS0001 | AHMAD FAIZ BIN RAZAK | ahmad@graduate.utm.my | 0123456789 | FC | Sarjana Muda Sains Komputer | 020304011234 | |
+
+   - Nama lajur boleh berbeza (contoh `No Matrik`, `Nama`, `Emel`, `No Telefon`, `Fakulti`, `No KP`).
+   - `FacultyCode` boleh kod (FC) atau nama penuh fakulti.
+   - Jika senarai pelajar ada dalam spreadsheet lain, isi `CONFIG.STUDENTS.SPREADSHEET_ID` dalam `Code.gs`.
+   - Jika matrik tiada, atau ada medan kosong / tidak sah (contoh emel bukan UTM), tingkap akan terbuka supaya pelajar mengisi
+     medan yang kurang. Lajur `profileSource` dalam `Responses` menunjukkan sumber: `Students sheet`, `Students sheet + manual` atau `Manual`.
+   - Pelayar hanya menerima data yang dimask. Data sebenar diisi oleh pelayan semasa hantar, dan pelayar tidak boleh menimpa data dalam senarai.
+
+5. Isi sheet **Admins**:
 
    | Email | Name | Role | FacultyCode | Active |
    |---|---|---|---|---|
@@ -25,8 +38,8 @@ Web app Google Apps Script untuk UTMXCITE. Borang pelajar dwibahasa (BM, *Englis
    - `PIC` hanya melihat fakulti sendiri; IC dan telefon dimask.
    - Kod fakulti: AHIBS, FABU, FAI, FC, FEST, FKA, FKE, FKM, FKT, FM, FS, FSSK, MJIIT, SPACE, UTMXCITE.
    - Tukar `Active` kepada `No` untuk mematikan akses serta-merta.
-5. **Deploy → New deployment → Web app**: *Execute as: Me*, *Who has access: Anyone*.
-6. (Pilihan) Letak logo UTM + UTMXCITE: muat naik ke Drive, kongsi *Anyone with the link*, kemudian isi
+6. **Deploy → New deployment → Web app**: *Execute as: Me*, *Who has access: Anyone*.
+7. (Pilihan) Letak logo UTM + UTMXCITE: muat naik ke Drive, kongsi *Anyone with the link*, kemudian isi
    `CONFIG.LOGO_URL` dalam `Code.gs` dengan `https://drive.google.com/thumbnail?id=FILE_ID&sz=w600`.
 
 Selepas mengubah kod, deploy semula (*Manage deployments → Edit → New version*).
@@ -43,4 +56,5 @@ Selepas mengubah kod, deploy semula (*Manage deployments → Edit → New versio
 ## Had
 
 - Kuota emel `MailApp`: sekitar 100/hari (akaun Gmail biasa) atau 1,500/hari (Workspace).
+- Sheet `Responses` lama (sebelum lajur matrik ditambah) tidak serasi. Padam sheet itu dan jalankan `setup()` semula sebelum guna.
 - Tiada semakan pendua (pelajar yang sama boleh hantar lebih daripada sekali).
