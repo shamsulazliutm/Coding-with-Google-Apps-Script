@@ -212,7 +212,7 @@ var STEPS = [
       hint: bi('Contoh:\n1) Bapa - Percetakan\n2) Kakak - Fesyen\n3) Abang - Bengkel', 'E.g.:\n1) Father - Printing\n2) Sister - Fashion\n3) Brother - Workshop') },
     { id: 'familyDuration', type: 'area', label: bi('BERAPA LAMA SETIAP AHLI KELUARGA MENJALANKAN PERNIAGAAN? (Mengikut soalan di atas)', 'HOW LONG EACH OF THE FAMILY MEMBERS RUN THE BUSINESS? (According to the question above)') }
   ]},
-  { tab: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), title: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), fields: [
+  { tab: bi('Pengalaman dalam Perniagaan', 'Experience in Business'), title: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), fields: [
     { id: 'ownBiz', type: 'radio', req: true, label: bi('ADAKAH ANDA SENDIRI PERNAH MENJALANKAN SEBARANG JENIS PERNIAGAAN?', 'HAVE YOU YOURSELF EVER RUN ANY TYPE OF BUSINESS?'), options: [YES, NO] }
   ]},
   { tab: bi('Profil Perniagaan', 'Business Profile'), title: bi('Profil Perniagaan', 'Business Profile'), show: function (a) { return a.ownBiz === 'Yes'; }, fields: [
