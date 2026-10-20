@@ -145,10 +145,18 @@ var PROFILE = {
 var PROFILE_ORDER = ['name', 'email', 'phone', 'facultyCode', 'program', 'ic'];
 
 var STEPS = [
-  { tab: bi('Arahan', 'Instructions'), intro: true, title: bi('Arahan', 'Instructions'), fields: [] },
+  { tab: bi('Arahan', 'Instructions'), intro: true, title: bi('Arahan', 'Instructions'), fields: [
+    { id: 'consent', type: 'consent', req: true, label: bi(
+      'Saya mengesahkan maklumat yang diberikan adalah benar dan bersetuju data peribadi saya (nama, no. matrik, No. KP/pasport, emel, telefon dan maklumat keusahawanan) dikumpul, disimpan dan diproses oleh UTM melalui UTMXCITE bagi tujuan pemprofilan dan pembangunan keusahawanan pelajar, selaras dengan Akta Perlindungan Data Peribadi 2010 (PDPA).',
+      'I confirm that the information given is true and I consent to my personal data (name, matric number, IC/passport number, email, phone and entrepreneurship information) being collected, stored and processed by UTM through UTMXCITE for student entrepreneurship profiling and development, in accordance with the Personal Data Protection Act 2010 (PDPA).') }
+  ] },
   { tab: bi('Profil Pelajar', 'Students Profile'), title: bi('Bahagian 1 - Profil Pelajar', 'Section 1 - Students Profile'), fields: [
-    { id: 'matric', type: 'matric', req: true, label: bi('No. Matrik', 'Matric Number'),
-      hint: bi('Masukkan no. matrik anda dan tekan Semak. Maklumat lain diambil daripada rekod universiti.', 'Enter your matric number and press Check. Your other details are read from the university record.') },
+    { id: 'matric', type: 'text', req: true, max: 15, norm: function (v) { return v.replace(/\s+/g, '').toUpperCase(); },
+      label: bi('No. Matrik', 'Matric Number'), placeholder: 'cth / e.g. A24CS0001' },
+    { id: 'icLast4', type: 'text', req: true, max: 4, check: true, norm: function (v) { return v.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); },
+      label: bi('4 digit akhir No. Kad Pengenalan / Pasport', 'Last 4 digits of IC / Passport Number'),
+      hint: bi('Untuk mengesahkan identiti anda. Tekan Semak untuk mengambil maklumat anda daripada rekod universiti.', 'To confirm your identity. Press Check to load your details from the university record.'),
+      placeholder: '1234' },
     { id: 'hometown', type: 'text', label: bi('Kampung Halaman', 'Hometown') },
     { id: 'familyBiz', type: 'radio', req: true, label: bi('Adakah mana-mana ahli keluarga anda terlibat dalam perniagaan?', 'Does any of your family members involve in business?'), options: [YES, NO] }
   ]},
@@ -195,7 +203,7 @@ INTRO.parentNode.removeChild(INTRO);
 INTRO.className = 'intro';
 INTRO.hidden = false;
 
-var prof = { matric: '', ready: false, found: false, missing: [], preview: {}, manual: {} };
+var prof = { matric: '', icLast4: '', ready: false, found: false, missing: [], preview: {}, manual: {} };
 var looking = false;
 var done = {};         // steps the student has completed
 var ans = {};          // all answers
@@ -230,21 +238,32 @@ function render() {
     if (f.type === 'text' || f.type === 'email' || f.type === 'tel') {
       var i = el('input'); i.type = f.type; i.id = f.id; i.value = ans[f.id] || '';
       if (f.auto) i.autocomplete = f.auto;
-      i.addEventListener('input', function () { ans[f.id] = f.upper ? i.value.toUpperCase() : i.value; if (f.upper) i.value = ans[f.id]; });
-      q.appendChild(i);
-    } else if (f.type === 'matric') {
-      var mr = el('div', 'mrow');
-      var mi = el('input'); mi.type = 'text'; mi.id = 'matric'; mi.value = ans.matric || ''; mi.autocomplete = 'off';
-      mi.maxLength = 15; mi.placeholder = 'cth / e.g. A24CS0001';
-      mi.addEventListener('input', function () {
-        ans.matric = mi.value.replace(/\s+/g, '').toUpperCase(); mi.value = ans.matric;
-        if (prof.matric !== ans.matric) { prof = { matric: '', ready: false, found: false, missing: [], preview: {}, manual: {} }; renderProfBox(); }
+      if (f.max) i.maxLength = f.max;
+      if (f.placeholder) i.placeholder = f.placeholder;
+      i.addEventListener('input', function () {
+        ans[f.id] = f.norm ? f.norm(i.value) : (f.upper ? i.value.toUpperCase() : i.value);
+        if (f.norm || f.upper) i.value = ans[f.id];
+        if (f.id === 'matric' || f.id === 'icLast4') profKeyChanged();
       });
-      mi.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); checkProfile(); } });
-      var mb = el('button', 'primary', 'Semak <i>/ Check</i>'); mb.type = 'button'; mb.id = 'chk';
-      mb.addEventListener('click', function () { checkProfile(); });
-      mr.appendChild(mi); mr.appendChild(mb); q.appendChild(mr);
-      q.appendChild(el('div', 'pbox', '')).id = 'profBox';
+      if (f.id === 'matric' || f.id === 'icLast4') {
+        i.autocomplete = 'off';
+        i.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); checkProfile(); } });
+      }
+      if (f.check) {
+        var mr = el('div', 'mrow'); mr.appendChild(i);
+        var mb = el('button', 'primary', 'Semak <i>/ Check</i>'); mb.type = 'button'; mb.id = 'chk';
+        mb.addEventListener('click', function () { checkProfile(); });
+        mr.appendChild(mb); q.appendChild(mr);
+        q.appendChild(el('div', 'pbox', '')).id = 'profBox';
+      } else q.appendChild(i);
+    } else if (f.type === 'consent') {
+      var cl = el('label', 'opt');
+      var cb = el('input'); cb.type = 'checkbox'; cb.id = 'consent'; cb.checked = ans.consent === 'Yes';
+      cb.addEventListener('change', function () { ans.consent = cb.checked ? 'Yes' : ''; });
+      cl.appendChild(cb);
+      cl.appendChild(el('span', '', '<span class="req">*</span> ' + esc(f.label.bm) + '<span class="en">' + esc(f.label.en) + '</span>'));
+      q.removeChild(q.firstChild);                  // the text is the label itself
+      q.appendChild(cl);
     } else if (f.type === 'area') {
       var t = el('textarea'); t.id = f.id; t.value = ans[f.id] || '';
       t.addEventListener('input', function () { ans[f.id] = t.value; });
@@ -302,6 +321,7 @@ function updateNav() {
 
 // Returns [bm, en] when a value is not acceptable, otherwise null.
 function fieldBad(id, v, req) {
+  if (id === 'consent') return v === 'Yes' ? null : ['Sila tandakan persetujuan untuk meneruskan.', 'Please tick the consent box to continue.'];
   var empty = v == null || String(v).trim() === '';
   if (req && empty) return ['Sila isi ruangan ini.', 'This question is required.'];
   if (empty) return null;
@@ -312,7 +332,8 @@ function fieldBad(id, v, req) {
   } else if (id === 'phone' && !/^[0-9+\-\s]{7,20}$/.test(v)) return ['Nombor telefon tidak sah.', 'Invalid phone number.'];
   else if (id === 'ic' && !/^[A-Za-z0-9\-\s]{5,20}$/.test(v)) return ['No. KP / pasport tidak sah.', 'Invalid IC / passport number.'];
   else if (id === 'matric' && !/^[A-Za-z0-9]{6,15}$/.test(v)) return ['No. matrik tidak sah.', 'Invalid matric number.'];
-  else if (id === 'matric' && !(prof.matric === v && prof.ready)) return ['Sila tekan Semak untuk mengesahkan no. matrik anda.', 'Please press Check to confirm your matric number.'];
+  else if (id === 'icLast4' && !/^[A-Za-z0-9]{4}$/.test(v)) return ['Masukkan 4 digit akhir.', 'Enter the last 4 digits.'];
+  else if (id === 'icLast4' && !profReady()) return ['Sila tekan Semak untuk mengesahkan maklumat anda.', 'Please press Check to confirm your details.'];
   return null;
 }
 
@@ -344,12 +365,20 @@ function validate() {
   return !list.length;
 }
 
-function profileStepActive() { return STEPS[idx].fields.some(function (f) { return f.type === 'matric'; }); }
+function profReady() { return prof.ready && prof.matric === ans.matric && prof.icLast4 === ans.icLast4; }
+function keysValid() { return /^[A-Za-z0-9]{6,15}$/.test(ans.matric || '') && /^[A-Za-z0-9]{4}$/.test(ans.icLast4 || ''); }
+function profKeyChanged() {
+  if (prof.matric !== ans.matric || prof.icLast4 !== ans.icLast4) {
+    prof = { matric: '', icLast4: '', ready: false, found: false, missing: [], preview: {}, manual: {} };
+    renderProfBox();
+  }
+}
+function profileStepActive() { return STEPS[idx].fields.some(function (f) { return f.id === 'matric'; }); }
 
 function checkProfile(after) {
   var m = ans.matric || '';
-  if (!/^[A-Za-z0-9]{6,15}$/.test(m)) { showProblems(problems(idx)); return; }
-  if (prof.matric === m && prof.ready) { if (after) after(); return; }
+  if (!keysValid()) { showProblems(problems(idx)); return; }
+  if (profReady()) { if (after) after(); return; }
   if (looking) return;
   looking = true; banner(''); $('chk').disabled = true;
   google.script.run
@@ -357,7 +386,7 @@ function checkProfile(after) {
       looking = false; var b = $('chk'); if (b) b.disabled = false;
       if (!r.ok) { banner(r.message); return; }
       if (r.matric !== ans.matric) return;          // the student kept typing
-      prof = { matric: r.matric, found: r.found, missing: r.missing, preview: r.preview, manual: {}, ready: !r.missing.length, after: after };
+      prof = { matric: r.matric, icLast4: ans.icLast4, found: r.found, missing: r.missing, preview: r.preview, manual: {}, ready: !r.missing.length, after: after };
       renderProfBox();
       if (prof.ready) { if (after) after(); } else openModal();
     })
@@ -365,7 +394,7 @@ function checkProfile(after) {
       looking = false; var b = $('chk'); if (b) b.disabled = false;
       banner('Gagal menyemak / Lookup failed: ' + String(e && e.message || e).replace(/^Error:\s*/, ''));
     })
-    .lookupStudent(m);
+    .lookupStudent(m, ans.icLast4);
 }
 
 function row(dl, l, v) { var dt = el('dt', '', ''); dt.textContent = l; var dd = el('dd', '', ''); dd.textContent = v; dl.appendChild(dt); dl.appendChild(dd); }
@@ -373,7 +402,7 @@ function row(dl, l, v) { var dt = el('dt', '', ''); dt.textContent = l; var dd =
 function renderProfBox() {
   var box = $('profBox'); if (!box) return;
   box.innerHTML = ''; box.className = 'pbox';
-  if (prof.matric !== ans.matric || !prof.matric) { box.style.display = 'none'; return; }
+  if (prof.matric !== ans.matric || prof.icLast4 !== ans.icLast4 || !prof.matric) { box.style.display = 'none'; return; }
   box.style.display = 'block';
   var complete = prof.ready;
   box.classList.add(complete ? 'ok' : 'warn');
@@ -425,6 +454,7 @@ function saveModal() {
   var vals = {}, bad = false;
   prof.missing.forEach(function (k) {
     var v = $('pmf_' + k).value.trim(), q = $('pm_' + k), e = fieldBad(k, v, true);
+    if (!e && k === 'ic' && v.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(-4) !== ans.icLast4) e = ['Mesti berakhir dengan 4 digit yang anda masukkan (' + ans.icLast4 + ').', 'Must end with the 4 digits you entered (' + ans.icLast4 + ').'];
     q.classList.toggle('bad', !!e);
     if (e) { q.querySelector('.err').innerHTML = esc(e[0]) + ' <i>/ ' + esc(e[1]) + '</i>'; bad = true; } else vals[k] = v;
   });
@@ -497,7 +527,7 @@ function submit() {
 
 $('next').addEventListener('click', function () {
   if (busy) return;
-  if (profileStepActive() && /^[A-Za-z0-9]{6,15}$/.test(ans.matric || '') && !(prof.matric === ans.matric && prof.ready)) {
+  if (profileStepActive() && keysValid() && !profReady()) {
     return checkProfile(function () { $('next').click(); });
   }
   if (!validate()) return;

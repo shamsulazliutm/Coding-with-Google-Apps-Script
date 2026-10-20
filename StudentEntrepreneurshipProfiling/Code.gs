@@ -20,6 +20,7 @@ var CONFIG = {
   OTP_MAX_ATTEMPTS: 5,     // wrong codes before lockout
   OTP_RESEND_SECONDS: 60,  // minimum gap between code requests
   LOCKOUT_SECONDS: 900,
+  IC_MAX_ATTEMPTS: 5,      // wrong IC last-4 guesses per matric before lockout (LOCKOUT_SECONDS)
   SESSION_TTL: 21600,      // 6 hours (CacheService maximum)
   SHEETS: { RESPONSES: 'Responses', ADMINS: 'Admins', FACULTIES: 'Faculties', STUDENTS: 'Students' },
   // Student master list (matric -> profile). Leave SPREADSHEET_ID empty to use the 'Students' sheet
@@ -50,8 +51,12 @@ var HEADERS = [
   'timestamp', 'refId', 'matric', 'name', 'email', 'phone', 'facultyCode', 'facultyName',
   'program', 'ic', 'hometown', 'profileSource', 'familyBiz', 'familyList', 'familyDuration',
   'ownBiz', 'bizType', 'bizDuration', 'motivation', 'motivationOther',
-  'interest', 'interestType', 'campus', 'stream'
+  'interest', 'interestType', 'campus', 'stream', 'consent'
 ];
+
+var MSG_MISMATCH = 'No. matrik dan 4 digit akhir No. KP/Pasport tidak sepadan. / Matric number and last 4 digits of IC/passport do not match.';
+var MSG_LOCKED = 'Terlalu banyak percubaan salah. Cuba lagi selepas 15 minit. / Too many wrong attempts. Try again in 15 minutes.';
+var MSG_DUPLICATE = 'No. matrik ini telah menghantar borang. Hubungi UTMXCITE jika perlu kemas kini. / This matric number has already submitted the form. Contact UTMXCITE if you need to update it.';
 
 var ADMIN_HEADERS = ['Email', 'Name', 'Role', 'FacultyCode', 'Active'];
 
@@ -170,9 +175,15 @@ function submitForm(p) {
 
   // Profile comes from the student master list. The browser only supplies values the list lacks,
   // so it can never overwrite what the university already holds.
+  if (p.consent !== 'Yes') throw new Error('Consent is required.');
+  a.consent = 'Yes';
   a.matric = cleanMatric_(p.matric);
   if (!a.matric) throw new Error('Invalid matric number.');
+  var last4 = normId_(p.icLast4);
+  if (last4.length !== 4) throw new Error('Last 4 digits of IC/passport are required.');
   var master = findStudent_(a.matric);
+  var denied = verifyIc_(a.matric, master, last4);
+  if (denied) throw new Error(denied);
   var manual = p.manual && typeof p.manual === 'object' ? p.manual : {};
   var fromMaster = 0, fromManual = 0;
   PROFILE_FIELDS.forEach(function (k) {
@@ -182,6 +193,7 @@ function submitForm(p) {
     if (!v) throw new Error('Missing or invalid: ' + k);
     a[k] = v; fromManual++;
   });
+  if (last4Of_(a.ic) !== last4) throw new Error('IC / passport does not end with the 4 digits entered.');
   a.hometown = cleanProfile_('hometown', p.hometown) || (master ? cleanProfile_('hometown', master.hometown) : '');
   a.profileSource = !fromManual ? 'Students sheet' : (fromMaster ? 'Students sheet + manual' : 'Manual');
   a.facultyName = FACULTIES.filter(function (f) { return f[0] === a.facultyCode; })[0][1];
@@ -221,6 +233,7 @@ function submitForm(p) {
     a.timestamp = Utilities.formatDate(now, CONFIG.TZ, "yyyy-MM-dd'T'HH:mm:ss");
     a.refId = 'SEP-' + Utilities.formatDate(now, CONFIG.TZ, 'yyyyMMdd') + '-' +
       Utilities.getUuid().substring(0, 5).toUpperCase();
+    if (alreadySubmitted_(a.matric)) throw new Error(MSG_DUPLICATE);
     var sheet = getSpreadsheet_().getSheetByName(CONFIG.SHEETS.RESPONSES);
     var row = HEADERS.map(function (k) { return a[k] == null ? '' : a[k]; });
     var r = sheet.getLastRow() + 1;
@@ -239,14 +252,25 @@ function submitForm(p) {
  * Looks a matric number up in the master list. Only masked data goes back to the browser;
  * `missing` lists the profile fields the student must fill in manually.
  */
-function lookupStudent(matric) {
+function lookupStudent(matric, icLast4) {
   var m = cleanMatric_(matric);
   if (!m) return { ok: false, message: 'No. matrik tidak sah. / Invalid matric number.' };
+  var last4 = normId_(icLast4);
+  if (last4.length !== 4) {
+    return { ok: false, message: 'Sila masukkan 4 digit akhir No. KP/Pasport. / Please enter the last 4 digits of your IC/passport.' };
+  }
   var s = findStudent_(m);
+  var denied = verifyIc_(m, s, last4);
+  if (denied) return { ok: false, message: denied };
+  if (alreadySubmitted_(m)) return { ok: false, duplicate: true, message: MSG_DUPLICATE };
+
+  // Details are shown only once the IC digits matched; a record without a usable IC cannot be verified.
+  var verified = !!(s && cleanProfile_('ic', s.ic));
   var missing = [], preview = {};
   PROFILE_FIELDS.forEach(function (k) {
     var v = s ? cleanProfile_(k, s[k]) : '';
     if (!v) { missing.push(k); return; }
+    if (!verified) return;
     if (k === 'name') preview.name = maskName_(v);
     else if (k === 'email') preview.email = maskEmail_(v);
     else if (k === 'phone') preview.phone = mask_(v, 3);
@@ -255,6 +279,28 @@ function lookupStudent(matric) {
     } else if (k === 'program') preview.program = v;
   });
   return { ok: true, matric: m, found: !!s, missing: missing, preview: preview };
+}
+
+/** Empty string when the entered IC digits are acceptable, else the message to show. */
+function verifyIc_(matric, master, last4) {
+  var cache = CacheService.getScriptCache(), key = 'icfail_' + matric;
+  if (Number(cache.get(key) || 0) >= CONFIG.IC_MAX_ATTEMPTS) return MSG_LOCKED;
+  var masterIc = master ? cleanProfile_('ic', master.ic) : '';
+  if (!masterIc) return '';                      // not in the list, or no IC on file: nothing to compare
+  if (last4Of_(masterIc) === last4) { cache.remove(key); return ''; }
+  cache.put(key, String(Number(cache.get(key) || 0) + 1), CONFIG.LOCKOUT_SECONDS);
+  return MSG_MISMATCH;
+}
+
+function normId_(v) { return String(v == null ? '' : v).replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+function last4Of_(v) { var s = normId_(v); return s.length >= 4 ? s.slice(-4) : ''; }
+
+/** One submission per matric number. Delete the row in Responses to let a student submit again. */
+function alreadySubmitted_(matric) {
+  var sh = getSpreadsheet_().getSheetByName(CONFIG.SHEETS.RESPONSES);
+  if (!sh || sh.getLastRow() < 2) return false;
+  var vals = sh.getRange(2, HEADERS.indexOf('matric') + 1, sh.getLastRow() - 1, 1).getValues();
+  return vals.some(function (r) { return String(r[0]).trim().toUpperCase() === matric; });
 }
 
 function findStudent_(matric) {

@@ -46,6 +46,9 @@ Selepas mengubah kod, deploy semula (*Manage deployments → Edit → New versio
 
 ## Ciri keselamatan
 
+- **Pengesahan identiti:** pelajar memasukkan No. Matrik dan 4 digit akhir No. KP/Pasport. Maklumat dipaparkan (dimask) hanya jika digit sepadan dengan senarai. Lima kali salah bagi satu no. matrik mengunci no. itu selama 15 minit. Jika matrik ada dalam senarai tetapi tiada IC, rekod tidak dipaparkan dan pelajar mengisi IC sendiri (mesti berakhir dengan 4 digit yang dimasukkan).
+- **Satu hantaran bagi satu no. matrik:** semakan dibuat semasa Semak dan semasa Hantar. Untuk membenarkan pelajar menghantar semula, padam barisnya dalam sheet `Responses`.
+- **Persetujuan PDPA:** kotak wajib pada halaman Arahan, disimpan dalam lajur `consent`. Teks persetujuan ialah draf umum, sila semak dengan pegawai undang-undang atau data UTM sebelum guna.
 - Emel pelajar mesti `@graduate.utm.my` atau `@utm.my` (disemak di klien dan pelayan).
 - OTP 6 digit, sah 5 minit, sekali guna, disimpan sebagai hash. Had 5 percubaan salah, kemudian dikunci 15 minit. Permintaan kod semula dihadkan 1 minit.
 - Respons permintaan OTP sama sama ada emel berdaftar atau tidak.
@@ -57,4 +60,3 @@ Selepas mengubah kod, deploy semula (*Manage deployments → Edit → New versio
 
 - Kuota emel `MailApp`: sekitar 100/hari (akaun Gmail biasa) atau 1,500/hari (Workspace).
 - Sheet `Responses` lama (sebelum lajur matrik ditambah) tidak serasi. Padam sheet itu dan jalankan `setup()` semula sebelum guna.
-- Tiada semakan pendua (pelajar yang sama boleh hantar lebih daripada sekali).
