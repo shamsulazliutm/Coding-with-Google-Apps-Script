@@ -110,7 +110,8 @@ function bi(bm, en) { return { bm: bm, en: en }; }
 var YES = { v: 'Yes', l: bi('Ya', 'Yes') }, NO = { v: 'No', l: bi('Tidak', 'No') };
 
 var STEPS = [
-  { tab: bi('Profil Pelajar', 'Student Profile'), title: bi('Bahagian 1 - Profil Pelajar', 'Section 1 - Students Profile'), fields: [
+  { tab: bi('Arahan', 'Instructions'), intro: true, title: bi('Arahan', 'Instructions'), fields: [] },
+  { tab: bi('Profil Pelajar', 'Students Profile'), title: bi('Bahagian 1 - Profil Pelajar', 'Section 1 - Students Profile'), fields: [
     { id: 'name', type: 'text', req: true, upper: true, auto: 'name', label: bi('Nama Penuh (HURUF BESAR)', 'Full Name (in CAPITAL LETTERS)') },
     { id: 'email', type: 'email', req: true, auto: 'email', label: bi('Alamat Emel', 'Email Address'),
       hint: bi('Mesti emel UTM (@graduate.utm.my atau @utm.my)', 'Must be a UTM email (@graduate.utm.my or @utm.my)') },
@@ -121,12 +122,12 @@ var STEPS = [
     { id: 'hometown', type: 'text', label: bi('Kampung Halaman', 'Hometown') },
     { id: 'familyBiz', type: 'radio', req: true, label: bi('Adakah mana-mana ahli keluarga anda terlibat dalam perniagaan?', 'Does any of your family members involve in business?'), options: [YES, NO] }
   ]},
-  { tab: bi('Latar Belakang', 'Background'), title: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), show: function (a) { return a.familyBiz === 'Yes'; }, fields: [
+  { tab: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), title: bi('Latar Belakang Keusahawanan', 'Entrepreneurship Background'), show: function (a) { return a.familyBiz === 'Yes'; }, fields: [
     { id: 'familyList', type: 'area', label: bi('SENARAIKAN SEMUA AHLI KELUARGA YANG MENJALANKAN PERNIAGAAN DAN NYATAKAN JENIS PERNIAGAAN', 'LIST ALL YOUR FAMILY MEMBERS THAT RUN THE BUSINESS AND STATE THE TYPE OF BUSINESS'),
       hint: bi('Contoh:\n1) Bapa - Percetakan\n2) Kakak - Fesyen\n3) Abang - Bengkel', 'E.g.:\n1) Father - Printing\n2) Sister - Fashion\n3) Brother - Workshop') },
     { id: 'familyDuration', type: 'area', label: bi('BERAPA LAMA SETIAP AHLI KELUARGA MENJALANKAN PERNIAGAAN? (Mengikut soalan di atas)', 'HOW LONG EACH OF THE FAMILY MEMBERS RUN THE BUSINESS? (According to the question above)') }
   ]},
-  { tab: bi('Pengalaman', 'Experience'), title: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), fields: [
+  { tab: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), title: bi('Pengalaman Pelajar dalam Perniagaan', 'Student Experience in Business'), fields: [
     { id: 'ownBiz', type: 'radio', req: true, label: bi('ADAKAH ANDA SENDIRI PERNAH MENJALANKAN SEBARANG JENIS PERNIAGAAN?', 'HAVE YOU YOURSELF EVER RUN ANY TYPE OF BUSINESS?'), options: [YES, NO] }
   ]},
   { tab: bi('Profil Perniagaan', 'Business Profile'), title: bi('Profil Perniagaan', 'Business Profile'), show: function (a) { return a.ownBiz === 'Yes'; }, fields: [
@@ -140,10 +141,10 @@ var STEPS = [
       { v: 'Passionate to learn doing business', l: bi('Minat untuk belajar berniaga', 'Passionate to learn doing business') },
       { v: 'Encouragement from others', l: bi('Galakan daripada orang lain', 'Encouragement from others') }] }
   ]},
-  { tab: bi('Minat', 'Interest'), title: bi('Minat dalam Perniagaan', 'Interests in Business'), fields: [
+  { tab: bi('Minat dalam Perniagaan', 'Interests in Business'), title: bi('Minat dalam Perniagaan', 'Interests in Business'), fields: [
     { id: 'interest', type: 'radio', req: true, label: bi('ADAKAH ANDA BERMINAT UNTUK MENJALANKAN PERNIAGAAN?', 'DO YOU HAVE AN INTEREST TO RUN A BUSINESS?'), options: [YES, NO] }
   ]},
-  { tab: bi('Butiran Minat', 'Interest Details'), title: bi('Minat dalam Perniagaan (Butiran)', 'Interest in Business (Details)'), show: function (a) { return a.interest === 'Yes'; }, fields: [
+  { tab: bi('Minat dalam Perniagaan (Butiran)', 'Interest in Business'), title: bi('Minat dalam Perniagaan (Butiran)', 'Interest in Business (Details)'), show: function (a) { return a.interest === 'Yes'; }, fields: [
     { id: 'interestType', type: 'text', req: true, label: bi('JENIS PERNIAGAAN YANG ANDA MINATI (JIKA ADA)', 'TYPE OF BUSINESS OF YOUR INTEREST (IF ANY)') },
     { id: 'campus', type: 'radio', req: true, label: bi('ADAKAH ANDA MAHU MENJALANKAN PERNIAGAAN DI KAMPUS SEMASA PENGAJIAN?', 'DO YOU WANT TO RUN A BUSINESS ON CAMPUS DURING YOUR STUDY?'), options: [
       YES, NO, { v: 'Maybe', l: bi('Mungkin', 'Maybe') }] },
@@ -158,6 +159,11 @@ var STEPS = [
               'A temporary, contract, or freelance job that requires specialized skills and expertise, offers significant monetary compensation (potentially a full-time income equivalent), and provides opportunities for a worker\'s professional growth and portfolio building.') }] }
   ]}
 ];
+
+var INTRO = $('intro');
+INTRO.parentNode.removeChild(INTRO);
+INTRO.className = 'intro';
+INTRO.hidden = false;
 
 var done = {};         // steps the student has completed
 var ans = {};          // all answers
@@ -181,7 +187,8 @@ function render() {
   var step = STEPS[idx];
   var stage = $('stage');
   stage.innerHTML = '';
-  stage.appendChild(el('h2', '', biHtml(step.title)));
+  if (step.intro) stage.appendChild(INTRO);
+  else stage.appendChild(el('h2', '', biHtml(step.title)));
 
   step.fields.forEach(function (f) {
     var q = el('div', 'q'); q.id = 'q_' + f.id;
@@ -235,7 +242,6 @@ function render() {
     stage.appendChild(q);
   });
 
-  $('intro').hidden = pos !== 0;   // intro text belongs to the first page only
   updateNav();
   window.scrollTo(0, 0);
 }
@@ -243,7 +249,7 @@ function render() {
 function updateNav() {
   var vis = visible(), pos = vis.indexOf(idx), last = pos === vis.length - 1;
   $('back').style.visibility = pos === 0 ? 'hidden' : 'visible';
-  $('next').innerHTML = last ? 'Hantar <i>/ Submit</i>' : 'Seterusnya <i>/ Next</i> &rarr;';
+  $('next').innerHTML = STEPS[idx].intro ? 'Mula <i>/ Start</i> &rarr;' : last ? 'Hantar <i>/ Submit</i>' : 'Seterusnya <i>/ Next</i> &rarr;';
   $('bar').style.width = Math.round(((pos + 1) / vis.length) * 100) + '%';
   renderTabs();
 }
