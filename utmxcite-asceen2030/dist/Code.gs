@@ -784,7 +784,7 @@ var KPIS = [
   {
     id: 'CKAI5', prefix: 'MS', sheet: 'CKAI5_Makerspace', fungsi: 'startup', group: 'Center', entry: 'admin',
     title: 'CKAI 5 · Bilangan penggunaan Makerspace', short: 'Penggunaan Makerspace',
-    unit: 'permohonan penggunaan', measure: 'makerspace', jenis: 'minimum',
+    unit: 'pengguna', measure: 'makerspace', jenis: 'minimum',
     listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'status_bayaran', 'bayaran_rm', 'borang'],
     statusField: 'status_bayaran',
     rules: [{ when: { field: 'peralatan', in: ['Lain-lain (Other)'] }, require: ['peralatan_lain'] }],
@@ -2821,13 +2821,12 @@ var MEASURES = {
     var users = {};
     inYear.forEach(function (r) { users[String(r.no_matrik || r.emel).toUpperCase()] = 1; });
     return {
-      value: inYear.length,
+      value: sumOf_(inYear, 'bil_peserta'),          // Jumlah pengguna (jumlah bil_peserta), bukan bilangan tempahan
       secondary: [
+        { label: 'Jumlah tempahan', value: inYear.length },
         { label: 'Pengguna unik', value: Object.keys(users).length },
-        { label: 'Jumlah peserta', value: sumOf_(inYear, 'bil_peserta') },
         { label: 'Caj diterima', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Bayar'; }), 'bayaran_rm')) },
-        { label: 'Caj belum dibayar', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Belum Dibayar'; }), 'bayaran_rm')) },
-        { label: 'Tempahan', value: inYear.length }
+        { label: 'Caj belum dibayar', value: rm_(sumOf_(inYear.filter(function (r) { return r.status_bayaran === 'Belum Dibayar'; }), 'bayaran_rm')) }
       ],
       breakdown: [
         // Carta mengikut BILANGAN PENGGUNA (jumlah bil_peserta), bukan bilangan tempahan

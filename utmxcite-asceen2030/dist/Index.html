@@ -1334,7 +1334,7 @@ label .req{color:var(--bad)}
   // Penggunaan Makerspace: bilangan pengguna (bil_peserta). msUsersHtml = nombor besar + tempahan; msEquipHtml = bar mendatar mengikut peralatan dengan peratus.
   function msUsersHtml(c, items) {
     var total = (items || []).reduce(function (a, i) { return a + Number(i.value || 0); }, 0), tm = null;
-    (c.secondary || []).forEach(function (x) { if (x.label === 'Tempahan') tm = x.value; });
+    (c.secondary || []).forEach(function (x) { if (x.label === 'Jumlah tempahan') tm = x.value; });
     return '<div class="big1">' + esc(fmtNum(total)) + ' <small>pengguna</small></div>' + (tm !== null ? '<p class="igs">daripada ' + esc(fmtNum(tm)) + ' tempahan</p>' : '');
   }
   function msEquipHtml(items) {

@@ -783,7 +783,7 @@ var KPIS = [
   {
     id: 'CKAI5', prefix: 'MS', sheet: 'CKAI5_Makerspace', fungsi: 'startup', group: 'Center', entry: 'admin',
     title: 'CKAI 5 · Bilangan penggunaan Makerspace', short: 'Penggunaan Makerspace',
-    unit: 'permohonan penggunaan', measure: 'makerspace', jenis: 'minimum',
+    unit: 'pengguna', measure: 'makerspace', jenis: 'minimum',
     listColumns: ['id', 'nama', 'no_matrik', 'peralatan', 'tarikh_mula', 'bil_peserta', 'status_bayaran', 'bayaran_rm', 'borang'],
     statusField: 'status_bayaran',
     rules: [{ when: { field: 'peralatan', in: ['Lain-lain (Other)'] }, require: ['peralatan_lain'] }],
