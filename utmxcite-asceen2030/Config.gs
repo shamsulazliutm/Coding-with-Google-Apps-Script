@@ -636,7 +636,7 @@ var KPIS = [
     title: 'KAI 6 · Tubuhkan UTM AI Start Up', short: 'UTM AI Start Up',
     unit: 'pelajar dilatih', measure: 'kai6', jenis: 'minimum', perFacultyTarget: 5,
     facultyWhitelist: ['FAI', 'FC', 'FKE', 'MJIIT'],
-    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'nama_startup', 'status'],
+    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'nama_startup', 'status', 'link_profil'],
     statusField: 'status', rules: [],
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
@@ -646,6 +646,7 @@ var KPIS = [
       F_('nama_startup', 'Nama startup AI', 'text', { sec: 'Pasukan / startup' }),
       F_('nama_ahli_kumpulan', 'Ahli kumpulan (no. matrik)', 'people', { full: true, kp: false, format: 'numbered', noun: 'ahli kumpulan', max: 10 }),
       F_('no_pendaftaran_SSM', 'No. pendaftaran SSM', 'text'),
+      F_('link_profil', 'Link profil', 'url', { hint: 'Pautan profil startup / pasukan (laman web, LinkedIn, Instagram dan seumpamanya).' }),
       F_('bidang_ai', 'Bidang AI', 'select', { options: ['Pendidikan dan Pembelajaran', 'Pentadbiran dan Pengurusan', 'Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Penulisan dan Penjanaan Kandungan', 'Reka Bentuk dan Multimedia', 'Pemasaran dan Komunikasi', 'Perniagaan dan Keusahawanan', 'Penyelidikan dan Inovasi', 'Pengaturcaraan dan Pembangunan Sistem', 'Khidmat Pelanggan dan Chatbot', 'Lain-lain'] }),
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
       F_('mentor_industri', 'Mentor universiti/industri', 'text'),

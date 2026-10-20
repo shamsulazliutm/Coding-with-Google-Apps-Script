@@ -589,6 +589,10 @@
   // Sel senarai: pelajar = nama sahaja (no. KP tidak dipaparkan dalam jadual); fail = butang muat turun.
   function listCell(k, r, c) {
     var fd = fieldDef(k, c), v = r[c] === undefined ? '' : r[c];
+    if (fd && fd.type === 'url') {
+      var u = String(v).trim();
+      return /^https?:\/\//i.test(u) ? '<a class="tlnk" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">Buka pautan ↗</a>' : esc(u);
+    }
     if (fd && fd.type === 'people' && fd.format === 'numbered') return esc(String(v).replace(/\r?\n/g, ' · '));
     if (fd && fd.type === 'people') {
       var ps = parseJson(v, []);

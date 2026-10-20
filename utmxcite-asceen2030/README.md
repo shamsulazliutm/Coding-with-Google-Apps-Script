@@ -274,3 +274,5 @@ id, fakulti, bulan_pendapatan, nama_pelajar, no_kp, no_matrik, jantina, bangsa, 
 **KAI 6 · ahli kumpulan dan fakulti:** `fakulti` diambil daripada PELAJAR (PIC hanya pelajar fakultinya; had fakulti KAI 6 kekal). `nama_ahli_kumpulan` dimasukkan sebagai senarai no. matrik (maksimum 10); nama diambil daripada PELAJAR dan disimpan dalam Sheet sebagai teks bernombor, satu baris setiap ahli: `1. NAMA (NO. MATRIK)`.
 
 **KAI 6 · peringkat pembangunan startup:** medan `status` ialah *Peringkat pembangunan startup*: Idea/konsep, Prototaip, Validasi pasaran, Pelancaran, Pertumbuhan. Semua peringkat dikira dalam KAI 6. `setup()` menukar nilai lama: Ideasi / Dalam latihan → Idea/konsep; Prototaip / MVP / Tamat latihan → Prototaip (Dicalonkan, Dipilih dan Tarik diri tidak disentuh; betulkan sendiri).
+
+**KAI 6 · link profil:** lajur baharu `link_profil` (pautan https sahaja) selepas `no_pendaftaran_SSM`; dipaparkan sebagai pautan "Buka pautan" dalam senarai.

@@ -270,6 +270,7 @@ label .req{color:var(--bad)}
 .mdl{position:fixed;inset:0;background:rgba(43,26,31,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}.mdlb{background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:20px}.mdlb h3{margin-bottom:6px}
 .stuset{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}.stuset legend{font-weight:700;padding:0 6px;color:var(--m)}
 @media(max-width:860px){.prow.mo{grid-template-columns:24px 1fr auto;row-gap:2px}.prow.mo .pname,.prow.mo .pcell{grid-column:2}.prow{grid-template-columns:24px 1fr auto}.prow input[data-pf=matrik],.prow input[data-pf=nokp]{grid-column:2}}
+.tlnk{color:var(--m);text-decoration:underline;white-space:nowrap}.tlnk:hover{opacity:.8}
 </style>
 
 </head>
@@ -1110,7 +1111,7 @@ var KPIS = [
     title: 'KAI 6 · Tubuhkan UTM AI Start Up', short: 'UTM AI Start Up',
     unit: 'pelajar dilatih', measure: 'kai6', jenis: 'minimum', perFacultyTarget: 5,
     facultyWhitelist: ['FAI', 'FC', 'FKE', 'MJIIT'],
-    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'nama_startup', 'status'],
+    listColumns: ['id', 'nama', 'no_matrik', 'fakulti', 'nama_startup', 'status', 'link_profil'],
     statusField: 'status', rules: [],
     fields: [
       F_('fakulti', 'Fakulti', 'faculty', { required: true, sec: 'Pelajar' }),
@@ -1120,6 +1121,7 @@ var KPIS = [
       F_('nama_startup', 'Nama startup AI', 'text', { sec: 'Pasukan / startup' }),
       F_('nama_ahli_kumpulan', 'Ahli kumpulan (no. matrik)', 'people', { full: true, kp: false, format: 'numbered', noun: 'ahli kumpulan', max: 10 }),
       F_('no_pendaftaran_SSM', 'No. pendaftaran SSM', 'text'),
+      F_('link_profil', 'Link profil', 'url', { hint: 'Pautan profil startup / pasukan (laman web, LinkedIn, Instagram dan seumpamanya).' }),
       F_('bidang_ai', 'Bidang AI', 'select', { options: ['Pendidikan dan Pembelajaran', 'Pentadbiran dan Pengurusan', 'Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Penulisan dan Penjanaan Kandungan', 'Reka Bentuk dan Multimedia', 'Pemasaran dan Komunikasi', 'Perniagaan dan Keusahawanan', 'Penyelidikan dan Inovasi', 'Pengaturcaraan dan Pembangunan Sistem', 'Khidmat Pelanggan dan Chatbot', 'Lain-lain'] }),
       F_('ringkasan', 'Ringkasan idea', 'textarea', { full: true }),
       F_('mentor_industri', 'Mentor universiti/industri', 'text'),
@@ -4151,7 +4153,7 @@ window.__demoSeed = function () {
   }
   for (i = 1; i <= 2; i++) save('KAI5', { fakulti: fac(i), nama_pelajar: nm('Pelajar F-SIP Contoh', i), no_matrik: 'F24' + p2(i) + '001', status: 'Mendaftar', tarikh_daftar: ymd(5, 10 + i), nama_startup: 'Startup F-SIP ' + i, kelulusan_caq: 'Diluluskan' });
   [['FAI', 4], ['FC', 3], ['FKE', 2], ['MJIIT', 2]].forEach(function (f, fi) {
-    for (var j = 1; j <= f[1]; j++) save('KAI6', { fakulti: f[0], nama: nm('Pelajar AI ' + f[0] + ' Contoh', j), no_matrik: 'A' + (fi + 1) + p2(j) + '24', status: PERINGKAT_STARTUP[j % 5], nama_startup: 'AI Startup ' + f[0] + ' ' + Math.ceil(j / 2), bidang_ai: ['Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Khidmat Pelanggan dan Chatbot', 'Pendidikan dan Pembelajaran'][j % 4], mentor_industri: 'Mentor Industri Contoh', startup_ditubuhkan: j % 3 === 0 ? 'Ya' : 'Tidak' });
+    for (var j = 1; j <= f[1]; j++) save('KAI6', { fakulti: f[0], nama: nm('Pelajar AI ' + f[0] + ' Contoh', j), no_matrik: 'A' + (fi + 1) + p2(j) + '24', status: PERINGKAT_STARTUP[j % 5], nama_startup: 'AI Startup ' + f[0] + ' ' + Math.ceil(j / 2), bidang_ai: ['Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Khidmat Pelanggan dan Chatbot', 'Pendidikan dan Pembelajaran'][j % 4], mentor_industri: 'Mentor Industri Contoh', link_profil: 'https://contoh.my/profil/' + f[0].toLowerCase() + j, startup_ditubuhkan: j % 3 === 0 ? 'Ya' : 'Tidak' });
   });
 
   // ---- CKAI 1 Profiling pelajar
@@ -4841,6 +4843,10 @@ window.__demoSeed = function () {
   // Sel senarai: pelajar = nama sahaja (no. KP tidak dipaparkan dalam jadual); fail = butang muat turun.
   function listCell(k, r, c) {
     var fd = fieldDef(k, c), v = r[c] === undefined ? '' : r[c];
+    if (fd && fd.type === 'url') {
+      var u = String(v).trim();
+      return /^https?:\/\//i.test(u) ? '<a class="tlnk" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">Buka pautan ↗</a>' : esc(u);
+    }
     if (fd && fd.type === 'people' && fd.format === 'numbered') return esc(String(v).replace(/\r?\n/g, ' · '));
     if (fd && fd.type === 'people') {
       var ps = parseJson(v, []);

@@ -80,7 +80,7 @@ window.__demoSeed = function () {
   }
   for (i = 1; i <= 2; i++) save('KAI5', { fakulti: fac(i), nama_pelajar: nm('Pelajar F-SIP Contoh', i), no_matrik: 'F24' + p2(i) + '001', status: 'Mendaftar', tarikh_daftar: ymd(5, 10 + i), nama_startup: 'Startup F-SIP ' + i, kelulusan_caq: 'Diluluskan' });
   [['FAI', 4], ['FC', 3], ['FKE', 2], ['MJIIT', 2]].forEach(function (f, fi) {
-    for (var j = 1; j <= f[1]; j++) save('KAI6', { fakulti: f[0], nama: nm('Pelajar AI ' + f[0] + ' Contoh', j), no_matrik: 'A' + (fi + 1) + p2(j) + '24', status: PERINGKAT_STARTUP[j % 5], nama_startup: 'AI Startup ' + f[0] + ' ' + Math.ceil(j / 2), bidang_ai: ['Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Khidmat Pelanggan dan Chatbot', 'Pendidikan dan Pembelajaran'][j % 4], mentor_industri: 'Mentor Industri Contoh', startup_ditubuhkan: j % 3 === 0 ? 'Ya' : 'Tidak' });
+    for (var j = 1; j <= f[1]; j++) save('KAI6', { fakulti: f[0], nama: nm('Pelajar AI ' + f[0] + ' Contoh', j), no_matrik: 'A' + (fi + 1) + p2(j) + '24', status: PERINGKAT_STARTUP[j % 5], nama_startup: 'AI Startup ' + f[0] + ' ' + Math.ceil(j / 2), bidang_ai: ['Analisis Data dan Pelaporan', 'Automasi Proses Kerja', 'Khidmat Pelanggan dan Chatbot', 'Pendidikan dan Pembelajaran'][j % 4], mentor_industri: 'Mentor Industri Contoh', link_profil: 'https://contoh.my/profil/' + f[0].toLowerCase() + j, startup_ditubuhkan: j % 3 === 0 ? 'Ya' : 'Tidak' });
   });
 
   // ---- CKAI 1 Profiling pelajar

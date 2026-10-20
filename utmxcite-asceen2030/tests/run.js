@@ -359,8 +359,10 @@ test('KAI6: sasaran 20, minimum 5 setiap fakulti (4 fakulti), startup unik', () 
   deepEq(c.breakdown[0].items.map(i => i.label), ['FAI', 'FC', 'FKE', 'MJIIT']);
   assert.ok(c.breakdown[0].items.every(i => i.target === 5));
   const sh6 = g.getSheet_('KAI6_AI_Startup');
-  deepEq(sh6.getRange(1, 1, 1, sh6.getLastColumn()).getValues()[0], ['id', 'fakulti', 'nama', 'no_kp', 'no_matrik', 'nama_startup', 'nama_ahli_kumpulan', 'no_pendaftaran_SSM', 'bidang_ai', 'ringkasan', 'mentor_industri', 'startup_ditubuhkan', 'status', 'lampiran', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
+  deepEq(sh6.getRange(1, 1, 1, sh6.getLastColumn()).getValues()[0], ['id', 'fakulti', 'nama', 'no_kp', 'no_matrik', 'nama_startup', 'nama_ahli_kumpulan', 'no_pendaftaran_SSM', 'link_profil', 'bidang_ai', 'ringkasan', 'mentor_industri', 'startup_ditubuhkan', 'status', 'lampiran', 'catatan', 'dicipta_pada', 'dicipta_oleh', 'dikemas_kini_pada', 'dikemas_kini_oleh']);
   const bad = g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: 'Z', no_matrik: 'z9', status: 'Idea/konsep', bidang_ai: 'Memasak' }); fail(bad, /betulkan/); assert.ok(bad.fields.bidang_ai);
+  const bad2 = g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: 'Z', no_matrik: 'z9', status: 'Idea/konsep', link_profil: 'javascript:alert(1)' }); fail(bad2, /betulkan/); assert.ok(bad2.fields.link_profil);
+  ok(g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: 'Z', no_matrik: 'z9', status: 'Idea/konsep', link_profil: 'https://contoh.my/profil' }));
 });
 test('KAI6: peringkat pembangunan startup (5 peringkat, semua dikira); nilai lama ditukar oleh setup()', () => {
   const mk = (n, st) => g.api_save(adminToken, 'KAI6', { fakulti: 'FAI', nama: n, no_matrik: n, status: st, nama_startup: 'PS' + n });
