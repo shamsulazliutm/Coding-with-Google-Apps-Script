@@ -2,21 +2,18 @@
 
 Web app Google Apps Script dengan rekod disimpan dalam Google Sheets.
 
-## Fail
+## Fail (hanya dua)
 
-| Fail | Fungsi |
+| Fail | Isi |
 |---|---|
-| `Code.gs` | Pelayan: pengesahan peranan, API panel dan admin, pengiraan keputusan |
-| `Setup.gs` | Mencipta sheet dan mengisi data awal (6 panel, admin, rubrik, 6 permohonan) |
-| `Index.html`, `Style.html`, `Client.html` | Antara muka (tema maroon dan emas) |
-| `appsscript.json` | Manifes: web app dijalankan sebagai pemilik, akses DOMAIN |
+| `Code.gs` | Pelayan: pengesahan peranan, API panel dan admin, pengiraan keputusan, serta penyediaan sheet dan data awal |
+| `Index.html` | Antara muka lengkap (tema maroon dan emas, CSS dan JavaScript dalam satu fail) |
 
 ## Pemasangan
 
-1. Cipta satu **Google Sheet** baharu (guna akaun `utmxcite@utm.my`).
-2. **Extensions > Apps Script**, lalu salin kandungan semua fail di atas ke dalam projek.
-   Dalam editor, aktifkan "Show appsscript.json manifest file" (Project Settings) dan tampal `appsscript.json`.
-3. Muat semula Sheet, kemudian pilih menu **Penilaian > Sediakan sheet (kali pertama)** dan beri kebenaran.
+1. Cipta satu **Google Sheet** baharu (guna akaun `utmxcite@utm.my`), kemudian **Extensions > Apps Script**.
+2. Tampal kandungan `Code.gs` ke dalam fail `Code.gs` yang sedia ada. Tambah satu fail **HTML** bernama `Index` dan tampal kandungan `Index.html`.
+3. Simpan, muat semula Sheet, kemudian pilih menu **Penilaian > Sediakan sheet (kali pertama)** dan beri kebenaran.
    Sheet berikut dicipta: `Panel`, `Pemohon`, `Pelajar`, `Sesi`, `Rubrik`, `Chip`, `Penilaian`, `Keputusan`, `Log`.
 4. **Deploy > New deployment > Web app**
    - Execute as: **Me** (pemilik skrip)
@@ -47,4 +44,4 @@ Tetapkan `LOGO_URL` di atas `Code.gs` kepada URL atau `data:` URI imej logo UTM/
 
 ## Data
 
-Dalam fail `Setup.gs`, 6 permohonan (Marzmell, Nanel, Cheval, Voltro, The Cube, Majora) dan pautan pelan perniagaan Drive diisi awal daripada fail penilaian sedia ada. Marzmell ialah SUB dengan dua pelajar.
+Dalam `Code.gs` (fungsi `setupSheets`), 6 permohonan (Marzmell, Nanel, Cheval, Voltro, The Cube, Majora) dan pautan pelan perniagaan Drive diisi awal daripada fail penilaian sedia ada. Marzmell ialah SUB dengan dua pelajar.
