@@ -9,7 +9,7 @@
  */
 
 const ADMIN_EMAIL = 'utmxcite@utm.my';
-const LOGO_URL = ''; // pilihan: URL imej logo (data: URI atau pautan awam); kosong = logo teks
+const LOGO_URL = ''; // pilihan: ganti logo lalai dalam Index.html dengan URL imej lain; kosong = guna logo dalam Index.html
 
 const SH = {
   PANEL: 'Panel', PEMOHON: 'Pemohon', PELAJAR: 'Pelajar', SESI: 'Sesi',
