@@ -227,7 +227,7 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 /* Klien: semua data datang daripada pelayan (Code.gs). Tapisan akses dibuat di pelayan. */
 const $ = s => document.querySelector(s), app = $('#app');
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const PUBLIC = { apiLogin: 1 };
+const PUBLIC = { apiRequestOtp: 1, apiVerifyOtp: 1, apiLogin: 1 };
 let TOKEN = '';
 try { TOKEN = localStorage.getItem('utm_tok') || ''; } catch (e) { try { TOKEN = sessionStorage.getItem('utm_tok') || ''; } catch (e2) { } }
 function setTok(t) { TOKEN = t || ''; [() => localStorage, () => sessionStorage].forEach(f => { try { t ? f().setItem('utm_tok', t) : f().removeItem('utm_tok'); } catch (e) { } }); }
@@ -247,13 +247,51 @@ const typePill = t => `<span class="pill ${t === 'SUB' ? 'p-info' : 'p-mute'}">$
 const short = n => String(n).replace(/^(Dr\.|En\.|Pn\.|PM\. Dr\.|PM\.) /, '').split(' ').slice(0, 2).join(' ');
 
 /* ---------- log masuk OTP ---------- */
-function showLogin(msg) {
+function loginHead(msg) {
   $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Penilaian permohonan Student Mall & SUB';
-  app.innerHTML = `<div class="login card"><h2>Log masuk</h2><p class="note">Masukkan kod OTP 8 digit yang dihantar ke e-mel anda oleh admin. Tiada e-mel atau kata laluan diperlukan.</p>
-   ${msg ? `<div class="lock" style="background:var(--warn-soft);color:var(--warn)">${esc(msg)}</div>` : ''}
+  return msg ? `<div class="lock" style="background:var(--warn-soft);color:var(--warn)">${esc(msg)}</div>` : '';
+}
+/* Langkah 1: e-mel */
+function showLogin(msg, em) {
+  app.innerHTML = `<div class="login card"><h2>Log masuk</h2><p class="note">Masukkan e-mel yang didaftarkan sebagai panel atau admin. Kod OTP 6 digit akan dihantar ke e-mel itu. Akaun Google/Gmail tidak diperlukan.</p>
+   ${loginHead(msg)}
+   <div class="f"><label class="wide">E-mel<input id="l_e" type="email" autocomplete="email" value="${esc(em || '')}" placeholder="nama@utm.my"></label></div>
+   <div class="foot"><button class="btn-solid" id="l_go">Hantar kod OTP</button></div>
+   <p style="margin:14px 0 0;font-size:13.5px"><button class="elsum" id="l_adm" style="color:var(--maroon);font-style:normal;font-weight:600">Ada kod OTP 8 digit daripada admin? Masukkan kod sahaja</button></p></div>`;
+  const go = async () => {
+    const e = $('#l_e').value.trim().toLowerCase(), b = $('#l_go'); if (!e) return;
+    b.disabled = true; b.textContent = 'Menghantar…';
+    try { await rpc('apiRequestOtp', e); otpStep(e); } catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Hantar kod OTP'; }
+  };
+  $('#l_go').onclick = go; $('#l_e').onkeydown = ev => { if (ev.key === 'Enter') go(); }; $('#l_e').focus();
+  $('#l_adm').onclick = () => showCodeLogin();
+}
+/* Langkah 2: kod OTP daripada e-mel */
+function otpStep(em) {
+  let left = 60, tm = null;
+  app.innerHTML = `<div class="login card"><h2>Masukkan kod OTP</h2><p class="note">Jika <b>${esc(em)}</b> berdaftar, kod 6 digit telah dihantar. Semak peti masuk dan folder spam. Kod sah 10 minit.</p>
+   <div class="f"><label class="wide">Kod OTP<input id="l_c" class="otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••"></label></div>
+   <div class="foot"><button class="btn-solid" id="l_ok">Log masuk</button></div>
+   <div class="foot" style="justify-content:space-between"><button class="btn-ghost" id="l_re" disabled>Hantar semula (60s)</button><button class="btn-ghost" id="l_ch">Tukar e-mel</button></div></div>`;
+  const re = $('#l_re');
+  tm = setInterval(() => { if (!re.isConnected) return clearInterval(tm); left--; if (left <= 0) { re.disabled = false; re.textContent = 'Hantar semula'; clearInterval(tm); } else re.textContent = 'Hantar semula (' + left + 's)'; }, 1000);
+  const ok = async () => {
+    const c = $('#l_c').value.trim(); if (c.length !== 6) return toast('Masukkan 6 digit kod', true);
+    const b = $('#l_ok'); b.disabled = true; b.textContent = 'Menyemak…';
+    try { const r = await rpc('apiVerifyOtp', em, c); setTok(r.token); clearInterval(tm); await start(); }
+    catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Log masuk'; $('#l_c').select(); }
+  };
+  $('#l_ok').onclick = ok; $('#l_c').onkeydown = ev => { if (ev.key === 'Enter') ok(); }; $('#l_c').focus();
+  re.onclick = async () => { re.disabled = true; try { await rpc('apiRequestOtp', em); toast('Kod baharu dihantar'); otpStep(em); } catch (x) { toast(x.message, true); re.disabled = false; } };
+  $('#l_ch').onclick = () => { clearInterval(tm); showLogin('', em); };
+}
+/* Pilihan: kod 8 digit yang dijana admin, tanpa e-mel */
+function showCodeLogin(msg) {
+  app.innerHTML = `<div class="login card"><h2>Log masuk dengan kod admin</h2><p class="note">Masukkan kod OTP 8 digit yang diberi oleh admin. Kod hanya boleh digunakan sekali.</p>
+   ${loginHead(msg)}
    <div class="f"><label class="wide">Kod OTP<input id="l_c" class="otp" inputmode="numeric" maxlength="9" autocomplete="one-time-code" placeholder="•••• ••••"></label></div>
    <div class="foot"><button class="btn-solid" id="l_ok">Log masuk</button></div>
-   <p class="note" style="margin:12px 0 0">Kod hanya boleh digunakan sekali. Belum terima kod atau kod tamat? Hubungi admin (utmxcite@utm.my).</p></div>`;
+   <p style="margin:14px 0 0;font-size:13.5px"><button class="elsum" id="l_back" style="color:var(--maroon);font-style:normal;font-weight:600">← Log masuk dengan e-mel</button></p></div>`;
   const c = $('#l_c');
   c.oninput = () => { const d = c.value.replace(/\D/g, '').slice(0, 8); c.value = d.length > 4 ? d.slice(0, 4) + ' ' + d.slice(4) : d; };
   const ok = async () => {
@@ -263,6 +301,7 @@ function showLogin(msg) {
     catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Log masuk'; c.select(); }
   };
   $('#l_ok').onclick = ok; c.onkeydown = ev => { if (ev.key === 'Enter') ok(); }; c.focus();
+  $('#l_back').onclick = () => showLogin();
 }
 $('#out').onclick = async () => { try { await rpc('apiLogout'); } catch (e) { } setTok(''); codes = null; showLogin(); };
 

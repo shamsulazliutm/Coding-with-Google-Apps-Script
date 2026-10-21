@@ -32,6 +32,9 @@ const NCRIT = 6;
 const CODE_LEN = 8;          // panjang kod OTP (digit)
 const CODE_TTL_HOURS = 48;   // kod sah sehingga digunakan, atau sehingga tempoh ini tamat
 const LOGIN_FAILS = 30;      // maksimum cubaan kod salah (seluruh sistem) dalam 10 minit
+const OTP_TTL = 600;         // kod OTP e-mel sah 10 minit
+const OTP_TRIES = 5;         // maksimum cubaan salah bagi satu kod
+const OTP_REQ_MAX = 3;       // maksimum permintaan kod bagi satu e-mel dalam 10 minit
 const SESSION_TTL = 21600;   // sesi log masuk 6 jam (had maksimum CacheService)
 let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
@@ -134,9 +137,9 @@ function need_(role, token) {
   return u;
 }
 
-/* ===================== Log masuk dengan kod OTP ===================== */
-/* Admin menjana kod OTP bagi setiap panel (tab Panel) dan kod dihantar ke e-mel panel.
- * Panel hanya menaip kod. Kod disimpan sebagai hash, sah sekali sahaja dan tamat tempoh. */
+/* ===================== Log masuk OTP ===================== */
+/* Utama: panel masukkan e-mel, OTP 6 digit dihantar ke e-mel itu.
+ * Pilihan: admin menjana kod 8 digit (tab Panel) yang boleh dimasukkan tanpa e-mel. Semua kod sekali guna. */
 
 function secret_() {
   const props = PropertiesService.getScriptProperties();
@@ -198,7 +201,54 @@ function issueAll_(sendMail) {
   }).map(function (r) { return issueCode_(r.Emel, sendMail); });
 }
 
-/** Log masuk: hanya kod OTP. */
+/** Langkah 1 (log masuk e-mel): minta kod OTP 6 digit. Jawapan sama sama ada e-mel berdaftar atau tidak. */
+function apiRequestOtp(email) {
+  const em = String(email || '').trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) throw new Error('E-mel tidak sah.');
+  return withLock_(function () {
+    const cache = CacheService.getScriptCache();
+    const n = Number(cache.get('otpreq:' + em) || 0);
+    if (n >= OTP_REQ_MAX) throw new Error('Terlalu banyak permintaan kod. Cuba lagi dalam 10 minit.');
+    cache.put('otpreq:' + em, String(n + 1), 600);
+    if (roleOf_(em)) {
+      const code = ('000000' + (parseInt(Utilities.getUuid().replace(/-/g, '').slice(0, 8), 16) % 1000000)).slice(-6);
+      cache.put('otp:' + em, JSON.stringify({ h: hash_(code + em), t: 0 }), OTP_TTL);
+      MailApp.sendEmail({
+        to: em, name: 'UTMPreneur Penilaian',
+        subject: 'Kod OTP anda: ' + code,
+        body: 'Kod OTP untuk log masuk sistem Penilaian Student Mall & SUB (UTMPreneur):\n\n    ' + code +
+          '\n\nKod sah selama 10 minit. Jangan kongsikan kod ini. Abaikan e-mel ini jika anda tidak memintanya.'
+      });
+    }
+    return { ok: true };
+  });
+}
+
+/** Langkah 2 (log masuk e-mel): sahkan e-mel dan kod, kemudian terima token sesi. */
+function apiVerifyOtp(email, code) {
+  const em = String(email || '').trim().toLowerCase();
+  return withLock_(function () {
+    const cache = CacheService.getScriptCache();
+    const rec = JSON.parse(cache.get('otp:' + em) || 'null');
+    if (!rec) throw new Error('Kod tamat tempoh atau tidak sah. Minta kod baharu.');
+    if (rec.t >= OTP_TRIES) { cache.remove('otp:' + em); throw new Error('Terlalu banyak cubaan. Minta kod baharu.'); }
+    if (hash_(String(code || '').trim() + em) !== rec.h) {
+      rec.t++;
+      cache.put('otp:' + em, JSON.stringify(rec), OTP_TTL);
+      throw new Error('Kod tidak betul. Baki cubaan: ' + (OTP_TRIES - rec.t) + '.');
+    }
+    cache.remove('otp:' + em);
+    const r = roleOf_(em);
+    if (!r) throw new Error('Akaun tidak aktif.');
+    const token = Utilities.getUuid() + Utilities.getUuid();
+    cache.put('sess:' + hash_(token), em, SESSION_TTL);
+    ACTOR_ = em;
+    log_('Log masuk', r.role);
+    return { token: token, me: r };
+  });
+}
+
+/** Log masuk pilihan: kod OTP 8 digit yang dijana admin (tanpa e-mel). */
 function apiLogin(code) {
   const c = String(code || '').replace(/\D/g, '');
   if (c.length !== CODE_LEN) throw new Error('Masukkan kod OTP ' + CODE_LEN + ' digit.');
