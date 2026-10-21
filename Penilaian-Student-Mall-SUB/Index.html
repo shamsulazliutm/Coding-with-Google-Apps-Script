@@ -317,6 +317,11 @@ async function start() {
 let tab = 'dashboard', openRow = null, filt = { q: '', t: '' }, openKey = null;
 const TABS = [['dashboard', 'Dashboard'], ['permohonan', 'Permohonan'], ['sesi', 'Sesi penilaian'], ['panel', 'Panel'], ['rubrik', 'Rubrik'], ['keputusan', 'Keputusan'], ['log', 'Log']];
 
+setInterval(async () => {
+  if (B && B.me && B.me.role === 'admin' && !ACT_AS && !document.hidden && (tab === 'dashboard' || tab === 'keputusan') && !(document.activeElement && document.activeElement.tagName === 'SELECT')) {
+    try { const d = await rpc('apiAdminData'); if (!ACT_AS) { D = d; adminShell(); } } catch (e) { }
+  }
+}, 30000);
 async function loadAdmin() { D = await rpc('apiAdminData'); adminShell(); }
 function adminShell() {
   app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? `<span class="n">${D.apps.length}</span>` : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
@@ -331,7 +336,7 @@ const sent = (pid, email) => D.nilai.find(n => n.pid === pid && n.email.toLowerC
 
 function dashboard() {
   const P = D.keputusan.panels, total = P.length * D.apps.length;
-  const per = P.map(p => ({ p, n: D.nilai.filter(n => n.email.toLowerCase() === p.emel.toLowerCase() && n.status === 'Dihantar').length }));
+  const per = P.map(p => ({ p, n: p.sent, d: p.draf }));
   const done = per.reduce((a, x) => a + x.n, 0);
   const pend = D.keputusan.rows.filter(r => r.n < P.length).map(r => `<tr><td><b>${esc(r.biz)}</b><small>${P.length - r.n} panel belum hantar</small></td><td class="num"><span class="pill ${r.n < P.length / 2 ? 'p-bad' : 'p-warn'}">${r.n}/${P.length}</span></td></tr>`).join('');
   const sm = D.apps.filter(a => a.type === 'Student Mall').length;
@@ -341,7 +346,7 @@ function dashboard() {
    <div class="card stat"><div class="l">Panel aktif</div><div class="v">${P.length}</div><div class="s">Active evaluators</div></div>
    <div class="card stat"><div class="l">Penilaian dihantar</div><div class="v">${done} / ${total}</div><div class="s">Submitted · ${total ? Math.round(done / total * 100) : 0}%</div></div>
    <div class="card stat"><div class="l">Sesi</div><div class="v" style="font-size:24px;padding:6px 0"><span class="pill ${D.sesi.status === 'Dibuka' ? 'p-ok' : 'p-mute'}" style="font-size:16px">${esc(D.sesi.status)}</span></div><div class="s">${esc(D.sesi.tarikh)} · ${esc(D.sesi.masa)}</div></div></div>
-  <div class="two"><div class="card"><h3>Kemajuan panel <i>Panel progress</i></h3>${per.map(x => `<div class="prog"><span>${esc(short(x.p.nama))}</span><div class="bar"><i style="width:${D.apps.length ? x.n / D.apps.length * 100 : 0}%"></i></div><b class="num">${x.n}/${D.apps.length}</b></div>`).join('')}</div>
+  <div class="two"><div class="card"><h3>Kemajuan panel <i>Panel progress</i></h3>${per.map(x => `<div class="prog"><span>${esc(short(x.p.nama))}</span><div class="bar"><i style="width:${D.apps.length ? x.n / D.apps.length * 100 : 0}%"></i></div><b class="num">${x.n}/${D.apps.length}</b></div>${x.d ? `<div class="note" style="margin:-4px 0 6px 0">${esc(short(x.p.nama))}: ${x.d} draf belum dihantar</div>` : ''}`).join('')}</div>
   <div class="card"><h3>Perlu tindakan <i>Needs action</i></h3>${pend ? `<div class="tw"><table><tbody>${pend}</tbody></table></div>` : '<p class="note">Semua panel telah menghantar.</p>'}
    <div class="foot">${D.sesi.status === 'Dibuka' ? '<button class="btn-solid" id="close">Tutup sesi & kunci</button>' : '<button class="btn-line" id="open">Buka semula sesi</button>'}</div></div></div>`;
   const c = $('#close'); if (c) c.onclick = () => armed(c, 'Sahkan tutup sesi', () => act('apiSetSesiStatus', 'Sesi ditutup', 'Ditutup'));
@@ -436,10 +441,14 @@ function rubrik() {
 
 function keputusan() {
   const K = D.keputusan, P = K.panels;
-  $('#main').innerHTML = head('Keputusan', 'Results · purata panel /100', '<button class="btn-line" id="rf">Kemas kini tab Sheet</button>') + `
+  const anyDraf = K.rows.some(r => r.nd > 0);
+  $('#main').innerHTML = head('Keputusan', 'Results · purata panel /100', '<button class="btn-ghost" id="rl">↻ Muat semula</button> <button class="btn-line" id="rf">Kemas kini tab Sheet</button>') + `
+  <p class="note" id="stamp" style="margin:-8px 0 12px">Dikemas kini ${esc(K.at || '')} · muat semula automatik setiap 30 saat. Hanya penilaian yang telah <b>dihantar</b> (butang "Hantar skor & kunci") dikira. Draf ditunjukkan sahaja.</p>
+  <div class="card" style="margin-bottom:14px"><h3>Status panel <i>Panel progress</i></h3><div class="chips">${P.map((p, i) => `<span class="chip" title="${esc(p.nama)}">P${i + 1} ${esc(short(p.nama))}: <b>${p.sent}/${K.total}</b> dihantar${p.draf ? ` · <span style="color:var(--warn)">${p.draf} draf</span>` : ''}</span>`).join('')}</div></div>
   <div class="card tw"><table><thead><tr><th>Rank</th><th>Perniagaan</th><th>Jenis</th>${P.map((p, i) => `<th class="num" title="${esc(p.nama)}">P${i + 1}</th>`).join('')}<th class="num">Dinilai</th><th class="num">Purata</th><th class="num">Layak</th><th>Status akhir</th></tr></thead><tbody>
-  ${K.rows.map(r => `<tr class="click" data-id="${r.id}"><td><b style="font-size:18px;color:var(--maroon)">${r.rank || '–'}</b></td><td><b>${esc(r.biz)}</b></td><td>${typePill(r.type)}</td>${r.sc.map(s => `<td class="num">${s == null ? '<span style="color:var(--muted)">–</span>' : s}</td>`).join('')}<td class="num">${r.n}/${P.length}</td><td class="num"><b>${r.avg == null ? '–' : r.avg.toFixed(2)}</b></td><td class="num">${r.layak}/${r.n}</td><td><select class="fin" data-id="${r.id}" aria-label="Status akhir">${['Belum', 'Lulus', 'Tidak lulus'].map(o => `<option ${(r.final || 'Belum') === o ? 'selected' : ''}>${o}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>
-  <p class="note">P1–P${P.length}: ${P.map((p, i) => `P${i + 1} ${esc(short(p.nama))}`).join(' · ')}. Admin menetapkan status akhir. Klik baris untuk melihat markah dan ulasan setiap panel.</p><div id="kd"></div>`;
+  ${K.rows.map(r => `<tr class="click" data-id="${r.id}"><td><b style="font-size:18px;color:var(--maroon)">${r.rank || '–'}</b></td><td><b>${esc(r.biz)}</b></td><td>${typePill(r.type)}</td>${r.sc.map((s, i) => `<td class="num">${s != null ? s : r.dr[i] != null ? `<span class="pill p-warn" title="Draf, belum dihantar">draf ${r.dr[i]}</span>` : '<span style="color:var(--muted)">–</span>'}</td>`).join('')}<td class="num">${r.n}/${P.length}${r.nd ? `<small>+${r.nd} draf</small>` : ''}</td><td class="num"><b>${r.avg == null ? '–' : r.avg.toFixed(2)}</b></td><td class="num">${r.layak}/${r.n}</td><td><select class="fin" data-id="${r.id}" aria-label="Status akhir">${['Belum', 'Lulus', 'Tidak lulus'].map(o => `<option ${(r.final || 'Belum') === o ? 'selected' : ''}>${o}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>
+  <p class="note">P1–P${P.length}: ${P.map((p, i) => `P${i + 1} ${esc(short(p.nama))}`).join(' · ')}. Admin menetapkan status akhir. Klik baris untuk melihat markah dan ulasan setiap panel.${anyDraf ? ' <b>Ada penilaian berstatus draf: minta panel menekan "Hantar skor & kunci".</b>' : ''}</p><div id="kd"></div>`;
+  $('#rl').onclick = async () => { const b = $('#rl'); b.disabled = true; b.textContent = 'Memuat…'; await loadAdmin(); toast('Data dimuat semula'); };
   $('#rf').onclick = () => act('apiRefreshKeputusan', 'Tab Keputusan dalam sheet dikemas kini');
   document.querySelectorAll('.fin').forEach(s => { s.onclick = e => e.stopPropagation(); s.onchange = () => act('apiSetStatusAkhir', 'Status akhir disimpan', +s.dataset.id, s.value); });
   document.querySelectorAll('tr.click').forEach(r => r.onclick = () => kdetail(+r.dataset.id));
@@ -448,7 +457,7 @@ function keputusan() {
 function kdetail(id) {
   openKey = id; const a = D.apps.find(x => x.id === id);
   $('#kd').innerHTML = `<div class="card detail"><h3>${esc(a.biz)} <i>markah setiap panel</i></h3><div class="tw"><table><thead><tr><th>Panel</th>${D.crit.map(c => `<th class="num">${c.id} /${c.max}</th>`).join('')}<th class="num">Jumlah</th><th>Layak</th><th>Ulasan</th><th></th></tr></thead><tbody>
-  ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return `<tr><td>${esc(short(p.nama))}</td>${n ? n.mk.map(m => `<td class="num">${m}</td>`).join('') : D.crit.map(() => '<td class="num">–</td>').join('')}<td class="num"><b>${n ? n.total : '–'}</b></td><td>${n ? esc(n.ok) : ''}</td><td>${n ? esc(n.cm) : ''}${n && n.status === 'Draf' ? ' <span class="pill p-warn">draf</span>' : ''}</td><td class="num">${n && n.status === 'Dihantar' ? `<button class="btn-ghost ro" data-e="${esc(p.emel)}">Buka semula</button> ` : ''}<button class="btn-line asp" data-e="${esc(p.emel)}" style="padding:6px 10px">${n ? 'Lihat / sunting' : 'Isi markah'}</button>${n && n.by ? ' <span class="pill p-info" title="Diisi oleh admin">admin</span>' : ''}</td></tr>`; }).join('')}</tbody></table></div>
+  ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return `<tr><td>${esc(short(p.nama))}</td>${n ? n.mk.map(m => `<td class="num">${m}</td>`).join('') : D.crit.map(() => '<td class="num">–</td>').join('')}<td class="num"><b>${n ? n.total : '–'}</b></td><td>${n ? esc(n.ok) : ''}</td><td>${n ? esc(n.cm) : ''}${n && n.status !== 'Dihantar' ? ' <span class="pill p-warn">draf, belum dihantar</span>' : ''}</td><td class="num">${n && n.status === 'Dihantar' ? `<button class="btn-ghost ro" data-e="${esc(p.emel)}">Buka semula</button> ` : ''}<button class="btn-line asp" data-e="${esc(p.emel)}" style="padding:6px 10px">${n ? 'Lihat / sunting' : 'Isi markah'}</button>${n && n.by ? ' <span class="pill p-info" title="Diisi oleh admin">admin</span>' : ''}</td></tr>`; }).join('')}</tbody></table></div>
   ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); const l = n ? n.notes.map((t, i) => t ? `<li><b>${esc(short(p.nama))} · ${esc(D.crit[i].bm)}:</b> ${esc(t)}</li>` : '').join('') : ''; return l; }).join('') ? `<h3 style="margin-top:14px">Catatan setiap kriteria <i>Notes</i></h3><ul class="notes-list">${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return n ? n.notes.map((t, i) => t ? `<li><b>${esc(short(p.nama))} · ${esc(D.crit[i].bm)}:</b> ${esc(t)}</li>` : '').join('') : ''; }).join('')}</ul>` : ''}</div>`;
   document.querySelectorAll('.asp').forEach(b => b.onclick = () => enterAs(b.dataset.e, id));
   document.querySelectorAll('.ro').forEach(b => b.onclick = () => armed(b, 'Sahkan', () => act('apiReopen', 'Penilaian dibuka semula', id, b.dataset.e)));

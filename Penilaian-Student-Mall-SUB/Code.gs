@@ -67,6 +67,10 @@ function ss_() {
   return SpreadsheetApp.openById(id);
 }
 
+/** Normalkan e-mel (buang ruang, huruf kecil) supaya perbandingan tidak gagal kerana ketikan manual dalam sheet. */
+function em_(x) { return String(x == null ? '' : x).trim().toLowerCase(); }
+function sent_(r) { return em_(r.Status) === 'dihantar'; }
+
 function table_(name) {
   const sh = ss_().getSheetByName(name);
   if (!sh) throw new Error('Sheet "' + name + '" tiada. Jalankan menu Penilaian > Sediakan sheet.');
@@ -112,10 +116,10 @@ function withLock_(fn) {
 function roleOf_(email) {
   email = String(email || '').trim().toLowerCase();
   if (!email) return null;
-  const p = table_(SH.PANEL).rows.filter(function (r) { return String(r.Emel).toLowerCase() === email; })[0];
-  const aktif = p && String(p.Status).toLowerCase() === 'aktif';
+  const p = table_(SH.PANEL).rows.filter(function (r) { return em_(r.Emel) === email; })[0];
+  const aktif = p && em_(p.Status) === 'aktif';
   if (email === ADMIN_EMAIL) return { email: email, role: 'admin', name: p ? p.Nama : 'Admin' };
-  if (p && aktif) return { email: email, role: String(p.Peranan).toLowerCase() === 'admin' ? 'admin' : 'panel', name: p.Nama };
+  if (p && aktif) return { email: email, role: em_(p.Peranan) === 'admin' ? 'admin' : 'panel', name: p.Nama };
   return null;
 }
 
@@ -164,8 +168,8 @@ function groupCode_(c) { return c.replace(/(\d{4})(?=\d)/g, '$1 '); }
 function issueCode_(emel, sendMail) {
   const em = String(emel).trim().toLowerCase();
   const t = table_(SH.PANEL);
-  const row = t.rows.filter(function (r) { return String(r.Emel).toLowerCase() === em; })[0];
-  if (!row || String(row.Status).toLowerCase() !== 'aktif') throw new Error('Panel tidak aktif atau tiada dalam senarai: ' + em);
+  const row = t.rows.filter(function (r) { return em_(r.Emel) === em; })[0];
+  if (!row || em_(row.Status) !== 'aktif') throw new Error('Panel tidak aktif atau tiada dalam senarai: ' + em);
   const used = {};
   t.rows.forEach(function (r) { if (r.KodHash) used[r.KodHash] = 1; });
   let code = '', h = '';
@@ -197,7 +201,7 @@ function issueCode_(emel, sendMail) {
 
 function issueAll_(sendMail) {
   return table_(SH.PANEL).rows.filter(function (r) {
-    return String(r.Peranan).toLowerCase() === 'panel' && String(r.Status).toLowerCase() === 'aktif';
+    return em_(r.Peranan) === 'panel' && em_(r.Status) === 'aktif';
   }).map(function (r) { return issueCode_(r.Emel, sendMail); });
 }
 
@@ -258,7 +262,7 @@ function apiLogin(code) {
     if (fails >= LOGIN_FAILS) throw new Error('Terlalu banyak cubaan salah. Cuba lagi dalam 10 minit atau hubungi admin.');
     const h = hash_('otp:' + c);
     const row = table_(SH.PANEL).rows.filter(function (r) { return r.KodHash === h; })[0];
-    if (!row || Number(row.KodTamat) < Date.now() || String(row.Status).toLowerCase() !== 'aktif') {
+    if (!row || Number(row.KodTamat) < Date.now() || em_(row.Status) !== 'aktif') {
       cache.put('loginfail', String(fails + 1), 600);
       throw new Error('Kod OTP tidak sah atau telah digunakan/tamat. Hubungi admin untuk kod baharu.');
     }
@@ -388,10 +392,10 @@ function apiBoot(token) {
 function panelData_(u) {
   const s = sesi_();
   const mine = {};
-  table_(SH.NILAI).rows.filter(function (r) { return String(r.Emel).toLowerCase() === u.email; })
+  table_(SH.NILAI).rows.filter(function (r) { return em_(r.Emel) === u.email; })
     .forEach(function (r) { mine[Number(r.PemohonID)] = evalRow_(r); });
-  const aktif = table_(SH.PANEL).rows.filter(function (r) { return String(r.Peranan).toLowerCase() === 'panel' && String(r.Status).toLowerCase() === 'aktif'; });
-  u.no = aktif.map(function (r) { return String(r.Emel).toLowerCase(); }).indexOf(u.email) + 1;
+  const aktif = table_(SH.PANEL).rows.filter(function (r) { return em_(r.Peranan) === 'panel' && em_(r.Status) === 'aktif'; });
+  u.no = aktif.map(function (r) { return em_(r.Emel); }).indexOf(u.email) + 1;
   return { me: u, sesi: s, crit: rubrik_(s.versi), chips: chips_(), apps: apps_(true), mine: mine };
 }
 
@@ -429,8 +433,8 @@ function saveEval_(u, pid, p, submit, byAdmin) {
     if (!app) throw new Error('Permohonan tidak sah.');
     const crit = rubrik_(s.versi);
     const t = table_(SH.NILAI);
-    const old = t.rows.filter(function (r) { return Number(r.PemohonID) === Number(pid) && String(r.Emel).toLowerCase() === u.email; })[0];
-    if (old && old.Status === 'Dihantar') throw new Error('Penilaian ini telah dihantar dan dikunci.' + (byAdmin ? ' Buka semula dahulu.' : ''));
+    const old = t.rows.filter(function (r) { return Number(r.PemohonID) === Number(pid) && em_(r.Emel) === u.email; })[0];
+    if (old && sent_(old)) throw new Error('Penilaian ini telah dihantar dan dikunci.' + (byAdmin ? ' Buka semula dahulu.' : ''));
 
     const row = { PemohonID: Number(pid), Emel: u.email };
     let total = 0;
@@ -520,10 +524,10 @@ function apiSavePanel(token, p) {
     const emel = String(p.emel || '').trim().toLowerCase();
     if (!p.nama || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emel)) throw new Error('Nama dan e-mel sah diperlukan.');
     const t = table_(SH.PANEL);
-    const o = t.rows.filter(function (r) { return String(r.Emel).toLowerCase() === emel; })[0];
+    const o = t.rows.filter(function (r) { return em_(r.Emel) === em_(emel); })[0];
     const row = Object.assign({}, o || {}, { Nama: p.nama, Emel: emel, Peranan: (o && o.Peranan) || 'Panel', Status: p.status || 'Aktif' });
     if (emel === ADMIN_EMAIL) { row.Peranan = 'Admin'; row.Status = 'Aktif'; }
-    if (String(row.Status).toLowerCase() !== 'aktif') { row.KodHash = ''; row.KodTamat = ''; }
+    if (em_(row.Status) !== 'aktif') { row.KodHash = ''; row.KodTamat = ''; }
     if (o) writeRow_(SH.PANEL, o._row, row); else append_(SH.PANEL, row);
     log_(o ? 'Kemas kini panel' : 'Tambah panel', p.nama + ' · ' + emel + ' · ' + row.Status);
     return true;
@@ -559,7 +563,7 @@ function apiSetSesiStatus(token, status) {
 function apiReopen(token, pid, emel) {
   need_('admin', token);
   return withLock_(function () {
-    const r = table_(SH.NILAI).rows.filter(function (x) { return Number(x.PemohonID) === Number(pid) && String(x.Emel).toLowerCase() === String(emel).toLowerCase(); })[0];
+    const r = table_(SH.NILAI).rows.filter(function (x) { return Number(x.PemohonID) === Number(pid) && em_(x.Emel) === em_(emel); })[0];
     if (!r) throw new Error('Penilaian tidak dijumpai.');
     r.Status = 'Draf';
     writeRow_(SH.NILAI, r._row, r);
@@ -623,26 +627,37 @@ function apiRefreshKeputusan(token) {
 /* ===================== Keputusan ===================== */
 
 function computeKeputusan_() {
-  const panels = table_(SH.PANEL).rows.filter(function (r) { return String(r.Peranan).toLowerCase() === 'panel' && String(r.Status).toLowerCase() === 'aktif'; });
-  const nilai = table_(SH.NILAI).rows.filter(function (r) { return r.Status === 'Dihantar'; });
+  const panels = table_(SH.PANEL).rows.filter(function (r) { return em_(r.Peranan) === 'panel' && em_(r.Status) === 'aktif'; });
+  const all = table_(SH.NILAI).rows;
+  const nilai = all.filter(sent_);
+  const draf = all.filter(function (r) { return !sent_(r); });
   const apps = apps_(false);
   const rows = apps.map(function (a) {
-    const sc = panels.map(function (p) {
-      const n = nilai.filter(function (r) { return Number(r.PemohonID) === a.id && String(r.Emel).toLowerCase() === String(p.Emel).toLowerCase(); })[0];
-      return n ? Number(n.Jumlah) : null;
-    });
+    const pick = function (list, p) {
+      return list.filter(function (r) { return Number(r.PemohonID) === a.id && em_(r.Emel) === em_(p.Emel); })[0];
+    };
+    const sc = panels.map(function (p) { const n = pick(nilai, p); return n ? Number(n.Jumlah) : null; });
+    const dr = panels.map(function (p) { const n = pick(draf, p); return n ? Number(n.Jumlah) || 0 : null; });
     const got = sc.filter(function (x) { return x !== null; });
     const avg = got.length ? got.reduce(function (x, y) { return x + y; }, 0) / got.length : null;
     const layak = nilai.filter(function (r) { return Number(r.PemohonID) === a.id && r.Layak === 'Ya'; }).length;
-    return { id: a.id, biz: a.biz, type: a.type, sc: sc, n: got.length, avg: avg, layak: layak, final: a.final, rank: null };
+    return { id: a.id, biz: a.biz, type: a.type, sc: sc, dr: dr, n: got.length, nd: dr.filter(function (x) { return x !== null; }).length,
+      avg: avg, layak: layak, final: a.final, rank: null };
   });
   const sorted = rows.filter(function (r) { return r.avg !== null; }).sort(function (x, y) { return y.avg - x.avg; });
   sorted.forEach(function (r, i) {
     r.rank = i > 0 && Math.abs(sorted[i - 1].avg - r.avg) < 1e-9 ? sorted[i - 1].rank : i + 1;
   });
   return {
-    panels: panels.map(function (p) { return { nama: p.Nama, emel: p.Emel }; }),
-    rows: rows.sort(function (x, y) { return (x.rank || 999) - (y.rank || 999); })
+    panels: panels.map(function (p) {
+      return {
+        nama: p.Nama, emel: p.Emel,
+        sent: nilai.filter(function (r) { return em_(r.Emel) === em_(p.Emel); }).length,
+        draf: draf.filter(function (r) { return em_(r.Emel) === em_(p.Emel); }).length
+      };
+    }),
+    rows: rows.sort(function (x, y) { return (x.rank || 999) - (y.rank || 999); }),
+    total: apps.length, at: Utilities.formatDate(new Date(), 'Asia/Kuala_Lumpur', 'HH:mm:ss')
   };
 }
 
@@ -650,10 +665,10 @@ function writeKeputusan_() {
   const k = computeKeputusan_();
   const sh = ss_().getSheetByName(SH.KEPUTUSAN) || ss_().insertSheet(SH.KEPUTUSAN);
   sh.clear();
-  const head = ['Rank', 'Perniagaan', 'Jenis'].concat(k.panels.map(function (p) { return p.nama; }), ['Dinilai', 'Purata (/100)', 'Layak (Ya)', 'Status Akhir']);
+  const head = ['Rank', 'Perniagaan', 'Jenis'].concat(k.panels.map(function (p) { return p.nama; }), ['Dinilai', 'Draf (belum hantar)', 'Purata (/100)', 'Layak (Ya)', 'Status Akhir']);
   const body = k.rows.map(function (r) {
     return [r.rank || '', r.biz, r.type].concat(r.sc.map(function (x) { return x === null ? '' : x; }),
-      [r.n + '/' + k.panels.length, r.avg === null ? '' : Math.round(r.avg * 100) / 100, r.layak, r.final || 'Belum']);
+      [r.n + '/' + k.panels.length, r.nd - 0, r.avg === null ? '' : Math.round(r.avg * 100) / 100, r.layak, r.final || 'Belum']);
   });
   sh.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold').setBackground('#8a2d3b').setFontColor('#ffffff').setWrap(true);
   if (body.length) sh.getRange(2, 1, body.length, head.length).setValues(body);

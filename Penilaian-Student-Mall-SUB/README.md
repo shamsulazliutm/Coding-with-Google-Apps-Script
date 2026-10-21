@@ -60,6 +60,7 @@ Peranan disemak semula pada setiap permintaan, jadi panel yang dinyahaktifkan te
 - **Catatan:** setiap kriteria ada ruang catatan (butang "+ Catatan"), selain catatan keseluruhan dan cip ulasan pantas. Admin melihat semua catatan dalam tab Keputusan (klik baris pemohon).
 - Draf disimpan automatik. **Hantar skor & kunci** mengunci penilaian; hanya admin boleh membukanya semula.
 - **Purata** panel dipaparkan dua tempat perpuluhan. Ranking daripada purata (purata sama berkongsi ranking). Status akhir ditetapkan admin.
+- Hanya penilaian yang telah **dihantar** ("Hantar skor & kunci") dikira dalam purata dan ranking. Draf ditunjukkan sebagai "draf" tetapi tidak dikira. Tab Keputusan memaparkan status setiap panel (dihantar/draf) dan dimuat semula automatik setiap 30 saat; butang **Muat semula** mengemas kini serta-merta.
 - Output ke sheet `Keputusan` dikemas kini automatik apabila penilaian dihantar, dibuka semula atau status akhir ditukar.
 - Rubrik disimpan mengikut versi. Versi baharu hanya boleh digunakan oleh sesi jika belum ada penilaian dihantar.
 - Semua suntingan penting direkodkan dalam sheet `Log`.
