@@ -39,6 +39,14 @@ Pengguna **hanya menaip kod OTP 8 digit**. Tiada e-mel atau kata laluan.
 - Kuota e-mel Apps Script: 1,500 sehari (Workspace) atau 100 sehari (Gmail biasa). Kebenaran menghantar e-mel diminta semasa menjalankan menu kali pertama.
 - Pautan web app terbuka kepada umum tetapi hanya menunjukkan skrin log masuk tanpa kod sah.
 
+## Admin memberi markah bagi pihak panel
+
+- **Tab Panel > "Nilai bagi panel"**, atau **tab Keputusan > klik pemohon > "Isi markah" / "Lihat / sunting"** bagi seorang panel.
+- Admin masuk ke paparan penilaian panel itu (dengan banner "Mod admin") dan memberi tahap, markah dan catatan seperti panel. Markah disimpan **atas nama panel itu** dan dikira dalam purata dan ranking.
+- Rekod ditanda "diisi oleh admin" (lajur `DiisiOleh`, lencana "admin" dalam Keputusan) dan direkodkan dalam sheet `Log`.
+- Penilaian yang sudah dihantar mesti dibuka semula dahulu ("Buka semula untuk disunting"). Admin boleh menilai walaupun sesi sudah ditutup.
+- Panel tidak boleh menggunakan fungsi ini.
+
 ## Peranan dan akses
 
 - **Panel** (sheet `Panel`, Peranan = Panel, Status = Aktif): hanya nampak maklumat calon (No. KP bertopeng) dan penilaian miliknya sendiri. Tiada panel lain atau keputusan dihantar kepada pelayar panel.

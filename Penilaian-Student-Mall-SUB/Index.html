@@ -210,6 +210,7 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
   .bar-b .btn-solid,.bar-b .btn-line{flex:1 1 45%;padding:13px 10px}
   .mk input{width:34px}
 }
+.asbar{background:var(--gold-soft);color:var(--fg);border-bottom:2px solid var(--gold);padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:14px}
 </style>
 </head>
 <body>
@@ -371,12 +372,13 @@ function panel() {
   <label class="chip" style="margin-bottom:12px"><input type="checkbox" id="mailit" checked> E-mel kod kepada panel secara automatik</label>
   ${codes ? `<div class="card detail"><h3>Kod OTP dijana <i>paparan sekali sahaja, sekali guna, sah 48 jam</i></h3><div class="tw"><table><thead><tr><th>Panel</th><th>Kod OTP</th><th>E-mel</th><th></th></tr></thead><tbody>${codes.map((c, i) => `<tr><td>${esc(c.nama)}<small>${esc(c.emel)}</small></td><td style="font-size:22px;font-weight:700;letter-spacing:.12em;font-variant-numeric:tabular-nums">${esc(c.code)}</td><td>${c.emailed ? '<span class="pill p-ok">dihantar</span>' : c.error ? `<span class="pill p-bad" title="${esc(c.error)}">gagal</span>` : '<span class="pill p-mute">tidak dihantar</span>'}</td><td class="num"><button class="btn-ghost cp" data-i="${i}">Salin</button></td></tr>`).join('')}</tbody></table></div><div class="foot"><button class="btn-ghost" id="hide">Sembunyikan kod</button></div></div>` : ''}
   <div class="card tw" style="margin-top:12px"><table><thead><tr><th>Nama</th><th>E-mel</th><th>Peranan</th><th>Status</th><th>Kod OTP</th><th></th></tr></thead><tbody>
-  ${D.panels.map((p, i) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(p.emel)}</td><td>${esc(p.peranan)}</td><td><span class="pill ${p.status === 'Aktif' ? 'p-ok' : 'p-mute'}">${esc(p.status)}</span></td><td>${p.kod ? `<span class="pill p-info">aktif hingga ${esc(p.kod)}</span>` : '<span class="note">tiada kod aktif</span>'}</td><td class="num">${p.status === 'Aktif' ? `<button class="btn-line ic" data-i="${i}">Jana OTP</button> ` : ''}${p.peranan.toLowerCase() === 'panel' ? `<button class="btn-ghost tg" data-i="${i}">${p.status === 'Aktif' ? 'Nyahaktif' : 'Aktifkan'}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>
+  ${D.panels.map((p, i) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(p.emel)}</td><td>${esc(p.peranan)}</td><td><span class="pill ${p.status === 'Aktif' ? 'p-ok' : 'p-mute'}">${esc(p.status)}</span></td><td>${p.kod ? `<span class="pill p-info">aktif hingga ${esc(p.kod)}</span>` : '<span class="note">tiada kod aktif</span>'}</td><td class="num">${p.status === 'Aktif' ? `<button class="btn-line ic" data-i="${i}">Jana OTP</button> ` : ''}${p.status === 'Aktif' && p.peranan.toLowerCase() === 'panel' ? `<button class="btn-solid as" data-i="${i}" style="padding:8px 12px">Nilai bagi panel</button> ` : ''}${p.peranan.toLowerCase() === 'panel' ? `<button class="btn-ghost tg" data-i="${i}">${p.status === 'Aktif' ? 'Nyahaktif' : 'Aktifkan'}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>
   <div class="card detail" id="addp" hidden><h3>Tambah panel</h3><div class="f"><label>Nama<input id="p_n"></label><label>E-mel<input id="p_e" type="email"></label></div><div class="foot"><button class="btn-solid" id="sp">Simpan</button></div></div>`;
   const mail = () => $('#mailit').checked;
   $('#ap').onclick = () => { $('#addp').hidden = false; $('#p_n').focus(); };
   $('#sp').onclick = () => act('apiSavePanel', 'Panel disimpan. Tekan "Jana OTP" untuk memberi kod.', { nama: $('#p_n').value.trim(), emel: $('#p_e').value.trim(), status: 'Aktif' });
   document.querySelectorAll('.tg').forEach(b => b.onclick = () => { const p = D.panels[+b.dataset.i]; act('apiSavePanel', 'Status dikemas kini', { nama: p.nama, emel: p.emel, status: p.status === 'Aktif' ? 'Tidak aktif' : 'Aktif' }); });
+  document.querySelectorAll('.as').forEach(b => b.onclick = () => enterAs(D.panels[+b.dataset.i].emel, 0 + (D.apps[0] ? D.apps[0].id : 0)));
   document.querySelectorAll('.ic').forEach(b => b.onclick = async () => { const p = D.panels[+b.dataset.i]; try { codes = [await rpc('apiIssueCode', p.emel, mail())]; toast(codes[0].emailed ? 'Kod dihantar ke e-mel' : 'Kod dijana'); await loadAdmin(); } catch (e) { toast(e.message, true); } });
   $('#ia').onclick = async () => { try { codes = await rpc('apiIssueAll', mail()); toast(codes.length + ' kod dijana'); await loadAdmin(); } catch (e) { toast(e.message, true); } };
   const hd = $('#hide'); if (hd) hd.onclick = () => { codes = null; panel(); };
@@ -411,8 +413,9 @@ function keputusan() {
 function kdetail(id) {
   openKey = id; const a = D.apps.find(x => x.id === id);
   $('#kd').innerHTML = `<div class="card detail"><h3>${esc(a.biz)} <i>markah setiap panel</i></h3><div class="tw"><table><thead><tr><th>Panel</th>${D.crit.map(c => `<th class="num">${c.id} /${c.max}</th>`).join('')}<th class="num">Jumlah</th><th>Layak</th><th>Ulasan</th><th></th></tr></thead><tbody>
-  ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return `<tr><td>${esc(short(p.nama))}</td>${n ? n.mk.map(m => `<td class="num">${m}</td>`).join('') : D.crit.map(() => '<td class="num">–</td>').join('')}<td class="num"><b>${n ? n.total : '–'}</b></td><td>${n ? esc(n.ok) : ''}</td><td>${n ? esc(n.cm) : ''}${n && n.status === 'Draf' ? ' <span class="pill p-warn">draf</span>' : ''}</td><td class="num">${n && n.status === 'Dihantar' ? `<button class="btn-ghost ro" data-e="${esc(p.emel)}">Buka semula</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
+  ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return `<tr><td>${esc(short(p.nama))}</td>${n ? n.mk.map(m => `<td class="num">${m}</td>`).join('') : D.crit.map(() => '<td class="num">–</td>').join('')}<td class="num"><b>${n ? n.total : '–'}</b></td><td>${n ? esc(n.ok) : ''}</td><td>${n ? esc(n.cm) : ''}${n && n.status === 'Draf' ? ' <span class="pill p-warn">draf</span>' : ''}</td><td class="num">${n && n.status === 'Dihantar' ? `<button class="btn-ghost ro" data-e="${esc(p.emel)}">Buka semula</button> ` : ''}<button class="btn-line asp" data-e="${esc(p.emel)}" style="padding:6px 10px">${n ? 'Lihat / sunting' : 'Isi markah'}</button>${n && n.by ? ' <span class="pill p-info" title="Diisi oleh admin">admin</span>' : ''}</td></tr>`; }).join('')}</tbody></table></div>
   ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); const l = n ? n.notes.map((t, i) => t ? `<li><b>${esc(short(p.nama))} · ${esc(D.crit[i].bm)}:</b> ${esc(t)}</li>` : '').join('') : ''; return l; }).join('') ? `<h3 style="margin-top:14px">Catatan setiap kriteria <i>Notes</i></h3><ul class="notes-list">${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return n ? n.notes.map((t, i) => t ? `<li><b>${esc(short(p.nama))} · ${esc(D.crit[i].bm)}:</b> ${esc(t)}</li>` : '').join('') : ''; }).join('')}</ul>` : ''}</div>`;
+  document.querySelectorAll('.asp').forEach(b => b.onclick = () => enterAs(b.dataset.e, id));
   document.querySelectorAll('.ro').forEach(b => b.onclick = () => armed(b, 'Sahkan', () => act('apiReopen', 'Penilaian dibuka semula', id, b.dataset.e)));
 }
 
@@ -422,11 +425,24 @@ function log() {
 
 /* ===================== PANEL (PENILAI) ===================== */
 let cur = 0, openAnch = null, openEls = false, openNote = {}, saveT = null, armSend = false, saving = '';
-async function loadPanel() {
-  D = await rpc('apiPanelData');
+let ACT_AS = null;   // e-mel panel yang sedang dinilai oleh admin (null = paparan panel biasa)
+function prepPanel() {
   D.apps.forEach(a => { const n = D.crit.length; if (!D.mine[a.id]) D.mine[a.id] = { lv: Array(n).fill(0), mk: Array(n).fill(0), els: [], cm: '', ok: '', status: 'Draf', notes: Array(n).fill('') }; const m = D.mine[a.id]; if (!m.notes || m.notes.length < n) m.notes = Array.from({ length: n }, (_, i) => (m.notes && m.notes[i]) || ''); });
+}
+async function loadPanel() {
+  D = await rpc('apiPanelData'); prepPanel();
   $('#whoR').textContent = 'Penilai / Evaluator' + (D.me.no ? ' · Panel ' + D.me.no : '');
   evalView();
+}
+const saveEv = (id, m, submit) => ACT_AS ? rpc('apiSaveEvalAs', ACT_AS, id, m, submit) : rpc('apiSaveEval', id, m, submit);
+/** Admin masuk ke paparan penilaian seorang panel untuk memberi markah bagi pihaknya. */
+async function enterAs(email, pid) {
+  try {
+    const d = await rpc('apiAdminEvalData', email);
+    ACT_AS = email; D = d; prepPanel();
+    cur = Math.max(0, D.apps.findIndex(x => x.id === pid)); openAnch = null; openEls = false; armSend = false; saving = '';
+    evalView(); window.scrollTo(0, 0);
+  } catch (e) { ACT_AS = null; toast(e.message, true); }
 }
 const tot = m => m.mk.reduce((a, b) => a + b, 0);
 function queueSave() {
@@ -434,17 +450,17 @@ function queueSave() {
   saving = 'Menyimpan…'; const s = $('#sv'); if (s) s.textContent = saving;
   clearTimeout(saveT);
   saveT = setTimeout(async () => {
-    try { await rpc('apiSaveEval', a.id, m, false); saving = 'Draf disimpan automatik / Draft saved'; } catch (e) { saving = 'Gagal menyimpan: ' + e.message; }
+    try { await saveEv(a.id, m, false); saving = 'Draf disimpan automatik / Draft saved'; } catch (e) { saving = 'Gagal menyimpan: ' + e.message; }
     const s2 = $('#sv'); if (s2) s2.textContent = saving;
   }, 900);
 }
 function evalView() {
   const y = window.scrollY;
-  const a = D.apps[cur], m = D.mine[a.id], closed = D.sesi.status !== 'Dibuka', lock = m.status === 'Dihantar' || closed;
+  const a = D.apps[cur], m = D.mine[a.id], closed = D.sesi.status !== 'Dibuka' && !ACT_AS, lock = m.status === 'Dihantar' || closed;
   const crit = D.crit, left = m.lv.filter(x => x < 1).length;
   const ready = left === 0 && !!m.ok;
   const stateTxt = lock ? '' : left ? `Lengkapkan ${left} kriteria lagi` : !m.ok ? 'Pilih sama ada pelajar layak' : 'Sedia dihantar';
-  app.innerHTML = `<div class="eval"><aside class="left">
+  app.innerHTML = `${ACT_AS ? `<div class="asbar"><span>🛡 <b>Mod admin:</b> anda memberi markah bagi <b>${esc(D.me.name)}</b>. Markah disimpan atas nama panel ini dan direkodkan dalam Log.${m.by ? ' <i>(diisi oleh admin)</i>' : ''}</span><button class="btn-line" id="back">← Kembali ke Admin</button></div>` : ''}<div class="eval"><aside class="left">
    <div class="cal"><span class="tag">Calon ${cur + 1} / ${D.apps.length}</span><span class="note">${a.slot ? 'Slot ' + esc(a.slot) : esc(D.sesi.tarikh) + ' · ' + esc(D.sesi.masa)}</span></div>
    <h2>${esc(a.biz)}</h2><p class="sub-note">${typePill(a.type)} ${esc(a.kind)}</p>
    <div class="card info">${a.st.map(s => `<dl class="kv" style="margin:0 0 10px"><dt>Nama pelajar</dt><dd>${esc(s.n)}</dd><dt>No. Matrik</dt><dd>${esc(s.m)}</dd><dt>No. KP</dt><dd>${esc(s.kp)}</dd><dt>Tahun</dt><dd>${esc(s.yr)}</dd><dt>Fakulti</dt><dd>${esc(s.fac)}</dd><dt>Kursus</dt><dd>${esc(s.course)}</dd><dt>CGPA</dt><dd>${s.cgpa.toFixed(2)}</dd></dl>`).join('')}
@@ -455,7 +471,7 @@ function evalView() {
   </aside><section>
    <div class="head" style="margin-bottom:4px"><div><h2 style="font-size:22px">Penilaian <span class="note" style="font-weight:400">Evaluation · pilih tahap, laras markah jika perlu</span></h2></div></div>
    <p class="legend">Tahap: 5 Cemerlang · 4 Baik · 3 Memuaskan · 2 Kurang · 1 Lemah</p>
-   ${m.status === 'Dihantar' ? '<div class="lock">Skor telah dihantar dan dikunci. Hubungi admin untuk membuka semula.</div>' : closed ? '<div class="lock" style="background:var(--warn-soft);color:var(--warn)">Sesi telah ditutup.</div>' : ''}
+   ${m.status === 'Dihantar' ? (ACT_AS ? '<div class="lock">Skor telah dihantar dan dikunci. <button class="btn-line" id="reopen" style="margin-left:8px;padding:5px 12px">Buka semula untuk disunting</button></div>' : '<div class="lock">Skor telah dihantar dan dikunci. Hubungi admin untuk membuka semula.</div>') : closed ? '<div class="lock" style="background:var(--warn-soft);color:var(--warn)">Sesi telah ditutup.</div>' : ''}
    ${crit.map((c, i) => {
      const noteOn = !!openNote[a.id + '-' + i];
      return `<div class="crit"><div class="ct"><h4>${esc(c.bm)} <button data-an="${i}" aria-label="Panduan tahap ${esc(c.bm)}" title="Panduan tahap">ⓘ</button></h4><small>${esc(c.en)} · /${c.max}</small>
@@ -480,6 +496,8 @@ function evalView() {
   window.scrollTo(0, y);
   const go = d => { cur += d; openAnch = null; openEls = false; armSend = false; saving = ''; evalView(); window.scrollTo(0, 0); };
   $('#pv').onclick = () => go(-1); $('#nx').onclick = () => go(1);
+  const bk = $('#back'); if (bk) bk.onclick = async () => { ACT_AS = null; clearTimeout(saveT); cur = 0; await loadAdmin(); };
+  const ro = $('#reopen'); if (ro) ro.onclick = async () => { try { await rpc('apiReopen', a.id, ACT_AS); toast('Dibuka semula'); await enterAs(ACT_AS, a.id); } catch (e) { toast(e.message, true); } };
   app.querySelectorAll('[data-an]').forEach(b => b.onclick = () => { openAnch = openAnch === +b.dataset.an ? null : +b.dataset.an; evalView(); });
   app.querySelectorAll('[data-elx]').forEach(b => b.onclick = () => { openEls = !openEls; evalView(); });
   app.querySelectorAll('[data-nt]').forEach(b => b.onclick = () => { const k = a.id + '-' + b.dataset.nt; openNote[k] = !(openNote[k]); evalView(); });
@@ -490,13 +508,13 @@ function evalView() {
   app.querySelectorAll('[data-chip]').forEach(c => c.onclick = () => { const t = D.chips[+c.dataset.chip]; m.cm = (m.cm ? m.cm + '; ' : '') + t; queueSave(); evalView(); });
   const cm = $('#cm'); if (cm) cm.oninput = e => { m.cm = e.target.value; queueSave(); };
   app.querySelectorAll('[name=ok]').forEach(r => r.onchange = () => { m.ok = r.value; armSend = false; queueSave(); evalView(); });
-  const dr = $('#draft'); if (dr) dr.onclick = async () => { clearTimeout(saveT); try { await rpc('apiSaveEval', a.id, m, false); saving = 'Draf disimpan / Draft saved'; toast('Draf disimpan'); } catch (e) { toast(e.message, true); } const s = $('#sv'); if (s) s.textContent = saving; };
+  const dr = $('#draft'); if (dr) dr.onclick = async () => { clearTimeout(saveT); try { await saveEv(a.id, m, false); saving = 'Draf disimpan / Draft saved'; toast('Draf disimpan'); } catch (e) { toast(e.message, true); } const s = $('#sv'); if (s) s.textContent = saving; };
   $('#send').onclick = async () => {
     if (left) return toast('Pilih tahap bagi ' + left + ' kriteria lagi', true);
     if (!m.ok) return toast('Pilih sama ada pelajar layak', true);
     if (!armSend) { armSend = true; evalView(); return; }
     clearTimeout(saveT);
-    try { D.mine[a.id] = await rpc('apiSaveEval', a.id, m, true); toast('Skor dihantar dan dikunci'); } catch (e) { toast(e.message, true); }
+    try { D.mine[a.id] = await saveEv(a.id, m, true); toast('Skor dihantar dan dikunci'); } catch (e) { toast(e.message, true); }
     armSend = false; evalView();
   };
 }

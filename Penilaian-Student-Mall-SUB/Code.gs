@@ -25,7 +25,7 @@ const HEAD = {
   Chip: ['Teks'],
   Penilaian: ['PemohonID', 'Emel', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
     'Elemen', 'Ulasan', 'Layak', 'Jumlah', 'Status', 'Dikemaskini',
-    'Catatan1', 'Catatan2', 'Catatan3', 'Catatan4', 'Catatan5', 'Catatan6'],
+    'Catatan1', 'Catatan2', 'Catatan3', 'Catatan4', 'Catatan5', 'Catatan6', 'DiisiOleh'],
   Log: ['Masa', 'Pengguna', 'Tindakan', 'Butiran']
 };
 const NCRIT = 6;
@@ -321,7 +321,7 @@ function evalRow_(r) {
   return {
     pid: Number(r.PemohonID), email: r.Emel, lv: lv, mk: mk,
     els: r.Elemen ? String(r.Elemen).split(',').map(function (x) { return x === '1'; }) : [],
-    cm: r.Ulasan || '', ok: r.Layak || '', total: Number(r.Jumlah) || 0, status: r.Status || 'Draf',
+    by: r.DiisiOleh || '', cm: r.Ulasan || '', ok: r.Layak || '', total: Number(r.Jumlah) || 0, status: r.Status || 'Draf',
     notes: [1, 2, 3, 4, 5, 6].map(function (i) { return String(r['Catatan' + i] || ''); })
   };
 }
@@ -335,8 +335,7 @@ function apiBoot(token) {
 
 /* ===================== API: panel ===================== */
 
-function apiPanelData(token) {
-  const u = need_('panel', token);
+function panelData_(u) {
   const s = sesi_();
   const mine = {};
   table_(SH.NILAI).rows.filter(function (r) { return String(r.Emel).toLowerCase() === u.email; })
@@ -346,17 +345,42 @@ function apiPanelData(token) {
   return { me: u, sesi: s, crit: rubrik_(s.versi), chips: chips_(), apps: apps_(true), mine: mine };
 }
 
+function apiPanelData(token) {
+  return panelData_(need_('panel', token));
+}
+
+/** Admin masuk ke paparan penilaian seorang panel (untuk memberi markah bagi pihak panel itu). */
+function targetPanel_(emel) {
+  const t = roleOf_(emel);
+  if (!t || t.role !== 'panel') throw new Error('Panel tidak aktif atau tiada dalam senarai.');
+  return t;
+}
+
+function apiAdminEvalData(token, emel) {
+  need_('admin', token);
+  return panelData_(targetPanel_(emel));
+}
+
 function apiSaveEval(token, pid, p, submit) {
-  const u = need_('panel', token);
+  return saveEval_(need_('panel', token), pid, p, submit, false);
+}
+
+function apiSaveEvalAs(token, emel, pid, p, submit) {
+  need_('admin', token);
+  return saveEval_(targetPanel_(emel), pid, p, submit, true);
+}
+
+/** Teras simpan penilaian. byAdmin=true: admin bertindak bagi pihak panel (sesi tertutup tidak menghalang, dan direkodkan). */
+function saveEval_(u, pid, p, submit, byAdmin) {
   return withLock_(function () {
     const s = sesi_();
-    if (s.status !== 'Dibuka') throw new Error('Sesi telah ditutup.');
+    if (s.status !== 'Dibuka' && !byAdmin) throw new Error('Sesi telah ditutup.');
     const app = apps_(true).filter(function (a) { return a.id === Number(pid); })[0];
     if (!app) throw new Error('Permohonan tidak sah.');
     const crit = rubrik_(s.versi);
     const t = table_(SH.NILAI);
     const old = t.rows.filter(function (r) { return Number(r.PemohonID) === Number(pid) && String(r.Emel).toLowerCase() === u.email; })[0];
-    if (old && old.Status === 'Dihantar') throw new Error('Penilaian ini telah dihantar dan dikunci.');
+    if (old && old.Status === 'Dihantar') throw new Error('Penilaian ini telah dihantar dan dikunci.' + (byAdmin ? ' Buka semula dahulu.' : ''));
 
     const row = { PemohonID: Number(pid), Emel: u.email };
     let total = 0;
@@ -376,8 +400,14 @@ function apiSaveEval(token, pid, p, submit) {
     row.Jumlah = total;
     row.Status = submit ? 'Dihantar' : 'Draf';
     row.Dikemaskini = new Date();
+    row.DiisiOleh = byAdmin ? ACTOR_ : '';
     if (old) writeRow_(SH.NILAI, old._row, row); else append_(SH.NILAI, row);
-    if (submit) { log_('Hantar penilaian', app.biz + ' · ' + u.email + ' · ' + total + '/100'); writeKeputusan_(); }
+    if (submit) {
+      log_(byAdmin ? 'Admin hantar penilaian bagi panel' : 'Hantar penilaian', app.biz + ' · ' + u.email + ' · ' + total + '/100');
+      writeKeputusan_();
+    } else if (byAdmin && !old) {
+      log_('Admin mula menilai bagi panel', app.biz + ' · ' + u.email);
+    }
     return evalRow_(row);
   });
 }
