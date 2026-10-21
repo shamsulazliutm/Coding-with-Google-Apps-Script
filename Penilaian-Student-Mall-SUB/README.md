@@ -17,10 +17,18 @@ Web app Google Apps Script dengan rekod disimpan dalam Google Sheets.
    Sheet berikut dicipta: `Panel`, `Pemohon`, `Pelajar`, `Sesi`, `Rubrik`, `Chip`, `Penilaian`, `Keputusan`, `Log`.
 4. **Deploy > New deployment > Web app**
    - Execute as: **Me** (pemilik skrip)
-   - Who has access: **Anyone within UTM** (domain)
-5. Kongsikan pautan web app kepada panel. Setiap panel log masuk dengan e-mel UTM yang tersenarai dalam sheet `Panel`.
+   - Who has access: **Anyone**
+5. Kongsikan pautan web app kepada panel.
 
-> `Session.getActiveUser().getEmail()` hanya memulangkan e-mel pengguna jika pengguna berada dalam domain yang sama dengan pemilik skrip. Semua panel menggunakan e-mel `@utm.my`, jadi pemilik skrip mesti juga akaun `@utm.my`.
+## Log masuk OTP
+
+- Pengguna memasukkan e-mel, dan sistem menghantar **kod OTP 6 digit** ke e-mel itu melalui `MailApp`. Kod sah 10 minit.
+- Hanya e-mel yang ada dalam sheet `Panel` (Status = Aktif) dan admin `utmxcite@utm.my` menerima kod. Jawapan skrin sentiasa sama untuk e-mel berdaftar atau tidak, supaya senarai panel tidak terdedah.
+- Had: 3 permintaan kod setiap e-mel dalam 10 minit, 5 cubaan salah bagi satu kod, dan kod hanya boleh digunakan sekali.
+- Selepas berjaya, pengguna mendapat sesi 6 jam. Peranan disemak semula pada setiap permintaan, jadi panel yang dinyahaktifkan terus ditolak.
+- Tiada akaun Google diperlukan, jadi panel **bukan @utm.my** juga boleh menilai: tambah e-melnya dalam tab Panel.
+- Kuota e-mel Apps Script: sehingga 1,500 e-mel sehari bagi akaun Workspace (100 bagi akaun Gmail biasa). Kebenaran menghantar e-mel diminta semasa kali pertama menjalankan "Sediakan sheet".
+- Pautan web app yang terbuka kepada umum hanya menunjukkan skrin log masuk. Semua data dilindungi oleh token sesi di pelayan.
 
 ## Peranan dan akses
 

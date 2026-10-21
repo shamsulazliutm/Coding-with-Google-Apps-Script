@@ -4,7 +4,8 @@
  * FAIL 1 daripada 2 (Code.gs): pelayan + penyediaan sheet. Fail 2: Index.html (antara muka).
  *
  * Skrip terikat (bound) pada satu Google Sheet. Web app dilaksanakan sebagai pemilik skrip
- * (executeAs USER_DEPLOYING, akses DOMAIN) dan pengguna dikenal pasti melalui e-mel Google.
+ * (Execute as: Me, akses: Anyone). Pengguna log masuk dengan kod OTP 6 digit yang dihantar ke e-mel
+ * berdaftar dalam sheet Panel, dan menerima token sesi. Tiada akaun Google diperlukan.
  * Panel hanya menerima data dan penilaian miliknya; admin menerima semuanya.
  */
 
@@ -27,6 +28,11 @@ const HEAD = {
   Log: ['Masa', 'Pengguna', 'Tindakan', 'Butiran']
 };
 const NCRIT = 6;
+const OTP_TTL = 600;        // kod OTP sah 10 minit
+const OTP_TRIES = 5;        // maksimum cubaan salah bagi satu kod
+const OTP_REQ_MAX = 3;      // maksimum permintaan kod bagi satu e-mel dalam 10 minit
+const SESSION_TTL = 21600;  // sesi log masuk 6 jam (had maksimum CacheService)
+let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
 /* ===================== Titik masuk ===================== */
 
@@ -80,7 +86,7 @@ function writeRow_(name, rowNo, obj) {
 }
 
 function log_(action, detail) {
-  append_(SH.LOG, { Masa: new Date(), Pengguna: (Session.getActiveUser().getEmail() || ''), Tindakan: action, Butiran: detail || '' });
+  append_(SH.LOG, { Masa: new Date(), Pengguna: ACTOR_, Tindakan: action, Butiran: detail || '' });
 }
 
 function withLock_(fn) {
@@ -91,20 +97,102 @@ function withLock_(fn) {
 
 /* ===================== Pengguna dan peranan ===================== */
 
-function me_() {
-  const email = (Session.getActiveUser().getEmail() || '').toLowerCase();
-  if (!email) return { email: '', role: 'none', name: '' };
+function roleOf_(email) {
+  email = String(email || '').trim().toLowerCase();
+  if (!email) return null;
   const p = table_(SH.PANEL).rows.filter(function (r) { return String(r.Emel).toLowerCase() === email; })[0];
   const aktif = p && String(p.Status).toLowerCase() === 'aktif';
   if (email === ADMIN_EMAIL) return { email: email, role: 'admin', name: p ? p.Nama : 'Admin' };
   if (p && aktif) return { email: email, role: String(p.Peranan).toLowerCase() === 'admin' ? 'admin' : 'panel', name: p.Nama };
-  return { email: email, role: 'none', name: '' };
+  return null;
 }
 
-function need_(role) {
-  const u = me_();
+/** Pengguna semasa daripada token sesi. Peranan disemak semula pada setiap permintaan. */
+function me_(token) {
+  const none = { email: '', role: 'none', name: '' };
+  if (!token) return none;
+  const em = CacheService.getScriptCache().get('sess:' + hash_(token));
+  const r = em ? roleOf_(em) : null;
+  if (!r) return none;
+  ACTOR_ = r.email;
+  return r;
+}
+
+function need_(role, token) {
+  const u = me_(token);
+  if (!u.email) throw new Error('SESI_TAMAT');
   if (u.role !== role) throw new Error('Akses ditolak.');
   return u;
+}
+
+/* ===================== Log masuk OTP ===================== */
+
+function secret_() {
+  const props = PropertiesService.getScriptProperties();
+  let v = props.getProperty('OTP_SECRET');
+  if (!v) { v = Utilities.getUuid() + Utilities.getUuid(); props.setProperty('OTP_SECRET', v); }
+  return v;
+}
+
+function hash_(text) {
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text + secret_()));
+}
+
+function randomCode_() {
+  const n = parseInt(Utilities.getUuid().replace(/-/g, '').slice(0, 8), 16) % 1000000;
+  return ('000000' + n).slice(-6);
+}
+
+/** Langkah 1: minta kod. Jawapan sama sama ada e-mel berdaftar atau tidak. */
+function apiRequestOtp(email) {
+  const em = String(email || '').trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) throw new Error('E-mel tidak sah.');
+  return withLock_(function () {
+    const cache = CacheService.getScriptCache();
+    const n = Number(cache.get('otpreq:' + em) || 0);
+    if (n >= OTP_REQ_MAX) throw new Error('Terlalu banyak permintaan kod. Cuba lagi dalam 10 minit.');
+    cache.put('otpreq:' + em, String(n + 1), 600);
+    if (roleOf_(em)) {
+      const code = randomCode_();
+      cache.put('otp:' + em, JSON.stringify({ h: hash_(code + em), t: 0 }), OTP_TTL);
+      MailApp.sendEmail({
+        to: em, name: 'UTMPreneur Penilaian',
+        subject: 'Kod OTP anda: ' + code,
+        body: 'Kod OTP untuk log masuk sistem Penilaian Student Mall & SUB (UTMPreneur):\n\n    ' + code +
+          '\n\nKod sah selama 10 minit. Jangan kongsikan kod ini. Abaikan e-mel ini jika anda tidak memintanya.'
+      });
+    }
+    return { ok: true };
+  });
+}
+
+/** Langkah 2: sahkan kod dan terima token sesi. */
+function apiVerifyOtp(email, code) {
+  const em = String(email || '').trim().toLowerCase();
+  return withLock_(function () {
+    const cache = CacheService.getScriptCache();
+    const rec = JSON.parse(cache.get('otp:' + em) || 'null');
+    if (!rec) throw new Error('Kod tamat tempoh atau tidak sah. Minta kod baharu.');
+    if (rec.t >= OTP_TRIES) { cache.remove('otp:' + em); throw new Error('Terlalu banyak cubaan. Minta kod baharu.'); }
+    if (hash_(String(code || '').trim() + em) !== rec.h) {
+      rec.t++;
+      cache.put('otp:' + em, JSON.stringify(rec), OTP_TTL);
+      throw new Error('Kod tidak betul. Baki cubaan: ' + (OTP_TRIES - rec.t) + '.');
+    }
+    cache.remove('otp:' + em);
+    const r = roleOf_(em);
+    if (!r) throw new Error('Akaun tidak aktif.');
+    const token = Utilities.getUuid() + Utilities.getUuid();
+    cache.put('sess:' + hash_(token), em, SESSION_TTL);
+    ACTOR_ = em;
+    log_('Log masuk', r.role);
+    return { token: token, me: r };
+  });
+}
+
+function apiLogout(token) {
+  if (token) CacheService.getScriptCache().remove('sess:' + hash_(token));
+  return true;
 }
 
 /* ===================== Data rujukan ===================== */
@@ -166,15 +254,15 @@ function evalRow_(r) {
 
 /* ===================== API: umum ===================== */
 
-function apiBoot() {
-  const u = me_();
+function apiBoot(token) {
+  const u = me_(token);
   return { me: u, admin: ADMIN_EMAIL, logo: LOGO_URL };
 }
 
 /* ===================== API: panel ===================== */
 
-function apiPanelData() {
-  const u = need_('panel');
+function apiPanelData(token) {
+  const u = need_('panel', token);
   const s = sesi_();
   const mine = {};
   table_(SH.NILAI).rows.filter(function (r) { return String(r.Emel).toLowerCase() === u.email; })
@@ -182,8 +270,8 @@ function apiPanelData() {
   return { me: u, sesi: s, crit: rubrik_(s.versi), chips: chips_(), apps: apps_(true), mine: mine };
 }
 
-function apiSaveEval(pid, p, submit) {
-  const u = need_('panel');
+function apiSaveEval(token, pid, p, submit) {
+  const u = need_('panel', token);
   return withLock_(function () {
     const s = sesi_();
     if (s.status !== 'Dibuka') throw new Error('Sesi telah ditutup.');
@@ -219,8 +307,8 @@ function apiSaveEval(pid, p, submit) {
 
 /* ===================== API: admin ===================== */
 
-function apiAdminData() {
-  need_('admin');
+function apiAdminData(token) {
+  need_('admin', token);
   const s = sesi_();
   const nilai = table_(SH.NILAI).rows.map(evalRow_);
   return {
@@ -234,8 +322,8 @@ function apiAdminData() {
   };
 }
 
-function apiSaveApp(a) {
-  need_('admin');
+function apiSaveApp(token, a) {
+  need_('admin', token);
   return withLock_(function () {
     const t = table_(SH.PEMOHON);
     let id = Number(a.id);
@@ -265,8 +353,8 @@ function apiSaveApp(a) {
   });
 }
 
-function apiSavePanel(p) {
-  need_('admin');
+function apiSavePanel(token, p) {
+  need_('admin', token);
   return withLock_(function () {
     const emel = String(p.emel || '').trim().toLowerCase();
     if (!p.nama || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emel)) throw new Error('Nama dan e-mel sah diperlukan.');
@@ -280,8 +368,8 @@ function apiSavePanel(p) {
   });
 }
 
-function apiSaveSesi(s) {
-  need_('admin');
+function apiSaveSesi(token, s) {
+  need_('admin', token);
   return withLock_(function () {
     const cur = sesi_();
     const row = { Nama: s.nama, Tarikh: s.tarikh, Masa: s.masa, RubrikVersi: cur.versi, Status: cur.status };
@@ -295,8 +383,8 @@ function apiSaveSesi(s) {
   });
 }
 
-function apiSetSesiStatus(status) {
-  need_('admin');
+function apiSetSesiStatus(token, status) {
+  need_('admin', token);
   if (status !== 'Dibuka' && status !== 'Ditutup') throw new Error('Status tidak sah.');
   return withLock_(function () {
     const cur = sesi_();
@@ -306,8 +394,8 @@ function apiSetSesiStatus(status) {
   });
 }
 
-function apiReopen(pid, emel) {
-  need_('admin');
+function apiReopen(token, pid, emel) {
+  need_('admin', token);
   return withLock_(function () {
     const r = table_(SH.NILAI).rows.filter(function (x) { return Number(x.PemohonID) === Number(pid) && String(x.Emel).toLowerCase() === String(emel).toLowerCase(); })[0];
     if (!r) throw new Error('Penilaian tidak dijumpai.');
@@ -319,8 +407,8 @@ function apiReopen(pid, emel) {
   });
 }
 
-function apiSetStatusAkhir(pid, status) {
-  need_('admin');
+function apiSetStatusAkhir(token, pid, status) {
+  need_('admin', token);
   return withLock_(function () {
     const r = table_(SH.PEMOHON).rows.filter(function (x) { return Number(x.ID) === Number(pid); })[0];
     if (!r) throw new Error('Permohonan tidak dijumpai.');
@@ -333,8 +421,8 @@ function apiSetStatusAkhir(pid, status) {
 }
 
 /** Simpan rubrik sebagai versi baharu. useNow=true menukar sesi kepada versi baharu (hanya jika tiada penilaian dihantar). */
-function apiSaveRubrik(crit, chips, useNow) {
-  need_('admin');
+function apiSaveRubrik(token, crit, chips, useNow) {
+  need_('admin', token);
   return withLock_(function () {
     let total = 0;
     crit.forEach(function (c) {
@@ -364,8 +452,8 @@ function apiSaveRubrik(crit, chips, useNow) {
   });
 }
 
-function apiRefreshKeputusan() {
-  need_('admin');
+function apiRefreshKeputusan(token) {
+  need_('admin', token);
   writeKeputusan_();
   return true;
 }
