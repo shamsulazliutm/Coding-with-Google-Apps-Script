@@ -24,7 +24,8 @@ const HEAD = {
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
   Chip: ['Teks'],
   Penilaian: ['PemohonID', 'Emel', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
-    'Elemen', 'Ulasan', 'Layak', 'Jumlah', 'Status', 'Dikemaskini'],
+    'Elemen', 'Ulasan', 'Layak', 'Jumlah', 'Status', 'Dikemaskini',
+    'Catatan1', 'Catatan2', 'Catatan3', 'Catatan4', 'Catatan5', 'Catatan6'],
   Log: ['Masa', 'Pengguna', 'Tindakan', 'Butiran']
 };
 const NCRIT = 6;
@@ -65,9 +66,14 @@ function table_(name) {
   if (!sh) throw new Error('Sheet "' + name + '" tiada. Jalankan menu Penilaian > Sediakan sheet.');
   const v = sh.getDataRange().getValues();
   const head = v.shift();
+  const want = HEAD[name];
+  if (want && head.length < want.length) { // sheet versi lama: tambah lajur baharu di hujung
+    sh.getRange(1, head.length + 1, 1, want.length - head.length).setValues([want.slice(head.length)]);
+    want.slice(head.length).forEach(function (k) { head.push(k); });
+  }
   const rows = v.map(function (r, i) {
     const o = { _row: i + 2 };
-    head.forEach(function (k, j) { o[k] = r[j]; });
+    head.forEach(function (k, j) { o[k] = r[j] === undefined ? '' : r[j]; });
     return o;
   }).filter(function (o) { return head.some(function (k) { return o[k] !== '' && o[k] !== null; }); });
   return { sh: sh, head: head, rows: rows };
@@ -248,7 +254,8 @@ function evalRow_(r) {
   return {
     pid: Number(r.PemohonID), email: r.Emel, lv: lv, mk: mk,
     els: r.Elemen ? String(r.Elemen).split(',').map(function (x) { return x === '1'; }) : [],
-    cm: r.Ulasan || '', ok: r.Layak || '', total: Number(r.Jumlah) || 0, status: r.Status || 'Draf'
+    cm: r.Ulasan || '', ok: r.Layak || '', total: Number(r.Jumlah) || 0, status: r.Status || 'Draf',
+    notes: [1, 2, 3, 4, 5, 6].map(function (i) { return String(r['Catatan' + i] || ''); })
   };
 }
 
@@ -267,6 +274,8 @@ function apiPanelData(token) {
   const mine = {};
   table_(SH.NILAI).rows.filter(function (r) { return String(r.Emel).toLowerCase() === u.email; })
     .forEach(function (r) { mine[Number(r.PemohonID)] = evalRow_(r); });
+  const aktif = table_(SH.PANEL).rows.filter(function (r) { return String(r.Peranan).toLowerCase() === 'panel' && String(r.Status).toLowerCase() === 'aktif'; });
+  u.no = aktif.map(function (r) { return String(r.Emel).toLowerCase(); }).indexOf(u.email) + 1;
   return { me: u, sesi: s, crit: rubrik_(s.versi), chips: chips_(), apps: apps_(true), mine: mine };
 }
 
@@ -295,6 +304,7 @@ function apiSaveEval(token, pid, p, submit) {
     if (submit && p.ok !== 'Ya' && p.ok !== 'Tidak') throw new Error('Pilih sama ada pelajar layak.');
     row.Elemen = (p.els || []).map(function (x) { return x ? 1 : 0; }).join(',');
     row.Ulasan = String(p.cm || '').slice(0, 2000);
+    for (let i = 1; i <= NCRIT; i++) row['Catatan' + i] = String((p.notes && p.notes[i - 1]) || '').slice(0, 1000);
     row.Layak = p.ok === 'Ya' || p.ok === 'Tidak' ? p.ok : '';
     row.Jumlah = total;
     row.Status = submit ? 'Dihantar' : 'Draf';

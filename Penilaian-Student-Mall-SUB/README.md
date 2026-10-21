@@ -40,6 +40,7 @@ Web app Google Apps Script dengan rekod disimpan dalam Google Sheets.
 
 - 6 kriteria, jumlah **100 markah** (10 / 20 / 20 / 20 / 20 / 10). Maksimum boleh diubah di tab Rubrik, jumlahnya mesti 100.
 - Panel memilih **tahap 1–5**, markah = tahap ÷ 5 × maksimum, dan boleh melaraskan markah (**nombor bulat**, 0 hingga maksimum). Pelayan mengesahkan semula setiap markah.
+- **Catatan:** setiap kriteria ada ruang catatan (butang "+ Catatan"), selain catatan keseluruhan dan cip ulasan pantas. Admin melihat semua catatan dalam tab Keputusan (klik baris pemohon).
 - Draf disimpan automatik. **Hantar skor & kunci** mengunci penilaian; hanya admin boleh membukanya semula.
 - **Purata** panel dipaparkan dua tempat perpuluhan. Ranking daripada purata (purata sama berkongsi ranking). Status akhir ditetapkan admin.
 - Output ke sheet `Keputusan` dikemas kini automatik apabila penilaian dihantar, dibuka semula atau status akhir ditukar.
@@ -53,3 +54,7 @@ Tetapkan `LOGO_URL` di atas `Code.gs` kepada URL atau `data:` URI imej logo UTM/
 ## Data
 
 Dalam `Code.gs` (fungsi `setupSheets`), 6 permohonan (Marzmell, Nanel, Cheval, Voltro, The Cube, Majora) dan pautan pelan perniagaan Drive diisi awal daripada fail penilaian sedia ada. Marzmell ialah SUB dengan dua pelajar.
+
+## Kemas kini daripada versi lama
+
+Sheet `Penilaian` versi lama dilanjutkan secara automatik dengan lajur `Catatan1`–`Catatan6` apabila sistem dibuka. Data lama tidak terjejas.
