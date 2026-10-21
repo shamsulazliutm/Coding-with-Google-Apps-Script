@@ -17,7 +17,7 @@ const SH = {
   RUBRIK: 'Rubrik', CHIP: 'Chip', NILAI: 'Penilaian', KEPUTUSAN: 'Keputusan', LOG: 'Log'
 };
 const HEAD = {
-  Panel: ['Nama', 'Emel', 'Peranan', 'Status'],
+  Panel: ['Nama', 'Emel', 'Peranan', 'Status', 'KodHash', 'KodTamat'],
   Pemohon: ['ID', 'Perniagaan', 'Jenis', 'SSM', 'JenisPerniagaan', 'PautanPelan', 'Slot', 'Susunan', 'StatusAkhir'],
   Pelajar: ['PemohonID', 'Nama', 'Matrik', 'KP', 'Tahun', 'Fakulti', 'Kursus', 'CGPA'],
   Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status'],
@@ -29,10 +29,10 @@ const HEAD = {
   Log: ['Masa', 'Pengguna', 'Tindakan', 'Butiran']
 };
 const NCRIT = 6;
-const OTP_TTL = 600;        // kod OTP sah 10 minit
-const OTP_TRIES = 5;        // maksimum cubaan salah bagi satu kod
-const OTP_REQ_MAX = 3;      // maksimum permintaan kod bagi satu e-mel dalam 10 minit
-const SESSION_TTL = 21600;  // sesi log masuk 6 jam (had maksimum CacheService)
+const CODE_LEN = 8;          // panjang kod OTP (digit)
+const CODE_TTL_HOURS = 48;   // kod sah sehingga digunakan, atau sehingga tempoh ini tamat
+const LOGIN_FAILS = 30;      // maksimum cubaan kod salah (seluruh sistem) dalam 10 minit
+const SESSION_TTL = 21600;   // sesi log masuk 6 jam (had maksimum CacheService)
 let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
 /* ===================== Titik masuk ===================== */
@@ -47,6 +47,9 @@ function doGet() {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Penilaian')
     .addItem('Sediakan sheet (kali pertama)', 'setupSheets')
+    .addItem('Jana kod OTP admin', 'menuIssueAdmin')
+    .addItem('Jana & e-mel kod OTP semua panel', 'menuIssueAll')
+    .addItem('Buka kunci log masuk', 'menuUnlock')
     .addItem('Kemas kini tab Keputusan', 'refreshKeputusan')
     .addToUi();
 }
@@ -131,7 +134,9 @@ function need_(role, token) {
   return u;
 }
 
-/* ===================== Log masuk OTP ===================== */
+/* ===================== Log masuk dengan kod OTP ===================== */
+/* Admin menjana kod OTP bagi setiap panel (tab Panel) dan kod dihantar ke e-mel panel.
+ * Panel hanya menaip kod. Kod disimpan sebagai hash, sah sekali sahaja dan tamat tempoh. */
 
 function secret_() {
   const props = PropertiesService.getScriptProperties();
@@ -145,52 +150,75 @@ function hash_(text) {
 }
 
 function randomCode_() {
-  const n = parseInt(Utilities.getUuid().replace(/-/g, '').slice(0, 8), 16) % 1000000;
-  return ('000000' + n).slice(-6);
+  const hex = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+  const n = parseInt(hex, 16) % Math.pow(10, CODE_LEN);
+  return ('00000000000' + n).slice(-CODE_LEN);
 }
 
-/** Langkah 1: minta kod. Jawapan sama sama ada e-mel berdaftar atau tidak. */
-function apiRequestOtp(email) {
-  const em = String(email || '').trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) throw new Error('E-mel tidak sah.');
-  return withLock_(function () {
-    const cache = CacheService.getScriptCache();
-    const n = Number(cache.get('otpreq:' + em) || 0);
-    if (n >= OTP_REQ_MAX) throw new Error('Terlalu banyak permintaan kod. Cuba lagi dalam 10 minit.');
-    cache.put('otpreq:' + em, String(n + 1), 600);
-    if (roleOf_(em)) {
-      const code = randomCode_();
-      cache.put('otp:' + em, JSON.stringify({ h: hash_(code + em), t: 0 }), OTP_TTL);
+function groupCode_(c) { return c.replace(/(\d{4})(?=\d)/g, '$1 '); }
+
+/** Jana kod baharu bagi satu e-mel. Kod lama dibatalkan. Dipulangkan sekali sahaja. */
+function issueCode_(emel, sendMail) {
+  const em = String(emel).trim().toLowerCase();
+  const t = table_(SH.PANEL);
+  const row = t.rows.filter(function (r) { return String(r.Emel).toLowerCase() === em; })[0];
+  if (!row || String(row.Status).toLowerCase() !== 'aktif') throw new Error('Panel tidak aktif atau tiada dalam senarai: ' + em);
+  const used = {};
+  t.rows.forEach(function (r) { if (r.KodHash) used[r.KodHash] = 1; });
+  let code = '', h = '';
+  for (let i = 0; i < 20; i++) {
+    code = randomCode_(); h = hash_('otp:' + code);
+    if (!used[h]) break;
+  }
+  row.KodHash = h;
+  row.KodTamat = Date.now() + CODE_TTL_HOURS * 3600 * 1000;
+  writeRow_(SH.PANEL, row._row, row);
+  let emailed = false, error = '';
+  if (sendMail) {
+    try {
+      let url = '';
+      try { url = ScriptApp.getService().getUrl() || ''; } catch (e) { }
       MailApp.sendEmail({
-        to: em, name: 'UTMPreneur Penilaian',
-        subject: 'Kod OTP anda: ' + code,
-        body: 'Kod OTP untuk log masuk sistem Penilaian Student Mall & SUB (UTMPreneur):\n\n    ' + code +
-          '\n\nKod sah selama 10 minit. Jangan kongsikan kod ini. Abaikan e-mel ini jika anda tidak memintanya.'
+        to: row.Emel, name: 'UTMPreneur Penilaian',
+        subject: 'Kod OTP log masuk Penilaian Student Mall & SUB',
+        body: 'Salam ' + row.Nama + ',\n\nKod OTP anda untuk sistem Penilaian Student Mall & SUB (UTMPreneur):\n\n    ' + groupCode_(code) +
+          '\n\n' + (url ? 'Buka sistem: ' + url + '\n\n' : '') +
+          'Masukkan kod ini pada skrin log masuk (tiada e-mel diperlukan). Kod hanya boleh digunakan sekali dan sah ' + CODE_TTL_HOURS +
+          ' jam. Jangan kongsikan kod ini. Hubungi admin jika kod tidak berfungsi.'
       });
-    }
-    return { ok: true };
-  });
+      emailed = true;
+    } catch (e) { error = String(e.message || e); }
+  }
+  return { nama: row.Nama, emel: row.Emel, code: groupCode_(code), emailed: emailed, error: error };
 }
 
-/** Langkah 2: sahkan kod dan terima token sesi. */
-function apiVerifyOtp(email, code) {
-  const em = String(email || '').trim().toLowerCase();
+function issueAll_(sendMail) {
+  return table_(SH.PANEL).rows.filter(function (r) {
+    return String(r.Peranan).toLowerCase() === 'panel' && String(r.Status).toLowerCase() === 'aktif';
+  }).map(function (r) { return issueCode_(r.Emel, sendMail); });
+}
+
+/** Log masuk: hanya kod OTP. */
+function apiLogin(code) {
+  const c = String(code || '').replace(/\D/g, '');
+  if (c.length !== CODE_LEN) throw new Error('Masukkan kod OTP ' + CODE_LEN + ' digit.');
   return withLock_(function () {
     const cache = CacheService.getScriptCache();
-    const rec = JSON.parse(cache.get('otp:' + em) || 'null');
-    if (!rec) throw new Error('Kod tamat tempoh atau tidak sah. Minta kod baharu.');
-    if (rec.t >= OTP_TRIES) { cache.remove('otp:' + em); throw new Error('Terlalu banyak cubaan. Minta kod baharu.'); }
-    if (hash_(String(code || '').trim() + em) !== rec.h) {
-      rec.t++;
-      cache.put('otp:' + em, JSON.stringify(rec), OTP_TTL);
-      throw new Error('Kod tidak betul. Baki cubaan: ' + (OTP_TRIES - rec.t) + '.');
+    const fails = Number(cache.get('loginfail') || 0);
+    if (fails >= LOGIN_FAILS) throw new Error('Terlalu banyak cubaan salah. Cuba lagi dalam 10 minit atau hubungi admin.');
+    const h = hash_('otp:' + c);
+    const row = table_(SH.PANEL).rows.filter(function (r) { return r.KodHash === h; })[0];
+    if (!row || Number(row.KodTamat) < Date.now() || String(row.Status).toLowerCase() !== 'aktif') {
+      cache.put('loginfail', String(fails + 1), 600);
+      throw new Error('Kod OTP tidak sah atau telah digunakan/tamat. Hubungi admin untuk kod baharu.');
     }
-    cache.remove('otp:' + em);
-    const r = roleOf_(em);
+    row.KodHash = ''; row.KodTamat = '';   // kod sekali guna
+    writeRow_(SH.PANEL, row._row, row);
+    const r = roleOf_(row.Emel);
     if (!r) throw new Error('Akaun tidak aktif.');
     const token = Utilities.getUuid() + Utilities.getUuid();
-    cache.put('sess:' + hash_(token), em, SESSION_TTL);
-    ACTOR_ = em;
+    cache.put('sess:' + hash_(token), r.email, SESSION_TTL);
+    ACTOR_ = r.email;
     log_('Log masuk', r.role);
     return { token: token, me: r };
   });
@@ -199,6 +227,45 @@ function apiVerifyOtp(email, code) {
 function apiLogout(token) {
   if (token) CacheService.getScriptCache().remove('sess:' + hash_(token));
   return true;
+}
+
+/** Admin: jana (dan e-mel) kod bagi satu panel. */
+function apiIssueCode(token, emel, sendMail) {
+  need_('admin', token);
+  return withLock_(function () {
+    const r = issueCode_(emel, !!sendMail);
+    log_('Jana kod OTP', r.emel + (r.emailed ? ' (dihantar e-mel)' : ''));
+    return r;
+  });
+}
+
+/** Admin: jana (dan e-mel) kod bagi semua panel aktif. */
+function apiIssueAll(token, sendMail) {
+  need_('admin', token);
+  return withLock_(function () {
+    const res = issueAll_(!!sendMail);
+    log_('Jana kod OTP semua panel', res.length + ' panel' + (sendMail ? ' (e-mel)' : ''));
+    return res;
+  });
+}
+
+/** Menu Sheet (pemilik skrip): jana kod admin; juga untuk pemulihan jika admin terkunci. */
+function menuIssueAdmin() {
+  const r = withLock_(function () { ACTOR_ = 'pemilik skrip'; const x = issueCode_(ADMIN_EMAIL, false); log_('Jana kod OTP admin (menu)', ADMIN_EMAIL); return x; });
+  SpreadsheetApp.getUi().alert('Kod OTP admin', r.code + '\n\nSekali guna, sah ' + CODE_TTL_HOURS + ' jam. Masukkan kod ini pada skrin log masuk.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+/** Pemulihan: set semula kaunter cubaan salah apabila log masuk terkunci. */
+function menuUnlock() {
+  CacheService.getScriptCache().remove('loginfail');
+  SpreadsheetApp.getActive().toast('Kunci log masuk dibuka.');
+}
+
+function menuIssueAll() {
+  const res = withLock_(function () { ACTOR_ = 'pemilik skrip'; const x = issueAll_(true); log_('Jana kod OTP semua panel (menu)', x.length + ' panel (e-mel)'); return x; });
+  SpreadsheetApp.getUi().alert('Kod OTP panel', res.map(function (r) {
+    return r.nama + ': ' + r.code + (r.emailed ? '  (e-mel dihantar)' : '  (e-mel GAGAL: ' + r.error + ')');
+  }).join('\n'), SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /* ===================== Data rujukan ===================== */
@@ -323,7 +390,11 @@ function apiAdminData(token) {
   const nilai = table_(SH.NILAI).rows.map(evalRow_);
   return {
     sesi: s, crit: rubrik_(s.versi), chips: chips_(), apps: apps_(false),
-    panels: table_(SH.PANEL).rows.map(function (r) { return { nama: r.Nama, emel: r.Emel, peranan: r.Peranan, status: r.Status }; }),
+    panels: table_(SH.PANEL).rows.map(function (r) {
+      const sah = r.KodHash && Number(r.KodTamat) > Date.now();
+      return { nama: r.Nama, emel: r.Emel, peranan: r.Peranan, status: r.Status,
+        kod: sah ? Utilities.formatDate(new Date(Number(r.KodTamat)), 'Asia/Kuala_Lumpur', 'dd/MM HH:mm') : '' };
+    }),
     nilai: nilai, keputusan: computeKeputusan_(),
     versi: table_(SH.RUBRIK).rows.map(function (r) { return Number(r.Versi); }).reduce(function (a, b) { return Math.max(a, b); }, 1),
     log: table_(SH.LOG).rows.slice(-200).reverse().map(function (r) {
@@ -370,8 +441,9 @@ function apiSavePanel(token, p) {
     if (!p.nama || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emel)) throw new Error('Nama dan e-mel sah diperlukan.');
     const t = table_(SH.PANEL);
     const o = t.rows.filter(function (r) { return String(r.Emel).toLowerCase() === emel; })[0];
-    const row = { Nama: p.nama, Emel: emel, Peranan: (o && o.Peranan) || 'Panel', Status: p.status || 'Aktif' };
+    const row = Object.assign({}, o || {}, { Nama: p.nama, Emel: emel, Peranan: (o && o.Peranan) || 'Panel', Status: p.status || 'Aktif' });
     if (emel === ADMIN_EMAIL) { row.Peranan = 'Admin'; row.Status = 'Aktif'; }
+    if (String(row.Status).toLowerCase() !== 'aktif') { row.KodHash = ''; row.KodTamat = ''; }
     if (o) writeRow_(SH.PANEL, o._row, row); else append_(SH.PANEL, row);
     log_(o ? 'Kemas kini panel' : 'Tambah panel', p.nama + ' · ' + emel + ' · ' + row.Status);
     return true;

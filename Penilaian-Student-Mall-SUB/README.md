@@ -20,15 +20,24 @@ Web app Google Apps Script dengan rekod disimpan dalam Google Sheets.
    - Who has access: **Anyone**
 5. Kongsikan pautan web app kepada panel.
 
-## Log masuk OTP
+## Log masuk dengan kod OTP (tanpa e-mel)
 
-- Pengguna memasukkan e-mel, dan sistem menghantar **kod OTP 6 digit** ke e-mel itu melalui `MailApp`. Kod sah 10 minit.
-- Hanya e-mel yang ada dalam sheet `Panel` (Status = Aktif) dan admin `utmxcite@utm.my` menerima kod. Jawapan skrin sentiasa sama untuk e-mel berdaftar atau tidak, supaya senarai panel tidak terdedah.
-- Had: 3 permintaan kod setiap e-mel dalam 10 minit, 5 cubaan salah bagi satu kod, dan kod hanya boleh digunakan sekali.
-- Selepas berjaya, pengguna mendapat sesi 6 jam. Peranan disemak semula pada setiap permintaan, jadi panel yang dinyahaktifkan terus ditolak.
-- Tiada akaun Google diperlukan, jadi panel **bukan @utm.my** juga boleh menilai: tambah e-melnya dalam tab Panel.
-- Kuota e-mel Apps Script: sehingga 1,500 e-mel sehari bagi akaun Workspace (100 bagi akaun Gmail biasa). Kebenaran menghantar e-mel diminta semasa kali pertama menjalankan "Sediakan sheet".
-- Pautan web app yang terbuka kepada umum hanya menunjukkan skrin log masuk. Semua data dilindungi oleh token sesi di pelayan.
+Pengguna **hanya menaip kod OTP 8 digit**. Tiada e-mel atau kata laluan.
+
+1. Admin buka tab **Panel**, kemudian tekan **Jana kod semua panel** (atau **Jana OTP** pada satu baris). Kod dihantar ke e-mel setiap panel secara automatik (boleh dimatikan) dan dipaparkan sekali kepada admin untuk disalin, sebagai cadangan jika e-mel gagal.
+2. Panel membuka pautan sistem dan menaip kod itu.
+3. Kod **sekali guna**, sah 48 jam (`CODE_TTL_HOURS` dalam `Code.gs`), dan disimpan sebagai hash dalam sheet `Panel`, bukan teks asal. Menjana kod baharu membatalkan kod lama.
+4. Selepas berjaya, pengguna mendapat sesi 6 jam yang kekal walaupun tab ditutup. Butang **Log keluar** menamatkan sesi. Jika sesi tamat atau pelayar bertukar, admin menjana kod baharu.
+
+**Admin pertama kali / pemulihan:** dalam Google Sheet, pilih menu **Penilaian > Jana kod OTP admin**. Kod dipaparkan kepada pemilik skrip sahaja. Menu **Jana & e-mel kod OTP semua panel** dan **Buka kunci log masuk** juga tersedia.
+
+**Keselamatan**
+- Kod 8 digit rawak, dan panel tidak aktif ditolak serta-merta kerana peranan disemak setiap permintaan.
+- Had 30 cubaan salah dalam 10 minit bagi seluruh sistem. Selepas had itu semua log masuk disekat sehingga tamat 10 minit, atau admin memilih **Buka kunci log masuk** dalam menu Sheet. Ini menghalang tekaan kod, dengan kos sekatan sementara.
+- Kod tidak direkodkan dalam sheet `Log`. Hanya tindakan "Jana kod OTP" dan "Log masuk" dicatat.
+- Tiada akaun Google diperlukan, jadi panel bukan @utm.my juga boleh menilai.
+- Kuota e-mel Apps Script: 1,500 sehari (Workspace) atau 100 sehari (Gmail biasa). Kebenaran menghantar e-mel diminta semasa menjalankan menu kali pertama.
+- Pautan web app terbuka kepada umum tetapi hanya menunjukkan skrin log masuk tanpa kod sah.
 
 ## Peranan dan akses
 

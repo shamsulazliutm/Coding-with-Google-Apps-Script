@@ -155,7 +155,7 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .hidden-in-panel{display:none}
 .login{max-width:430px;margin:56px auto;padding:24px}
 .login h2{margin:0 0 4px}
-.otp{font-size:30px;letter-spacing:.45em;text-align:center;font-weight:700;width:100%}
+.otp{font-size:30px;letter-spacing:.3em;text-align:center;font-weight:700;width:100%}
 .login .foot{margin-top:14px}
 .login .btn-solid{flex:1}
 
@@ -226,10 +226,10 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 /* Klien: semua data datang daripada pelayan (Code.gs). Tapisan akses dibuat di pelayan. */
 const $ = s => document.querySelector(s), app = $('#app');
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const PUBLIC = { apiRequestOtp: 1, apiVerifyOtp: 1 };
+const PUBLIC = { apiLogin: 1 };
 let TOKEN = '';
-try { TOKEN = sessionStorage.getItem('utm_tok') || ''; } catch (e) { }
-function setTok(t) { TOKEN = t || ''; try { t ? sessionStorage.setItem('utm_tok', t) : sessionStorage.removeItem('utm_tok'); } catch (e) { } }
+try { TOKEN = localStorage.getItem('utm_tok') || ''; } catch (e) { try { TOKEN = sessionStorage.getItem('utm_tok') || ''; } catch (e2) { } }
+function setTok(t) { TOKEN = t || ''; [() => localStorage, () => sessionStorage].forEach(f => { try { t ? f().setItem('utm_tok', t) : f().removeItem('utm_tok'); } catch (e) { } }); }
 const rpc = (fn, ...a) => new Promise((ok, no) => google.script.run.withSuccessHandler(ok).withFailureHandler(e => {
   const m = e && e.message ? e.message.replace(/^(Exception|Error): /, '') : String(e);
   if (m.indexOf('SESI_TAMAT') >= 0) { setTok(''); showLogin('Sesi tamat. Sila log masuk semula.'); return; }
@@ -246,38 +246,24 @@ const typePill = t => `<span class="pill ${t === 'SUB' ? 'p-info' : 'p-mute'}">$
 const short = n => String(n).replace(/^(Dr\.|En\.|Pn\.|PM\. Dr\.|PM\.) /, '').split(' ').slice(0, 2).join(' ');
 
 /* ---------- log masuk OTP ---------- */
-function showLogin(msg, em) {
+function showLogin(msg) {
   $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Penilaian permohonan Student Mall & SUB';
-  app.innerHTML = `<div class="login card"><h2>Log masuk</h2><p class="note">Masukkan e-mel yang didaftarkan sebagai panel atau admin. Kod OTP 6 digit akan dihantar ke e-mel itu.</p>
+  app.innerHTML = `<div class="login card"><h2>Log masuk</h2><p class="note">Masukkan kod OTP 8 digit yang dihantar ke e-mel anda oleh admin. Tiada e-mel atau kata laluan diperlukan.</p>
    ${msg ? `<div class="lock" style="background:var(--warn-soft);color:var(--warn)">${esc(msg)}</div>` : ''}
-   <div class="f"><label class="wide">E-mel<input id="l_e" type="email" autocomplete="email" value="${esc(em || '')}" placeholder="nama@utm.my"></label></div>
-   <div class="foot"><button class="btn-solid" id="l_go">Hantar kod OTP</button></div></div>`;
-  const go = async () => {
-    const e = $('#l_e').value.trim().toLowerCase(), b = $('#l_go'); if (!e) return;
-    b.disabled = true; b.textContent = 'Menghantar…';
-    try { await rpc('apiRequestOtp', e); otpStep(e); } catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Hantar kod OTP'; }
-  };
-  $('#l_go').onclick = go; $('#l_e').onkeydown = ev => { if (ev.key === 'Enter') go(); }; $('#l_e').focus();
-}
-function otpStep(em) {
-  let left = 60, tm = null;
-  app.innerHTML = `<div class="login card"><h2>Masukkan kod OTP</h2><p class="note">Jika <b>${esc(em)}</b> berdaftar, kod 6 digit telah dihantar. Semak peti masuk dan folder spam. Kod sah 10 minit.</p>
-   <div class="f"><label class="wide">Kod OTP<input id="l_c" class="otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••"></label></div>
+   <div class="f"><label class="wide">Kod OTP<input id="l_c" class="otp" inputmode="numeric" maxlength="9" autocomplete="one-time-code" placeholder="•••• ••••"></label></div>
    <div class="foot"><button class="btn-solid" id="l_ok">Log masuk</button></div>
-   <div class="foot" style="justify-content:space-between"><button class="btn-ghost" id="l_re" disabled>Hantar semula (60s)</button><button class="btn-ghost" id="l_ch">Tukar e-mel</button></div></div>`;
-  const re = $('#l_re');
-  tm = setInterval(() => { if (!re.isConnected) return clearInterval(tm); left--; if (left <= 0) { re.disabled = false; re.textContent = 'Hantar semula'; clearInterval(tm); } else re.textContent = 'Hantar semula (' + left + 's)'; }, 1000);
+   <p class="note" style="margin:12px 0 0">Kod hanya boleh digunakan sekali. Belum terima kod atau kod tamat? Hubungi admin (utmxcite@utm.my).</p></div>`;
+  const c = $('#l_c');
+  c.oninput = () => { const d = c.value.replace(/\D/g, '').slice(0, 8); c.value = d.length > 4 ? d.slice(0, 4) + ' ' + d.slice(4) : d; };
   const ok = async () => {
-    const c = $('#l_c').value.trim(); if (c.length !== 6) return toast('Masukkan 6 digit kod', true);
+    if (c.value.replace(/\D/g, '').length !== 8) return toast('Masukkan kod 8 digit', true);
     const b = $('#l_ok'); b.disabled = true; b.textContent = 'Menyemak…';
-    try { const r = await rpc('apiVerifyOtp', em, c); setTok(r.token); clearInterval(tm); await start(); }
-    catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Log masuk'; $('#l_c').select(); }
+    try { const r = await rpc('apiLogin', c.value); setTok(r.token); await start(); }
+    catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Log masuk'; c.select(); }
   };
-  $('#l_ok').onclick = ok; $('#l_c').onkeydown = ev => { if (ev.key === 'Enter') ok(); }; $('#l_c').focus();
-  re.onclick = async () => { re.disabled = true; try { await rpc('apiRequestOtp', em); toast('Kod baharu dihantar'); otpStep(em); } catch (x) { toast(x.message, true); re.disabled = false; } };
-  $('#l_ch').onclick = () => { clearInterval(tm); showLogin('', em); };
+  $('#l_ok').onclick = ok; c.onkeydown = ev => { if (ev.key === 'Enter') ok(); }; c.focus();
 }
-$('#out').onclick = async () => { try { await rpc('apiLogout'); } catch (e) { } setTok(''); showLogin(); };
+$('#out').onclick = async () => { try { await rpc('apiLogout'); } catch (e) { } setTok(''); codes = null; showLogin(); };
 
 async function start() {
   if (!TOKEN) return showLogin();
@@ -298,7 +284,7 @@ const TABS = [['dashboard', 'Dashboard'], ['permohonan', 'Permohonan'], ['sesi',
 async function loadAdmin() { D = await rpc('apiAdminData'); adminShell(); }
 function adminShell() {
   app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? `<span class="n">${D.apps.length}</span>` : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
-  app.querySelectorAll('nav button').forEach(b => b.onclick = () => { tab = b.dataset.t; openRow = null; openKey = null; adminShell(); });
+  app.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t !== 'panel') codes = null; tab = b.dataset.t; openRow = null; openKey = null; adminShell(); });
   ({ dashboard, permohonan, sesi, panel, rubrik, keputusan, log })[tab]();
 }
 async function act(fn, msg, ...a) {
@@ -379,14 +365,22 @@ function sesi() {
   const op = $('#op'); if (op) op.onclick = () => act('apiSetSesiStatus', 'Sesi dibuka', 'Dibuka');
 }
 
+let codes = null;
 function panel() {
-  $('#main').innerHTML = head('Panel', 'Evaluators', '<button class="btn-solid" id="ap">+ Tambah panel</button>') + `
-  <div class="card tw"><table><thead><tr><th>Nama</th><th>E-mel</th><th>Peranan</th><th>Status</th><th></th></tr></thead><tbody>
-  ${D.panels.map((p, i) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(p.emel)}</td><td>${esc(p.peranan)}</td><td><span class="pill ${p.status === 'Aktif' ? 'p-ok' : 'p-mute'}">${esc(p.status)}</span></td><td class="num">${p.peranan.toLowerCase() === 'panel' ? `<button class="btn-ghost tg" data-i="${i}">${p.status === 'Aktif' ? 'Nyahaktif' : 'Aktifkan'}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>
+  $('#main').innerHTML = head('Panel', 'Evaluators dan kod OTP', '<button class="btn-line" id="ia">Jana kod semua panel</button> <button class="btn-solid" id="ap">+ Tambah panel</button>') + `
+  <label class="chip" style="margin-bottom:12px"><input type="checkbox" id="mailit" checked> E-mel kod kepada panel secara automatik</label>
+  ${codes ? `<div class="card detail"><h3>Kod OTP dijana <i>paparan sekali sahaja, sekali guna, sah 48 jam</i></h3><div class="tw"><table><thead><tr><th>Panel</th><th>Kod OTP</th><th>E-mel</th><th></th></tr></thead><tbody>${codes.map((c, i) => `<tr><td>${esc(c.nama)}<small>${esc(c.emel)}</small></td><td style="font-size:22px;font-weight:700;letter-spacing:.12em;font-variant-numeric:tabular-nums">${esc(c.code)}</td><td>${c.emailed ? '<span class="pill p-ok">dihantar</span>' : c.error ? `<span class="pill p-bad" title="${esc(c.error)}">gagal</span>` : '<span class="pill p-mute">tidak dihantar</span>'}</td><td class="num"><button class="btn-ghost cp" data-i="${i}">Salin</button></td></tr>`).join('')}</tbody></table></div><div class="foot"><button class="btn-ghost" id="hide">Sembunyikan kod</button></div></div>` : ''}
+  <div class="card tw" style="margin-top:12px"><table><thead><tr><th>Nama</th><th>E-mel</th><th>Peranan</th><th>Status</th><th>Kod OTP</th><th></th></tr></thead><tbody>
+  ${D.panels.map((p, i) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(p.emel)}</td><td>${esc(p.peranan)}</td><td><span class="pill ${p.status === 'Aktif' ? 'p-ok' : 'p-mute'}">${esc(p.status)}</span></td><td>${p.kod ? `<span class="pill p-info">aktif hingga ${esc(p.kod)}</span>` : '<span class="note">tiada kod aktif</span>'}</td><td class="num">${p.status === 'Aktif' ? `<button class="btn-line ic" data-i="${i}">Jana OTP</button> ` : ''}${p.peranan.toLowerCase() === 'panel' ? `<button class="btn-ghost tg" data-i="${i}">${p.status === 'Aktif' ? 'Nyahaktif' : 'Aktifkan'}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>
   <div class="card detail" id="addp" hidden><h3>Tambah panel</h3><div class="f"><label>Nama<input id="p_n"></label><label>E-mel<input id="p_e" type="email"></label></div><div class="foot"><button class="btn-solid" id="sp">Simpan</button></div></div>`;
+  const mail = () => $('#mailit').checked;
   $('#ap').onclick = () => { $('#addp').hidden = false; $('#p_n').focus(); };
-  $('#sp').onclick = () => act('apiSavePanel', 'Panel disimpan', { nama: $('#p_n').value.trim(), emel: $('#p_e').value.trim(), status: 'Aktif' });
+  $('#sp').onclick = () => act('apiSavePanel', 'Panel disimpan. Tekan "Jana OTP" untuk memberi kod.', { nama: $('#p_n').value.trim(), emel: $('#p_e').value.trim(), status: 'Aktif' });
   document.querySelectorAll('.tg').forEach(b => b.onclick = () => { const p = D.panels[+b.dataset.i]; act('apiSavePanel', 'Status dikemas kini', { nama: p.nama, emel: p.emel, status: p.status === 'Aktif' ? 'Tidak aktif' : 'Aktif' }); });
+  document.querySelectorAll('.ic').forEach(b => b.onclick = async () => { const p = D.panels[+b.dataset.i]; try { codes = [await rpc('apiIssueCode', p.emel, mail())]; toast(codes[0].emailed ? 'Kod dihantar ke e-mel' : 'Kod dijana'); await loadAdmin(); } catch (e) { toast(e.message, true); } });
+  $('#ia').onclick = async () => { try { codes = await rpc('apiIssueAll', mail()); toast(codes.length + ' kod dijana'); await loadAdmin(); } catch (e) { toast(e.message, true); } };
+  const hd = $('#hide'); if (hd) hd.onclick = () => { codes = null; panel(); };
+  document.querySelectorAll('.cp').forEach(b => b.onclick = async () => { const c = codes[+b.dataset.i]; try { await navigator.clipboard.writeText(c.code.replace(/\s/g, '')); toast('Kod disalin'); } catch (e) { toast('Salin secara manual: ' + c.code); } });
 }
 
 function rubrik() {
