@@ -211,6 +211,16 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
   .mk input{width:34px}
 }
 .asbar{background:var(--gold-soft);color:var(--fg);border-bottom:2px solid var(--gold);padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:14px}
+.lg{max-width:520px;text-align:center;padding:28px 32px}
+.lg h2{text-align:center;font-size:26px;color:var(--maroon);margin:0 0 6px}
+.lg .lgnote{margin:0 0 18px;color:var(--fg);font-size:15px}
+.lg .lgl{display:block;font-weight:700;margin:14px 0 6px;font-size:15px}
+.lg input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:16px;text-align:left}
+.lg input:focus{outline:2px solid var(--gold);outline-offset:0;border-color:var(--gold)}
+.lg .lgbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.lg .lgbtns .btn-solid{padding:12px 12px;font-size:14.5px;white-space:nowrap}
+.lg .lgmsg{min-height:1.4em;margin:14px 0 0;font-size:14px}
+.lg .lgsmall{margin:8px 0 0;font-size:12.5px;color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -251,57 +261,43 @@ function loginHead(msg) {
   $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Penilaian permohonan Student Mall & SUB';
   return msg ? `<div class="lock" style="background:var(--warn-soft);color:var(--warn)">${esc(msg)}</div>` : '';
 }
-/* Langkah 1: e-mel */
+/* Satu skrin: e-mel + kod OTP, dua butang */
+let cdTimer = null;
 function showLogin(msg, em) {
-  app.innerHTML = `<div class="login card"><h2>Log masuk</h2><p class="note">Masukkan e-mel yang didaftarkan sebagai panel atau admin. Kod OTP 6 digit akan dihantar ke e-mel itu. Akaun Google/Gmail tidak diperlukan.</p>
+  clearInterval(cdTimer);
+  app.innerHTML = `<div class="login card lg"><h2>Log Masuk</h2>
+   <p class="lgnote">Masukkan e-mel berdaftar anda. Kod pengesahan enam digit akan dihantar melalui e-mel.</p>
    ${loginHead(msg)}
-   <div class="f"><label class="wide">E-mel<input id="l_e" type="email" autocomplete="email" value="${esc(em || '')}" placeholder="nama@utm.my"></label></div>
-   <div class="foot"><button class="btn-solid" id="l_go">Hantar kod OTP</button></div>
-   <p style="margin:14px 0 0;font-size:13.5px"><button class="elsum" id="l_adm" style="color:var(--maroon);font-style:normal;font-weight:600">Ada kod OTP 8 digit daripada admin? Masukkan kod sahaja</button></p></div>`;
-  const go = async () => {
-    const e = $('#l_e').value.trim().toLowerCase(), b = $('#l_go'); if (!e) return;
-    b.disabled = true; b.textContent = 'Menghantar…';
-    try { await rpc('apiRequestOtp', e); otpStep(e); } catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Hantar kod OTP'; }
+   <label class="lgl" for="l_e">E-mel berdaftar</label>
+   <input id="l_e" type="email" autocomplete="email" value="${esc(em || '')}" placeholder="nama@utm.my">
+   <label class="lgl" for="l_c">Kod OTP</label>
+   <input id="l_c" inputmode="numeric" maxlength="9" autocomplete="one-time-code" placeholder="Masukkan kod 6 digit">
+   <div class="lgbtns"><button class="btn-solid" id="l_send">Hantar / Hantar Semula Kod</button><button class="btn-solid" id="l_ok">Sahkan dan Log Masuk</button></div>
+   <p class="lgmsg" id="l_msg" role="status" aria-live="polite"></p>
+   <p class="lgsmall">Tiada akaun Google atau Gmail diperlukan. Ada kod 8 digit daripada admin? Kosongkan e-mel dan masukkan kod itu pada ruang Kod OTP.</p></div>`;
+  const E = $('#l_e'), C = $('#l_c'), S = $('#l_send'), O = $('#l_ok'), M = $('#l_msg');
+  const say = (t, bad) => { M.textContent = t; M.style.color = bad ? 'var(--bad)' : 'var(--ok)'; };
+  const cooldown = () => { let left = 60; S.disabled = true; clearInterval(cdTimer); cdTimer = setInterval(() => { if (!S.isConnected) return clearInterval(cdTimer); left--; if (left <= 0) { clearInterval(cdTimer); S.disabled = false; S.textContent = 'Hantar / Hantar Semula Kod'; } else S.textContent = 'Hantar semula (' + left + 's)'; }, 1000); S.textContent = 'Hantar semula (60s)'; };
+  C.oninput = () => { C.value = C.value.replace(/[^\d ]/g, ''); };
+  S.onclick = async () => {
+    const e = E.value.trim().toLowerCase(); if (!e) { say('Masukkan e-mel berdaftar anda.', true); return E.focus(); }
+    S.disabled = true; S.textContent = 'Menghantar…'; say('');
+    try { await rpc('apiRequestOtp', e); say('Jika e-mel itu berdaftar, kod 6 digit telah dihantar. Semak peti masuk dan folder spam. Kod sah 10 minit.'); cooldown(); C.focus(); }
+    catch (x) { say(x.message, true); S.disabled = false; S.textContent = 'Hantar / Hantar Semula Kod'; }
   };
-  $('#l_go').onclick = go; $('#l_e').onkeydown = ev => { if (ev.key === 'Enter') go(); }; $('#l_e').focus();
-  $('#l_adm').onclick = () => showCodeLogin();
-}
-/* Langkah 2: kod OTP daripada e-mel */
-function otpStep(em) {
-  let left = 60, tm = null;
-  app.innerHTML = `<div class="login card"><h2>Masukkan kod OTP</h2><p class="note">Jika <b>${esc(em)}</b> berdaftar, kod 6 digit telah dihantar. Semak peti masuk dan folder spam. Kod sah 10 minit.</p>
-   <div class="f"><label class="wide">Kod OTP<input id="l_c" class="otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••"></label></div>
-   <div class="foot"><button class="btn-solid" id="l_ok">Log masuk</button></div>
-   <div class="foot" style="justify-content:space-between"><button class="btn-ghost" id="l_re" disabled>Hantar semula (60s)</button><button class="btn-ghost" id="l_ch">Tukar e-mel</button></div></div>`;
-  const re = $('#l_re');
-  tm = setInterval(() => { if (!re.isConnected) return clearInterval(tm); left--; if (left <= 0) { re.disabled = false; re.textContent = 'Hantar semula'; clearInterval(tm); } else re.textContent = 'Hantar semula (' + left + 's)'; }, 1000);
-  const ok = async () => {
-    const c = $('#l_c').value.trim(); if (c.length !== 6) return toast('Masukkan 6 digit kod', true);
-    const b = $('#l_ok'); b.disabled = true; b.textContent = 'Menyemak…';
-    try { const r = await rpc('apiVerifyOtp', em, c); setTok(r.token); clearInterval(tm); await start(); }
-    catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Log masuk'; $('#l_c').select(); }
+  const verify = async () => {
+    const e = E.value.trim().toLowerCase(), c = C.value.replace(/\D/g, '');
+    if (!c) { say('Masukkan kod OTP.', true); return C.focus(); }
+    if (!e && c.length !== 8) { say('Masukkan e-mel berdaftar anda, atau kod 8 digit daripada admin.', true); return E.focus(); }
+    if (e && c.length !== 6) { say('Kod OTP mesti 6 digit.', true); return C.focus(); }
+    O.disabled = true; O.textContent = 'Menyemak…'; say('');
+    try { const r = e ? await rpc('apiVerifyOtp', e, c) : await rpc('apiLogin', c); setTok(r.token); clearInterval(cdTimer); await start(); }
+    catch (x) { say(x.message, true); O.disabled = false; O.textContent = 'Sahkan dan Log Masuk'; C.select(); }
   };
-  $('#l_ok').onclick = ok; $('#l_c').onkeydown = ev => { if (ev.key === 'Enter') ok(); }; $('#l_c').focus();
-  re.onclick = async () => { re.disabled = true; try { await rpc('apiRequestOtp', em); toast('Kod baharu dihantar'); otpStep(em); } catch (x) { toast(x.message, true); re.disabled = false; } };
-  $('#l_ch').onclick = () => { clearInterval(tm); showLogin('', em); };
-}
-/* Pilihan: kod 8 digit yang dijana admin, tanpa e-mel */
-function showCodeLogin(msg) {
-  app.innerHTML = `<div class="login card"><h2>Log masuk dengan kod admin</h2><p class="note">Masukkan kod OTP 8 digit yang diberi oleh admin. Kod hanya boleh digunakan sekali.</p>
-   ${loginHead(msg)}
-   <div class="f"><label class="wide">Kod OTP<input id="l_c" class="otp" inputmode="numeric" maxlength="9" autocomplete="one-time-code" placeholder="•••• ••••"></label></div>
-   <div class="foot"><button class="btn-solid" id="l_ok">Log masuk</button></div>
-   <p style="margin:14px 0 0;font-size:13.5px"><button class="elsum" id="l_back" style="color:var(--maroon);font-style:normal;font-weight:600">← Log masuk dengan e-mel</button></p></div>`;
-  const c = $('#l_c');
-  c.oninput = () => { const d = c.value.replace(/\D/g, '').slice(0, 8); c.value = d.length > 4 ? d.slice(0, 4) + ' ' + d.slice(4) : d; };
-  const ok = async () => {
-    if (c.value.replace(/\D/g, '').length !== 8) return toast('Masukkan kod 8 digit', true);
-    const b = $('#l_ok'); b.disabled = true; b.textContent = 'Menyemak…';
-    try { const r = await rpc('apiLogin', c.value); setTok(r.token); await start(); }
-    catch (x) { toast(x.message, true); b.disabled = false; b.textContent = 'Log masuk'; c.select(); }
-  };
-  $('#l_ok').onclick = ok; c.onkeydown = ev => { if (ev.key === 'Enter') ok(); }; c.focus();
-  $('#l_back').onclick = () => showLogin();
+  O.onclick = verify;
+  E.onkeydown = ev => { if (ev.key === 'Enter') S.click(); };
+  C.onkeydown = ev => { if (ev.key === 'Enter') verify(); };
+  (em ? C : E).focus();
 }
 $('#out').onclick = async () => { try { await rpc('apiLogout'); } catch (e) { } setTok(''); codes = null; showLogin(); };
 

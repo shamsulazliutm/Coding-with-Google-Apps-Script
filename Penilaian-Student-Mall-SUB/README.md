@@ -24,16 +24,16 @@ Web app Google Apps Script dengan rekod disimpan dalam Google Sheets.
 
 Tiada akaun Google/Gmail diperlukan untuk masuk ke sistem.
 
-**Kaedah utama: e-mel kemudian OTP**
-1. Pengguna memasukkan **e-mel** yang didaftarkan dalam sheet `Panel` (atau e-mel admin).
-2. Sistem menghantar **kod OTP 6 digit** ke e-mel itu. Kod sah 10 minit.
-3. Pengguna memasukkan kod itu dan masuk. Sesi 6 jam kekal walaupun tab ditutup. Butang **Log keluar** menamatkan sesi.
+**Kaedah utama: e-mel kemudian OTP** (satu skrin, dua medan dan dua butang)
+1. Pengguna memasukkan **e-mel** yang didaftarkan dalam sheet `Panel` (atau e-mel admin), kemudian menekan **Hantar / Hantar Semula Kod**.
+2. Sistem menghantar **kod OTP 6 digit** ke e-mel itu. Kod sah 10 minit. Butang hantar semula dikunci 60 saat.
+3. Pengguna memasukkan kod dan menekan **Sahkan dan Log Masuk**. Sesi 6 jam kekal walaupun tab ditutup. Butang **Log keluar** menamatkan sesi.
 - Skrin memberi jawapan yang sama sama ada e-mel berdaftar atau tidak, supaya senarai panel tidak terdedah.
 - Had: 3 permintaan kod bagi satu e-mel dalam 10 minit, 5 cubaan salah bagi satu kod, dan kod hanya sekali guna.
 
 **Kaedah tambahan: kod 8 digit daripada admin (tanpa e-mel)**
 - Admin buka tab **Panel**, kemudian **Jana kod semua panel** atau **Jana OTP** pada satu baris. Kod dihantar ke e-mel panel (boleh dimatikan) dan dipaparkan sekali kepada admin untuk disalin.
-- Panel memilih pautan **"Ada kod OTP 8 digit daripada admin?"** pada skrin log masuk dan menaip kod itu sahaja.
+- Panel mengosongkan medan e-mel dan menaip kod 8 digit itu pada ruang **Kod OTP**, kemudian menekan **Sahkan dan Log Masuk**.
 - Kod sekali guna, sah 48 jam (`CODE_TTL_HOURS`), disimpan sebagai hash. Had 30 cubaan salah dalam 10 minit bagi seluruh kaedah ini, dan menu Sheet **Penilaian > Buka kunci log masuk** membukanya semula.
 - Menu Sheet **Penilaian > Jana kod OTP admin** sedia untuk pemulihan jika e-mel tidak diterima.
 
