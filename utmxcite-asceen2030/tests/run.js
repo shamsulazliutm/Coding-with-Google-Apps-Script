@@ -200,6 +200,13 @@ test('Admin merekod bagi fakulti lain dan melihat semua', () => {
   assert.strictEqual(ok(g.api_list(adminToken, 'KAI1', { fakulti: 'FC' })).rows.length, 1);
   assert.strictEqual(ok(g.api_list(adminToken, 'KAI1', { q: 'co-work' })).rows.length, 1);
 });
+test('KAI 1: fakulti boleh LAIN-LAIN (Admin); PIC kekal dikunci kepada fakultinya', () => {
+  const b = { aliran: 'Technology Startup', jenis: 'Inkubator Fakulti', nama_inkubator: 'Inkubator Luar', didaftarkan: 'Tidak', status: 'Dicadangkan' };
+  const r = ok(g.api_save(adminToken, 'KAI1', Object.assign({ fakulti: 'LAIN-LAIN' }, b)));
+  assert.strictEqual(r.fakulti, 'LAIN-LAIN');
+  const bad = g.api_save(adminToken, 'KAI1', Object.assign({ fakulti: 'XYZ' }, b)); fail(bad, /betulkan/); assert.ok(bad.fields.fakulti);
+  const other = g.api_save(adminToken, 'KAI6', { fakulti: 'LAIN-LAIN', nama: 'Q', no_matrik: 'Q1', status: 'Idea/konsep' }); fail(other, /betulkan/);   // hanya KAI 1
+});
 test('KAI6 terhad kepada FAI, FC, FKE, MJIIT', () => {
   const base = { nama: 'Ali', no_matrik: 'A1', status: 'Idea/konsep' };
   fail(g.api_save(adminToken, 'KAI6', Object.assign({ fakulti: 'FKA' }, base)), /betulkan/);

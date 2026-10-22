@@ -304,8 +304,8 @@ function validateRecord_(kpi, rec, faculties, user, existing, rows, opts) {
         clean[f.key] = String(v);
         break;
       case 'faculty':
-        if (facCodes.indexOf(String(v)) < 0) { errors[f.key] = 'Fakulti tidak sah.'; break; }
-        if (f.key === 'fakulti' && !facultyAllowedForKpi_(kpi, String(v))) { errors[f.key] = 'Fakulti ini tidak termasuk dalam KPI ini.'; break; }
+        if (facCodes.indexOf(String(v)) < 0 && (f.extra || []).indexOf(String(v)) < 0) { errors[f.key] = 'Fakulti tidak sah.'; break; }
+        if (f.key === 'fakulti' && (f.extra || []).indexOf(String(v)) < 0 && !facultyAllowedForKpi_(kpi, String(v))) { errors[f.key] = 'Fakulti ini tidak termasuk dalam KPI ini.'; break; }
         clean[f.key] = String(v);
         break;
       case 'email':

@@ -491,7 +491,7 @@ var KPIS = [
     fields: [
       F_('aliran', 'Aliran', 'select', { required: true, sec: 'Identiti', options: ['Technology Startup', 'High-Income Gig', 'Social Enterprise'] }),
       F_('jenis', 'Jenis pelaksanaan', 'select', { required: true, options: ['Inkubator Fakulti', 'Co-working / Ruang Individu'] }),
-      F_('fakulti', 'Fakulti', 'faculty', { required: true }),
+      F_('fakulti', 'Fakulti', 'faculty', { required: true, extra: ['LAIN-LAIN'] }),
       F_('nama_inkubator', 'Nama inkubator / startup', 'text', { required: true }),
       F_('bidang_fokus', 'Bidang fokus', 'text'),
       F_('penerangan', 'Penerangan ringkas', 'textarea', { full: true }),

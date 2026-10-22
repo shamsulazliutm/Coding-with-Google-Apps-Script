@@ -687,7 +687,8 @@
         var list = S.session.faculties.filter(function (x) { return fd.key !== 'fakulti' || !k.facultyWhitelist || k.facultyWhitelist.indexOf(x.kod) >= 0; });
         if (locked) v = user.fakulti;
         return '<select id="' + id + '" name="' + fd.key + '"' + (locked ? ' disabled' : '') + '><option value="">— pilih —</option>' +
-          list.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (v === x.kod ? ' selected' : '') + '>' + esc(x.kod + ' · ' + x.nama) + '</option>'; }).join('') + '</select>' +
+          list.map(function (x) { return '<option value="' + esc(x.kod) + '"' + (v === x.kod ? ' selected' : '') + '>' + esc(x.kod + ' · ' + x.nama) + '</option>'; }).join('') +
+          (fd.extra || []).map(function (x) { return '<option value="' + esc(x) + '"' + (v === x ? ' selected' : '') + '>' + esc(x.charAt(0) + x.slice(1).toLowerCase()) + '</option>'; }).join('') + '</select>' +
           (locked ? '<div class="hint">Dikunci mengikut fakulti anda.</div>' : '');
       case 'textarea':
         return '<textarea id="' + id + '" name="' + fd.key + '" maxlength="2000">' + esc(v) + '</textarea>';
