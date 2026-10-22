@@ -47,6 +47,20 @@ Peranan disemak semula pada setiap permintaan, jadi panel yang dinyahaktifkan te
 - Penilaian yang sudah dihantar mesti dibuka semula dahulu ("Buka semula untuk disunting"). Admin boleh menilai walaupun sesi sudah ditutup.
 - Panel tidak boleh menggunakan fungsi ini.
 
+## Tab Laporan (PDF)
+
+Admin boleh memuat turun laporan PDF A4 dengan **logo UTM dan UTMXCITE pada kepala setiap halaman**.
+
+| Format | Kandungan |
+|---|---|
+| Ringkasan keputusan (melintang) | Maklumat sesi, jadual ranking semua pemohon (markah P1–Pn, dinilai, purata, layak, status akhir), senarai panel dan ruang tandatangan "Disediakan oleh" / "Disahkan oleh" |
+| Terperinci setiap pemohon (menegak) | Satu halaman bagi setiap pemohon: maklumat pelajar (No. KP bertopeng), markah mengikut kriteria dan panel, purata, jumlah, keputusan, serta catatan panel (boleh dimatikan) |
+| Laporan lengkap | Ringkasan diikuti halaman terperinci semua pemohon dalam satu fail |
+
+Pilihan: tapis jenis (Student Mall / SUB) dan pilih satu pemohon. Kaki halaman memaparkan tarikh jana, nama admin dan "Halaman x / y". Hanya penilaian yang dihantar dikira. Jana laporan direkodkan dalam `Log`.
+
+PDF dijana dalam pelayar menggunakan jsPDF 2.5.1 dan jspdf-autotable 3.8.2 yang dimuat daripada cdnjs, jadi sambungan internet diperlukan. Jika muat turun disekat oleh pelayar, gunakan **Buka dalam tab baharu** kemudian simpan.
+
 ## Peranan dan akses
 
 - **Panel** (sheet `Panel`, Peranan = Panel, Status = Aktif): hanya nampak maklumat calon (No. KP bertopeng) dan penilaian miliknya sendiri. Tiada panel lain atau keputusan dihantar kepada pelayar panel.

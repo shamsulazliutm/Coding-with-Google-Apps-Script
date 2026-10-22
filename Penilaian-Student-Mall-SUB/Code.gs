@@ -618,6 +618,12 @@ function apiSaveRubrik(token, crit, chips, useNow) {
   });
 }
 
+function apiLogReport(token, desc) {
+  need_('admin', token);
+  log_('Jana laporan PDF', String(desc || '').slice(0, 100));
+  return true;
+}
+
 function apiRefreshKeputusan(token) {
   need_('admin', token);
   writeKeputusan_();

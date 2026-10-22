@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UTMPreneur · Penilaian</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
 /* Tema UTMPreneur: maroon + emas, menu sisi untuk admin, skrin penuh untuk panel */
 :root{
@@ -221,6 +223,21 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .lg .lgbtns .btn-solid{padding:12px 12px;font-size:14.5px;white-space:nowrap}
 .lg .lgmsg{min-height:1.4em;margin:14px 0 0;font-size:14px}
 .lg .lgsmall{margin:8px 0 0;font-size:12.5px;color:var(--muted);font-style:italic}
+.rp{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:18px;align-items:start}
+.rp .ctl label.opt{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--surface)}
+.rp .ctl label.opt:has(input:checked){border-color:var(--maroon);background:var(--maroon-soft)}
+.rp .ctl label.opt b{display:block;font-size:14px}.rp .ctl label.opt small{color:var(--muted);font-size:12.5px;line-height:1.35}
+.rp .ctl .f{grid-template-columns:1fr;gap:10px;margin:10px 0}
+.paper{background:#fff;color:#222;border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:18px 22px;overflow-x:auto;font-size:12.5px}
+.paper .ph{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:3px solid #d9a02b;padding-bottom:8px;margin-bottom:12px;box-shadow:0 2px 0 -1px #8a2d3b}
+.paper .ph img{height:42px}
+.paper .ph div{text-align:right}.paper .ph b{color:#8a2d3b;font-size:15px;display:block}.paper .ph span{color:#6f6266;font-size:11.5px}
+.paper h4{margin:12px 0 6px;font-size:14px;color:#222}
+.paper table{font-size:12px;min-width:640px}.paper th{background:#8a2d3b;color:#fff;font-size:10.5px;padding:6px 8px}
+.paper td{padding:6px 8px;border:1px solid #e3d8d9;color:#222}.paper td small{color:#6f6266}
+.paper .tot td{background:#f6eeee;font-weight:700}
+.paper .sign{display:flex;gap:40px;margin-top:22px}.paper .sign div{flex:1;border-top:1px solid #999;padding-top:4px;color:#555;font-size:11.5px;margin-top:34px}
+@media (max-width:860px){.rp{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -315,7 +332,7 @@ async function start() {
 
 /* ===================== ADMIN ===================== */
 let tab = 'dashboard', openRow = null, filt = { q: '', t: '' }, openKey = null;
-const TABS = [['dashboard', 'Dashboard'], ['permohonan', 'Permohonan'], ['sesi', 'Sesi penilaian'], ['panel', 'Panel'], ['rubrik', 'Rubrik'], ['keputusan', 'Keputusan'], ['log', 'Log']];
+const TABS = [['dashboard', 'Dashboard'], ['permohonan', 'Permohonan'], ['sesi', 'Sesi penilaian'], ['panel', 'Panel'], ['rubrik', 'Rubrik'], ['keputusan', 'Keputusan'], ['laporan', 'Laporan'], ['log', 'Log']];
 
 setInterval(async () => {
   if (B && B.me && B.me.role === 'admin' && !ACT_AS && !document.hidden && (tab === 'dashboard' || tab === 'keputusan') && !(document.activeElement && document.activeElement.tagName === 'SELECT')) {
@@ -326,7 +343,7 @@ async function loadAdmin() { D = await rpc('apiAdminData'); adminShell(); }
 function adminShell() {
   app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? `<span class="n">${D.apps.length}</span>` : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
   app.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t !== 'panel') codes = null; tab = b.dataset.t; openRow = null; openKey = null; adminShell(); });
-  ({ dashboard, permohonan, sesi, panel, rubrik, keputusan, log })[tab]();
+  ({ dashboard, permohonan, sesi, panel, rubrik, keputusan, laporan, log })[tab]();
 }
 async function act(fn, msg, ...a) {
   try { await rpc(fn, ...a); toast(msg); await loadAdmin(); } catch (e) { toast(e.message, true); }
@@ -465,6 +482,201 @@ function kdetail(id) {
 
 function log() {
   $('#main').innerHTML = head('Log suntingan', 'Audit trail') + `<div class="card tw"><table><thead><tr><th>Masa</th><th>Pengguna</th><th>Tindakan</th><th>Butiran</th></tr></thead><tbody>${D.log.map(l => `<tr><td>${esc(l.masa)}</td><td>${esc(l.user)}</td><td>${esc(l.act)}</td><td>${esc(l.det)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ===================== LAPORAN (PDF) ===================== */
+let RP = { type: 'ringkasan', jenis: '', notes: true, pid: 0 };
+const MAROON = [138, 45, 59], GOLD = [217, 160, 43], GREY = [110, 98, 102];
+const nem = x => String(x == null ? '' : x).trim().toLowerCase();
+const fmt = (n, d = 2) => n == null ? '-' : Number(n).toFixed(d);
+const maskKp = kp => String(kp || '').replace(/\d{4}$/, '****');
+
+function rpData() {
+  const K = D.keputusan, P = K.panels;
+  const rows = D.apps.filter(a => !RP.jenis || a.type === RP.jenis).map(a => {
+    const kr = K.rows.find(r => r.id === a.id) || {};
+    const evs = P.map(p => D.nilai.find(n => n.pid === a.id && nem(n.email) === nem(p.emel) && n.status === 'Dihantar') || null);
+    const got = evs.filter(Boolean);
+    return {
+      a, evs, n: got.length, avg: kr.avg == null ? null : kr.avg, sc: kr.sc || [],
+      avgC: D.crit.map((c, i) => got.length ? got.reduce((s, n) => s + n.mk[i], 0) / got.length : null),
+      layakY: got.filter(n => n.ok === 'Ya').length, layakN: got.filter(n => n.ok === 'Tidak').length, final: a.final || 'Belum'
+    };
+  });
+  const ranked = rows.filter(r => r.avg != null).sort((x, y) => y.avg - x.avg), rk = new Map();
+  ranked.forEach((r, i) => rk.set(r.a.id, i > 0 && Math.abs(ranked[i - 1].avg - r.avg) < 1e-9 ? rk.get(ranked[i - 1].a.id) : i + 1));
+  rows.forEach(r => r.rank = rk.get(r.a.id) || null);
+  rows.sort((x, y) => (x.rank || 999) - (y.rank || 999) || x.a.id - y.a.id);
+  return { rows, P, ranked: ranked.length };
+}
+const firstName = n => { const w = String(n).replace(/\b(Dr|PM|En|Pn|Prof|Ts|Ir|Puan|Encik)\.?\s+/gi, '').trim().split(/\s+/); return w[0] || n; };
+const panelLbl = (p, i) => 'P' + (i + 1) + ' ' + firstName(p.nama);
+const panelFull = (p, i) => 'P' + (i + 1) + ' ' + p.nama;
+
+let LOGO_JPG = null;
+function logoJpeg(img) {   // JPEG kecil (latar putih) supaya fail PDF tidak besar
+  if (!LOGO_JPG) { const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0); LOGO_JPG = c.toDataURL('image/jpeg', 0.92); }
+  return LOGO_JPG;
+}
+function logoImg() { const i = document.querySelector('#logo img'); return i && i.complete && i.naturalWidth ? i : null; }
+
+function buildPdf() {
+  const jsPDF = window.jspdf && window.jspdf.jsPDF;
+  if (!jsPDF) throw new Error('Pustaka PDF belum dimuat. Semak sambungan internet, muat semula halaman dan cuba lagi.');
+  const { rows, P, ranked } = rpData();
+  if (!rows.length) throw new Error('Tiada permohonan untuk dilaporkan.');
+  const detailRows = RP.pid ? rows.filter(r => r.a.id === RP.pid) : rows;
+  const doc = new jsPDF({ orientation: RP.type === 'terperinci' ? 'portrait' : 'landscape', unit: 'mm', format: 'a4' });
+  if (RP.type !== 'terperinci') summaryPages(doc, rows, P);
+  if (RP.type !== 'ringkasan') detailRows.forEach((r, i) => detailPage(doc, r, P, ranked, !(RP.type === 'terperinci' && i === 0)));
+  decorate(doc);
+  return doc;
+}
+
+/* Kepala (logo UTMXCITE) dan kaki dilukis pada setiap halaman selepas kandungan siap, supaya "Halaman x / y" tepat. */
+function decorate(doc) {
+  const n = doc.getNumberOfPages(), img = logoImg(), now = new Date().toLocaleString('ms-MY'), m = 12;
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i);
+    const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
+    if (img) { const h = 16, w = h * img.naturalWidth / img.naturalHeight; doc.addImage(logoJpeg(img), 'JPEG', m, 6.5, w, h, 'utmxcite-logo', 'FAST'); }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(pw > ph ? 14 : 11.5); doc.setTextColor(...MAROON);
+    doc.text('LAPORAN PENILAIAN PERMOHONAN STUDENT MALL & SUB', pw - m, 13, { align: 'right' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...GREY);
+    doc.text('Universiti Teknologi Malaysia | UTMXCITE | ' + D.sesi.tarikh + ', ' + D.sesi.masa, pw - m, 18.5, { align: 'right' });
+    doc.setDrawColor(...GOLD); doc.setLineWidth(0.9); doc.line(m, 25, pw - m, 25);
+    doc.setDrawColor(...MAROON); doc.setLineWidth(0.3); doc.line(m, 26.3, pw - m, 26.3);
+    doc.setDrawColor(190); doc.setLineWidth(0.2); doc.line(m, ph - 12, pw - m, ph - 12);
+    doc.setFontSize(7.5); doc.setTextColor(...GREY);
+    doc.text('Dijana oleh sistem UTMPreneur Penilaian pada ' + now + ' oleh ' + (B.me.name || B.me.email), m, ph - 7.5);
+    doc.text('Halaman ' + i + ' / ' + n, pw - m, ph - 7.5, { align: 'right' });
+  }
+}
+
+const TBL = { margin: { top: 30, bottom: 16, left: 12, right: 12 }, theme: 'grid', styles: { fontSize: 8.5, cellPadding: 1.8, lineColor: [215, 205, 206], lineWidth: 0.2, textColor: 30, overflow: 'linebreak' }, headStyles: { fillColor: MAROON, textColor: 255, halign: 'center', fontStyle: 'bold' }, alternateRowStyles: { fillColor: [250, 246, 246] } };
+function section(doc, text, y) { doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...MAROON); doc.text(text, 12, y); return y + 2.5; }
+function orient(doc) { return doc.internal.pageSize.getWidth() > doc.internal.pageSize.getHeight() ? 'landscape' : 'portrait'; }
+
+function summaryPages(doc, rows, P) {
+  const m = 12, S = D.sesi;
+  let y = 34;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(30);
+  doc.text('Ringkasan Keputusan Penilaian' + (RP.jenis ? ' - ' + RP.jenis : ''), m, y); y += 3;
+  const done = rows.filter(r => r.avg != null).length;
+  doc.autoTable({ ...TBL, startY: y, theme: 'plain', styles: { fontSize: 9, cellPadding: 1 }, body: [
+    ['Sesi', S.nama, 'Tarikh / Masa', S.tarikh + ' / ' + S.masa],
+    ['Bilangan permohonan', rows.length + (RP.jenis ? ' (' + RP.jenis + ')' : ' (Student Mall ' + rows.filter(r => r.a.type !== 'SUB').length + ', SUB ' + rows.filter(r => r.a.type === 'SUB').length + ')'), 'Bilangan panel', String(P.length)],
+    ['Telah dinilai (min. seorang panel)', done + ' / ' + rows.length, 'Rubrik', 'Versi ' + S.versi + ' (markah penuh 100)']],
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 72 }, 1: { cellWidth: 78 }, 2: { fontStyle: 'bold', cellWidth: 32 } } });
+  y = doc.lastAutoTable.finalY + 5;
+  y = section(doc, 'Kedudukan pemohon (ranking mengikut purata markah panel, /100)', y);
+  doc.autoTable({ ...TBL, startY: y,
+    head: [['Rank', 'Perniagaan', 'Jenis', 'Pelajar', ...P.map((p, i) => 'P' + (i + 1)), 'Dinilai', 'Purata', 'Layak', 'Status akhir']],
+    body: rows.map(r => [r.rank || '-', r.a.biz, r.a.type, r.a.st.map(s => s.n).join('\n'), ...r.sc.map(s => s == null ? '-' : s), r.n + '/' + P.length, fmt(r.avg), r.n ? r.layakY + '/' + r.n : '-', r.final]),
+    columnStyles: { 0: { halign: 'center', cellWidth: 12, fontStyle: 'bold' }, 1: { cellWidth: 44, fontStyle: 'bold' }, 2: { cellWidth: 22 }, 3: { cellWidth: 52 }, ...Object.fromEntries(P.map((p, i) => [4 + i, { halign: 'center', cellWidth: 11 }])), [4 + P.length]: { halign: 'center', cellWidth: 15 }, [5 + P.length]: { halign: 'center', cellWidth: 17, fontStyle: 'bold' }, [6 + P.length]: { halign: 'center', cellWidth: 14 }, [7 + P.length]: { halign: 'center' } },
+    didParseCell: d => { if (d.section === 'body' && d.column.index === 7 + P.length) { const v = d.cell.raw; d.cell.styles.fontStyle = 'bold'; if (v === 'Lulus') d.cell.styles.textColor = [31, 122, 77]; else if (v === 'Tidak lulus') d.cell.styles.textColor = [179, 38, 30]; } } });
+  y = doc.lastAutoTable.finalY + 4;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...GREY);
+  const legend = doc.splitTextToSize('Panel: ' + P.map(panelFull).join('; ') + '.', doc.internal.pageSize.getWidth() - 2 * m);
+  const note = doc.splitTextToSize('Nota: markah panel ialah jumlah /100. Purata, ranking dan bilangan layak dikira daripada penilaian yang telah dihantar sahaja. "-" bermaksud belum dihantar. Status akhir ditetapkan oleh admin.', doc.internal.pageSize.getWidth() - 2 * m);
+  const need = (legend.length + note.length) * 3.6 + 42;
+  if (y + need > doc.internal.pageSize.getHeight() - 16) { doc.addPage('a4', orient(doc)); y = 34; }
+  doc.text(legend, m, y); y += legend.length * 3.6 + 1; doc.text(note, m, y); y += note.length * 3.6 + 8;
+  signBlock(doc, y);
+}
+
+function signBlock(doc, y) {
+  const m = 12, pw = doc.internal.pageSize.getWidth(), colW = (pw - 2 * m - 16) / 2;
+  [['Disediakan oleh', m], ['Disahkan oleh', m + colW + 16]].forEach(([t, x]) => {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(30); doc.text(t + ':', x, y);
+    doc.setFont('helvetica', 'normal'); doc.setDrawColor(120); doc.setLineWidth(0.2);
+    doc.line(x, y + 16, x + colW, y + 16);
+    doc.setFontSize(8.5); doc.setTextColor(...GREY);
+    doc.text('Tandatangan', x, y + 20); doc.text('Nama: ', x, y + 26); doc.line(x + 12, y + 26, x + colW, y + 26);
+    doc.text('Jawatan: ', x, y + 32); doc.line(x + 15, y + 32, x + colW, y + 32); doc.text('Tarikh: ', x, y + 38); doc.line(x + 12, y + 38, x + colW, y + 38);
+  });
+}
+
+function detailPage(doc, r, P, ranked, newPage) {
+  if (newPage) doc.addPage('a4', 'portrait');
+  const m = 12, pw = doc.internal.pageSize.getWidth(), a = r.a;
+  let y = 34;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(30); doc.text(a.biz, m, y);
+  doc.setFontSize(10); doc.setTextColor(...MAROON); doc.text(r.rank ? 'Ranking ' + r.rank + ' / ' + ranked : 'Belum ada ranking', pw - m, y, { align: 'right' });
+  y += 5; doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...GREY);
+  const sub = doc.splitTextToSize(a.type + ' | ' + a.kind + ' | SSM: ' + a.ssm, pw - 2 * m); doc.text(sub, m, y); y += sub.length * 4 + 3;
+  y = section(doc, 'Maklumat pelajar', y);
+  doc.autoTable({ ...TBL, startY: y, head: [['Nama', 'No. Matrik', 'No. KP', 'Thn', 'Fakulti', 'Kursus', 'CGPA']],
+    body: a.st.map(s => [s.n, s.m, maskKp(s.kp), s.yr, s.fac, s.course, fmt(s.cgpa)]),
+    columnStyles: { 0: { cellWidth: 42 }, 1: { cellWidth: 22 }, 2: { cellWidth: 28 }, 3: { cellWidth: 9, halign: 'center' }, 4: { cellWidth: 14, halign: 'center' }, 6: { cellWidth: 13, halign: 'center' } } });
+  y = doc.lastAutoTable.finalY + 6;
+  y = section(doc, 'Markah mengikut kriteria (setiap panel)', y);
+  doc.autoTable({ ...TBL, startY: y, showFoot: 'lastPage',
+    head: [['Bil', 'Kriteria', 'Maks', ...P.map((p, i) => 'P' + (i + 1)), 'Purata']],
+    body: D.crit.map((c, i) => [c.id, c.bm, c.max, ...r.evs.map(e => e ? e.mk[i] : '-'), fmt(r.avgC[i], 1)]),
+    foot: [['', 'JUMLAH', D.crit.reduce((s, c) => s + c.max, 0), ...r.evs.map(e => e ? e.total : '-'), fmt(r.avg)]],
+    footStyles: { fillColor: [246, 238, 238], textColor: 30, fontStyle: 'bold' },
+    columnStyles: { 0: { cellWidth: 9, halign: 'center' }, 1: { cellWidth: 56 }, 2: { cellWidth: 12, halign: 'center' }, ...Object.fromEntries(P.map((p, i) => [3 + i, { halign: 'center', cellWidth: 13 }])), [3 + P.length]: { halign: 'center', cellWidth: 18 } } });
+  y = doc.lastAutoTable.finalY + 2;
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GREY);
+  const lg = doc.splitTextToSize('Panel: ' + P.map(panelFull).join('; ') + '.', pw - 2 * m); doc.text(lg, m, y + 2); y += lg.length * 3.2 + 6;
+  doc.autoTable({ ...TBL, startY: y, theme: 'grid', styles: { ...TBL.styles, fontSize: 9 }, body: [
+    ['Purata markah', fmt(r.avg) + ' / 100', 'Penilaian dihantar', r.n + ' / ' + P.length],
+    ['Layak (Ya / Tidak)', r.layakY + ' / ' + r.layakN, 'Status akhir', r.final]],
+    columnStyles: { 0: { fontStyle: 'bold', fillColor: [246, 238, 238], cellWidth: 40 }, 1: { cellWidth: 50, fontStyle: 'bold' }, 2: { fontStyle: 'bold', fillColor: [246, 238, 238], cellWidth: 40 } } });
+  y = doc.lastAutoTable.finalY + 6;
+  if (r.n < P.length) { doc.setFontSize(8); doc.setFont('helvetica', 'italic'); doc.setTextColor(...GREY); doc.text('Nota: hanya penilaian yang telah dihantar dikira. ' + (P.length - r.n) + ' panel belum menghantar.', m, y); y += 6; }
+  if (RP.notes) {
+    const nb = [];
+    r.evs.forEach((e, i) => { if (!e) return; const l = panelLbl(P[i], i);
+      e.notes.forEach((t, k) => { if (t) nb.push([l, D.crit[k].bm, t]); });
+      if (e.cm) nb.push([l, 'Keseluruhan', e.cm]);
+    });
+    y = section(doc, 'Catatan dan ulasan panel', y);
+    if (nb.length) doc.autoTable({ ...TBL, startY: y, head: [['Panel', 'Kriteria', 'Catatan']], body: nb, columnStyles: { 0: { cellWidth: 44 }, 1: { cellWidth: 40 } }, headStyles: { ...TBL.headStyles, halign: 'left' } });
+    else { doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(...GREY); doc.text('Tiada catatan.', m, y + 4); }
+  }
+}
+
+function paperPreview() {
+  const { rows, P, ranked } = rpData(), S = D.sesi, img = logoImg();
+  const head = `<div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN PENILAIAN PERMOHONAN STUDENT MALL &amp; SUB</b><span>Universiti Teknologi Malaysia | UTMXCITE | ${esc(S.tarikh)}, ${esc(S.masa)}</span></div></div>`;
+  const summary = `<h4>Ringkasan Keputusan Penilaian${RP.jenis ? ' - ' + esc(RP.jenis) : ''}</h4><div class="tw"><table><thead><tr><th>Rank</th><th>Perniagaan</th><th>Jenis</th><th>Pelajar</th>${P.map((p, i) => `<th>P${i + 1}</th>`).join('')}<th>Dinilai</th><th>Purata</th><th>Layak</th><th>Status</th></tr></thead><tbody>
+   ${rows.map(r => `<tr><td><b>${r.rank || '-'}</b></td><td><b>${esc(r.a.biz)}</b></td><td>${esc(r.a.type)}</td><td>${r.a.st.map(s => esc(s.n)).join('<br>')}</td>${r.sc.map(s => `<td style="text-align:center">${s == null ? '-' : s}</td>`).join('')}<td style="text-align:center">${r.n}/${P.length}</td><td style="text-align:center"><b>${fmt(r.avg)}</b></td><td style="text-align:center">${r.n ? r.layakY + '/' + r.n : '-'}</td><td>${esc(r.final)}</td></tr>`).join('')}</tbody></table></div>
+   <p style="color:#6f6266;font-size:11px">Panel: ${P.map((p, i) => esc(panelFull(p, i))).join('; ')}. Hanya penilaian yang dihantar dikira.</p>`;
+  const sign = `<div class="sign"><div>Disediakan oleh<br>Nama / Jawatan / Tarikh</div><div>Disahkan oleh<br>Nama / Jawatan / Tarikh</div></div>`;
+  const pick = rows.find(r => r.a.id === RP.pid) || rows[0];
+  const detail = !pick ? '' : `<h4>${esc(pick.a.biz)} <small style="color:#6f6266;font-weight:400">${pick.rank ? 'Ranking ' + pick.rank + ' / ' + ranked : ''}</small></h4><div class="tw"><table><thead><tr><th>Bil</th><th>Kriteria</th><th>Maks</th>${P.map((p, i) => `<th>P${i + 1}</th>`).join('')}<th>Purata</th></tr></thead><tbody>
+   ${D.crit.map((c, i) => `<tr><td>${c.id}</td><td>${esc(c.bm)}</td><td style="text-align:center">${c.max}</td>${pick.evs.map(e => `<td style="text-align:center">${e ? e.mk[i] : '-'}</td>`).join('')}<td style="text-align:center">${fmt(pick.avgC[i], 1)}</td></tr>`).join('')}
+   <tr class="tot"><td></td><td>JUMLAH</td><td style="text-align:center">100</td>${pick.evs.map(e => `<td style="text-align:center">${e ? e.total : '-'}</td>`).join('')}<td style="text-align:center">${fmt(pick.avg)}</td></tr></tbody></table></div>`;
+  const parts = RP.type === 'ringkasan' ? summary + sign : RP.type === 'terperinci' ? detail + `<p style="color:#6f6266;font-size:11px">${(RP.pid ? 1 : rows.length)} halaman: satu halaman bagi setiap pemohon, dengan maklumat pelajar, markah setiap panel dan catatan.</p>` : summary + sign + '<hr style="margin:16px 0;border:0;border-top:1px dashed #bbb">' + detail;
+  return `<div class="paper">${head}${parts}</div>`;
+}
+
+function laporan() {
+  const T = [['ringkasan', 'Ringkasan keputusan', 'Satu jadual ranking semua pemohon dengan markah setiap panel, purata, layak dan status akhir. A4 melintang, ruang tandatangan.'],
+    ['terperinci', 'Terperinci setiap pemohon', 'Satu halaman bagi setiap pemohon: maklumat pelajar, markah mengikut kriteria dan panel, keputusan serta catatan panel. A4 menegak.'],
+    ['lengkap', 'Laporan lengkap', 'Ringkasan keputusan diikuti halaman terperinci semua pemohon dalam satu fail PDF.']];
+  const { rows } = rpData();
+  $('#main').innerHTML = head('Laporan', 'Reports · muat turun PDF dengan kepala UTMXCITE', '<button class="btn-ghost" id="rl">↻ Data terkini</button>') + `
+  <div class="rp"><div class="ctl card"><h3>Format laporan</h3>
+   ${T.map(t => `<label class="opt"><input type="radio" name="rt" value="${t[0]}" ${RP.type === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><small>${t[2]}</small></span></label>`).join('')}
+   <div class="f"><label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option></select></label>
+   ${RP.type !== 'ringkasan' ? `<label>Pemohon (laporan terperinci)<select id="rp"><option value="0">Semua pemohon (${rows.length})</option>${rows.map(r => `<option value="${r.a.id}" ${RP.pid === r.a.id ? 'selected' : ''}>${esc(r.a.biz)}</option>`).join('')}</select></label>
+   <label class="chip" style="border-radius:8px"><input type="checkbox" id="rn" ${RP.notes ? 'checked' : ''}> Sertakan catatan panel</label>` : ''}</div>
+   <div class="foot" style="margin-top:6px"><button class="btn-solid" id="dl" style="flex:1">⬇ Muat turun PDF</button></div>
+   <div class="foot" style="margin-top:8px"><button class="btn-line" id="op" style="flex:1">Buka dalam tab baharu</button></div>
+   <p class="note" style="margin:10px 0 0">Kepala setiap halaman mempunyai logo UTM dan UTMXCITE. Hanya penilaian yang telah dihantar dikira. No. KP dipaparkan bertopeng. Jika muat turun disekat oleh pelayar, gunakan "Buka dalam tab baharu" kemudian simpan.</p></div>
+   <div><p class="note" style="margin:0 0 8px">Pratonton (susun atur PDF sebenar mungkin berbeza sedikit):</p>${paperPreview()}</div></div>`;
+  document.querySelectorAll('[name=rt]').forEach(r => r.onchange = () => { RP.type = r.value; laporan(); });
+  $('#rj').onchange = e => { RP.jenis = e.target.value; RP.pid = 0; laporan(); };
+  const rp = $('#rp'); if (rp) rp.onchange = e => { RP.pid = +e.target.value; laporan(); };
+  const rn = $('#rn'); if (rn) rn.onchange = e => { RP.notes = e.target.checked; };
+  $('#rl').onclick = async () => { await loadAdmin(); toast('Data dimuat semula'); };
+  const name = () => 'Laporan_Penilaian_' + { ringkasan: 'Ringkasan', terperinci: 'Terperinci', lengkap: 'Lengkap' }[RP.type] + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+  const make = (fn) => { try { const doc = buildPdf(); fn(doc); rpc('apiLogReport', RP.type + (RP.jenis ? ' / ' + RP.jenis : '')).catch(() => { }); } catch (e) { toast(e.message, true); } };
+  $('#dl').onclick = () => make(doc => { doc.save(name()); toast('PDF dijana'); });
+  $('#op').onclick = () => make(doc => { const w = window.open(doc.output('bloburl'), '_blank'); if (!w) toast('Pelayar menyekat tab baharu. Benarkan pop-up atau guna Muat turun.', true); });
 }
 
 /* ===================== PANEL (PENILAI) ===================== */
