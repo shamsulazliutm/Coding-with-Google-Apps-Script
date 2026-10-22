@@ -765,7 +765,7 @@ function renderBlocksPdf(doc, B) {
           doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(30); doc.text(mb.role, x, y + 3);
           doc.setDrawColor(90); doc.setLineWidth(0.25); doc.line(x, y + 18, x + cw, y + 18);
           doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(mb.name, x, y + 22.5);
-          doc.setTextColor(...GREY); doc.text(mb.jw || '(Jawatan Pegawai)', x, y + 27); doc.text('Tarikh: ' + DOTS.slice(0, 22), x, y + 33);
+          doc.setTextColor(...GREY); if (mb.jw) doc.text(mb.jw, x, y + 27); doc.text('Tarikh: ' + DOTS.slice(0, 22), x, y + 33);
         });
         y += 42;
       }
@@ -782,7 +782,7 @@ function blocksHtml(B) {
     if (b.t === 'kv') return `<table style="min-width:0;margin:2px 0 6px 34px;width:auto">${b.rows.map(([k, v]) => `<tr><td style="border:0;padding:1px 14px 1px 0;white-space:nowrap">${esc(k)}</td><td style="border:0;padding:1px 6px">${k || v ? ':' : ''}</td><td style="border:0;padding:1px 0">${esc(v)}</td></tr>`).join('')}</table>`;
     if (b.t === 'list') return `<div style="margin:2px 0 6px 34px">${b.items.map((t, i) => `<div>(${String.fromCharCode(97 + i)}) ${esc(t)}</div>`).join('')}</div>`;
     if (b.t === 'table') return `<p style="margin:10px 0 3px;color:#8a2d3b;font-weight:700;font-size:12px">${esc(b.cap)}</p><div class="tw"><table><thead><tr>${b.head.map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${b.body.map(r => `<tr>${r.map((c, i) => `<td style="${(b.center || []).includes(i) ? 'text-align:center;' : ''}${(b.bold || []).includes(i) ? 'font-weight:700;' : ''}">${esc(c).replace(/\n/g, '<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.note ? `<p style="color:#6f6266;font-size:11px;margin:3px 0">${esc(b.note)}</p>` : ''}`;
-    if (b.t === 'sign') return `<h4 style="text-align:center;margin:22px 0 4px">TANDATANGAN AHLI-AHLI JAWATANKUASA</h4><div style="display:flex;flex-wrap:wrap;gap:6px 30px">${b.members.map(mb => `<div style="flex:1 1 220px;margin-top:6px"><b>${esc(mb.role)}</b><div style="border-bottom:1px solid #999;height:36px"></div>${esc(mb.name)}<br><span style="color:#6f6266">${esc(mb.jw || '(Jawatan Pegawai)')}</span><br><span style="color:#6f6266">Tarikh: ............</span></div>`).join('')}</div>`;
+    if (b.t === 'sign') return `<h4 style="text-align:center;margin:22px 0 4px">TANDATANGAN AHLI-AHLI JAWATANKUASA</h4><div style="display:flex;flex-wrap:wrap;gap:6px 30px">${b.members.map(mb => `<div style="flex:1 1 220px;margin-top:6px"><b>${esc(mb.role)}</b><div style="border-bottom:1px solid #999;height:36px"></div>${esc(mb.name)}${mb.jw ? `<br><span style="color:#6f6266">${esc(mb.jw)}</span>` : ''}<br><span style="color:#6f6266">Tarikh: ............</span></div>`).join('')}</div>`;
     return '';
   }).join('');
 }
