@@ -14,7 +14,7 @@ const LOGO_URL = ''; // pilihan: ganti logo lalai dalam Index.html dengan URL im
 
 const SH = {
   PANEL: 'Panel', PEMOHON: 'Pemohon', PELAJAR: 'Pelajar', SESI: 'Sesi',
-  RUBRIK: 'Rubrik', CHIP: 'Chip', NILAI: 'Penilaian', KEPUTUSAN: 'Keputusan', LOG: 'Log'
+  RUBRIK: 'Rubrik', CHIP: 'Chip', TETAPAN: 'Tetapan', NILAI: 'Penilaian', KEPUTUSAN: 'Keputusan', LOG: 'Log'
 };
 const HEAD = {
   Panel: ['Nama', 'Emel', 'Peranan', 'Status', 'KodHash', 'KodTamat'],
@@ -23,6 +23,7 @@ const HEAD = {
   Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status'],
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
   Chip: ['Teks'],
+  Tetapan: ['Kunci', 'Nilai'],
   Penilaian: ['PemohonID', 'Emel', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
     'Elemen', 'Ulasan', 'Layak', 'Jumlah', 'Status', 'Dikemaskini',
     'Catatan1', 'Catatan2', 'Catatan3', 'Catatan4', 'Catatan5', 'Catatan6', 'DiisiOleh'],
@@ -466,6 +467,44 @@ function saveEval_(u, pid, p, submit, byAdmin) {
   });
 }
 
+/* ===================== Butiran laporan jawatankuasa ===================== */
+const CFG_KEYS = ['bil', 'tujuan', 'suratFail', 'suratTarikh', 'tamat', 'tempat', 'tarikhSidang', 'masaSidang', 'pengerusi', 'jawatan', 'cgpaMin', 'syor'];
+
+function cfgSheet_() {
+  let sh = ss_().getSheetByName(SH.TETAPAN);
+  if (!sh) {  // sheet baharu pada pemasangan lama: cipta secara automatik
+    sh = ss_().insertSheet(SH.TETAPAN);
+    sh.getRange(1, 1, 1, 2).setValues([HEAD.Tetapan]).setFontWeight('bold').setBackground('#8a2d3b').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function cfg_() {
+  const v = cfgSheet_().getDataRange().getValues();
+  v.shift();
+  const o = {};
+  v.forEach(function (r) { if (r[0]) o[String(r[0])] = String(r[1] == null ? '' : r[1]); });
+  return o;
+}
+
+function apiSaveTetapan(token, obj) {
+  need_('admin', token);
+  return withLock_(function () {
+    const sh = cfgSheet_();
+    const v = sh.getDataRange().getValues();
+    const rowOf = {};
+    v.forEach(function (r, i) { if (i > 0 && r[0]) rowOf[String(r[0])] = i + 1; });
+    CFG_KEYS.forEach(function (k) {
+      if (obj[k] === undefined) return;
+      const val = String(obj[k]).slice(0, 4000);
+      if (rowOf[k]) sh.getRange(rowOf[k], 2).setValue(val); else sh.appendRow([k, val]);
+    });
+    log_('Simpan butiran laporan', 'Laporan jawatankuasa');
+    return cfg_();
+  });
+}
+
 /* ===================== API: admin ===================== */
 
 function apiAdminData(token) {
@@ -479,7 +518,7 @@ function apiAdminData(token) {
       return { nama: r.Nama, emel: r.Emel, peranan: r.Peranan, status: r.Status,
         kod: sah ? Utilities.formatDate(new Date(Number(r.KodTamat)), 'Asia/Kuala_Lumpur', 'dd/MM HH:mm') : '' };
     }),
-    nilai: nilai, keputusan: computeKeputusan_(),
+    nilai: nilai, keputusan: computeKeputusan_(), cfg: cfg_(),
     versi: table_(SH.RUBRIK).rows.map(function (r) { return Number(r.Versi); }).reduce(function (a, b) { return Math.max(a, b); }, 1),
     log: table_(SH.LOG).rows.slice(-200).reverse().map(function (r) {
       return { masa: r.Masa instanceof Date ? Utilities.formatDate(r.Masa, 'Asia/Kuala_Lumpur', 'dd/MM/yyyy HH:mm') : String(r.Masa), user: r.Pengguna, act: r.Tindakan, det: r.Butiran };

@@ -339,7 +339,7 @@ setInterval(async () => {
     try { const d = await rpc('apiAdminData'); if (!ACT_AS) { D = d; adminShell(); } } catch (e) { }
   }
 }, 30000);
-async function loadAdmin() { D = await rpc('apiAdminData'); adminShell(); }
+async function loadAdmin() { D = await rpc('apiAdminData'); CFG = null; adminShell(); }
 function adminShell() {
   app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? `<span class="n">${D.apps.length}</span>` : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
   app.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t !== 'panel') codes = null; tab = b.dataset.t; openRow = null; openKey = null; adminShell(); });
@@ -491,9 +491,9 @@ const nem = x => String(x == null ? '' : x).trim().toLowerCase();
 const fmt = (n, d = 2) => n == null ? '-' : Number(n).toFixed(d);
 const maskKp = kp => String(kp || '').replace(/\d{4}$/, '****');
 
-function rpData() {
+function rpData(jenis = RP.jenis) {
   const K = D.keputusan, P = K.panels;
-  const rows = D.apps.filter(a => !RP.jenis || a.type === RP.jenis).map(a => {
+  const rows = D.apps.filter(a => !jenis || a.type === jenis).map(a => {
     const kr = K.rows.find(r => r.id === a.id) || {};
     const evs = P.map(p => D.nilai.find(n => n.pid === a.id && nem(n.email) === nem(p.emel) && n.status === 'Dihantar') || null);
     const got = evs.filter(Boolean);
@@ -523,6 +523,12 @@ function logoImg() { const i = document.querySelector('#logo img'); return i && 
 function buildPdf() {
   const jsPDF = window.jspdf && window.jspdf.jsPDF;
   if (!jsPDF) throw new Error('Pustaka PDF belum dimuat. Semak sambungan internet, muat semula halaman dan cuba lagi.');
+  if (RP.type === 'jawatankuasa') {
+    const d = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    renderBlocksPdf(d, jkBlocks());
+    decorate(d, { title: 'LAPORAN JAWATANKUASA JPPPDKP UTM', sub: 'Universiti Teknologi Malaysia | UTMXCITE | Bil ' + jkCfg().bil });
+    return d;
+  }
   const { rows, P, ranked } = rpData();
   if (!rows.length) throw new Error('Tiada permohonan untuk dilaporkan.');
   const detailRows = RP.pid ? rows.filter(r => r.a.id === RP.pid) : rows;
@@ -534,16 +540,17 @@ function buildPdf() {
 }
 
 /* Kepala (logo UTMXCITE) dan kaki dilukis pada setiap halaman selepas kandungan siap, supaya "Halaman x / y" tepat. */
-function decorate(doc) {
+function decorate(doc, opt) {
+  opt = opt || {};
   const n = doc.getNumberOfPages(), img = logoImg(), now = new Date().toLocaleString('ms-MY'), m = 12;
   for (let i = 1; i <= n; i++) {
     doc.setPage(i);
     const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
     if (img) { const h = 16, w = h * img.naturalWidth / img.naturalHeight; doc.addImage(logoJpeg(img), 'JPEG', m, 6.5, w, h, 'utmxcite-logo', 'FAST'); }
     doc.setFont('helvetica', 'bold'); doc.setFontSize(pw > ph ? 14 : 11.5); doc.setTextColor(...MAROON);
-    doc.text('LAPORAN PENILAIAN PERMOHONAN STUDENT MALL & SUB', pw - m, 13, { align: 'right' });
+    doc.text(opt.title || 'LAPORAN PENILAIAN PERMOHONAN STUDENT MALL & SUB', pw - m, 13, { align: 'right' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...GREY);
-    doc.text('Universiti Teknologi Malaysia | UTMXCITE | ' + D.sesi.tarikh + ', ' + D.sesi.masa, pw - m, 18.5, { align: 'right' });
+    doc.text(opt.sub || ('Universiti Teknologi Malaysia | UTMXCITE | ' + D.sesi.tarikh + ', ' + D.sesi.masa), pw - m, 18.5, { align: 'right' });
     doc.setDrawColor(...GOLD); doc.setLineWidth(0.9); doc.line(m, 25, pw - m, 25);
     doc.setDrawColor(...MAROON); doc.setLineWidth(0.3); doc.line(m, 26.3, pw - m, 26.3);
     doc.setDrawColor(190); doc.setLineWidth(0.2); doc.line(m, ph - 12, pw - m, ph - 12);
@@ -638,8 +645,169 @@ function detailPage(doc, r, P, ranked, newPage) {
   }
 }
 
+/* ===================== LAPORAN JAWATANKUASA (JPPPDKP) ===================== */
+/* Kandungan dibina sekali sebagai "blok", kemudian dilukis ke PDF dan ke pratonton HTML. */
+let CFG = null;
+const CFG_DEF = () => ({ bil: 'xx/' + new Date().getFullYear(), tujuan: '', suratFail: '', suratTarikh: '', tamat: '', tempat: '', tarikhSidang: D.sesi.tarikh, masaSidang: D.sesi.masa, pengerusi: '', jawatan: '{}', cgpaMin: '2.00', syor: '' });
+function jkCfg() { if (!CFG) CFG = { ...CFG_DEF(), ...(D.cfg || {}) }; return CFG; }
+const DOTS = '..............................';
+const ORD = ['Pertama', 'Kedua', 'Ketiga', 'Keempat', 'Kelima', 'Keenam', 'Ketujuh', 'Kelapan', 'Kesembilan', 'Kesepuluh'];
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const join = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' dan ' + a[a.length - 1] : a.join('');
+
+function jkBlocks() {
+  const C = jkCfg(), S = D.sesi, { rows, P, ranked } = rpData(''), B = [];
+  let jw = {}; try { jw = JSON.parse(C.jawatan || '{}') || {}; } catch (e) { }
+  const nApps = rows.length, nStud = rows.reduce((s, r) => s + r.a.st.length, 0), nSM = rows.filter(r => r.a.type !== 'SUB').length, nSUB = nApps - nSM;
+  const min = parseFloat(C.cgpaMin) || 0;
+  B.push({ t: 'title', text: 'LAPORAN JAWATANKUASA PENILAIAN PELAN PERNIAGAAN DAN DANA KEUSAHAWANAN PELAJAR (JPPPDKP) UTM BIL ' + C.bil });
+
+  B.push({ t: 'h', num: '1', text: 'Tujuan' });
+  B.push({ t: 'p', text: C.tujuan || 'Laporan ini disediakan untuk membantu Urusetia UTMXCITE membuat keputusan terhadap permohonan Student Mall dan SUB berdasarkan penilaian pelan perniagaan oleh jawatankuasa.' });
+
+  B.push({ t: 'h', num: '2', text: 'Pelantikan Jawatankuasa' });
+  B.push({ t: 'p', num: '2.1', text: 'Jawatankuasa ini dilantik oleh Dekan/Ketua Jabatan melalui surat:' });
+  B.push({ t: 'kv', rows: [['Fail Rujukan', C.suratFail || DOTS], ['Tarikh', C.suratTarikh || DOTS], ['Lantikan ahli jawatankuasa tamat pada', C.tamat || DOTS]] });
+  const chair = C.pengerusi.trim() || '(Nama Pegawai)';
+  const ahli = P.map(p => p.nama).filter(n => nem(n) !== nem(chair));
+  B.push({ t: 'p', num: '2.2', text: 'Keanggotaan Jawatankuasa:' });
+  B.push({ t: 'kv', rows: [['Pengerusi', chair], ...(ahli.length ? ahli : ['(Nama Pegawai)']).map((n, i) => [i ? '' : 'Ahli', n])] });
+
+  B.push({ t: 'h', num: '3', text: 'Pemerhatian Jawatankuasa' });
+  B.push({ t: 'p', num: '3.1', text: 'JPPPDKP telah bersidang pada ' + (C.tarikhSidang || DOTS) + ' jam ' + (C.masaSidang || DOTS) + ' bertempat di ' + (C.tempat || DOTS) + '.' });
+  B.push({ t: 'p', num: '3.2', text: 'Sebanyak ' + nApps + ' permohonan (' + nStud + ' pelajar) telah dikemukakan, terdiri daripada Student Mall ' + nSM + ' dan SUB ' + nSUB + '. Penilaian telah dibuat oleh ' + P.length + ' panel dengan jadual markah seperti di Jadual 1:' });
+  const w1 = P.length > 6 ? 9 : 10.5;
+  B.push({ t: 'table', cap: 'Jadual 1: Jadual markah dan kedudukan pemohon (markah /100)', head: ['Rank', 'Perniagaan', 'Jenis', ...P.map((p, i) => 'P' + (i + 1)), 'Dinilai', 'Purata'],
+    body: rows.map(r => [r.rank || '-', r.a.biz, r.a.type, ...r.sc.map(s => s == null ? '-' : s), r.n + '/' + P.length, fmt(r.avg)]),
+    widths: [11, 40, 22, ...P.map(() => w1), 15, 17], center: [0, ...P.map((p, i) => 3 + i), 3 + P.length, 4 + P.length], bold: [1, 4 + P.length],
+    note: 'Panel: ' + P.map(panelFull).join('; ') + '. "-" bermaksud belum dihantar. Purata dikira daripada penilaian yang dihantar sahaja.' });
+
+  B.push({ t: 'h', num: '4', text: 'Analisis' });
+  // 4.1 kelayakan asas
+  const el = rows.map(r => { const g = r.a.st.map(s => s.cgpa), ok = g.every(x => x >= min), some = g.some(x => x >= min); return { r, ok, some, plan: !!String(r.a.plan || '').trim(), ssm: !!String(r.a.ssm || '').trim() }; });
+  const okN = el.filter(e => e.ok).length, noPlan = el.filter(e => !e.plan), noSsm = el.filter(e => !e.ssm), failC = el.filter(e => !e.ok);
+  B.push({ t: 'p', num: '4.1', text: 'Kelayakan asas. Jawatankuasa menyemak kelayakan asas setiap pemohon berdasarkan CGPA (minimum ' + min.toFixed(2) + '), kelengkapan pelan perniagaan dan pendaftaran syarikat (SSM) seperti di Jadual 2:' });
+  B.push({ t: 'table', cap: 'Jadual 2: Semakan kelayakan asas pemohon', head: ['Perniagaan', 'Pelajar (Tahun)', 'CGPA', 'Syarat CGPA', 'Pelan perniagaan', 'No. SSM'],
+    body: el.map(e => [e.r.a.biz, e.r.a.st.map(s => s.n + ' (' + s.yr + ')').join('\n'), e.r.a.st.map(s => fmt(s.cgpa)).join('\n'), e.ok ? 'Memenuhi' : e.some ? 'Sebahagian' : 'Tidak memenuhi', e.plan ? 'Dikemukakan' : 'Tiada', e.ssm ? 'Ada' : 'Tiada']),
+    widths: [36, 52, 15, 27, 27, 25], center: [2, 3, 4, 5], bold: [0], flag: { col: 3, bad: ['Tidak memenuhi', 'Sebahagian'] } });
+  B.push({ t: 'p', text: okN + ' daripada ' + nApps + ' permohonan memenuhi syarat CGPA minimum.' + (failC.length ? ' Pemohon yang tidak memenuhi sepenuhnya syarat tersebut: ' + join(failC.map(e => e.r.a.biz + ' (CGPA ' + e.r.a.st.map(s => fmt(s.cgpa)).join(' / ') + ')')) + '.' : '') + (noPlan.length ? ' Pelan perniagaan belum dikemukakan oleh ' + join(noPlan.map(e => e.r.a.biz)) + '.' : ' Semua pemohon telah mengemukakan pelan perniagaan.') + (noSsm.length ? ' No. SSM tiada bagi ' + join(noSsm.map(e => e.r.a.biz)) + '.' : '') });
+  // 4.2 kaedah
+  B.push({ t: 'p', num: '4.2', text: 'Kaedah penilaian. Jawatankuasa telah menilai setiap pelan perniagaan secara bebas oleh ' + P.length + ' panel menggunakan rubrik versi ' + S.versi + ' berjumlah 100 markah. Setiap kriteria dinilai pada tahap 1 (lemah) hingga 5 (cemerlang) dan ditukarkan kepada markah mengikut markah penuh kriteria, dengan pelarasan markah oleh panel jika perlu, seperti di Jadual 3:' });
+  B.push({ t: 'table', cap: 'Jadual 3: Kriteria penilaian dan markah penuh', head: ['Bil', 'Kriteria', 'Panduan', 'Markah'], body: D.crit.map(c => [c.id, c.bm, c.sub, c.max]),
+    widths: [10, 52, 104, 16], center: [0, 3] });
+  // 4.3 analisis markah
+  const rk = rows.filter(r => r.avg != null);
+  const cr = D.crit.map((c, i) => { const v = rk.map(r => r.avgC[i]).filter(x => x != null); const m = v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; return { c, m, p: m == null ? null : pct(m, c.max) }; });
+  const crv = cr.filter(x => x.m != null);
+  B.push({ t: 'p', num: '4.3', text: 'Analisis markah. ' + (rk.length ? 'Purata markah keseluruhan pemohon ialah ' + fmt(rk.reduce((a, r) => a + r.avg, 0) / rk.length) + ' daripada 100. Markah tertinggi diperoleh ' + rk[0].a.biz + ' (' + fmt(rk[0].avg) + ') dan terendah ' + rk[rk.length - 1].a.biz + ' (' + fmt(rk[rk.length - 1].avg) + '), dengan julat ' + fmt(rk[0].avg - rk[rk.length - 1].avg) + ' markah. Purata markah mengikut kriteria seperti di Jadual 4:' : 'Belum ada penilaian yang dihantar untuk dianalisis.') });
+  if (rk.length) {
+    B.push({ t: 'table', cap: 'Jadual 4: Purata markah mengikut kriteria (semua pemohon)', head: ['Bil', 'Kriteria', 'Markah penuh', 'Purata', 'Peratus'], body: cr.map(x => [x.c.id, x.c.bm, x.c.max, fmt(x.m), x.p + '%']), widths: [10, 82, 30, 30, 30], center: [0, 2, 3, 4] });
+    const st = [...crv].sort((a, b) => b.p - a.p);
+    B.push({ t: 'p', text: 'Kriteria yang paling kukuh ialah ' + st[0].c.bm + ' (' + st[0].p + '%) manakala yang paling lemah ialah ' + st[st.length - 1].c.bm + ' (' + st[st.length - 1].p + '%).' + (rows.some(r => r.n < P.length) ? ' Nota: ' + rows.filter(r => r.n < P.length).length + ' permohonan belum dinilai oleh semua panel; purata dikira daripada penilaian yang dihantar.' : '') });
+  }
+  // 4.4 kesepakatan
+  const cons = rows.map(r => [r.a.biz, r.avg == null ? '-' : fmt(r.avg), r.layakY, r.layakN, r.n ? pct(r.layakY, r.n) + '%' : '-', !r.n ? '-' : r.layakY > r.layakN ? 'Majoriti layak' : r.layakN > r.layakY ? 'Majoriti tidak layak' : 'Seimbang']);
+  B.push({ t: 'p', num: '4.4', text: 'Kesepakatan panel. Setiap panel turut menyatakan sama ada pelajar layak. Ringkasan kesepakatan panel seperti di Jadual 5:' });
+  B.push({ t: 'table', cap: 'Jadual 5: Kesepakatan panel tentang kelayakan', head: ['Perniagaan', 'Purata', 'Layak (Ya)', 'Tidak', '% Layak', 'Kesepakatan'], body: cons, widths: [52, 20, 24, 18, 22, 46], center: [1, 2, 3, 4], bold: [0], flag: { col: 5, bad: ['Majoriti tidak layak', 'Seimbang'] } });
+  if (RP.notes) {
+    const nb = [];
+    rows.forEach(r => r.evs.forEach((e, i) => { if (!e) return; e.notes.forEach((t, k) => { if (t) nb.push([r.a.biz, panelLbl(P[i], i) + ' - ' + D.crit[k].bm, t]); }); if (e.cm) nb.push([r.a.biz, panelLbl(P[i], i) + ' - Keseluruhan', e.cm]); }));
+    B.push({ t: 'p', num: '4.5', text: 'Catatan dan ulasan panel. ' + (nb.length ? 'Catatan utama yang dikemukakan oleh panel seperti di Jadual 6:' : 'Tiada catatan khusus daripada panel.') });
+    if (nb.length) B.push({ t: 'table', cap: 'Jadual 6: Catatan dan ulasan panel', head: ['Perniagaan', 'Panel - Kriteria', 'Catatan'], body: nb, widths: [38, 52, 96], bold: [0] });
+  }
+
+  B.push({ t: 'h', num: '5', text: 'Syor' });
+  const by = f => rows.filter(r => (r.final || 'Belum') === f).map(r => r.a.biz + (r.avg != null ? ' (' + fmt(r.avg) + ')' : ''));
+  const yes = by('Lulus'), no = by('Tidak lulus'), pend = by('Belum');
+  B.push({ t: 'p', num: '5.1', text: 'Berdasarkan kepada analisis di para 4 di atas, Jawatankuasa mengesyorkan agar:' });
+  const L = [];
+  if (yes.length) L.push('Permohonan berikut DILULUSKAN: ' + join(yes) + '.');
+  if (no.length) L.push('Permohonan berikut TIDAK DILULUSKAN: ' + join(no) + '.');
+  if (pend.length) L.push('Keputusan belum ditetapkan bagi: ' + join(pend) + '.');
+  B.push({ t: 'list', items: L.length ? L : ['Keputusan akhir belum ditetapkan.'] });
+  if (C.syor.trim()) B.push({ t: 'p', num: '5.2', text: C.syor.trim() });
+
+  B.push({ t: 'sign', members: [{ role: 'Pengerusi', name: chair, jw: jw[nem(chair)] || '' }, ...ahli.map((n, i) => ({ role: 'Ahli ' + (ORD[i] || (i + 1)), name: n, jw: jw[nem(n)] || '' }))] });
+  return B;
+}
+
+/* --- penjana PDF bagi blok --- */
+function renderBlocksPdf(doc, B) {
+  const m = 12, LH = 4.8, pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), W = pw - 2 * m, bottom = ph - 16;
+  let y = 34;
+  doc.setLineHeightFactor(1.35);
+  const ensure = hh => { if (y + hh > bottom) { doc.addPage('a4', 'portrait'); y = 34; } };
+  const ink = () => { doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(30); };
+  B.forEach((b, bi) => {
+    if (b.t === 'title') { doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(30); const ln = doc.splitTextToSize(b.text, W); ensure(ln.length * 5.6 + 6); doc.text(ln, pw / 2, y + 4, { align: 'center' }); y += ln.length * 5.6 + 6; }
+    else if (b.t === 'h') { ensure(16); y += 3; doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(...MAROON); doc.text(b.num + '.', m, y + 4); doc.text(b.text, m + 12, y + 4); y += 8; }
+    else if (b.t === 'p') { ink(); const ln = doc.splitTextToSize(b.text, W - 12); ensure(B[bi + 1] && B[bi + 1].t === 'table' ? ln.length * LH + 42 : Math.min(ln.length, 3) * LH + 2); ln.forEach((l, i) => { ensure(LH + 1); if (i === 0 && b.num) doc.text(b.num, m, y + 4); doc.text(l, m + 12, y + 4); y += LH; }); y += 2.2; }
+    else if (b.t === 'kv') { ink(); b.rows.forEach(([k, v]) => { const ln = doc.splitTextToSize(String(v), W - 80); ensure(ln.length * LH + 1); if (k) doc.text(k, m + 12, y + 4); doc.text(':', m + 70, y + 4); doc.text(ln, m + 74, y + 4); y += ln.length * LH + 0.6; }); y += 2; }
+    else if (b.t === 'list') { ink(); b.items.forEach((t, i) => { const ln = doc.splitTextToSize(t, W - 22); ensure(ln.length * LH + 1); doc.text('(' + String.fromCharCode(97 + i) + ')', m + 12, y + 4); ln.forEach((l, k) => { doc.text(l, m + 20, y + 4 + k * LH); }); y += ln.length * LH + 1.2; }); y += 2; }
+    else if (b.t === 'table') {
+      ensure(34); doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...MAROON); doc.text(b.cap, m, y + 3); y += 5;
+      const cs = {}; b.widths.forEach((w, i) => cs[i] = { cellWidth: w, halign: (b.center || []).includes(i) ? 'center' : 'left', fontStyle: (b.bold || []).includes(i) ? 'bold' : 'normal' });
+      doc.autoTable({ ...TBL, startY: y, margin: { top: 30, bottom: 16, left: m, right: m }, styles: { ...TBL.styles, fontSize: 8, cellPadding: 1.5 }, head: [b.head], body: b.body.map(r => r.map(String)), columnStyles: cs,
+        didParseCell: d => { if (b.flag && d.section === 'body' && d.column.index === b.flag.col && b.flag.bad.includes(d.cell.raw)) { d.cell.styles.textColor = [179, 38, 30]; d.cell.styles.fontStyle = 'bold'; } } });
+      y = doc.lastAutoTable.finalY + 2;
+      if (b.note) { doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(...GREY); const ln = doc.splitTextToSize(b.note, W); ensure(ln.length * 3.4); doc.text(ln, m, y + 3); y += ln.length * 3.4 + 2; }
+      y += 3;
+    }
+    else if (b.t === 'sign') {
+      ensure(60); y += 4; doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(30); doc.text('TANDATANGAN AHLI-AHLI JAWATANKUASA', pw / 2, y + 4, { align: 'center' }); y += 10;
+      const cw = (W - 10) / 2;
+      for (let i = 0; i < b.members.length; i += 2) {
+        ensure(46);
+        [b.members[i], b.members[i + 1]].forEach((mb, k) => {
+          if (!mb) return; const x = m + k * (cw + 10);
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(30); doc.text(mb.role, x, y + 3);
+          doc.setDrawColor(90); doc.setLineWidth(0.25); doc.line(x, y + 18, x + cw, y + 18);
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(mb.name, x, y + 22.5);
+          doc.setTextColor(...GREY); doc.text(mb.jw || '(Jawatan Pegawai)', x, y + 27); doc.text('Tarikh: ' + DOTS.slice(0, 22), x, y + 33);
+        });
+        y += 42;
+      }
+    }
+  });
+}
+
+/* --- pratonton HTML bagi blok --- */
+function blocksHtml(B) {
+  return B.map(b => {
+    if (b.t === 'title') return `<h3 style="text-align:center;font-size:14px;margin:6px 0 10px">${esc(b.text)}</h3>`;
+    if (b.t === 'h') return `<h4 style="color:#8a2d3b;font-size:14px;margin:14px 0 4px">${b.num}. ${esc(b.text)}</h4>`;
+    if (b.t === 'p') return `<p style="margin:4px 0 4px ${b.num ? 0 : 34}px">${b.num ? `<b style="display:inline-block;width:34px">${b.num}</b>` : ''}${esc(b.text)}</p>`;
+    if (b.t === 'kv') return `<table style="min-width:0;margin:2px 0 6px 34px;width:auto">${b.rows.map(([k, v]) => `<tr><td style="border:0;padding:1px 14px 1px 0;white-space:nowrap">${esc(k)}</td><td style="border:0;padding:1px 6px">${k || v ? ':' : ''}</td><td style="border:0;padding:1px 0">${esc(v)}</td></tr>`).join('')}</table>`;
+    if (b.t === 'list') return `<div style="margin:2px 0 6px 34px">${b.items.map((t, i) => `<div>(${String.fromCharCode(97 + i)}) ${esc(t)}</div>`).join('')}</div>`;
+    if (b.t === 'table') return `<p style="margin:10px 0 3px;color:#8a2d3b;font-weight:700;font-size:12px">${esc(b.cap)}</p><div class="tw"><table><thead><tr>${b.head.map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${b.body.map(r => `<tr>${r.map((c, i) => `<td style="${(b.center || []).includes(i) ? 'text-align:center;' : ''}${(b.bold || []).includes(i) ? 'font-weight:700;' : ''}">${esc(c).replace(/\n/g, '<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.note ? `<p style="color:#6f6266;font-size:11px;margin:3px 0">${esc(b.note)}</p>` : ''}`;
+    if (b.t === 'sign') return `<h4 style="text-align:center;margin:22px 0 4px">TANDATANGAN AHLI-AHLI JAWATANKUASA</h4><div style="display:flex;flex-wrap:wrap;gap:6px 30px">${b.members.map(mb => `<div style="flex:1 1 220px;margin-top:6px"><b>${esc(mb.role)}</b><div style="border-bottom:1px solid #999;height:36px"></div>${esc(mb.name)}<br><span style="color:#6f6266">${esc(mb.jw || '(Jawatan Pegawai)')}</span><br><span style="color:#6f6266">Tarikh: ............</span></div>`).join('')}</div>`;
+    return '';
+  }).join('');
+}
+
+/* --- borang butiran laporan --- */
+function jkForm() {
+  const C = jkCfg(); let jw = {}; try { jw = JSON.parse(C.jawatan || '{}') || {}; } catch (e) { }
+  const P = D.keputusan.panels;
+  const inp = (k, lab, ph = '', wide) => `<label class="${wide ? 'wide' : ''}">${lab}<input data-cfg="${k}" value="${esc(C[k])}" placeholder="${esc(ph)}"></label>`;
+  return `<div class="card" style="margin-bottom:14px"><h3>Butiran laporan jawatankuasa <i>mengikut templat JPPPDKP</i></h3>
+   <div class="f">${inp('bil', 'Bil laporan', 'cth. 01/2026')}${inp('cgpaMin', 'CGPA minimum (Perkara 4.1)', '2.00')}
+   ${inp('suratFail', 'Fail rujukan surat pelantikan (2.1)')}${inp('suratTarikh', 'Tarikh surat (2.1)')}${inp('tamat', 'Lantikan tamat pada (2.1)')}
+   <label>Pengerusi (2.2)<input data-cfg="pengerusi" list="jkpan" value="${esc(C.pengerusi)}" placeholder="Nama pengerusi"><datalist id="jkpan">${P.map(p => `<option value="${esc(p.nama)}">`).join('')}</datalist></label>
+   ${inp('tarikhSidang', 'Tarikh bersidang (3.1)')}${inp('masaSidang', 'Masa (3.1)')}${inp('tempat', 'Tempat bersidang (3.1)', '', true)}
+   <label class="wide">Tujuan laporan (1) <small style="font-weight:400">kosongkan untuk teks lalai</small><textarea data-cfg="tujuan" rows="2">${esc(C.tujuan)}</textarea></label>
+   <label class="wide">Syor tambahan (5.2) <small style="font-weight:400">pilihan; syor lulus/tidak lulus dijana daripada Status akhir dalam tab Keputusan</small><textarea data-cfg="syor" rows="2">${esc(C.syor)}</textarea></label></div>
+   <h3 style="margin-top:14px">Jawatan untuk tandatangan <i>pilihan</i></h3><div class="f">${[...new Set([C.pengerusi.trim(), ...P.map(p => p.nama)].filter(Boolean))].map(n => `<label>${esc(n)}<input data-jw="${esc(nem(n))}" value="${esc(jw[nem(n)] || '')}" placeholder="Jawatan pegawai"></label>`).join('')}</div>
+   <div class="foot"><button class="btn-line" id="jsave">Simpan butiran</button><span class="note" id="jmsg"></span></div></div>`;
+}
+function jkCollect() {
+  const C = jkCfg(); document.querySelectorAll('[data-cfg]').forEach(i => C[i.dataset.cfg] = i.value);
+  const jw = {}; document.querySelectorAll('[data-jw]').forEach(i => { if (i.value.trim()) jw[i.dataset.jw] = i.value.trim(); }); C.jawatan = JSON.stringify(jw); return C;
+}
+
 function paperPreview() {
   const { rows, P, ranked } = rpData(), S = D.sesi, img = logoImg();
+  if (RP.type === 'jawatankuasa') return `<div class="paper" style="max-height:80vh;overflow:auto"><div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN JAWATANKUASA JPPPDKP UTM</b><span>Universiti Teknologi Malaysia | UTMXCITE | Bil ${esc(jkCfg().bil)}</span></div></div>${blocksHtml(jkBlocks())}</div>`;
   const head = `<div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN PENILAIAN PERMOHONAN STUDENT MALL &amp; SUB</b><span>Universiti Teknologi Malaysia | UTMXCITE | ${esc(S.tarikh)}, ${esc(S.masa)}</span></div></div>`;
   const summary = `<h4>Ringkasan Keputusan Penilaian${RP.jenis ? ' - ' + esc(RP.jenis) : ''}</h4><div class="tw"><table><thead><tr><th>Rank</th><th>Perniagaan</th><th>Jenis</th><th>Pelajar</th>${P.map((p, i) => `<th>P${i + 1}</th>`).join('')}<th>Dinilai</th><th>Purata</th><th>Layak</th><th>Status</th></tr></thead><tbody>
    ${rows.map(r => `<tr><td><b>${r.rank || '-'}</b></td><td><b>${esc(r.a.biz)}</b></td><td>${esc(r.a.type)}</td><td>${r.a.st.map(s => esc(s.n)).join('<br>')}</td>${r.sc.map(s => `<td style="text-align:center">${s == null ? '-' : s}</td>`).join('')}<td style="text-align:center">${r.n}/${P.length}</td><td style="text-align:center"><b>${fmt(r.avg)}</b></td><td style="text-align:center">${r.n ? r.layakY + '/' + r.n : '-'}</td><td>${esc(r.final)}</td></tr>`).join('')}</tbody></table></div>
@@ -656,25 +824,32 @@ function paperPreview() {
 function laporan() {
   const T = [['ringkasan', 'Ringkasan keputusan', 'Satu jadual ranking semua pemohon dengan markah setiap panel, purata, layak dan status akhir. A4 melintang, ruang tandatangan.'],
     ['terperinci', 'Terperinci setiap pemohon', 'Satu halaman bagi setiap pemohon: maklumat pelajar, markah mengikut kriteria dan panel, keputusan serta catatan panel. A4 menegak.'],
-    ['lengkap', 'Laporan lengkap', 'Ringkasan keputusan diikuti halaman terperinci semua pemohon dalam satu fail PDF.']];
-  const { rows } = rpData();
+    ['lengkap', 'Laporan lengkap', 'Ringkasan keputusan diikuti halaman terperinci semua pemohon dalam satu fail PDF.'],
+    ['jawatankuasa', 'Laporan Jawatankuasa (JPPPDKP)', 'Laporan rasmi mengikut templat: Tujuan, Pelantikan, Pemerhatian, Analisis (kelayakan, kaedah, markah, kesepakatan panel), Syor dan tandatangan ahli. A4 menegak.']];
+  const { rows } = rpData(), jk = RP.type === 'jawatankuasa';
   $('#main').innerHTML = head('Laporan', 'Reports · muat turun PDF dengan kepala UTMXCITE', '<button class="btn-ghost" id="rl">↻ Data terkini</button>') + `
   <div class="rp"><div class="ctl card"><h3>Format laporan</h3>
    ${T.map(t => `<label class="opt"><input type="radio" name="rt" value="${t[0]}" ${RP.type === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><small>${t[2]}</small></span></label>`).join('')}
-   <div class="f"><label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option></select></label>
-   ${RP.type !== 'ringkasan' ? `<label>Pemohon (laporan terperinci)<select id="rp"><option value="0">Semua pemohon (${rows.length})</option>${rows.map(r => `<option value="${r.a.id}" ${RP.pid === r.a.id ? 'selected' : ''}>${esc(r.a.biz)}</option>`).join('')}</select></label>
-   <label class="chip" style="border-radius:8px"><input type="checkbox" id="rn" ${RP.notes ? 'checked' : ''}> Sertakan catatan panel</label>` : ''}</div>
+   <div class="f">${jk ? '' : `<label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option></select></label>`}
+   ${RP.type === 'terperinci' || RP.type === 'lengkap' ? `<label>Pemohon (laporan terperinci)<select id="rp"><option value="0">Semua pemohon (${rows.length})</option>${rows.map(r => `<option value="${r.a.id}" ${RP.pid === r.a.id ? 'selected' : ''}>${esc(r.a.biz)}</option>`).join('')}</select></label>` : ''}
+   ${RP.type !== 'ringkasan' ? `<label class="chip" style="border-radius:8px"><input type="checkbox" id="rn" ${RP.notes ? 'checked' : ''}> Sertakan catatan panel</label>` : ''}</div>
    <div class="foot" style="margin-top:6px"><button class="btn-solid" id="dl" style="flex:1">⬇ Muat turun PDF</button></div>
    <div class="foot" style="margin-top:8px"><button class="btn-line" id="op" style="flex:1">Buka dalam tab baharu</button></div>
    <p class="note" style="margin:10px 0 0">Kepala setiap halaman mempunyai logo UTM dan UTMXCITE. Hanya penilaian yang telah dihantar dikira. No. KP dipaparkan bertopeng. Jika muat turun disekat oleh pelayar, gunakan "Buka dalam tab baharu" kemudian simpan.</p></div>
-   <div><p class="note" style="margin:0 0 8px">Pratonton (susun atur PDF sebenar mungkin berbeza sedikit):</p>${paperPreview()}</div></div>`;
-  document.querySelectorAll('[name=rt]').forEach(r => r.onchange = () => { RP.type = r.value; laporan(); });
-  $('#rj').onchange = e => { RP.jenis = e.target.value; RP.pid = 0; laporan(); };
+   <div>${jk ? jkForm() : ''}<p class="note" style="margin:0 0 8px">Pratonton (susun atur PDF sebenar mungkin berbeza sedikit):</p><div id="pvbox">${paperPreview()}</div></div></div>`;
+  document.querySelectorAll('[name=rt]').forEach(r => r.onchange = () => { if (jk) jkCollect(); RP.type = r.value; laporan(); });
+  const rj = $('#rj'); if (rj) rj.onchange = e => { RP.jenis = e.target.value; RP.pid = 0; laporan(); };
   const rp = $('#rp'); if (rp) rp.onchange = e => { RP.pid = +e.target.value; laporan(); };
-  const rn = $('#rn'); if (rn) rn.onchange = e => { RP.notes = e.target.checked; };
+  const rn = $('#rn'); if (rn) rn.onchange = e => { RP.notes = e.target.checked; if (jk) $('#pvbox').innerHTML = paperPreview(); };
+  if (jk) {
+    let t = null;
+    document.querySelectorAll('[data-cfg],[data-jw]').forEach(i => i.oninput = () => { clearTimeout(t); t = setTimeout(() => { jkCollect(); $('#pvbox').innerHTML = paperPreview(); }, 400); });
+    const ch = document.querySelector('[data-cfg="pengerusi"]'); if (ch) ch.onchange = () => { jkCollect(); laporan(); };   // senarai jawatan mengikut pengerusi baharu
+    $('#jsave').onclick = async () => { try { const c = jkCollect(); D.cfg = await rpc('apiSaveTetapan', c); $('#jmsg').textContent = ' Disimpan.'; toast('Butiran laporan disimpan'); } catch (e) { toast(e.message, true); } };
+  }
   $('#rl').onclick = async () => { await loadAdmin(); toast('Data dimuat semula'); };
-  const name = () => 'Laporan_Penilaian_' + { ringkasan: 'Ringkasan', terperinci: 'Terperinci', lengkap: 'Lengkap' }[RP.type] + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
-  const make = (fn) => { try { const doc = buildPdf(); fn(doc); rpc('apiLogReport', RP.type + (RP.jenis ? ' / ' + RP.jenis : '')).catch(() => { }); } catch (e) { toast(e.message, true); } };
+  const name = () => 'Laporan_' + { ringkasan: 'Penilaian_Ringkasan', terperinci: 'Penilaian_Terperinci', lengkap: 'Penilaian_Lengkap', jawatankuasa: 'JPPPDKP' }[RP.type] + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+  const make = (fn) => { try { if (jk) { const c = jkCollect(); rpc('apiSaveTetapan', c).then(x => { D.cfg = x; }).catch(() => { }); } const doc = buildPdf(); fn(doc); rpc('apiLogReport', RP.type + (RP.jenis ? ' / ' + RP.jenis : '')).catch(() => { }); } catch (e) { toast(e.message, true); } };
   $('#dl').onclick = () => make(doc => { doc.save(name()); toast('PDF dijana'); });
   $('#op').onclick = () => make(doc => { const w = window.open(doc.output('bloburl'), '_blank'); if (!w) toast('Pelayar menyekat tab baharu. Benarkan pop-up atau guna Muat turun.', true); });
 }

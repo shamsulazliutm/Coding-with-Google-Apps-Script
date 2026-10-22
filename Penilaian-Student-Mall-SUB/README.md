@@ -57,6 +57,9 @@ Admin boleh memuat turun laporan PDF A4 dengan **logo UTM dan UTMXCITE pada kepa
 | Terperinci setiap pemohon (menegak) | Satu halaman bagi setiap pemohon: maklumat pelajar (No. KP bertopeng), markah mengikut kriteria dan panel, purata, jumlah, keputusan, serta catatan panel (boleh dimatikan) |
 | Laporan lengkap | Ringkasan diikuti halaman terperinci semua pemohon dalam satu fail |
 
+**Laporan Jawatankuasa (JPPPDKP)** mengikut templat rasmi `draf_laporan.docx`: 1 Tujuan, 2 Pelantikan Jawatankuasa (surat, keanggotaan), 3 Pemerhatian (sidang, bilangan permohonan, **Jadual 1** markah dan ranking), **4 Analisis**, 5 Syor, dan tandatangan setiap ahli.
+Perkara 4 dijana automatik daripada data sistem: **4.1** kelayakan asas (CGPA minimum, pelan perniagaan, SSM; Jadual 2), **4.2** kaedah penilaian dan rubrik (Jadual 3), **4.3** analisis markah dan kriteria paling kukuh/lemah (Jadual 4), **4.4** kesepakatan panel tentang kelayakan (Jadual 5), **4.5** catatan panel (Jadual 6, pilihan). Perkara 5 menyenaraikan permohonan yang diluluskan/tidak diluluskan berdasarkan **Status akhir** dalam tab Keputusan. Butiran seperti bil laporan, fail rujukan surat, tarikh, tempat, pengerusi, jawatan dan CGPA minimum diisi dalam borang tab Laporan dan disimpan dalam sheet `Tetapan`.
+
 Pilihan: tapis jenis (Student Mall / SUB) dan pilih satu pemohon. Kaki halaman memaparkan tarikh jana, nama admin dan "Halaman x / y". Hanya penilaian yang dihantar dikira. Jana laporan direkodkan dalam `Log`.
 
 PDF dijana dalam pelayar menggunakan jsPDF 2.5.1 dan jspdf-autotable 3.8.2 yang dimuat daripada cdnjs, jadi sambungan internet diperlukan. Jika muat turun disekat oleh pelayar, gunakan **Buka dalam tab baharu** kemudian simpan.
