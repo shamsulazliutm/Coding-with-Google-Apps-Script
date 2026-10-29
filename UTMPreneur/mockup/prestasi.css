@@ -1,0 +1,58 @@
+/* Gaya ilustrasi "Laporan Prestasi" (bar sisi + infografik KPI). Ilustrasi sahaja, bukan kod sistem. */
+:root{--mar:#6B1F3A;--mar-d:#511228;--mar-l:#F6E9ED;--gold:#B9860B;--gold-l:#FBF1D6;--ink:#2B2023;--muted:#74676B;--line:#E7DFE0;--bg:#F4F1F0;--card:#fff;
+ --ok:#2E7D4F;--ok-l:#E3F2E9;--warn:#A8690E;--warn-l:#FCF0D9;--bad:#B3261E;--bad-l:#FBE6E4;--info:#2B5C9A;--info-l:#E4EEF9}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:var(--bg);font-size:13px;line-height:1.4}
+.app{display:flex;width:1366px;height:900px;overflow:hidden;background:var(--bg)}
+.side{width:236px;flex:none;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:12px 10px;gap:10px;overflow:hidden}
+.brand{display:flex;gap:10px;align-items:center}
+.burger{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--ink);flex:none}
+.brand img{height:34px}.brand b{display:block;font-size:12px;line-height:1.15;color:var(--mar)}.brand i{font-style:normal;font-size:9.5px;color:var(--muted)}
+.user{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;gap:9px;align-items:center;background:#FBF8F8}
+.av{width:30px;height:30px;border-radius:50%;background:#E8B54A;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex:none}
+.user b{font-size:11.5px;display:block}.user span{font-size:10px;color:var(--muted)}
+.out{font-size:10.5px;color:var(--muted);text-decoration:underline;padding-left:2px}
+.sec{font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin:6px 4px 0}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav div{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;font-size:12.5px;color:#3b2f33}
+.nav div .ic{width:16px;text-align:center;color:var(--muted);font-size:13px}
+.nav div.on{background:var(--mar-l);color:var(--mar);font-weight:700}.nav div.on .ic{color:var(--mar)}
+.nav div .ch{margin-left:auto;color:var(--muted);font-size:10px}
+.nav div .bd{margin-left:auto;background:var(--gold);color:#3A2A05;border-radius:999px;font-size:10px;font-weight:700;padding:0 6px}
+.nav .sub{padding-left:36px;font-size:11.5px;color:#5b4e52}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.top{height:54px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 22px;font-weight:700;font-size:16px;color:var(--mar-d);flex:none}
+.content{flex:1;overflow:hidden;padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+.head{display:flex;align-items:flex-end;gap:12px}
+.head h1{margin:0;font-size:24px;color:var(--mar-d)}.head p{margin:2px 0 0;font-size:11px;color:var(--muted)}
+.sp{flex:1}
+.ctl{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)}
+.sel{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 10px;font-size:12.5px;color:var(--ink)}
+.btn{border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;background:var(--mar-d);color:#fff;border:1px solid var(--mar-d)}
+.btn.alt{background:#fff;color:var(--mar-d)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.cap{font-size:10.5px;font-weight:700;letter-spacing:.07em;color:var(--mar-d);text-transform:uppercase}
+.teras{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-top:2px}
+.teras span{background:var(--gold);color:#fff;border-radius:6px;font-size:10px;padding:1px 8px;font-weight:700}
+.grid{display:grid;gap:12px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:12px 8px 10px;text-align:center;position:relative;background:#fff}
+.kpi svg{display:block;margin:0 auto 4px}
+.kpi b.k{display:block;font-size:12px}.kpi .n{font-size:11px;color:#4b3f43;margin-top:1px}.kpi .s{font-size:10px;color:var(--muted);margin:2px 0 6px}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:10px;font-weight:600;border:1px solid}
+.chip.ok{background:var(--ok-l);color:var(--ok);border-color:#BFE0CC}.chip.warn{background:var(--warn-l);color:var(--warn);border-color:#F0D6A4}
+.src{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;border-radius:5px;padding:1px 6px}
+.src.auto{background:var(--ok-l);color:var(--ok)}.src.sep{background:var(--info-l);color:var(--info)}.src.man{background:#ECE7E8;color:var(--muted)}.src.f2{background:var(--warn-l);color:var(--warn)}
+.note{font-size:10.5px;color:var(--muted)}
+.tag{display:inline-block;background:var(--gold-l);color:#6b4d05;border-radius:6px;font-size:10px;font-weight:700;padding:1px 7px}
+table{border-collapse:collapse;width:100%;font-size:12px}th{font-size:10px;text-align:left;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:7px 9px;border-bottom:1px solid var(--line)}td{padding:8px 9px;border-bottom:1px solid #F0EAEB;vertical-align:middle}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:10.5px;font-weight:600}
+.ok{background:var(--ok-l);color:var(--ok)}.warn{background:var(--warn-l);color:var(--warn)}.bad{background:var(--bad-l);color:var(--bad)}.info{background:var(--info-l);color:var(--info)}
+.tile{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}.tile .v{font-size:24px;font-weight:700;color:var(--mar-d)}.tile .t{font-size:11px;color:var(--muted)}.tile .d{font-size:10.5px;margin-top:2px}
+.phone{width:390px;height:844px;overflow:hidden;position:relative;background:var(--bg);display:flex;flex-direction:column;border:1px solid #d9d2d3}
+.pbar{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:10px 12px;flex:none}
+.pbar b{font-size:14px;color:var(--mar-d)}
+.drawer{position:absolute;left:0;top:0;bottom:0;width:270px;background:#fff;box-shadow:4px 0 22px rgba(0,0,0,.25);padding:12px 10px;display:flex;flex-direction:column;gap:10px;z-index:3}
+.shade{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:2}
+
+.brand>div:last-child{min-width:0}.brand b{font-size:13px}.brand i{display:block;font-size:9px;white-space:normal}
+.user span{display:block;word-break:break-all}

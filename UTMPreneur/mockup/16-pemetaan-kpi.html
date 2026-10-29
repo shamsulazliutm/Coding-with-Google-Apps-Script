@@ -1,0 +1,12 @@
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Pemetaan KPI KPT ke data sistem</title><link rel="stylesheet" href="prestasi.css"><style>body{width:1100px;padding:22px}.panel{gap:12px}</style></head>
+<body><div class="panel"><div class="cap">Pemetaan KPI KPT kepada data sistem (cadangan)</div>
+<table><thead><tr><th>KPI</th><th>Petunjuk</th><th>Sumber dalam sistem</th><th>Kaedah</th><th>Status</th></tr></thead><tbody>
+<tr><td><b>KPT 1</b></td><td>Jualan agregat usahawan (RM)</td><td>Laporan kewangan <b>Diterima</b>: jumlah <code>Pendapatan_RM</code> bagi tahun dipilih</td><td>Kira automatik</td><td><span class="pill ok">AUTO</span></td></tr>
+<tr><td><b>KPT 2</b></td><td>% graduan berusahawan</td><td>Perlu jumlah graduan dan status graduan (tiada dalam sistem). Boleh dianggar: pemilik SSU yang Status_Pelajar = Graduan / jumlah graduan (diisi admin)</td><td>Penyebut diisi admin</td><td><span class="pill info">SEPARA / MANUAL</span></td></tr>
+<tr><td><b>KPT 3</b></td><td>% tenaga pengajar terlibat</td><td>Penyelia/pensyarah yang memperakui tempahan Makerspace + pensyarah dalam borang SSU (subjek) / jumlah pengajar (diisi admin)</td><td>Pembilang auto, penyebut manual</td><td><span class="pill info">SEPARA</span></td></tr>
+<tr><td><b>KPT 4</b></td><td>Pelajar inovasi dan teknologi</td><td>Pelajar unik: ahli SSU jenis <i>Startup</i> + pengguna Makerspace (Laser Cut, 3D Printer) + SSU kluster teknologi</td><td>Kira automatik (takrifan perlu disahkan)</td><td><span class="pill info">SEPARA</span></td></tr>
+<tr><td><b>KPT 5</b></td><td>Syarikat pemula inovasi dan teknologi</td><td>Bilangan SSU Aktif berjenis <i>Startup</i> (atau kluster teknologi)</td><td>Kira automatik</td><td><span class="pill ok">AUTO</span></td></tr>
+<tr><td><b>KPT 6</b></td><td>Kolaborasi berimpak</td><td>Modul kolaborasi/inovasi belum dibina</td><td>Input manual sementara</td><td><span class="pill warn">FASA 2</span></td></tr>
+<tr><td><b>KPT 7</b></td><td>Syarikat atau projek dibiayai</td><td>Modul Mikro Kredit dan peruntukan program belum dibina; sementara: SSU yang sumber pembiayaan bukan "Wang sendiri/Tiada"</td><td>Input manual sementara</td><td><span class="pill warn">FASA 2</span></td></tr>
+</tbody></table>
+<div class="note">Sasaran setiap petunjuk dan tahun dikekalkan dalam tab <code>Sasaran_KPI</code> (diisi admin). Peringkat KAI, DKAI dan CKAI ialah paparan yang sama dengan set petunjuk dan sasaran berbeza.</div></div></body></html>

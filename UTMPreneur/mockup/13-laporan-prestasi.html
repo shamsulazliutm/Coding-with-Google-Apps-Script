@@ -1,0 +1,58 @@
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Laporan Prestasi (infografik KPI)</title><link rel="stylesheet" href="prestasi.css"></head>
+<body><div class="app">
+<aside class="side">
+  <div class="brand"><div class="burger">≡</div><img src="logo.png" alt=""><div><b>UTMPreneur</b><i>UTMXCITE · UTM</i></div></div>
+  <div class="user"><div class="av">SS</div><div><b>SHAMSUL AZLI</b><span>shamsulazli@utm.my · Admin Penuh</span></div></div>
+  <div class="out">Log keluar semua peranti</div>
+  <div class="nav">
+    <div class="on"><span class="ic">▥</span>Infografik KPI</div>
+    <div><span class="ic">▦</span>Dashboard operasi</div>
+  </div>
+  <div class="sec">PERINGKAT KPI</div>
+  <div class="nav">
+    <div><span class="ic">▣</span>KPT · Kementerian<span class="ch">⌄</span></div>
+    <div><span class="ic">▣</span>KAI · Universiti<span class="ch">⌄</span></div>
+    <div><span class="ic">▣</span>DKAI · Jabatan (JTNC HEPA)<span class="ch">⌄</span></div>
+    <div><span class="ic">▣</span>CKAI · Pusat (UTMXCITE)<span class="ch">⌄</span></div>
+  </div>
+  <div class="sec">MODUL</div>
+  <div class="nav">
+    <div><span class="ic">◎</span>Profiling</div><div><span class="ic">◎</span>Pendaftaran SSU<span class="bd">3</span></div>
+    <div><span class="ic">◎</span>Ruang niaga<span class="bd">2</span></div><div><span class="ic">◎</span>Laporan kewangan<span class="bd">5</span></div><div><span class="ic">◎</span>Makerspace</div>
+  </div>
+  <div class="sec">ADMIN</div>
+  <div class="nav"><div><span class="ic">⚙</span>Pentadbiran<span class="ch">⌄</span></div></div>
+</aside>
+<section class="main">
+  <div class="top">Laporan Prestasi UTMXCITE</div>
+  <div class="content">
+    <div class="head"><div><h1>Laporan Prestasi UTMXCITE</h1><p>DS 04 · Pekerjaan Premium Tier 1 · tahun 2026 · data ringkasan, tiada maklumat peribadi · <span class="tag">CONTOH DATA</span></p></div><div class="sp"></div>
+      <div class="ctl">Tahun <div class="sel">2026 ⌄</div><div class="btn">Cetak slide</div><div class="btn alt">Cetak halaman</div></div></div>
+    <div class="panel">
+      <div class="cap">KPI keusahawanan IPT · Peringkat Kementerian (KPT)</div>
+      <div class="teras"><span>Teras 1</span>Ekosistem keusahawanan pelajar yang berdaya saing</div>
+      <div class="grid g3" id="t1"></div>
+      <div class="teras"><span>Teras 2</span>Inovasi dan teknologi dalam keusahawanan</div>
+      <div class="grid g2" id="t2"></div>
+      <div class="teras"><span>Teras 3</span>Kolaborasi berimpak tinggi</div>
+      <div class="grid g2" id="t3"></div>
+      <div class="note"><span class="src auto" style="position:static">AUTO</span> dikira terus daripada data sistem &nbsp; <span class="src sep" style="position:static">SEPARA</span> sebahagian daripada sistem &nbsp; <span class="src man" style="position:static">MANUAL</span> diisi admin &nbsp; <span class="src f2" style="position:static">FASA 2</span> menunggu modul</div>
+    </div>
+  </div>
+</section></div>
+<script>
+const D=[
+ ['t1','KPT 1','Jualan agregat usahawan','RM141.4k','Sasaran RM 80,000.00 · 176.7%',1,'ok','Melebihi sasaran','auto','Pendapatan laporan kewangan Diterima'],
+ ['t1','KPT 2','% graduan berusahawan','0%','Sasaran 10% · 0%',0,'warn','Di bawah sasaran','man',''],
+ ['t1','KPT 3','% tenaga pengajar terlibat','16.2%','Sasaran 10% · 162%',1,'ok','Melebihi sasaran','sep',''],
+ ['t2','KPT 4','Pelajar inovasi dan teknologi','245','Sasaran 600 · 40.8%',.408,'warn','Di bawah sasaran','sep',''],
+ ['t2','KPT 5','Syarikat pemula inovasi dan teknologi','0','Sasaran 60 · 0%',0,'warn','Di bawah sasaran','auto',''],
+ ['t3','KPT 6','Kolaborasi berimpak','0','Sasaran 80 · 0%',0,'warn','Di bawah sasaran','f2',''],
+ ['t3','KPT 7','Syarikat atau projek dibiayai','5','Sasaran 210 · 2.4%',.024,'warn','Di bawah sasaran','f2','']];
+const SL={auto:'AUTO',sep:'SEPARA',man:'MANUAL',f2:'FASA 2'};
+D.forEach(d=>{const r=34,c=2*Math.PI*r,p=Math.max(.02,Math.min(1,d[5]));
+ const col=document.getElementById(d[0]);const big=d[0]!=='t1';
+ col.insertAdjacentHTML('beforeend',`<div class="kpi"><span class="src ${d[8]}">${SL[d[8]]}</span>
+ <svg width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="${r}" fill="none" stroke="#EFE7E9" stroke-width="8"/><circle cx="42" cy="42" r="${r}" fill="none" stroke="#B9860B" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 42 42)"/><text x="42" y="47" text-anchor="middle" font-size="${d[3].length>5?11:17}" font-weight="700" fill="#2B2023">${d[3]}</text></svg>
+ <b class="k">${d[1]}</b><div class="n">${d[2]}</div><div class="s">${d[4]}</div><span class="chip ${d[6]}">${d[7]}</span></div>`)});
+</script></body></html>
