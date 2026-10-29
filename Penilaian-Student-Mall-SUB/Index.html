@@ -6,6 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UTMPreneur · Penilaian</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+  <script>
+  /* Diagnostik pemuatan: jika skrip utama gagal dimuat, ralatnya dipaparkan di skrin (bukan sekadar "Memuatkan..."). */
+  window.__BUILD = 'b5';
+  window.addEventListener('error', function (ev) {
+    var a = document.getElementById('app'); if (!a || a.textContent.indexOf('Memuatkan') < 0 && a.textContent.indexOf('Ralat memuatkan') < 0) return;
+    var t = (ev && ev.target && ev.target.src) ? 'Gagal memuat sumber: ' + ev.target.src : ((ev && ev.message) || 'ralat tidak diketahui') + (ev && ev.lineno ? ' (baris ' + ev.lineno + ')' : '');
+    a.innerHTML = '<div class="err"><b>Ralat memuatkan halaman [' + window.__BUILD + ']</b><br>' + String(t).replace(/</g, '&lt;') + '</div>';
+  }, true);
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
