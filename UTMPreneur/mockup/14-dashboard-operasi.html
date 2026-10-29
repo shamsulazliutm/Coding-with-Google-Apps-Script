@@ -1,17 +1,6 @@
-<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Dashboard operasi</title><link rel="stylesheet" href="prestasi.css"></head>
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Dashboard operasi</title><link rel="stylesheet" href="prestasi.css"><script src="menu.js"></script></head>
 <body><div class="app">
-<aside class="side">
-  <div class="brand"><div class="burger">≡</div><img src="logo.png" alt=""><div><b>UTMPreneur</b><i>UTMXCITE · UTM</i></div></div>
-  <div class="user"><div class="av">SS</div><div><b>SHAMSUL AZLI</b><span>shamsulazli@utm.my · Admin Penuh</span></div></div>
-  <div class="out">Log keluar semua peranti</div>
-  <div class="nav"><div><span class="ic">▥</span>Infografik KPI</div><div class="on"><span class="ic">▦</span>Dashboard operasi</div></div>
-  <div class="sec">PERINGKAT KPI</div>
-  <div class="nav"><div><span class="ic">▣</span>KPT · Kementerian<span class="ch">⌄</span></div><div><span class="ic">▣</span>KAI · Universiti<span class="ch">⌄</span></div><div><span class="ic">▣</span>DKAI · Jabatan (JTNC HEPA)<span class="ch">⌄</span></div><div><span class="ic">▣</span>CKAI · Pusat (UTMXCITE)<span class="ch">⌄</span></div></div>
-  <div class="sec">MODUL</div>
-  <div class="nav"><div><span class="ic">◎</span>Profiling</div><div><span class="ic">◎</span>Pendaftaran SSU<span class="bd">3</span></div><div><span class="ic">◎</span>Ruang niaga<span class="bd">2</span></div><div><span class="ic">◎</span>Laporan kewangan<span class="bd">5</span></div><div><span class="ic">◎</span>Makerspace</div></div>
-  <div class="sec">ADMIN</div>
-  <div class="nav"><div><span class="ic">⚙</span>Pentadbiran<span class="ch">⌃</span></div><div class="sub">Permohonan SSU</div><div class="sub">Bantu pelajar</div><div class="sub">Import data pelajar</div><div class="sub">Urus admin</div><div class="sub">Status sistem</div></div>
-</aside>
+<aside class="side" id="sd"></aside>
 <section class="main">
   <div class="top">Dashboard operasi</div>
   <div class="content">
@@ -42,4 +31,4 @@
         <div class="note">Jantina, etnik dan tahun pengajian tersedia sebagai penapis lain. Data ringkasan sahaja.</div></div>
     </div>
   </div>
-</section></div></body></html>
+</section></div><script>document.getElementById('sd').innerHTML = renderSide('admin','kpi',1)</script></body></html>

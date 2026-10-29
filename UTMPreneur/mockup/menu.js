@@ -25,7 +25,13 @@ function renderSide(role, key, sub) {
     if (open && has) g[2].forEach((s, i) => { const [t, n] = s.split('|'); h += `<div class="sub ${i === (sub || 0) ? 'on' : ''}">${t}${n ? '<span class="bd">' + n + '</span>' : ''}</div>`; });
   });
   h += '</div>';
+  if (!pel) {
+    const K = ['Infografik', 'Dashboard', 'KPT · Kementerian', 'KAI · Universiti', 'DKAI · Jabatan (JTNC HEPA)', 'CKAI · Pusat (UTMXCITE)', 'Sasaran dan input manual'];
+    h += `<div class="sec">KPI</div><div class="nav"><div class="${key === 'kpi' ? 'on' : 'grp'}"><span class="ic">${key === 'kpi' ? '◉' : '▥'}</span>Laporan KPI<span class="ch">${key === 'kpi' ? '⌃' : '⌄'}</span></div>`;
+    if (key === 'kpi') K.forEach((t, i) => { h += `<div class="sub ${i === (sub || 0) ? 'on' : ''}">${t}</div>`; });
+    h += '</div>';
+  }
   if (pel) h += `<div class="sec">LAIN-LAIN</div><div class="nav"><div class="off"><span class="ic">◌</span>Mikro Kredit<span class="soon">AKAN DATANG</span></div><div class="off"><span class="ic">◌</span>Dana Program<span class="soon">AKAN DATANG</span></div><div class="off"><span class="ic">◌</span>Inovasi dan Anugerah<span class="soon">AKAN DATANG</span></div></div>`;
-  else h += `<div class="sec">ADMIN</div><div class="nav"><div class="grp"><span class="ic">⚙</span>Pentadbiran<span class="ch">⌄</span></div><div class="sub" style="color:#8a7f82">Laporan KPI · Dashboard · Import · Admin · Status</div></div>`;
+  else h += `<div class="sec">ADMIN</div><div class="nav"><div class="grp"><span class="ic">⚙</span>Pentadbiran<span class="ch">⌄</span></div><div class="sub" style="color:#8a7f82">Import pelajar · Urus admin · Status · Audit</div></div>`;
   return h;
 }

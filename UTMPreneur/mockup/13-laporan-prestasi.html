@@ -1,28 +1,6 @@
-<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Laporan Prestasi (infografik KPI)</title><link rel="stylesheet" href="prestasi.css"></head>
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Laporan Prestasi (infografik KPI)</title><link rel="stylesheet" href="prestasi.css"><script src="menu.js"></script></head>
 <body><div class="app">
-<aside class="side">
-  <div class="brand"><div class="burger">≡</div><img src="logo.png" alt=""><div><b>UTMPreneur</b><i>UTMXCITE · UTM</i></div></div>
-  <div class="user"><div class="av">SS</div><div><b>SHAMSUL AZLI</b><span>shamsulazli@utm.my · Admin Penuh</span></div></div>
-  <div class="out">Log keluar semua peranti</div>
-  <div class="nav">
-    <div class="on"><span class="ic">▥</span>Infografik KPI</div>
-    <div><span class="ic">▦</span>Dashboard operasi</div>
-  </div>
-  <div class="sec">PERINGKAT KPI</div>
-  <div class="nav">
-    <div><span class="ic">▣</span>KPT · Kementerian<span class="ch">⌄</span></div>
-    <div><span class="ic">▣</span>KAI · Universiti<span class="ch">⌄</span></div>
-    <div><span class="ic">▣</span>DKAI · Jabatan (JTNC HEPA)<span class="ch">⌄</span></div>
-    <div><span class="ic">▣</span>CKAI · Pusat (UTMXCITE)<span class="ch">⌄</span></div>
-  </div>
-  <div class="sec">MODUL</div>
-  <div class="nav">
-    <div><span class="ic">◎</span>Profiling</div><div><span class="ic">◎</span>Pendaftaran SSU<span class="bd">3</span></div>
-    <div><span class="ic">◎</span>Ruang niaga<span class="bd">2</span></div><div><span class="ic">◎</span>Laporan kewangan<span class="bd">5</span></div><div><span class="ic">◎</span>Makerspace</div>
-  </div>
-  <div class="sec">ADMIN</div>
-  <div class="nav"><div><span class="ic">⚙</span>Pentadbiran<span class="ch">⌄</span></div></div>
-</aside>
+<aside class="side" id="sd"></aside>
 <section class="main">
   <div class="top">Laporan Prestasi UTMXCITE</div>
   <div class="content">
@@ -55,4 +33,4 @@ D.forEach(d=>{const r=34,c=2*Math.PI*r,p=Math.max(.02,Math.min(1,d[5]));
  col.insertAdjacentHTML('beforeend',`<div class="kpi"><span class="src ${d[8]}">${SL[d[8]]}</span>
  <svg width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="${r}" fill="none" stroke="#EFE7E9" stroke-width="8"/><circle cx="42" cy="42" r="${r}" fill="none" stroke="#B9860B" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 42 42)"/><text x="42" y="47" text-anchor="middle" font-size="${d[3].length>5?11:17}" font-weight="700" fill="#2B2023">${d[3]}</text></svg>
  <b class="k">${d[1]}</b><div class="n">${d[2]}</div><div class="s">${d[4]}</div><span class="chip ${d[6]}">${d[7]}</span></div>`)});
-</script></body></html>
+</script><script>document.getElementById('sd').innerHTML = renderSide('admin','kpi',0)</script></body></html>
