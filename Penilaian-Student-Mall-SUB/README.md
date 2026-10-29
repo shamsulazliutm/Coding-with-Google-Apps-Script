@@ -120,3 +120,7 @@ Dalam `Code.gs` (fungsi `setupSheets`), 6 permohonan (Marzmell, Nanel, Cheval, V
 ## Kemas kini daripada versi lama
 
 Sheet `Penilaian` versi lama dilanjutkan secara automatik dengan lajur `Catatan1`–`Catatan6` apabila sistem dibuka. Data lama tidak terjejas.
+
+## Nota teknikal Index.html
+
+Apps Script membuang teks selepas `//` pada sesuatu baris dalam skrip, walaupun `//` itu berada dalam rentetan atau templat (cth. `https://`). Jangan tulis `//` dalam rentetan atau templat dalam `Index.html`; guna `&#47;&#47;` dalam HTML atau `\/\/` dalam regex. Komen `//` biasa selamat. Ini punca halaman tersekat di "Memuatkan..." dengan ralat "Missing } in template expression".

@@ -445,7 +445,7 @@ function showApply() {
     <p>Dear Student,</p>
     <p>All UTM Students who are operating a business are required to fill in the UTMXCITE Student Startup Registration Form in order to get a license (certificate). This form is also required for students who would like to apply for incubator or business premises in UTM. This process will allow the university via UTMXCITE to collect the students' enterprise and startup information which will eventually provide effective entrepreneurship ecosystem at the university.</p>
     <p>With this submission, you have agreed to let us (UTMXCITE) use your details to contact you for further collaboration/discussion. Your data will not be shared or used for any other purposes, except for the reporting to the university and Ministry of Higher Education.</p>
-    <p>In order to fill up this form, please make sure that the business name you are registering has never registered with SSM. To check on this, please refer to this website: <a href="https://www.ssm-einfo.my/" target="_blank" rel="noopener">https://www.ssm-einfo.my/</a>. You have to register before you can login into the system and start your search.</p>
+    <p>In order to fill up this form, please make sure that the business name you are registering has never registered with SSM. To check on this, please refer to this website: <a href="https:&#47;&#47;www.ssm-einfo.my&#47;" target="_blank" rel="noopener">https:&#47;&#47;www.ssm-einfo.my&#47;</a>. You have to register before you can login into the system and start your search.</p>
     <p>For any queries, please contact UTMXCITE via email at <b>utmxcite@utm.my</b> or Hotline Number <b>018-967 0791</b>.</p>
     <p><b>Our office address is:</b><br><address>UTM Centre for Student Innovation and Technology Entrepreneurship (UTMXCITE),<br>Level 1, General office, Department of Office of Student Affairs and Alumni,<br>Student Union Building (SUB),<br>Universiti Teknologi Malaysia,<br>81310 UTM Johor Bahru,<br>Skudai, Johor.</address></p>
     <p>Thank you for your kind cooperation and attention towards this matter.</p>
@@ -469,7 +469,7 @@ function showApply() {
      <div class="aptype"><label class="opt"><input type="radio" name="ap_ssm" value="Berdaftar" ${reg ? 'checked' : ''}><span><b>Sudah berdaftar</b></span></label><label class="opt"><input type="radio" name="ap_ssm" value="Belum berdaftar" ${!reg ? 'checked' : ''}><span><b>Belum berdaftar</b><small>Tidak menghalang permohonan.</small></span></label></div>
      ${reg ? `<div class="apcond f"><label>No. pendaftaran SSM *<input data-f="ssm" value="${esc(A.ssm)}" placeholder="cth. 202503331550"></label>
        ${fbox('ssm', 'Sijil SSM *', A.docs.ssm)}
-       <label class="wide">Pautan maklumat SSM / e-Info (pilihan)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https://"></label></div>` :
+       <label class="wide">Pautan maklumat SSM / e-Info (pilihan)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https:&#47;&#47;"></label></div>` :
        `<div class="apcond f"><label class="wide">Rancangan mendaftar SSM<input data-f="ssmPlan" value="${esc(A.ssmPlan)}" placeholder="cth. sebelum 30 Jun"></label></div>`}</div>
    ${fb ? `<div class="card apsec"><h3><span class="apn">4</span> Keselamatan makanan</h3><div class="f">
      <label>Suntikan tifoid *<select data-f="tifoid">${opt(['Sudah (semua pengendali)', 'Sebahagian', 'Belum'], A.tifoid)}</select></label>
@@ -488,7 +488,7 @@ function showApply() {
      <div class="aptype"><label class="opt"><input type="radio" name="ap_mode" value="file" ${A.mode === 'file' ? 'checked' : ''}><span><b>Muat naik fail PDF</b><small>Maksimum 8 MB.</small></span></label>
      <label class="opt"><input type="radio" name="ap_mode" value="link" ${A.mode === 'link' ? 'checked' : ''}><span><b>Beri pautan</b><small>Pautan https, contohnya Google Drive (tetapkan "sesiapa yang mempunyai pautan").</small></span></label></div>
      ${A.mode === 'file' ? `<div class="apdrop"><label class="btn-line" for="ap_file" style="display:inline-block;cursor:pointer">Pilih fail PDF</label><input type="file" id="ap_file" accept="application/pdf,.pdf" style="position:absolute;left:-9999px"><span id="ap_fn" class="note">${A.file ? esc(A.file.name) + ' (' + (A.file.size / 1048576).toFixed(1) + ' MB)' : 'Belum dipilih'}</span></div>` :
-       `<div class="f"><label class="wide">Pautan pelan perniagaan<input data-f="planUrl" type="url" value="${esc(A.planUrl)}" placeholder="https://drive.google.com/..."></label></div>`}</div>
+       `<div class="f"><label class="wide">Pautan pelan perniagaan<input data-f="planUrl" type="url" value="${esc(A.planUrl)}" placeholder="https:&#47;&#47;drive.google.com&#47;..."></label></div>`}</div>
    <div class="card apsec"><label class="apack"><input type="checkbox" data-f="ack" ${A.ack ? 'checked' : ''}> <span>Saya mengesahkan bahawa semua maklumat di atas adalah benar dan lengkap, serta bersetuju maklumat ini digunakan oleh UTMXCITE untuk penilaian permohonan.</span></label>
      <input data-f="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
      <div class="foot"><button class="btn-solid" id="ap_go" type="submit" style="padding:14px 26px;font-size:16px">Hantar permohonan</button></div>
