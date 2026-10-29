@@ -1177,6 +1177,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
   function inc(v, k, x) { return (v[k] || []).indexOf(x) >= 0; }
 
   function profilSpec() {
+    var minat = function (v) { return !!v.tahapMinat && v.tahapMinat !== 'TIADA'; };
     return [
       { t: 'sect', k: '_a', bm: 'Maklumat semasa', en: 'Current details' },
       { k: 'fakulti', t: 'select', g: 'FAKULTI', bm: 'Fakulti', en: 'Faculty', req: 1 },
@@ -1196,11 +1197,13 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       { k: 'tempohNiaga', t: 'select', g: 'TEMPOH_NIAGA', bm: 'Tempoh berniaga', en: 'Duration', show: function (v) { return isYa(v, 'pernahBerniaga'); } },
       { k: 'motivasi', t: 'multi', g: 'MOTIVASI', bm: 'Motivasi berniaga', en: 'Motivation', show: function (v) { return isYa(v, 'pernahBerniaga'); } },
       { t: 'sect', k: '_d', bm: 'Minat berniaga', en: 'Interest in business' },
-      { k: 'berminat', t: 'radio', o: YT, bm: 'Berminat untuk berniaga?', en: 'Interested in running a business?', req: 1 },
-      { k: 'klusterDiminati', t: 'multi', g: 'KLUSTER', bm: 'Jenis perniagaan diminati', en: 'Business types of interest', show: function (v) { return isYa(v, 'berminat'); } },
-      { k: 'klusterLain', t: 'text', bm: 'Nyatakan lain-lain', en: 'Other (please specify)', max: 120, show: function (v) { return isYa(v, 'berminat') && inc(v, 'klusterDiminati', 'LAIN'); } },
-      { k: 'mahuKampus', t: 'radio', o: YTM, bm: 'Mahu berniaga di kampus?', en: 'Want to run a business on campus?', show: function (v) { return isYa(v, 'berminat'); } },
-      { k: 'aliran', t: 'select', g: 'ALIRAN', bm: 'Aliran pilihan', en: 'Preferred stream', show: function (v) { return isYa(v, 'berminat'); } }
+      { k: 'tahapMinat', t: 'radio', g: 'TAHAP_MINAT', bm: 'Tahap minat untuk berniaga', en: 'Level of interest in running a business', req: 1 },
+      { k: 'minatBidang', t: 'select', g: 'MINAT_BIDANG', bm: 'Bidang yang diminati', en: 'Field of interest', show: minat },
+      { k: 'klusterDiminati', t: 'multi', g: 'KLUSTER', bm: 'Jenis perniagaan diminati', en: 'Business types of interest', show: minat },
+      { k: 'klusterLain', t: 'text', bm: 'Nyatakan lain-lain', en: 'Other (please specify)', max: 120, show: function (v) { return minat(v) && inc(v, 'klusterDiminati', 'LAIN'); } },
+      { k: 'tahapKesediaan', t: 'radio', g: 'TAHAP_KESEDIAAN', bm: 'Tahap kesediaan', en: 'Readiness', show: minat },
+      { k: 'mahuKampus', t: 'radio', o: YTM, bm: 'Mahu berniaga di kampus?', en: 'Want to run a business on campus?', show: minat },
+      { k: 'aliran', t: 'select', g: 'ALIRAN', bm: 'Aliran pilihan', en: 'Preferred stream', show: minat }
     ];
   }
 
@@ -1213,6 +1216,10 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       { k: 'produk', t: 'multi', g: 'PRODUK', bm: 'Produk / perkhidmatan (maksimum 5)', en: 'Products / services', req: 1 },
       { k: 'jenisPerniagaan', t: 'select', g: 'JENIS_PERNIAGAAN', bm: 'Jenis perniagaan', en: 'Type of business', req: 1 },
       { k: 'kluster', t: 'select', g: 'KLUSTER', bm: 'Kluster perniagaan', en: 'Business cluster', req: 1 },
+      { k: 'jenisPerniagaanKpi', t: 'select', g: 'JENIS_PERNIAGAAN_KPI', bm: 'Klasifikasi perniagaan (untuk laporan KPI)', en: 'Business classification (for KPI reporting)', req: 1 },
+      { k: 'bilPekerja', t: 'number', bm: 'Bilangan pekerja', en: 'Number of workers', req: 1, ph: '0', hint: 'Termasuk pemilik dan rakan kongsi yang bekerja. / Including the owner and working partners.' },
+      { k: 'berasaskanInovasi', t: 'radio', o: YT, bm: 'Adakah perniagaan berasaskan inovasi dan teknologi?', en: 'Is the business innovation and technology based?', req: 1 },
+      { k: 'trl', t: 'radio', g: 'TRL', bm: 'Tahap kesediaan teknologi (TRL)', en: 'Technology readiness level (TRL)', show: function (v) { return v.berasaskanInovasi === 'Ya'; } },
       { k: 'alamat', t: 'textarea', bm: 'Alamat perniagaan', en: 'Business address', req: 1, max: 300, hint: 'Alamat perniagaan sebenar, bukan alamat kolej, fakulti atau UTM. / The actual business address, not a college, faculty or UTM address.' },
       { k: 'tarikhMula', t: 'date', bm: 'Tarikh mula berniaga', en: 'Business start date', req: 1 },
       { k: 'laman', t: 'text', bm: 'Laman web / media sosial', en: 'Website / social media', max: 300 },
@@ -1224,6 +1231,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       { t: 'sect', k: '_c', bm: 'Pendaftaran SSM', en: 'SSM registration' },
       { k: 'statusSsm', t: 'radio', g: 'STATUS_SSM', bm: 'Adakah perniagaan didaftarkan dengan SSM?', en: 'Registered with SSM?', req: 1 },
       { k: 'noSsm', t: 'text', bm: 'No. pendaftaran SSM', en: 'SSM registration no.', max: 30, show: function (v) { return v.statusSsm === 'YA'; } },
+      { k: 'tarikhSsm', t: 'date', bm: 'Tarikh pendaftaran SSM', en: 'SSM registration date', show: function (v) { return v.statusSsm === 'YA'; } },
       { k: 'failSsm', t: 'file', bm: 'Sijil SSM (PDF/JPG/PNG)', en: 'SSM certificate', show: function (v) { return v.statusSsm === 'YA'; } },
       { k: 'failMaklumat', t: 'file', bm: 'Maklumat SSM (pilihan)', en: 'SSM information (optional)', show: function (v) { return v.statusSsm === 'YA'; } },
       { t: 'sect', k: '_d', bm: 'Kewangan', en: 'Finance' },
@@ -1247,8 +1255,13 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       { k: 'jenisPerniagaan', t: 'select', g: 'JENIS_PERNIAGAAN', bm: 'Jenis perniagaan', en: 'Type of business', req: 1 },
       { k: 'kluster', t: 'select', g: 'KLUSTER', bm: 'Kluster', en: 'Cluster', req: 1 },
       { k: 'alamat', t: 'textarea', bm: 'Alamat perniagaan', en: 'Business address', req: 1 },
+      { k: 'jenisPerniagaanKpi', t: 'select', g: 'JENIS_PERNIAGAAN_KPI', bm: 'Klasifikasi perniagaan (KPI)', en: 'Business classification (KPI)' },
+      { k: 'bilPekerja', t: 'number', bm: 'Bilangan pekerja', en: 'Number of workers', ph: '0' },
+      { k: 'berasaskanInovasi', t: 'radio', o: YT, bm: 'Berasaskan inovasi dan teknologi?', en: 'Innovation and technology based?' },
+      { k: 'trl', t: 'radio', g: 'TRL', bm: 'TRL', en: 'TRL', show: function (v) { return v.berasaskanInovasi === 'Ya'; } },
       { k: 'statusSsm', t: 'radio', g: 'STATUS_SSM', bm: 'Status SSM', en: 'SSM status' },
       { k: 'noSsm', t: 'text', bm: 'No. SSM (jika ada)', en: 'SSM no. (if any)' },
+      { k: 'tarikhSsm', t: 'date', bm: 'Tarikh pendaftaran SSM', en: 'SSM registration date' },
       { k: 'syaratSubjek', t: 'select', g: 'SYARAT_SUBJEK', bm: 'Subjek (jika ada)', en: 'Subject (if any)' },
       { k: 'tarikhDaftar', t: 'date', bm: 'Tarikh pendaftaran asal', en: 'Original registration date', hint: 'Kosongkan untuk hari ini. Tamat sah laku = tarikh ini + 12 bulan. / Leave blank for today.' },
       { k: 'ahli', t: 'list', max: 11, ph: 'No. Matrik rakan kongsi', bm: 'Rakan kongsi', en: 'Partners' },
@@ -1303,7 +1316,8 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       PF.form.set({
         fakulti: p.fakulti, program: p.program, bidang: p.bidang, tahun: p.tahun, telefon: p.telefon, alamatKolej: p.alamatKolej, alamatRumah: p.alamatRumah,
         kampung: v.kampung, keluargaBerniaga: v.keluargaBerniaga, keluarga: v.keluarga, pernahBerniaga: v.pernahBerniaga,
-        jenisDijalankan: v.jenisDijalankan, tempohNiaga: v.tempohNiaga, motivasi: v.motivasi, berminat: v.berminat,
+        jenisDijalankan: v.jenisDijalankan, tempohNiaga: v.tempohNiaga, motivasi: v.motivasi,
+        tahapMinat: v.tahapMinat || (v.berminat === 'Ya' ? 'SEDERHANA' : (v.berminat === 'Tidak' ? 'TIADA' : '')), minatBidang: v.minatBidang, tahapKesediaan: v.tahapKesediaan,
         klusterDiminati: v.klusterDiminati, klusterLain: v.klusterLain, mahuKampus: v.mahuKampus, aliran: v.aliran
       });
     });
@@ -1508,6 +1522,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       ['Produk', l.produk.join(', ')], ['Jenis perniagaan', l.jenisPerniagaan], ['Kluster', l.kluster], ['Alamat', b.alamat], ['Tarikh mula', b.tarikhMula],
       ['Laman / media sosial', b.laman], ['Subjek', l.syarat + (b.pensyarah ? ' · ' + b.pensyarah + ' · Seksyen ' + b.seksyen + ' · Kump. ' + b.kumpulan : '')],
       ['Status SSM', l.statusSsm + (b.noSsm ? ' (' + b.noSsm + ')' : '')], ['Sumber pembiayaan', l.sumber.join(', ')],
+      ['Klasifikasi KPI', l.jenisKpi], ['Berasaskan inovasi', b.berasaskanInovasi + (b.trl ? ' · ' + b.trl.replace('TRL', 'TRL ') : '')], ['Bil. pekerja', b.bilPekerja], ['Tarikh SSM', b.tarikhSsm],
       ['Modal (RM)', b.modal], ['Pendapatan bulanan (RM)', b.pendapatan], ['No. pendaftaran', d.ringkas.noPendaftaran], ['Sah sehingga', d.tarikhTamat], ['Diluluskan oleh', d.diluluskanOleh]
     ]));
     if (d.fail.ssm) c2.appendChild(dlBtn('Sijil SSM', 'SSM certificate', b.id, 'ssm', out));
@@ -1569,7 +1584,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     loadRuj().then(function () {
       var box = $('sd-form'); box.textContent = '';
       SD.form = Form(sediaSpec()); box.appendChild(SD.form.el);
-      SD.form.set({ jenisSsu: 'Perniagaan', statusSsm: 'PROSES', emel: false });
+      SD.form.set({ jenisSsu: 'Perniagaan', statusSsm: 'PROSES', berasaskanInovasi: 'Tidak', emel: false });
     });
   }
   function submitSedia() {
@@ -3333,6 +3348,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       { k: 'tiadaAktiviti', t: 'check', bm: 'Tiada aktiviti bulan ini', en: 'No business activity this month' },
       { k: 'pendapatan', t: 'text', bm: 'Jumlah pendapatan (RM)', en: 'Total income (RM)', req: 1, ph: '0.00', hint: 'Nilai RM tepat, tidak negatif. / Exact RM value, not negative.', show: num },
       { k: 'perbelanjaan', t: 'text', bm: 'Jumlah perbelanjaan (RM)', en: 'Total expenses (RM)', req: 1, ph: '0.00', hint: 'Nilai RM tepat, tidak negatif. / Exact RM value, not negative.', show: num },
+      { k: 'bilPekerja', t: 'number', bm: 'Bilangan pekerja bulan ini', en: 'Number of workers this month', req: 1, ph: '0', hint: 'Termasuk pemilik dan rakan kongsi yang bekerja. / Including owner and working partners.' },
       { t: 'sect', k: '_b', bm: 'Fail laporan', en: 'Report file' },
       { k: 'fail', t: 'file', accept: '.pdf,.xlsx,.xls', req: wajibFail, bm: 'Fail laporan kewangan (PDF atau Excel)', en: 'Financial report file (PDF or Excel)',
         hint: wajibFail ? 'Wajib bagi penyewa lot (kecuali tiada aktiviti). / Required for lot tenants (unless no activity).' : 'Pilihan. / Optional.' },
@@ -3385,7 +3401,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
       $('kew-btn-hantar').hidden = false;
       KW.form = UP.Form(formSpec(d.wajibFail, !!bagi));
       $('kew-f-form').appendChild(KW.form.el);
-      KW.form.set({ tiadaAktiviti: d.borang.tiadaAktiviti, pendapatan: d.borang.pendapatan, perbelanjaan: d.borang.perbelanjaan, fail: l.adaFail, perakuan: false });
+      KW.form.set({ tiadaAktiviti: d.borang.tiadaAktiviti, pendapatan: d.borang.pendapatan, perbelanjaan: d.borang.perbelanjaan, bilPekerja: d.borang.bilPekerja, fail: l.adaFail, perakuan: false });
       ['pendapatan', 'perbelanjaan'].forEach(function (k) { KW.form.fields[k].wrap.querySelector('input').inputMode = 'decimal'; });
       KW.form.el.addEventListener('input', paintUntung);
       KW.form.el.addEventListener('change', paintUntung);
@@ -3397,7 +3413,7 @@ code{background:#F1ECEC;border-radius:5px;padding:1px 5px;font-size:12px}
     var m = $('kew-msg-f'); clearMsg(m);
     if (!KW.form) return;
     var v = KW.form.values();
-    var p = { id: KW.id, tiadaAktiviti: v.tiadaAktiviti === true, pendapatan: v.pendapatan, perbelanjaan: v.perbelanjaan, fail: v.fail || null, perakuan: v.perakuan === true };
+    var p = { id: KW.id, tiadaAktiviti: v.tiadaAktiviti === true, pendapatan: v.pendapatan, perbelanjaan: v.perbelanjaan, bilPekerja: v.bilPekerja, fail: v.fail || null, perakuan: v.perakuan === true };
     if (KW.bagi) p.noMatrik = KW.bagi.m;
     var b = $('kew-btn-hantar'); busy(b, true); KW.form.clear();
     UP.api(KW.bagi ? 'kew.admin.hantar' : 'kew.hantar', p).then(function (r) {

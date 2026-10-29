@@ -31,7 +31,7 @@ var SCHEMA = {
     tabs: {
       PELAJAR: ['No_Matrik', 'Nama_Penuh', 'Emel', 'No_KP_Pasport', 'Jantina', 'Etnik', 'Kewarganegaraan', 'Fakulti', 'Program', 'Bidang_Pengajian', 'Tahun_Pengajian', 'No_Telefon', 'Alamat_Kolej', 'Alamat_Rumah', 'Status_Pelajar', 'Sesi_Kemasukan'],
       Pengguna: ['Emel', 'Peranan', 'No_Matrik', 'No_Staf', 'Nama', 'No_KP_Pasport', 'Telefon', 'Jabatan_Organisasi', 'Status', 'Tarikh_Daftar', 'Log_Masuk_Terakhir'],
-      Perniagaan: ['ID_Perniagaan', 'Nama_Perniagaan', 'ID_Permohonan_SSU', 'No_Matrik_Pemilik', 'Jenis_SSU', 'Kluster', 'Jenis_Perniagaan', 'No_SSM', 'Alamat', 'No_Pendaftaran', 'Bil_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat', 'Status_SSU', 'Dicipta_Pada'],
+      Perniagaan: ['ID_Perniagaan', 'Nama_Perniagaan', 'ID_Permohonan_SSU', 'No_Matrik_Pemilik', 'Jenis_SSU', 'Kluster', 'Jenis_Perniagaan', 'No_SSM', 'Alamat', 'No_Pendaftaran', 'Bil_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat', 'Status_SSU', 'Dicipta_Pada', 'Berasaskan_Inovasi', 'TRL', 'Bil_Pekerja', 'Jenis_Perniagaan_KPI'],
       Link_Dokumen: ['Kod', 'Jenis', 'Modul', 'Nama', 'URL', 'ID', 'Status', 'Catatan'],
       Tetapan: ['Kunci', 'Nilai', 'Penerangan'],
       Admin: ['Emel', 'Nama', 'Peranan', 'Modul', 'Aktif', 'Ditambah_Oleh', 'Tarikh'],
@@ -46,7 +46,7 @@ var SCHEMA = {
     nama: 'UTMPreneur - Profiling',
     modul: 'Profiling',
     tabs: {
-      Profil: ['ID_Profil', 'No_Matrik', 'Sesi', 'Tarikh_Kemas_Kini', 'No_Telefon', 'Kampung_Halaman', 'Keluarga_Berniaga', 'Pernah_Berniaga', 'Jenis_Perniagaan_Dijalankan', 'Tempoh_Perniagaan', 'Motivasi', 'Berminat_Berniaga', 'Kluster_Diminati', 'Kluster_Lain', 'Mahu_Kampus', 'Aliran_Pilihan'],
+      Profil: ['ID_Profil', 'No_Matrik', 'Sesi', 'Tarikh_Kemas_Kini', 'No_Telefon', 'Kampung_Halaman', 'Keluarga_Berniaga', 'Pernah_Berniaga', 'Jenis_Perniagaan_Dijalankan', 'Tempoh_Perniagaan', 'Motivasi', 'Berminat_Berniaga', 'Kluster_Diminati', 'Kluster_Lain', 'Mahu_Kampus', 'Aliran_Pilihan', 'Tahap_Minat', 'Minat_Bidang', 'Tahap_Kesediaan'],
       Perniagaan_Keluarga: ['ID_Profil', 'Hubungan', 'Jenis_Perniagaan', 'Tempoh']
     }
   },
@@ -54,7 +54,7 @@ var SCHEMA = {
     nama: 'UTMPreneur - SSU',
     modul: 'SSU',
     tabs: {
-      Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat'],
+      Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Berasaskan_Inovasi', 'TRL', 'Bil_Pekerja', 'Tarikh_SSM', 'Jenis_Perniagaan_KPI', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat'],
       Ahli_Pasukan: ['ID_Permohonan', 'No_Matrik', 'Nama', 'Fakulti', 'Jantina', 'Etnik', 'Tahun', 'Peranan_Ahli']
     }
   },
@@ -81,7 +81,7 @@ var SCHEMA = {
     nama: 'UTMPreneur - Kewangan',
     modul: 'Kewangan',
     tabs: {
-      Laporan_Bulanan: ['ID_Laporan', 'ID_Perniagaan', 'ID_Sewaan', 'Bulan', 'Tahun', 'Tiada_Aktiviti', 'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Fail_Laporan', 'Perakuan', 'Status', 'Tarikh_Hantar', 'Tarikh_Akhir', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan']
+      Laporan_Bulanan: ['ID_Laporan', 'ID_Perniagaan', 'ID_Sewaan', 'Bulan', 'Tahun', 'Tiada_Aktiviti', 'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Fail_Laporan', 'Perakuan', 'Status', 'Tarikh_Hantar', 'Tarikh_Akhir', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan', 'Bil_Pekerja']
     }
   },
   SS_TEMPAHAN_RUANG: {

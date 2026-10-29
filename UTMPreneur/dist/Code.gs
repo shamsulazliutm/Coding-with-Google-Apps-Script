@@ -539,7 +539,7 @@ var SCHEMA = {
     tabs: {
       PELAJAR: ['No_Matrik', 'Nama_Penuh', 'Emel', 'No_KP_Pasport', 'Jantina', 'Etnik', 'Kewarganegaraan', 'Fakulti', 'Program', 'Bidang_Pengajian', 'Tahun_Pengajian', 'No_Telefon', 'Alamat_Kolej', 'Alamat_Rumah', 'Status_Pelajar', 'Sesi_Kemasukan'],
       Pengguna: ['Emel', 'Peranan', 'No_Matrik', 'No_Staf', 'Nama', 'No_KP_Pasport', 'Telefon', 'Jabatan_Organisasi', 'Status', 'Tarikh_Daftar', 'Log_Masuk_Terakhir'],
-      Perniagaan: ['ID_Perniagaan', 'Nama_Perniagaan', 'ID_Permohonan_SSU', 'No_Matrik_Pemilik', 'Jenis_SSU', 'Kluster', 'Jenis_Perniagaan', 'No_SSM', 'Alamat', 'No_Pendaftaran', 'Bil_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat', 'Status_SSU', 'Dicipta_Pada'],
+      Perniagaan: ['ID_Perniagaan', 'Nama_Perniagaan', 'ID_Permohonan_SSU', 'No_Matrik_Pemilik', 'Jenis_SSU', 'Kluster', 'Jenis_Perniagaan', 'No_SSM', 'Alamat', 'No_Pendaftaran', 'Bil_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat', 'Status_SSU', 'Dicipta_Pada', 'Berasaskan_Inovasi', 'TRL', 'Bil_Pekerja', 'Jenis_Perniagaan_KPI'],
       Link_Dokumen: ['Kod', 'Jenis', 'Modul', 'Nama', 'URL', 'ID', 'Status', 'Catatan'],
       Tetapan: ['Kunci', 'Nilai', 'Penerangan'],
       Admin: ['Emel', 'Nama', 'Peranan', 'Modul', 'Aktif', 'Ditambah_Oleh', 'Tarikh'],
@@ -554,7 +554,7 @@ var SCHEMA = {
     nama: 'UTMPreneur - Profiling',
     modul: 'Profiling',
     tabs: {
-      Profil: ['ID_Profil', 'No_Matrik', 'Sesi', 'Tarikh_Kemas_Kini', 'No_Telefon', 'Kampung_Halaman', 'Keluarga_Berniaga', 'Pernah_Berniaga', 'Jenis_Perniagaan_Dijalankan', 'Tempoh_Perniagaan', 'Motivasi', 'Berminat_Berniaga', 'Kluster_Diminati', 'Kluster_Lain', 'Mahu_Kampus', 'Aliran_Pilihan'],
+      Profil: ['ID_Profil', 'No_Matrik', 'Sesi', 'Tarikh_Kemas_Kini', 'No_Telefon', 'Kampung_Halaman', 'Keluarga_Berniaga', 'Pernah_Berniaga', 'Jenis_Perniagaan_Dijalankan', 'Tempoh_Perniagaan', 'Motivasi', 'Berminat_Berniaga', 'Kluster_Diminati', 'Kluster_Lain', 'Mahu_Kampus', 'Aliran_Pilihan', 'Tahap_Minat', 'Minat_Bidang', 'Tahap_Kesediaan'],
       Perniagaan_Keluarga: ['ID_Profil', 'Hubungan', 'Jenis_Perniagaan', 'Tempoh']
     }
   },
@@ -562,7 +562,7 @@ var SCHEMA = {
     nama: 'UTMPreneur - SSU',
     modul: 'SSU',
     tabs: {
-      Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat'],
+      Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Berasaskan_Inovasi', 'TRL', 'Bil_Pekerja', 'Tarikh_SSM', 'Jenis_Perniagaan_KPI', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat'],
       Ahli_Pasukan: ['ID_Permohonan', 'No_Matrik', 'Nama', 'Fakulti', 'Jantina', 'Etnik', 'Tahun', 'Peranan_Ahli']
     }
   },
@@ -589,7 +589,7 @@ var SCHEMA = {
     nama: 'UTMPreneur - Kewangan',
     modul: 'Kewangan',
     tabs: {
-      Laporan_Bulanan: ['ID_Laporan', 'ID_Perniagaan', 'ID_Sewaan', 'Bulan', 'Tahun', 'Tiada_Aktiviti', 'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Fail_Laporan', 'Perakuan', 'Status', 'Tarikh_Hantar', 'Tarikh_Akhir', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan']
+      Laporan_Bulanan: ['ID_Laporan', 'ID_Perniagaan', 'ID_Sewaan', 'Bulan', 'Tahun', 'Tiada_Aktiviti', 'Pendapatan_RM', 'Perbelanjaan_RM', 'Untung_RM', 'Fail_Laporan', 'Perakuan', 'Status', 'Tarikh_Hantar', 'Tarikh_Akhir', 'Disemak_Oleh', 'Tarikh_Semakan', 'Catatan_Semakan', 'Bil_Pekerja']
     }
   },
   SS_TEMPAHAN_RUANG: {
@@ -1566,7 +1566,7 @@ var Kewangan = (function () {
     o.bolehUbah = peranan === 'pemilik' && o.boleh;
     return {
       laporan: o,
-      borang: { tiadaAktiviti: o.tiadaAktiviti, pendapatan: o.pendapatan === null ? '' : String(o.pendapatan), perbelanjaan: o.perbelanjaan === null ? '' : String(o.perbelanjaan) },
+      borang: { tiadaAktiviti: o.tiadaAktiviti, pendapatan: o.pendapatan === null ? '' : String(o.pendapatan), perbelanjaan: o.perbelanjaan === null ? '' : String(o.perbelanjaan), bilPekerja: str_(r.Bil_Pekerja) },
       perniagaan: { id: str_(per.ID_Perniagaan), nama: str_(per.Nama_Perniagaan), noPendaftaran: str_(per.No_Pendaftaran), statusSsu: str_(per.Status_SSU) },
       peranan: peranan, wajibFail: wajib, tarikhAkhirHari: dayCfg_('TARIKH_AKHIR_LAPORAN_HARI', 7)
     };
@@ -1617,6 +1617,10 @@ var Kewangan = (function () {
   function semak_(d, opts) {
     var e = {}, v = {};
     v.tiada = d.tiadaAktiviti === true || d.tiadaAktiviti === 'true';
+    var bp = str_(d.bilPekerja);
+    if (v.tiada && bp === '') v.bilPekerja = 0;
+    else if (!/^\d{1,3}$/.test(bp)) { v.bilPekerja = null; e.bilPekerja = 'Nombor bulat 0 hingga 999 / Whole number 0 to 999'; }
+    else v.bilPekerja = parseInt(bp, 10);
     if (v.tiada) {
       v.pendapatan = 0; v.perbelanjaan = 0;
     } else {
@@ -1681,7 +1685,7 @@ var Kewangan = (function () {
       var lama = str_(cur.Status);
       Db.update(TAB, cur._row, {
         ID_Sewaan: sewaan ? str_(sewaan.ID_Sewaan) : str_(cur.ID_Sewaan),
-        Tiada_Aktiviti: v.tiada ? 'Ya' : 'Tidak', Pendapatan_RM: v.pendapatan, Perbelanjaan_RM: v.perbelanjaan, Untung_RM: v.untung,
+        Tiada_Aktiviti: v.tiada ? 'Ya' : 'Tidak', Pendapatan_RM: v.pendapatan, Perbelanjaan_RM: v.perbelanjaan, Untung_RM: v.untung, Bil_Pekerja: v.bilPekerja,
         Fail_Laporan: urlFail, Perakuan: 'Ya', Status: 'Dihantar', Tarikh_Hantar: new Date()
       });
       Audit.log(ctx, ctx.bagiPihak ? 'KEW_HANTAR_BAGI_PIHAK' : 'KEW_HANTAR', 'Kewangan', id, lama, 'Dihantar',
@@ -4477,6 +4481,7 @@ var Profiling = (function () {
         keluargaBerniaga: Util.str(p.Keluarga_Berniaga), keluarga: fam,
         pernahBerniaga: Util.str(p.Pernah_Berniaga), jenisDijalankan: Util.str(p.Jenis_Perniagaan_Dijalankan),
         tempohNiaga: Util.str(p.Tempoh_Perniagaan), motivasi: split_(p.Motivasi),
+        tahapMinat: Util.str(p.Tahap_Minat), minatBidang: Util.str(p.Minat_Bidang), tahapKesediaan: Util.str(p.Tahap_Kesediaan),
         berminat: Util.str(p.Berminat_Berniaga), klusterDiminati: split_(p.Kluster_Diminati), klusterLain: Util.str(p.Kluster_Lain),
         mahuKampus: Util.str(p.Mahu_Kampus), aliran: Util.str(p.Aliran_Pilihan)
       } : null,
@@ -4541,8 +4546,13 @@ var Profiling = (function () {
       v.motivasi = codes('motivasi', d.motivasi, 'MOTIVASI', 0);
     }
 
-    v.berminat = Util.str(d.berminat);
-    oneOf('berminat', v.berminat, YA_TIDAK);
+    // Tahap minat (4 peringkat) menentukan "berminat": Tiada minat = Tidak, selainnya = Ya. Klien lama yang hanya menghantar
+    // berminat diterima: Ya dianggap Sederhana, Tidak dianggap Tiada minat.
+    v.tahapMinat = Util.str(d.tahapMinat);
+    if (!v.tahapMinat) v.tahapMinat = Util.str(d.berminat) === 'Ya' ? 'SEDERHANA' : (Util.str(d.berminat) === 'Tidak' ? 'TIADA' : '');
+    if (!Ref.has('TAHAP_MINAT', v.tahapMinat)) req('tahapMinat', 'Pilihan tidak sah / Invalid choice');
+    v.berminat = v.tahapMinat === 'TIADA' ? 'Tidak' : 'Ya';
+    v.minatBidang = ''; v.tahapKesediaan = '';
     v.klusterDiminati = []; v.klusterLain = ''; v.mahuKampus = ''; v.aliran = '';
     if (v.berminat === 'Ya') {
       v.klusterDiminati = codes('klusterDiminati', d.klusterDiminati, 'KLUSTER', 1);
@@ -4554,6 +4564,10 @@ var Profiling = (function () {
       oneOf('mahuKampus', v.mahuKampus, YA_TIDAK_MUNGKIN);
       v.aliran = Util.str(d.aliran);
       if (!Ref.has('ALIRAN', v.aliran)) req('aliran', 'Pilihan tidak sah / Invalid choice');
+      v.minatBidang = Util.str(d.minatBidang);
+      if (!Ref.has('MINAT_BIDANG', v.minatBidang)) req('minatBidang', 'Pilihan tidak sah / Invalid choice');
+      v.tahapKesediaan = Util.str(d.tahapKesediaan);
+      if (!Ref.has('TAHAP_KESEDIAAN', v.tahapKesediaan)) req('tahapKesediaan', 'Pilihan tidak sah / Invalid choice');
     }
     return { nilai: v, ralat: e };
   }
@@ -4581,7 +4595,8 @@ var Profiling = (function () {
         Kampung_Halaman: v.kampung, Keluarga_Berniaga: v.keluargaBerniaga, Pernah_Berniaga: v.pernahBerniaga,
         Jenis_Perniagaan_Dijalankan: v.jenisDijalankan, Tempoh_Perniagaan: v.tempohNiaga, Motivasi: csv_(v.motivasi),
         Berminat_Berniaga: v.berminat, Kluster_Diminati: csv_(v.klusterDiminati), Kluster_Lain: v.klusterLain,
-        Mahu_Kampus: v.mahuKampus, Aliran_Pilihan: v.aliran
+        Mahu_Kampus: v.mahuKampus, Aliran_Pilihan: v.aliran,
+        Tahap_Minat: v.tahapMinat, Minat_Bidang: v.minatBidang, Tahap_Kesediaan: v.tahapKesediaan
       };
       if (cur.length) Db.update('Profil', cur[0]._row, rec); else Db.append('Profil', rec);
       // 3. Perniagaan keluarga: ganti baris bagi profil ini
@@ -8163,6 +8178,55 @@ var Seed = (function () {
       ['SOLE', 'Sole proprietor / enterprise', 'Sole proprietor / enterprise'], ['SOSIAL', 'Keusahawanan sosial', 'Social entrepreneurship'],
       ['TEKNO', 'Technology startup', 'Technology startup'], ['GIG', 'High Value GiG', 'High Value GiG']
     ]));
+    out = out.concat(ruj('JENIS_PERNIAGAAN_KPI', [
+      ['K01', "Aktiviti guaman", "Aktiviti guaman"],
+      ['K02', "Aktiviti infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan yang berkaitan", "Aktiviti infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan yang berkaitan"],
+      ['K03', "Aktiviti pemasangan elektrikal, paip dan pembinaan lain", "Aktiviti pemasangan elektrikal, paip dan pembinaan lain"],
+      ['K04', "Aktiviti penerbitan buku, surat khabar, terbitan berkala dan penerbitan lain", "Aktiviti penerbitan buku, surat khabar, terbitan berkala dan penerbitan lain"],
+      ['K05', "Aktiviti pengaturcaraan komputer lain (termasuk content creation, coding, business apps, MachineLearning, Artificial Intelligence, Cybersecurity, pangkalan data dan lama web)", "Aktiviti pengaturcaraan komputer lain (termasuk content creation, coding, business apps, MachineLearning, Artificial Intelligence, Cybersecurity, pangkalan data dan lama web)"],
+      ['K06', "Aktiviti perakaunan, simpan kira dan audit; perundingan percukaian", "Aktiviti perakaunan, simpan kira dan audit; perundingan percukaian"],
+      ['K07', "Aktiviti perkhidmatan minuman (termasuk Restoran, Kafeteria, Vendor Bergerak, Perkhidmatan minuman bergerak dan Kiosk)", "Aktiviti perkhidmatan minuman (termasuk Restoran, Kafeteria, Vendor Bergerak, Perkhidmatan minuman bergerak dan Kiosk)"],
+      ['K08', "Aktiviti perkhidmatan perantaraan untuk aktiviti pos dan kurier (termasuk operasi platform dalam talian untuk membolehkan orang menempah penghantaran makanan selain perantara spt. Grab Food, Lalamove dan Shopee Food)", "Aktiviti perkhidmatan perantaraan untuk aktiviti pos dan kurier (termasuk operasi platform dalam talian untuk membolehkan orang menempah penghantaran makanan selain perantara spt. Grab Food, Lalamove dan Shopee Food)"],
+      ['K09', "Aktiviti perkhidmatan perantaraan untuk hartanah (termasuk aktiviti ejen dan broker hartanah untuk pembelian, penjualan dan penyewaan hartanah", "Aktiviti perkhidmatan perantaraan untuk hartanah (termasuk aktiviti ejen dan broker hartanah untuk pembelian, penjualan dan penyewaan hartanah"],
+      ['K10', "Aktiviti perkhidmatan teknologi maklumat dan komputer lain (termasuk perkhidmatan pemulihan kerosakan komputer, pemasangan (setting-up) komputer peribadi dan perkhidmatan pemasangan perisian)", "Aktiviti perkhidmatan teknologi maklumat dan komputer lain (termasuk perkhidmatan pemulihan kerosakan komputer, pemasangan (setting-up) komputer peribadi dan perkhidmatan pemasangan perisian)"],
+      ['K11', "Aktiviti sokongan kepada aktiviti insurans/takaful dan tabungan pencen (termasuk Ejen insurans/takaful", "Aktiviti sokongan kepada aktiviti insurans/takaful dan tabungan pencen (termasuk Ejen insurans/takaful"],
+      ['K12', "Dandanan rambut, rawatan kecantikan, spa harian dan aktiviti seumpamanya", "Dandanan rambut, rawatan kecantikan, spa harian dan aktiviti seumpamanya"],
+      ['K13', "Infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan aktiviti perkhidmatan maklumat lain", "Infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan aktiviti perkhidmatan maklumat lain"],
+      ['K14', "Insurans/takaful", "Insurans/takaful"],
+      ['K15', "Jualan komponen (termasuk alat ganti) dan aksesori kenderaan bermotor", "Jualan komponen (termasuk alat ganti) dan aksesori kenderaan bermotor"],
+      ['K16', "Pembaikan dan penyelenggaraan bagi kelengkapan elektrik (termasuk peralatan lampu elektrik dan peranti pendawaian pembawa arus dan peranti pendawaian bukan pembawa arus untuk pendawaian litar elektrik)", "Pembaikan dan penyelenggaraan bagi kelengkapan elektrik (termasuk peralatan lampu elektrik dan peranti pendawaian pembawa arus dan peranti pendawaian bukan pembawa arus untuk pendawaian litar elektrik)"],
+      ['K17', "Pembaikan dan penyelenggaraan kelengkapan isi rumah (termasuk peti sejuk, dapur, mesin basuh, pengering pakaian, pendingin udara bilik, dll.) dan peralatan rumah dan halaman", "Pembaikan dan penyelenggaraan kelengkapan isi rumah (termasuk peti sejuk, dapur, mesin basuh, pengering pakaian, pendingin udara bilik, dll.) dan peralatan rumah dan halaman"],
+      ['K18', "Pembaikan dan penyelenggaraan kenderaan bermotor (termasuk Menyembur dan mengecat kenderaan bermotor, Mencuci dan menggilap (cuci kereta, dan pembaikan tayar dan tiub (pemasangan atau penggantian))", "Pembaikan dan penyelenggaraan kenderaan bermotor (termasuk Menyembur dan mengecat kenderaan bermotor, Mencuci dan menggilap (cuci kereta, dan pembaikan tayar dan tiub (pemasangan atau penggantian))"],
+      ['K19', "Pembaikan dan penyelenggaraan komputer dan peralatan komunikasi", "Pembaikan dan penyelenggaraan komputer dan peralatan komunikasi"],
+      ['K20', "Pembaikan dan penyelenggaraan peralatan elektronik pengguna", "Pembaikan dan penyelenggaraan peralatan elektronik pengguna"],
+      ['K21', "Pembaikan dan penyelenggaraan produk logam fabrikasi, jentera dan kelengkapan", "Pembaikan dan penyelenggaraan produk logam fabrikasi, jentera dan kelengkapan"],
+      ['K22', "Pembangunan permainan video, perisian permainan video dan peralatan perisian permainan video (termasuk e-sukan)", "Pembangunan permainan video, perisian permainan video dan peralatan perisian permainan video (termasuk e-sukan)"],
+      ['K23', "Pembinaan bangunan kediaman dan bukan kediaman", "Pembinaan bangunan kediaman dan bukan kediaman"],
+      ['K24', "Pembuatan barang kemas, bijouterie dan artikel berkaitan", "Pembuatan barang kemas, bijouterie dan artikel berkaitan"],
+      ['K25', "Pembuatan barangan sukan", "Pembuatan barangan sukan"],
+      ['K26', "Pembuatan instrumen dan bekalan perubatan dan pergigian", "Pembuatan instrumen dan bekalan perubatan dan pergigian"],
+      ['K27', "Pembuatan instrumen muzik", "Pembuatan instrumen muzik"],
+      ['K28', "Pembuatan pakaian, kecuali pakaian bulu", "Pembuatan pakaian, kecuali pakaian bulu"],
+      ['K29', "Pembuatan permainan dan mainan", "Pembuatan permainan dan mainan"],
+      ['K30', "Pembuatan produk getah dan plastik", "Pembuatan produk getah dan plastik"],
+      ['K31', "Pencetakan dan aktiviti perkhidmatan berkaitan pencetakan", "Pencetakan dan aktiviti perkhidmatan berkaitan pencetakan"],
+      ['K32', "Penerbitan perisian", "Penerbitan perisian"],
+      ['K33', "Pengaturcaraan komputer, perundingan dan aktiviti yang berkaitan", "Pengaturcaraan komputer, perundingan dan aktiviti yang berkaitan"],
+      ['K34', "Pengurusan konvensyen dan pameran perdagangan", "Pengurusan konvensyen dan pameran perdagangan"],
+      ['K35', "Peniaga jongkong emas", "Peniaga jongkong emas"],
+      ['K36', "Penyiapan dan kemasan bangunan", "Penyiapan dan kemasan bangunan"],
+      ['K37', "Perikanan dan akuakultur (termasuk Ternakan ikan hiasan di laut dan air tawar)", "Perikanan dan akuakultur (termasuk Ternakan ikan hiasan di laut dan air tawar)"],
+      ['K38', "Pusat tuisyen", "Pusat tuisyen"],
+      ['K39', "Telekomunikasi", "Telekomunikasi"]
+    ]));
+    out = out.concat(ruj('TRL', [['TRL4', 'TRL 4', 'TRL 4'], ['TRL5', 'TRL 5', 'TRL 5'], ['TRL6', 'TRL 6', 'TRL 6']]));
+    out = out.concat(ruj('TAHAP_MINAT', [['TIADA', 'Tiada minat', 'No interest'], ['RENDAH', 'Rendah', 'Low'], ['SEDERHANA', 'Sederhana', 'Moderate'], ['TINGGI', 'Tinggi', 'High']]));
+    out = out.concat(ruj('MINAT_BIDANG', [
+      ['KEJTEK', 'Kejuruteraan & Teknologi', 'Engineering & Technology'], ['DIGITAL', 'Digital / AI', 'Digital / AI'], ['SAINSKES', 'Sains & Kesihatan', 'Science & Health'],
+      ['ALAMBINA', 'Alam Bina & Kemampanan', 'Built Environment & Sustainability'], ['SOSIAL', 'Sosial & Pendidikan', 'Social & Education'],
+      ['NIAGA', 'Perniagaan & Keusahawanan', 'Business & Entrepreneurship'], ['LAIN', 'Lain-lain', 'Other']
+    ]));
+    out = out.concat(ruj('TAHAP_KESEDIAAN', [['BELUM', 'Belum ada idea', 'No idea yet'], ['IDEA', 'Ada idea', 'Have an idea'], ['PROTOTAIP', 'Ada prototaip / MVP', 'Have a prototype / MVP'], ['BEROPERASI', 'Sudah beroperasi', 'Already operating']]));
     out = out.concat(ruj('JENIS_LOT', [
       ['FNB', 'Makanan dan Minuman', 'F&B'], ['RETAIL', 'Peruncitan', 'Retail'], ['LAIN', 'Lain-lain', 'Other']
     ]));
@@ -8798,6 +8862,25 @@ var Ssu = (function () {
     v.noSsm = Util.str(d.noSsm).substr(0, 30);
     if (v.statusSsm === 'YA' && !admin && !/^[A-Za-z0-9\-\/() ]{5,30}$/.test(v.noSsm)) bad('noSsm', 'No. SSM tidak sah / Invalid SSM number');
 
+    v.berasaskanInovasi = Util.str(d.berasaskanInovasi) || (admin ? 'Tidak' : '');
+    if (['Ya', 'Tidak'].indexOf(v.berasaskanInovasi) < 0) bad('berasaskanInovasi', 'Pilihan tidak sah / Invalid choice');
+    v.trl = '';
+    if (v.berasaskanInovasi === 'Ya') {
+      v.trl = Util.str(d.trl);
+      if (!Ref.has('TRL', v.trl)) bad('trl', 'Pilih TRL 4, 5 atau 6 / Choose TRL 4, 5 or 6');
+    }
+    var bp = Util.str(d.bilPekerja);
+    if (bp === '' && admin) v.bilPekerja = '';
+    else if (!/^\d{1,3}$/.test(bp)) { v.bilPekerja = ''; bad('bilPekerja', 'Nombor bulat 0 hingga 999 / Whole number 0 to 999'); }
+    else v.bilPekerja = parseInt(bp, 10);
+    v.tarikhSsm = Util.str(d.tarikhSsm);
+    if (v.tarikhSsm) {
+      var ts = /^\d{4}-\d{2}-\d{2}$/.test(v.tarikhSsm) ? Util.toDate(v.tarikhSsm) : null;
+      if (!ts || ts.getUTCFullYear() < 1990 || Util.daysBetween(new Date(), ts) > 0) bad('tarikhSsm', 'Tarikh tidak sah atau akan datang / Invalid or future date');
+    } else if (v.statusSsm === 'YA' && !admin) bad('tarikhSsm', 'Tarikh pendaftaran SSM wajib / SSM registration date is required');
+    v.jenisKpi = Util.str(d.jenisPerniagaanKpi);
+    if (!Ref.has('JENIS_PERNIAGAAN_KPI', v.jenisKpi) && !(admin && v.jenisKpi === '')) bad('jenisPerniagaanKpi', 'Pilihan tidak sah / Invalid choice');
+
     v.jenisPerniagaan = Util.str(d.jenisPerniagaan);
     one('jenisPerniagaan', v.jenisPerniagaan, 'JENIS_PERNIAGAAN');
     v.kluster = Util.str(d.kluster);
@@ -8873,6 +8956,8 @@ var Ssu = (function () {
       jenisPerniagaan: Util.str(r.Jenis_Perniagaan), kluster: Util.str(r.Kluster), sumber: split_(r.Sumber_Pembiayaan),
       modal: Util.str(r.Modal_RM), pendapatan: Util.str(r.Pendapatan_Bulanan_RM), alamat: Util.str(r.Alamat_Perniagaan),
       tarikhMula: Util.dateKey(r.Tarikh_Mula_Perniagaan), laman: Util.str(r.Laman_Media_Sosial),
+      berasaskanInovasi: Util.str(r.Berasaskan_Inovasi), trl: Util.str(r.TRL), bilPekerja: Util.str(r.Bil_Pekerja),
+      tarikhSsm: Util.dateKey(r.Tarikh_SSM), jenisPerniagaanKpi: Util.str(r.Jenis_Perniagaan_KPI),
       ahli: ahli.filter(function (a) { return Util.normMatric(a.No_Matrik) !== pemilik; }).map(function (a) { return Util.normMatric(a.No_Matrik); }),
       failSsmAda: !!Util.str(r.Fail_SSM), failMaklumatAda: !!Util.str(r.Fail_Maklumat_SSM)
     };
@@ -9035,6 +9120,8 @@ var Ssu = (function () {
         Jenis_Perniagaan: v.jenisPerniagaan, Kluster: v.kluster, Sumber_Pembiayaan: csv_(v.sumber),
         Modal_RM: v.modal, Pendapatan_Bulanan_RM: v.pendapatan, Alamat_Perniagaan: v.alamat,
         Tarikh_Mula_Perniagaan: v.tarikhMula ? Util.toDate(v.tarikhMula) : '', Laman_Media_Sosial: v.laman,
+        Berasaskan_Inovasi: v.berasaskanInovasi, TRL: v.trl, Bil_Pekerja: v.bilPekerja, Tarikh_SSM: v.tarikhSsm ? Util.toDate(v.tarikhSsm) : '',
+        Jenis_Perniagaan_KPI: v.jenisKpi,
         Bil_Ahli: v.ahli.length + 1, Status: 'Baharu', Tarikh_Hantar: now, Tarikh_Keputusan: ''
       };
       if (cur) Db.update('Permohonan_SSU', cur._row, rec); else Db.append('Permohonan_SSU', rec);
@@ -9167,7 +9254,8 @@ var Ssu = (function () {
         produk: f.produk.map(function (k) { return Ref.bm('PRODUK', k); }),
         kluster: Ref.bm('KLUSTER', f.kluster), jenisPerniagaan: Ref.bm('JENIS_PERNIAGAAN', f.jenisPerniagaan),
         sumber: f.sumber.map(function (k) { return Ref.bm('SUMBER_PEMBIAYAAN', k); }),
-        statusSsm: Ref.bm('STATUS_SSM', f.statusSsm), syarat: Ref.bm('SYARAT_SUBJEK', f.syaratSubjek)
+        statusSsm: Ref.bm('STATUS_SSM', f.statusSsm), syarat: Ref.bm('SYARAT_SUBJEK', f.syaratSubjek),
+        jenisKpi: f.jenisPerniagaanKpi ? Ref.bm('JENIS_PERNIAGAAN_KPI', f.jenisPerniagaanKpi) : ''
       },
       pemilik: pil,
       ahli: ahli.map(function (a) {
@@ -9252,7 +9340,9 @@ var Ssu = (function () {
         ID_Perniagaan: perId, Nama_Perniagaan: Util.str(r.Nama_Perniagaan), ID_Permohonan_SSU: id, No_Matrik_Pemilik: m,
         Jenis_SSU: Util.str(r.Jenis_SSU), Kluster: Util.str(r.Kluster), Jenis_Perniagaan: Util.str(r.Jenis_Perniagaan),
         No_SSM: Util.str(r.No_SSM), Alamat: Util.str(r.Alamat_Perniagaan), No_Pendaftaran: noDaftar, Bil_Sijil: kali,
-        Tarikh_Pendaftaran: daftar, Tarikh_Tamat: tamat, Status_SSU: statusPer
+        Tarikh_Pendaftaran: daftar, Tarikh_Tamat: tamat, Status_SSU: statusPer,
+        Berasaskan_Inovasi: Util.str(r.Berasaskan_Inovasi), TRL: Util.str(r.TRL), Bil_Pekerja: Util.str(r.Bil_Pekerja) === '' ? '' : Number(r.Bil_Pekerja),
+        Jenis_Perniagaan_KPI: Util.str(r.Jenis_Perniagaan_KPI)
       };
       if (per) Db.update('Perniagaan', per._row, perRec);
       else { perRec.Dicipta_Pada = now; Db.append('Perniagaan', perRec); }
@@ -9348,6 +9438,8 @@ var Ssu = (function () {
         Status_SSM: v.statusSsm, No_SSM: v.noSsm, Jenis_Perniagaan: v.jenisPerniagaan, Kluster: v.kluster, Sumber_Pembiayaan: csv_(v.sumber),
         Modal_RM: v.modal === null ? '' : v.modal, Pendapatan_Bulanan_RM: v.pendapatan === null ? '' : v.pendapatan,
         Alamat_Perniagaan: v.alamat, Tarikh_Mula_Perniagaan: v.tarikhMula ? Util.toDate(v.tarikhMula) : '', Laman_Media_Sosial: v.laman,
+        Berasaskan_Inovasi: v.berasaskanInovasi, TRL: v.trl, Bil_Pekerja: v.bilPekerja, Tarikh_SSM: v.tarikhSsm ? Util.toDate(v.tarikhSsm) : '',
+        Jenis_Perniagaan_KPI: v.jenisKpi,
         Bil_Ahli: v.ahli.length + 1, Status: 'Baharu', Tarikh_Hantar: new Date()
       });
       writeAhli_(nid, m, v.ahli);

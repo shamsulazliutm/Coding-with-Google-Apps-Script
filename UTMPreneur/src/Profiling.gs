@@ -65,6 +65,7 @@ var Profiling = (function () {
         keluargaBerniaga: Util.str(p.Keluarga_Berniaga), keluarga: fam,
         pernahBerniaga: Util.str(p.Pernah_Berniaga), jenisDijalankan: Util.str(p.Jenis_Perniagaan_Dijalankan),
         tempohNiaga: Util.str(p.Tempoh_Perniagaan), motivasi: split_(p.Motivasi),
+        tahapMinat: Util.str(p.Tahap_Minat), minatBidang: Util.str(p.Minat_Bidang), tahapKesediaan: Util.str(p.Tahap_Kesediaan),
         berminat: Util.str(p.Berminat_Berniaga), klusterDiminati: split_(p.Kluster_Diminati), klusterLain: Util.str(p.Kluster_Lain),
         mahuKampus: Util.str(p.Mahu_Kampus), aliran: Util.str(p.Aliran_Pilihan)
       } : null,
@@ -129,8 +130,13 @@ var Profiling = (function () {
       v.motivasi = codes('motivasi', d.motivasi, 'MOTIVASI', 0);
     }
 
-    v.berminat = Util.str(d.berminat);
-    oneOf('berminat', v.berminat, YA_TIDAK);
+    // Tahap minat (4 peringkat) menentukan "berminat": Tiada minat = Tidak, selainnya = Ya. Klien lama yang hanya menghantar
+    // berminat diterima: Ya dianggap Sederhana, Tidak dianggap Tiada minat.
+    v.tahapMinat = Util.str(d.tahapMinat);
+    if (!v.tahapMinat) v.tahapMinat = Util.str(d.berminat) === 'Ya' ? 'SEDERHANA' : (Util.str(d.berminat) === 'Tidak' ? 'TIADA' : '');
+    if (!Ref.has('TAHAP_MINAT', v.tahapMinat)) req('tahapMinat', 'Pilihan tidak sah / Invalid choice');
+    v.berminat = v.tahapMinat === 'TIADA' ? 'Tidak' : 'Ya';
+    v.minatBidang = ''; v.tahapKesediaan = '';
     v.klusterDiminati = []; v.klusterLain = ''; v.mahuKampus = ''; v.aliran = '';
     if (v.berminat === 'Ya') {
       v.klusterDiminati = codes('klusterDiminati', d.klusterDiminati, 'KLUSTER', 1);
@@ -142,6 +148,10 @@ var Profiling = (function () {
       oneOf('mahuKampus', v.mahuKampus, YA_TIDAK_MUNGKIN);
       v.aliran = Util.str(d.aliran);
       if (!Ref.has('ALIRAN', v.aliran)) req('aliran', 'Pilihan tidak sah / Invalid choice');
+      v.minatBidang = Util.str(d.minatBidang);
+      if (!Ref.has('MINAT_BIDANG', v.minatBidang)) req('minatBidang', 'Pilihan tidak sah / Invalid choice');
+      v.tahapKesediaan = Util.str(d.tahapKesediaan);
+      if (!Ref.has('TAHAP_KESEDIAAN', v.tahapKesediaan)) req('tahapKesediaan', 'Pilihan tidak sah / Invalid choice');
     }
     return { nilai: v, ralat: e };
   }
@@ -169,7 +179,8 @@ var Profiling = (function () {
         Kampung_Halaman: v.kampung, Keluarga_Berniaga: v.keluargaBerniaga, Pernah_Berniaga: v.pernahBerniaga,
         Jenis_Perniagaan_Dijalankan: v.jenisDijalankan, Tempoh_Perniagaan: v.tempohNiaga, Motivasi: csv_(v.motivasi),
         Berminat_Berniaga: v.berminat, Kluster_Diminati: csv_(v.klusterDiminati), Kluster_Lain: v.klusterLain,
-        Mahu_Kampus: v.mahuKampus, Aliran_Pilihan: v.aliran
+        Mahu_Kampus: v.mahuKampus, Aliran_Pilihan: v.aliran,
+        Tahap_Minat: v.tahapMinat, Minat_Bidang: v.minatBidang, Tahap_Kesediaan: v.tahapKesediaan
       };
       if (cur.length) Db.update('Profil', cur[0]._row, rec); else Db.append('Profil', rec);
       // 3. Perniagaan keluarga: ganti baris bagi profil ini

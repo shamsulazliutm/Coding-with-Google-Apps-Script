@@ -104,6 +104,7 @@ test('UI Kewangan: pelajar hantar laporan, ahli baca sahaja, admin kembalikan/is
     assert.equal(await visible('#kew-f-form [data-k=pendapatan]'), true);
     await page.fill('#kew-f-form [data-k=pendapatan] input', '1,000.50');
     await page.fill('#kew-f-form [data-k=perbelanjaan] input', '1200');
+    await page.fill('#kew-f-form [data-k=bilPekerja] input', '2');
     assert.match(await text('#kew-f-untung'), /-RM 199\.50/, 'untung negatif dipaparkan');
     await page.setInputFiles('#kew-f-form [data-k=fail] input[type=file]', { name: 'laporan.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\n') });
     await page.waitForFunction(() => /laporan\.pdf/.test(document.querySelector('#kew-f-form [data-k=fail]').textContent));
@@ -190,6 +191,7 @@ test('UI Kewangan: pelajar hantar laporan, ahli baca sahaja, admin kembalikan/is
     assert.match(await text('#kew-f-catatan'), /Sila semak jumlah perbelanjaan/);
     assert.equal(await page.locator('#kew-f-form [data-k=pendapatan] input').inputValue(), '1000.5', 'nilai sedia ada diisi awal');
     await page.fill('#kew-f-form [data-k=perbelanjaan] input', '900');
+    await page.fill('#kew-f-form [data-k=bilPekerja] input', '2');
     await page.check('#kew-f-form [data-k=perakuan] input');
     await shot('kew-09-bagi-pihak');
     await page.click('#kew-btn-hantar');

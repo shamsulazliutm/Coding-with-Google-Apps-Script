@@ -220,6 +220,7 @@ test('Penggunaan sebenar: Laser Cut (minit), 3D Printer (gram dan minit), Ruang 
 test('Kadar belum ditetapkan: bil tidak dijana, admin diberi amaran sekali sahaja; bil dijana selepas kadar ditetapkan', () => {
   const { env, admin } = mkEnv();
   const t = student(env, AINA);
+  bekukan(env, '2026-01-05', '09:00'); // kadar berkuat kuasa sebelum sesi, tidak bergantung pada tarikh sebenar
   call(env, 'mk.admin.kadar.simpan', admin, { kod: '3D_PRINTER_JAM', jenisPengguna: 'Pelajar', kadar: '' });
   bekukan(env, HARI0, '09:00');
   const id = lulusPenuh(env, admin, t, TDP({ tarikh: '2026-10-21' }));
@@ -239,7 +240,7 @@ test('Kadar belum ditetapkan: bil tidak dijana, admin diberi amaran sekali sahaj
   assert.ok(pg.data.amaranPenggunaan.some((a) => /Kadar belum ditetapkan/.test(a)));
   assert.equal(bilAda(env).length, 0);
   // tetapkan kadar -> bil dijana pada kerja harian seterusnya
-  call(env, 'mk.admin.kadar.simpan', admin, { kod: '3D_PRINTER_JAM', jenisPengguna: 'Pelajar', kadar: '4' });
+  call(env, 'mk.admin.kadar.simpan', admin, { kod: '3D_PRINTER_JAM', jenisPengguna: 'Pelajar', kadar: '4', berkuatKuasa: '2026-01-05' });
   bekukan(env, '2026-10-23', '07:00');
   assert.equal(jobBil(env).bilDijana, 1);
   assert.equal(bilAda(env)[0].Anggaran_RM, 28);
@@ -248,6 +249,7 @@ test('Kadar belum ditetapkan: bil tidak dijana, admin diberi amaran sekali sahaj
 test('Tempahan percuma (kos RM0) tidak menjana bil; kadar berkuat kuasa mengikut tarikh sesi', () => {
   const { env, admin } = mkEnv();
   const t = student(env, AINA);
+  bekukan(env, '2026-01-05', '09:00');
   call(env, 'mk.admin.kadar.simpan', admin, { kod: 'LASER_CUT', jenisPengguna: 'Pelajar', kadar: '0' });
   bekukan(env, HARI0, '09:00');
   lulusPenuh(env, admin, t, LASER({ tarikh: '2026-10-21' }));

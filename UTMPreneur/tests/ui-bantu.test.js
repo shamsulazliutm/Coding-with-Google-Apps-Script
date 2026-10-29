@@ -65,7 +65,7 @@ test('UI: admin bantu pelajar mengisi profiling, memohon SSU dan meluluskan teru
     await page.selectOption('#pf-form [data-k=kampung] select', 'JOHOR');
     await page.check('#pf-form [data-k=keluargaBerniaga] input[value=Tidak]');
     await page.check('#pf-form [data-k=pernahBerniaga] input[value=Tidak]');
-    await page.check('#pf-form [data-k=berminat] input[value=Tidak]');
+    await page.check('#pf-form [data-k=tahapMinat] input[value=TIADA]');
     await page.click('#btn-pf');
     await page.waitForFunction(() => /Profiling disimpan/.test(document.getElementById('msg-pf').textContent));
     assert.equal(env.plain(env.run(`Db.rows('Profil')[0].No_Matrik`)), 'A23UJ0001');
@@ -85,6 +85,9 @@ test('UI: admin bantu pelajar mengisi profiling, memohon SSU dan meluluskan teru
     await page.selectOption('#sf-form [data-k=kluster] select', 'MANUF');
     await page.fill('#sf-form [data-k=alamat] textarea', 'No 12, Jalan Mawar, Taman Universiti, 81300 Skudai, Johor');
     await page.fill('#sf-form [data-k=tarikhMula] input', '2026-09-01');
+    await page.selectOption('#sf-form [data-k=jenisPerniagaanKpi] select', 'K05');
+    await page.fill('#sf-form [data-k=bilPekerja] input', '1');
+    await page.check('#sf-form [data-k=berasaskanInovasi] input[value=Tidak]');
     await page.selectOption('#sf-form [data-k=syaratSubjek] select', 'TIADA');
     await page.check('#sf-form [data-k=statusSsm] input[value=PROSES]');
     await page.check('#sf-form [data-k=sumber] input[value=SENDIRI]');

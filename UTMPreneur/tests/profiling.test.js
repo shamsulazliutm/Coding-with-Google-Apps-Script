@@ -83,7 +83,7 @@ test('Profiling: pengesahan medan dan cabang bersyarat', () => {
   r = call(env, 'profil.simpan', t, Object.assign(PROFIL(), { klusterLain: '' }));
   assert.ok(r.error.extra.medan.klusterLain);
   // cabang: tidak pernah berniaga dan tidak berminat -> medan bergantung dikosongkan
-  const p = Object.assign(PROFIL(), { pernahBerniaga: 'Tidak', jenisDijalankan: 'RETAIL', berminat: 'Tidak', klusterDiminati: ['ICT'], aliran: 'GIG' });
+  const p = Object.assign(PROFIL(), { pernahBerniaga: 'Tidak', jenisDijalankan: 'RETAIL', berminat: 'Tidak', tahapMinat: 'TIADA', klusterDiminati: ['ICT'], aliran: 'GIG' });
   r = call(env, 'profil.simpan', t, p);
   assert.equal(r.ok, true, JSON.stringify(r));
   const row = env.plain(env.run(`Db.rows('Profil')[0]`));

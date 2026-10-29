@@ -179,7 +179,7 @@ var Kewangan = (function () {
     o.bolehUbah = peranan === 'pemilik' && o.boleh;
     return {
       laporan: o,
-      borang: { tiadaAktiviti: o.tiadaAktiviti, pendapatan: o.pendapatan === null ? '' : String(o.pendapatan), perbelanjaan: o.perbelanjaan === null ? '' : String(o.perbelanjaan) },
+      borang: { tiadaAktiviti: o.tiadaAktiviti, pendapatan: o.pendapatan === null ? '' : String(o.pendapatan), perbelanjaan: o.perbelanjaan === null ? '' : String(o.perbelanjaan), bilPekerja: str_(r.Bil_Pekerja) },
       perniagaan: { id: str_(per.ID_Perniagaan), nama: str_(per.Nama_Perniagaan), noPendaftaran: str_(per.No_Pendaftaran), statusSsu: str_(per.Status_SSU) },
       peranan: peranan, wajibFail: wajib, tarikhAkhirHari: dayCfg_('TARIKH_AKHIR_LAPORAN_HARI', 7)
     };
@@ -230,6 +230,10 @@ var Kewangan = (function () {
   function semak_(d, opts) {
     var e = {}, v = {};
     v.tiada = d.tiadaAktiviti === true || d.tiadaAktiviti === 'true';
+    var bp = str_(d.bilPekerja);
+    if (v.tiada && bp === '') v.bilPekerja = 0;
+    else if (!/^\d{1,3}$/.test(bp)) { v.bilPekerja = null; e.bilPekerja = 'Nombor bulat 0 hingga 999 / Whole number 0 to 999'; }
+    else v.bilPekerja = parseInt(bp, 10);
     if (v.tiada) {
       v.pendapatan = 0; v.perbelanjaan = 0;
     } else {
@@ -294,7 +298,7 @@ var Kewangan = (function () {
       var lama = str_(cur.Status);
       Db.update(TAB, cur._row, {
         ID_Sewaan: sewaan ? str_(sewaan.ID_Sewaan) : str_(cur.ID_Sewaan),
-        Tiada_Aktiviti: v.tiada ? 'Ya' : 'Tidak', Pendapatan_RM: v.pendapatan, Perbelanjaan_RM: v.perbelanjaan, Untung_RM: v.untung,
+        Tiada_Aktiviti: v.tiada ? 'Ya' : 'Tidak', Pendapatan_RM: v.pendapatan, Perbelanjaan_RM: v.perbelanjaan, Untung_RM: v.untung, Bil_Pekerja: v.bilPekerja,
         Fail_Laporan: urlFail, Perakuan: 'Ya', Status: 'Dihantar', Tarikh_Hantar: new Date()
       });
       Audit.log(ctx, ctx.bagiPihak ? 'KEW_HANTAR_BAGI_PIHAK' : 'KEW_HANTAR', 'Kewangan', id, lama, 'Dihantar',

@@ -51,6 +51,8 @@ function mkEnv() {
   setCfg(env, 'WEBAPP_URL', 'https://example.test/exec');
   const admin = login(env, 'utmxcite@utm.my').token;
   const ok = (r) => { assert.equal(r.ok, true, JSON.stringify(r)); return r; };
+  // Kadar disemai dengan tarikh berkuat kuasa hari ini; ujian membekukan jam pada tarikh tetap (Oktober 2026), jadi tetapkan tarikh awal yang tetap.
+  env.run(`Db.rows('KADAR').forEach(function (r) { Db.update('KADAR', r._row, { Berkuat_Kuasa: Util.toDate('2026-01-01') }); })`);
   ok(call(env, 'mk.admin.peralatan.lalai', admin));
   ok(call(env, 'mk.admin.peralatan.simpan', admin, { kod: 'LASER1', jenis: 'Laser Cut', noMesin: '1', nama: 'Laser Cutter A', kodKadar: 'LASER_CUT', status: 'Aktif' }));
   ok(call(env, 'mk.admin.peralatan.simpan', admin, { kod: 'TDP1', jenis: '3D Printer', noMesin: '3', nama: 'Prusa MK4', kodKadar: '3D_PRINTER', status: 'Aktif' }));

@@ -115,6 +115,25 @@ var Ssu = (function () {
     v.noSsm = Util.str(d.noSsm).substr(0, 30);
     if (v.statusSsm === 'YA' && !admin && !/^[A-Za-z0-9\-\/() ]{5,30}$/.test(v.noSsm)) bad('noSsm', 'No. SSM tidak sah / Invalid SSM number');
 
+    v.berasaskanInovasi = Util.str(d.berasaskanInovasi) || (admin ? 'Tidak' : '');
+    if (['Ya', 'Tidak'].indexOf(v.berasaskanInovasi) < 0) bad('berasaskanInovasi', 'Pilihan tidak sah / Invalid choice');
+    v.trl = '';
+    if (v.berasaskanInovasi === 'Ya') {
+      v.trl = Util.str(d.trl);
+      if (!Ref.has('TRL', v.trl)) bad('trl', 'Pilih TRL 4, 5 atau 6 / Choose TRL 4, 5 or 6');
+    }
+    var bp = Util.str(d.bilPekerja);
+    if (bp === '' && admin) v.bilPekerja = '';
+    else if (!/^\d{1,3}$/.test(bp)) { v.bilPekerja = ''; bad('bilPekerja', 'Nombor bulat 0 hingga 999 / Whole number 0 to 999'); }
+    else v.bilPekerja = parseInt(bp, 10);
+    v.tarikhSsm = Util.str(d.tarikhSsm);
+    if (v.tarikhSsm) {
+      var ts = /^\d{4}-\d{2}-\d{2}$/.test(v.tarikhSsm) ? Util.toDate(v.tarikhSsm) : null;
+      if (!ts || ts.getUTCFullYear() < 1990 || Util.daysBetween(new Date(), ts) > 0) bad('tarikhSsm', 'Tarikh tidak sah atau akan datang / Invalid or future date');
+    } else if (v.statusSsm === 'YA' && !admin) bad('tarikhSsm', 'Tarikh pendaftaran SSM wajib / SSM registration date is required');
+    v.jenisKpi = Util.str(d.jenisPerniagaanKpi);
+    if (!Ref.has('JENIS_PERNIAGAAN_KPI', v.jenisKpi) && !(admin && v.jenisKpi === '')) bad('jenisPerniagaanKpi', 'Pilihan tidak sah / Invalid choice');
+
     v.jenisPerniagaan = Util.str(d.jenisPerniagaan);
     one('jenisPerniagaan', v.jenisPerniagaan, 'JENIS_PERNIAGAAN');
     v.kluster = Util.str(d.kluster);
@@ -190,6 +209,8 @@ var Ssu = (function () {
       jenisPerniagaan: Util.str(r.Jenis_Perniagaan), kluster: Util.str(r.Kluster), sumber: split_(r.Sumber_Pembiayaan),
       modal: Util.str(r.Modal_RM), pendapatan: Util.str(r.Pendapatan_Bulanan_RM), alamat: Util.str(r.Alamat_Perniagaan),
       tarikhMula: Util.dateKey(r.Tarikh_Mula_Perniagaan), laman: Util.str(r.Laman_Media_Sosial),
+      berasaskanInovasi: Util.str(r.Berasaskan_Inovasi), trl: Util.str(r.TRL), bilPekerja: Util.str(r.Bil_Pekerja),
+      tarikhSsm: Util.dateKey(r.Tarikh_SSM), jenisPerniagaanKpi: Util.str(r.Jenis_Perniagaan_KPI),
       ahli: ahli.filter(function (a) { return Util.normMatric(a.No_Matrik) !== pemilik; }).map(function (a) { return Util.normMatric(a.No_Matrik); }),
       failSsmAda: !!Util.str(r.Fail_SSM), failMaklumatAda: !!Util.str(r.Fail_Maklumat_SSM)
     };
@@ -352,6 +373,8 @@ var Ssu = (function () {
         Jenis_Perniagaan: v.jenisPerniagaan, Kluster: v.kluster, Sumber_Pembiayaan: csv_(v.sumber),
         Modal_RM: v.modal, Pendapatan_Bulanan_RM: v.pendapatan, Alamat_Perniagaan: v.alamat,
         Tarikh_Mula_Perniagaan: v.tarikhMula ? Util.toDate(v.tarikhMula) : '', Laman_Media_Sosial: v.laman,
+        Berasaskan_Inovasi: v.berasaskanInovasi, TRL: v.trl, Bil_Pekerja: v.bilPekerja, Tarikh_SSM: v.tarikhSsm ? Util.toDate(v.tarikhSsm) : '',
+        Jenis_Perniagaan_KPI: v.jenisKpi,
         Bil_Ahli: v.ahli.length + 1, Status: 'Baharu', Tarikh_Hantar: now, Tarikh_Keputusan: ''
       };
       if (cur) Db.update('Permohonan_SSU', cur._row, rec); else Db.append('Permohonan_SSU', rec);
@@ -484,7 +507,8 @@ var Ssu = (function () {
         produk: f.produk.map(function (k) { return Ref.bm('PRODUK', k); }),
         kluster: Ref.bm('KLUSTER', f.kluster), jenisPerniagaan: Ref.bm('JENIS_PERNIAGAAN', f.jenisPerniagaan),
         sumber: f.sumber.map(function (k) { return Ref.bm('SUMBER_PEMBIAYAAN', k); }),
-        statusSsm: Ref.bm('STATUS_SSM', f.statusSsm), syarat: Ref.bm('SYARAT_SUBJEK', f.syaratSubjek)
+        statusSsm: Ref.bm('STATUS_SSM', f.statusSsm), syarat: Ref.bm('SYARAT_SUBJEK', f.syaratSubjek),
+        jenisKpi: f.jenisPerniagaanKpi ? Ref.bm('JENIS_PERNIAGAAN_KPI', f.jenisPerniagaanKpi) : ''
       },
       pemilik: pil,
       ahli: ahli.map(function (a) {
@@ -569,7 +593,9 @@ var Ssu = (function () {
         ID_Perniagaan: perId, Nama_Perniagaan: Util.str(r.Nama_Perniagaan), ID_Permohonan_SSU: id, No_Matrik_Pemilik: m,
         Jenis_SSU: Util.str(r.Jenis_SSU), Kluster: Util.str(r.Kluster), Jenis_Perniagaan: Util.str(r.Jenis_Perniagaan),
         No_SSM: Util.str(r.No_SSM), Alamat: Util.str(r.Alamat_Perniagaan), No_Pendaftaran: noDaftar, Bil_Sijil: kali,
-        Tarikh_Pendaftaran: daftar, Tarikh_Tamat: tamat, Status_SSU: statusPer
+        Tarikh_Pendaftaran: daftar, Tarikh_Tamat: tamat, Status_SSU: statusPer,
+        Berasaskan_Inovasi: Util.str(r.Berasaskan_Inovasi), TRL: Util.str(r.TRL), Bil_Pekerja: Util.str(r.Bil_Pekerja) === '' ? '' : Number(r.Bil_Pekerja),
+        Jenis_Perniagaan_KPI: Util.str(r.Jenis_Perniagaan_KPI)
       };
       if (per) Db.update('Perniagaan', per._row, perRec);
       else { perRec.Dicipta_Pada = now; Db.append('Perniagaan', perRec); }
@@ -665,6 +691,8 @@ var Ssu = (function () {
         Status_SSM: v.statusSsm, No_SSM: v.noSsm, Jenis_Perniagaan: v.jenisPerniagaan, Kluster: v.kluster, Sumber_Pembiayaan: csv_(v.sumber),
         Modal_RM: v.modal === null ? '' : v.modal, Pendapatan_Bulanan_RM: v.pendapatan === null ? '' : v.pendapatan,
         Alamat_Perniagaan: v.alamat, Tarikh_Mula_Perniagaan: v.tarikhMula ? Util.toDate(v.tarikhMula) : '', Laman_Media_Sosial: v.laman,
+        Berasaskan_Inovasi: v.berasaskanInovasi, TRL: v.trl, Bil_Pekerja: v.bilPekerja, Tarikh_SSM: v.tarikhSsm ? Util.toDate(v.tarikhSsm) : '',
+        Jenis_Perniagaan_KPI: v.jenisKpi,
         Bil_Ahli: v.ahli.length + 1, Status: 'Baharu', Tarikh_Hantar: new Date()
       });
       writeAhli_(nid, m, v.ahli);

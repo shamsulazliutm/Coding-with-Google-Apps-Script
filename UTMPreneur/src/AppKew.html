@@ -117,6 +117,7 @@
       { k: 'tiadaAktiviti', t: 'check', bm: 'Tiada aktiviti bulan ini', en: 'No business activity this month' },
       { k: 'pendapatan', t: 'text', bm: 'Jumlah pendapatan (RM)', en: 'Total income (RM)', req: 1, ph: '0.00', hint: 'Nilai RM tepat, tidak negatif. / Exact RM value, not negative.', show: num },
       { k: 'perbelanjaan', t: 'text', bm: 'Jumlah perbelanjaan (RM)', en: 'Total expenses (RM)', req: 1, ph: '0.00', hint: 'Nilai RM tepat, tidak negatif. / Exact RM value, not negative.', show: num },
+      { k: 'bilPekerja', t: 'number', bm: 'Bilangan pekerja bulan ini', en: 'Number of workers this month', req: 1, ph: '0', hint: 'Termasuk pemilik dan rakan kongsi yang bekerja. / Including owner and working partners.' },
       { t: 'sect', k: '_b', bm: 'Fail laporan', en: 'Report file' },
       { k: 'fail', t: 'file', accept: '.pdf,.xlsx,.xls', req: wajibFail, bm: 'Fail laporan kewangan (PDF atau Excel)', en: 'Financial report file (PDF or Excel)',
         hint: wajibFail ? 'Wajib bagi penyewa lot (kecuali tiada aktiviti). / Required for lot tenants (unless no activity).' : 'Pilihan. / Optional.' },
@@ -169,7 +170,7 @@
       $('kew-btn-hantar').hidden = false;
       KW.form = UP.Form(formSpec(d.wajibFail, !!bagi));
       $('kew-f-form').appendChild(KW.form.el);
-      KW.form.set({ tiadaAktiviti: d.borang.tiadaAktiviti, pendapatan: d.borang.pendapatan, perbelanjaan: d.borang.perbelanjaan, fail: l.adaFail, perakuan: false });
+      KW.form.set({ tiadaAktiviti: d.borang.tiadaAktiviti, pendapatan: d.borang.pendapatan, perbelanjaan: d.borang.perbelanjaan, bilPekerja: d.borang.bilPekerja, fail: l.adaFail, perakuan: false });
       ['pendapatan', 'perbelanjaan'].forEach(function (k) { KW.form.fields[k].wrap.querySelector('input').inputMode = 'decimal'; });
       KW.form.el.addEventListener('input', paintUntung);
       KW.form.el.addEventListener('change', paintUntung);
@@ -181,7 +182,7 @@
     var m = $('kew-msg-f'); clearMsg(m);
     if (!KW.form) return;
     var v = KW.form.values();
-    var p = { id: KW.id, tiadaAktiviti: v.tiadaAktiviti === true, pendapatan: v.pendapatan, perbelanjaan: v.perbelanjaan, fail: v.fail || null, perakuan: v.perakuan === true };
+    var p = { id: KW.id, tiadaAktiviti: v.tiadaAktiviti === true, pendapatan: v.pendapatan, perbelanjaan: v.perbelanjaan, bilPekerja: v.bilPekerja, fail: v.fail || null, perakuan: v.perakuan === true };
     if (KW.bagi) p.noMatrik = KW.bagi.m;
     var b = $('kew-btn-hantar'); busy(b, true); KW.form.clear();
     UP.api(KW.bagi ? 'kew.admin.hantar' : 'kew.hantar', p).then(function (r) {

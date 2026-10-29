@@ -105,7 +105,10 @@ test('UI Peringkat 2: profiling, permohonan SSU, semakan admin, kelulusan dan mu
     await page.fill('#pf-form [data-k=keluarga] .rep-row input >> nth=0', 'Kedai runcit');
     await page.check('#pf-form [data-k=pernahBerniaga] input[value=Tidak]');
     assert.equal(await visible('#pf-form [data-k=jenisDijalankan]'), false);
-    await page.check('#pf-form [data-k=berminat] input[value=Ya]');
+    await page.check('#pf-form [data-k=tahapMinat] input[value=SEDERHANA]');
+    assert.equal(await visible('#pf-form [data-k=minatBidang]'), true, 'bidang minat muncul jika berminat');
+    await page.selectOption('#pf-form [data-k=minatBidang] select', 'DIGITAL');
+    await page.check('#pf-form [data-k=tahapKesediaan] input[value=IDEA]');
     await page.check('#pf-form [data-k=klusterDiminati] input[value=ICT]');
     await page.check('#pf-form [data-k=klusterDiminati] input[value=LAIN]');
     assert.equal(await visible('#pf-form [data-k=klusterLain]'), true, 'lain-lain meminta penjelasan');
@@ -140,6 +143,12 @@ test('UI Peringkat 2: profiling, permohonan SSU, semakan admin, kelulusan dan mu
     await page.selectOption('#sf-form [data-k=kluster] select', 'MANUF');
     await page.fill('#sf-form [data-k=alamat] textarea', 'Kolej Tun Fatimah, UTM Skudai');
     await page.fill('#sf-form [data-k=tarikhMula] input', '2026-09-01');
+    await page.selectOption('#sf-form [data-k=jenisPerniagaanKpi] select', 'K05');
+    await page.fill('#sf-form [data-k=bilPekerja] input', '2');
+    assert.equal(await visible('#sf-form [data-k=trl]'), false);
+    await page.check('#sf-form [data-k=berasaskanInovasi] input[value=Ya]');
+    assert.equal(await visible('#sf-form [data-k=trl]'), true, 'TRL muncul jika berasaskan inovasi');
+    await page.check('#sf-form [data-k=trl] input[value=TRL5]');
     await page.selectOption('#sf-form [data-k=syaratSubjek] select', 'UBSS1032');
     assert.equal(await visible('#sf-form [data-k=pensyarah]'), true);
     await page.fill('#sf-form [data-k=pensyarah] input', 'Dr. Contoh');
@@ -149,6 +158,7 @@ test('UI Peringkat 2: profiling, permohonan SSU, semakan admin, kelulusan dan mu
     await page.check('#sf-form [data-k=statusSsm] input[value=YA]');
     assert.equal(await visible('#sf-form [data-k=failSsm]'), true);
     await page.fill('#sf-form [data-k=noSsm] input', '202603001234');
+    await page.fill('#sf-form [data-k=tarikhSsm] input', '2026-03-01');
     await page.setInputFiles('#sf-form [data-k=failSsm] input[type=file]', { name: 'ssm.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\n') });
     await page.waitForFunction(() => /ssm\.pdf/.test(document.querySelector('#sf-form [data-k=failSsm]').textContent));
     await page.check('#sf-form [data-k=sumber] input[value=SENDIRI]');

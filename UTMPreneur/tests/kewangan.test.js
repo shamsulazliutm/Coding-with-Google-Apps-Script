@@ -5,7 +5,7 @@ const { ready, call, login, student, profiled, setCfg, SSU, PDF, b64, assert } =
 const K = require('./kew-helpers');
 const { AINA, AMIRUL, WEIJIE, ADMIN, addPer, addAhli, addSewaan, jobAt, lap, rows, setLap, XLSX, XLS, pegawai, peranan, rel } = K;
 
-const P = (id, o) => Object.assign({ id, tiadaAktiviti: false, pendapatan: '1500.50', perbelanjaan: '800', perakuan: true }, o || {});
+const P = (id, o) => Object.assign({ id, tiadaAktiviti: false, pendapatan: '1500.50', perbelanjaan: '800', bilPekerja: '2', perakuan: true }, o || {});
 const kewMail = (env, emel, re) => env.sentTo(emel).filter((m) => re.test(m.subject));
 
 /** Adegan: perniagaan PRN-0001 milik Aina (ahli: Amirul), laporan Sep 2026 dijana, pelajar sudah log masuk. */

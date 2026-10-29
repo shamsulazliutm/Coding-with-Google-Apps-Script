@@ -152,6 +152,55 @@ var Seed = (function () {
       ['SOLE', 'Sole proprietor / enterprise', 'Sole proprietor / enterprise'], ['SOSIAL', 'Keusahawanan sosial', 'Social entrepreneurship'],
       ['TEKNO', 'Technology startup', 'Technology startup'], ['GIG', 'High Value GiG', 'High Value GiG']
     ]));
+    out = out.concat(ruj('JENIS_PERNIAGAAN_KPI', [
+      ['K01', "Aktiviti guaman", "Aktiviti guaman"],
+      ['K02', "Aktiviti infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan yang berkaitan", "Aktiviti infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan yang berkaitan"],
+      ['K03', "Aktiviti pemasangan elektrikal, paip dan pembinaan lain", "Aktiviti pemasangan elektrikal, paip dan pembinaan lain"],
+      ['K04', "Aktiviti penerbitan buku, surat khabar, terbitan berkala dan penerbitan lain", "Aktiviti penerbitan buku, surat khabar, terbitan berkala dan penerbitan lain"],
+      ['K05', "Aktiviti pengaturcaraan komputer lain (termasuk content creation, coding, business apps, MachineLearning, Artificial Intelligence, Cybersecurity, pangkalan data dan lama web)", "Aktiviti pengaturcaraan komputer lain (termasuk content creation, coding, business apps, MachineLearning, Artificial Intelligence, Cybersecurity, pangkalan data dan lama web)"],
+      ['K06', "Aktiviti perakaunan, simpan kira dan audit; perundingan percukaian", "Aktiviti perakaunan, simpan kira dan audit; perundingan percukaian"],
+      ['K07', "Aktiviti perkhidmatan minuman (termasuk Restoran, Kafeteria, Vendor Bergerak, Perkhidmatan minuman bergerak dan Kiosk)", "Aktiviti perkhidmatan minuman (termasuk Restoran, Kafeteria, Vendor Bergerak, Perkhidmatan minuman bergerak dan Kiosk)"],
+      ['K08', "Aktiviti perkhidmatan perantaraan untuk aktiviti pos dan kurier (termasuk operasi platform dalam talian untuk membolehkan orang menempah penghantaran makanan selain perantara spt. Grab Food, Lalamove dan Shopee Food)", "Aktiviti perkhidmatan perantaraan untuk aktiviti pos dan kurier (termasuk operasi platform dalam talian untuk membolehkan orang menempah penghantaran makanan selain perantara spt. Grab Food, Lalamove dan Shopee Food)"],
+      ['K09', "Aktiviti perkhidmatan perantaraan untuk hartanah (termasuk aktiviti ejen dan broker hartanah untuk pembelian, penjualan dan penyewaan hartanah", "Aktiviti perkhidmatan perantaraan untuk hartanah (termasuk aktiviti ejen dan broker hartanah untuk pembelian, penjualan dan penyewaan hartanah"],
+      ['K10', "Aktiviti perkhidmatan teknologi maklumat dan komputer lain (termasuk perkhidmatan pemulihan kerosakan komputer, pemasangan (setting-up) komputer peribadi dan perkhidmatan pemasangan perisian)", "Aktiviti perkhidmatan teknologi maklumat dan komputer lain (termasuk perkhidmatan pemulihan kerosakan komputer, pemasangan (setting-up) komputer peribadi dan perkhidmatan pemasangan perisian)"],
+      ['K11', "Aktiviti sokongan kepada aktiviti insurans/takaful dan tabungan pencen (termasuk Ejen insurans/takaful", "Aktiviti sokongan kepada aktiviti insurans/takaful dan tabungan pencen (termasuk Ejen insurans/takaful"],
+      ['K12', "Dandanan rambut, rawatan kecantikan, spa harian dan aktiviti seumpamanya", "Dandanan rambut, rawatan kecantikan, spa harian dan aktiviti seumpamanya"],
+      ['K13', "Infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan aktiviti perkhidmatan maklumat lain", "Infrastruktur pengkomputeran, pemprosesan data, pengehosan (hosting) dan aktiviti perkhidmatan maklumat lain"],
+      ['K14', "Insurans/takaful", "Insurans/takaful"],
+      ['K15', "Jualan komponen (termasuk alat ganti) dan aksesori kenderaan bermotor", "Jualan komponen (termasuk alat ganti) dan aksesori kenderaan bermotor"],
+      ['K16', "Pembaikan dan penyelenggaraan bagi kelengkapan elektrik (termasuk peralatan lampu elektrik dan peranti pendawaian pembawa arus dan peranti pendawaian bukan pembawa arus untuk pendawaian litar elektrik)", "Pembaikan dan penyelenggaraan bagi kelengkapan elektrik (termasuk peralatan lampu elektrik dan peranti pendawaian pembawa arus dan peranti pendawaian bukan pembawa arus untuk pendawaian litar elektrik)"],
+      ['K17', "Pembaikan dan penyelenggaraan kelengkapan isi rumah (termasuk peti sejuk, dapur, mesin basuh, pengering pakaian, pendingin udara bilik, dll.) dan peralatan rumah dan halaman", "Pembaikan dan penyelenggaraan kelengkapan isi rumah (termasuk peti sejuk, dapur, mesin basuh, pengering pakaian, pendingin udara bilik, dll.) dan peralatan rumah dan halaman"],
+      ['K18', "Pembaikan dan penyelenggaraan kenderaan bermotor (termasuk Menyembur dan mengecat kenderaan bermotor, Mencuci dan menggilap (cuci kereta, dan pembaikan tayar dan tiub (pemasangan atau penggantian))", "Pembaikan dan penyelenggaraan kenderaan bermotor (termasuk Menyembur dan mengecat kenderaan bermotor, Mencuci dan menggilap (cuci kereta, dan pembaikan tayar dan tiub (pemasangan atau penggantian))"],
+      ['K19', "Pembaikan dan penyelenggaraan komputer dan peralatan komunikasi", "Pembaikan dan penyelenggaraan komputer dan peralatan komunikasi"],
+      ['K20', "Pembaikan dan penyelenggaraan peralatan elektronik pengguna", "Pembaikan dan penyelenggaraan peralatan elektronik pengguna"],
+      ['K21', "Pembaikan dan penyelenggaraan produk logam fabrikasi, jentera dan kelengkapan", "Pembaikan dan penyelenggaraan produk logam fabrikasi, jentera dan kelengkapan"],
+      ['K22', "Pembangunan permainan video, perisian permainan video dan peralatan perisian permainan video (termasuk e-sukan)", "Pembangunan permainan video, perisian permainan video dan peralatan perisian permainan video (termasuk e-sukan)"],
+      ['K23', "Pembinaan bangunan kediaman dan bukan kediaman", "Pembinaan bangunan kediaman dan bukan kediaman"],
+      ['K24', "Pembuatan barang kemas, bijouterie dan artikel berkaitan", "Pembuatan barang kemas, bijouterie dan artikel berkaitan"],
+      ['K25', "Pembuatan barangan sukan", "Pembuatan barangan sukan"],
+      ['K26', "Pembuatan instrumen dan bekalan perubatan dan pergigian", "Pembuatan instrumen dan bekalan perubatan dan pergigian"],
+      ['K27', "Pembuatan instrumen muzik", "Pembuatan instrumen muzik"],
+      ['K28', "Pembuatan pakaian, kecuali pakaian bulu", "Pembuatan pakaian, kecuali pakaian bulu"],
+      ['K29', "Pembuatan permainan dan mainan", "Pembuatan permainan dan mainan"],
+      ['K30', "Pembuatan produk getah dan plastik", "Pembuatan produk getah dan plastik"],
+      ['K31', "Pencetakan dan aktiviti perkhidmatan berkaitan pencetakan", "Pencetakan dan aktiviti perkhidmatan berkaitan pencetakan"],
+      ['K32', "Penerbitan perisian", "Penerbitan perisian"],
+      ['K33', "Pengaturcaraan komputer, perundingan dan aktiviti yang berkaitan", "Pengaturcaraan komputer, perundingan dan aktiviti yang berkaitan"],
+      ['K34', "Pengurusan konvensyen dan pameran perdagangan", "Pengurusan konvensyen dan pameran perdagangan"],
+      ['K35', "Peniaga jongkong emas", "Peniaga jongkong emas"],
+      ['K36', "Penyiapan dan kemasan bangunan", "Penyiapan dan kemasan bangunan"],
+      ['K37', "Perikanan dan akuakultur (termasuk Ternakan ikan hiasan di laut dan air tawar)", "Perikanan dan akuakultur (termasuk Ternakan ikan hiasan di laut dan air tawar)"],
+      ['K38', "Pusat tuisyen", "Pusat tuisyen"],
+      ['K39', "Telekomunikasi", "Telekomunikasi"]
+    ]));
+    out = out.concat(ruj('TRL', [['TRL4', 'TRL 4', 'TRL 4'], ['TRL5', 'TRL 5', 'TRL 5'], ['TRL6', 'TRL 6', 'TRL 6']]));
+    out = out.concat(ruj('TAHAP_MINAT', [['TIADA', 'Tiada minat', 'No interest'], ['RENDAH', 'Rendah', 'Low'], ['SEDERHANA', 'Sederhana', 'Moderate'], ['TINGGI', 'Tinggi', 'High']]));
+    out = out.concat(ruj('MINAT_BIDANG', [
+      ['KEJTEK', 'Kejuruteraan & Teknologi', 'Engineering & Technology'], ['DIGITAL', 'Digital / AI', 'Digital / AI'], ['SAINSKES', 'Sains & Kesihatan', 'Science & Health'],
+      ['ALAMBINA', 'Alam Bina & Kemampanan', 'Built Environment & Sustainability'], ['SOSIAL', 'Sosial & Pendidikan', 'Social & Education'],
+      ['NIAGA', 'Perniagaan & Keusahawanan', 'Business & Entrepreneurship'], ['LAIN', 'Lain-lain', 'Other']
+    ]));
+    out = out.concat(ruj('TAHAP_KESEDIAAN', [['BELUM', 'Belum ada idea', 'No idea yet'], ['IDEA', 'Ada idea', 'Have an idea'], ['PROTOTAIP', 'Ada prototaip / MVP', 'Have a prototype / MVP'], ['BEROPERASI', 'Sudah beroperasi', 'Already operating']]));
     out = out.concat(ruj('JENIS_LOT', [
       ['FNB', 'Makanan dan Minuman', 'F&B'], ['RETAIL', 'Peruncitan', 'Retail'], ['LAIN', 'Lain-lain', 'Other']
     ]));
