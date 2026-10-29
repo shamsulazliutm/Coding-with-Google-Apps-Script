@@ -56,3 +56,26 @@ table{border-collapse:collapse;width:100%;font-size:12px}th{font-size:10px;text-
 
 .brand>div:last-child{min-width:0}.brand b{font-size:13px}.brand i{display:block;font-size:9px;white-space:normal}
 .user span{display:block;word-break:break-all}
+/* menu proses */
+.nav div.grp{font-weight:600}.nav div.grp .ic{color:var(--mar)}
+.nav .sub.on{color:var(--mar);font-weight:700;background:var(--mar-l)}
+.nav .sub{display:flex;gap:8px;align-items:center}.nav .sub .bd{margin-left:auto}
+.nav div.off{color:#a79da0}.nav div.off .ic{color:#c9c0c2}
+.soon{margin-left:auto;font-size:8.5px;font-weight:700;background:#ECE7E8;color:var(--muted);border-radius:5px;padding:0 5px}
+.flow{display:flex;align-items:stretch;gap:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.flow .st{flex:1;padding:12px 10px;text-align:center;border-right:1px solid var(--line);position:relative}
+.flow .st:last-child{border-right:0}
+.flow .st .nm{font-size:10.5px;color:var(--muted);font-weight:600}.flow .st .no{font-size:22px;font-weight:700;color:var(--mar-d);margin:2px 0}
+.flow .st.on{background:var(--mar-l)}.flow .st.on .nm{color:var(--mar)}
+.flow .st.warn .no{color:var(--bad)}
+.flow .st:after{content:"›";position:absolute;right:-6px;top:50%;margin-top:-12px;font-size:22px;color:#cdbfc3;background:#fff;z-index:1;line-height:1}
+.flow .st:last-child:after{display:none}
+.stepper{display:flex;gap:0;align-items:center}
+.stepper .s{flex:1;text-align:center;font-size:10.5px;color:var(--muted)}
+.stepper .s b{display:flex;width:26px;height:26px;border-radius:50%;margin:0 auto 4px;align-items:center;justify-content:center;font-size:12px;background:var(--ok);color:#fff}
+.stepper .s.now b{background:var(--mar)}.stepper .s.todo b{background:#fff;border:2px solid var(--line);color:var(--muted)}
+.stepper .ln{flex:.5;height:2px;background:var(--line);margin-bottom:18px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.tabs div{padding:8px 14px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent}
+.tabs div.on{color:var(--mar);font-weight:700;border-color:var(--mar)}
+.side .brand img{height:26px}.side .brand b{font-size:12px;white-space:nowrap}.side .brand i{display:none}

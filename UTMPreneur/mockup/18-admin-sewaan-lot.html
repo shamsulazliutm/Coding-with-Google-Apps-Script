@@ -1,0 +1,22 @@
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Admin: Sewaan Lot (saluran proses)</title><link rel="stylesheet" href="prestasi.css"><script src="menu.js"></script></head>
+<body><div class="app"><aside class="side" id="sd"></aside>
+<section class="main"><div class="top">Sewaan Lot · Permohonan</div><div class="content">
+ <div class="head"><div><h1>Sewaan Lot</h1><p>Saluran proses permohonan hingga bil sewa · Student Mall dan SUB · <span class="tag">CONTOH DATA</span></p></div><div class="sp"></div><div class="ctl"><div class="sel">Semua lot ⌄</div><div class="btn alt">Eksport CSV</div></div></div>
+ <div class="flow">
+  <div class="st on"><div class="nm">Permohonan</div><div class="no">4</div></div><div class="st"><div class="nm">Penilaian</div><div class="no">3</div></div><div class="st"><div class="nm">Tawaran</div><div class="no">2</div></div>
+  <div class="st"><div class="nm">Perjanjian</div><div class="no">1</div></div><div class="st"><div class="nm">Sewaan aktif</div><div class="no">11</div></div><div class="st warn"><div class="nm">Bil lewat</div><div class="no">2</div></div></div>
+ <div class="grid" style="grid-template-columns:1.6fr 1fr;flex:1;min-height:0">
+  <div class="panel"><div class="tabs"><div class="on">Permohonan baharu (4)</div><div>Disenarai pendek</div><div>Dinilai</div><div>Semua</div></div>
+   <table><thead><tr><th>ID</th><th>Perniagaan</th><th>Lot</th><th>Pemohon</th><th>Status</th><th>Dihantar</th></tr></thead><tbody>
+    <tr><td>PLT-2026-0007</td><td>SENI KEK AINA</td><td>SM-03</td><td>Nurul Aina</td><td><span class="pill info">Baharu</span></td><td>27/10</td></tr>
+    <tr><td>PLT-2026-0008</td><td>LIM TECH REPAIR</td><td>SUB-02</td><td>Lim Wei Jie</td><td><span class="pill info">Baharu</span></td><td>27/10</td></tr>
+    <tr><td>PLT-2026-0009</td><td>KAVI DESIGN</td><td>SM-03</td><td>Kavitha</td><td><span class="pill info">Baharu</span></td><td>28/10</td></tr>
+    <tr><td>PLT-2026-0010</td><td>SYAFIQ 3D</td><td>SM-08</td><td>Syafiq</td><td><span class="pill warn">Perlu semak</span></td><td>28/10</td></tr></tbody></table>
+   <div class="note">Pilih satu baris untuk menyemak, menyenarai pendek, atau memanggil sesi penilaian. SM-03 dipohon oleh dua pemohon: diselesaikan melalui penilaian.</div></div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+   <div class="panel"><div class="cap">Okupansi lot</div><div style="font-size:26px;font-weight:700;color:var(--mar-d)">11 / 15 <span class="note">73%</span></div>
+    <svg viewBox="0 0 300 18" width="100%" height="18"><rect width="300" height="14" rx="7" fill="#EFE7E9"/><rect width="220" height="14" rx="7" fill="#B9860B"/></svg><div class="note">Student Mall 8/10 · SUB 3/5</div></div>
+   <div class="panel"><div class="cap">Perlu tindakan hari ini</div><table><tbody><tr><td>Tawaran SM-05 luput esok</td><td><span class="pill warn">1 hari</span></td></tr><tr><td>Bil Okt SM-07 lewat</td><td><span class="pill bad">Lewat</span></td></tr><tr><td>Cagaran SUB-02 lewat pulang</td><td><span class="pill bad">Lewat pulang</span></td></tr><tr><td>Salinan fizikal SM-01</td><td><span class="pill warn">Hari ke-12</span></td></tr></tbody></table></div>
+  </div></div>
+</div></section></div>
+<script>document.getElementById('sd').innerHTML = renderSide('admin', 'lot', 1)</script></body></html>

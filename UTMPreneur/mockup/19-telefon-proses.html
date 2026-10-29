@@ -1,0 +1,15 @@
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Telefon: menu proses</title><link rel="stylesheet" href="prestasi.css"><script src="menu.js"></script>
+<style>body{display:flex;gap:28px;padding:18px;background:#d9d2d3;width:880px}.drawer{width:290px}.drawer .nav div{padding:7px 10px}</style></head>
+<body>
+<div class="phone"><div class="pbar"><div class="burger">≡</div><img src="logo.png" style="height:28px" alt=""><b>Makerspace</b></div>
+ <div style="padding:12px;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+  <div class="tabs" style="overflow:hidden"><div class="on">Tempah</div><div>Tempahan saya</div><div>Pinjaman</div><div>Bayaran</div></div>
+  <div class="panel"><div class="cap">Jenis tempahan</div>
+   <div class="kpi" style="text-align:left;padding:10px"><b class="k">Ruang</b><div class="s">Maker Lab (200) · Bilik Mesyuarat (20)</div></div>
+   <div class="kpi" style="text-align:left;padding:10px"><b class="k">Laser Cut</b><div class="s">RM1 / 5 minit · slot 30 minit</div></div>
+   <div class="kpi" style="text-align:left;padding:10px"><b class="k">3D Printer</b><div class="s">kadar mengikut gram dan jam</div></div>
+   <div class="kpi" style="text-align:left;padding:10px"><b class="k">Pinjaman peralatan</b><div class="s">maksimum sebulan</div></div></div>
+  <div class="panel"><div class="cap">Tempahan terkini</div><div style="display:flex;gap:8px;align-items:center"><b>TMP-2026-0031</b><span class="pill warn">Menunggu perakuan</span></div><div class="note">Laser Cut · 03/11/2026 10:00 · penyelia dimaklumkan</div></div>
+ </div></div>
+<div class="phone"><div class="pbar"><div class="burger">≡</div><img src="logo.png" style="height:28px" alt=""><b>Makerspace</b></div><div class="shade"></div><div class="drawer" id="dr"></div></div>
+<script>document.getElementById('dr').innerHTML = renderSide('pelajar', 'mk', 0)</script></body></html>
