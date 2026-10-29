@@ -251,6 +251,9 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .apsth{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .apdrop{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1.5px dashed var(--line);border-radius:10px;padding:14px;position:relative}
 .apack{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}.apack input{margin-top:4px;width:18px;height:18px}
+.aptpl{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.aptpl small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.aptpl .btn-solid{text-decoration:none;display:inline-block}
 .apmsg{min-height:1.3em;margin:12px 0 0;color:var(--bad);font-weight:600;font-size:14px}
 .apdone{text-align:center;padding:34px 24px}
 .apok{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
@@ -275,7 +278,7 @@ nav.side .n{white-space:nowrap}
 /* Klien: semua data datang daripada pelayan (Code.gs). Tapisan akses dibuat di pelayan. */
 const $ = s => document.querySelector(s), app = $('#app');
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const PUBLIC = { apiRequestOtp: 1, apiVerifyOtp: 1, apiLogin: 1, apiSubmitApplication: 1 };
+const PUBLIC = { apiRequestOtp: 1, apiVerifyOtp: 1, apiLogin: 1, apiSubmitApplication: 1, apiPublicInfo: 1 };
 let TOKEN = '';
 try { TOKEN = localStorage.getItem('utm_tok') || ''; } catch (e) { try { TOKEN = sessionStorage.getItem('utm_tok') || ''; } catch (e2) { } }
 function setTok(t) { TOKEN = t || ''; [() => localStorage, () => sessionStorage].forEach(f => { try { t ? f().setItem('utm_tok', t) : f().removeItem('utm_tok'); } catch (e) { } }); }
@@ -359,7 +362,7 @@ async function start() {
 }
 
 /* ===================== BORANG PERMOHONAN PELAJAR (awam) ===================== */
-let APP = null;
+let APP = null, PUBINFO = null;   // PUBINFO.templateUrl dibaca daripada Tetapan!B15
 const FAK = ['FKE', 'FKA', 'FKM', 'FKT', 'FC', 'FS', 'FM', 'FAB', 'FP', 'FSSH', 'FEST'];
 const newStudent = () => ({ n: '', m: '', kp: '', yr: '', fac: '', course: '', cgpa: '', email: '', tel: '' });
 const MAXPLAN = 8 * 1024 * 1024;
@@ -372,6 +375,7 @@ function applyCollect() {
   const m = document.querySelector('[name=ap_mode]:checked'); if (m) A.mode = m.value;
 }
 function showApply() {
+  if (PUBINFO === null) { PUBINFO = { templateUrl: '' }; rpc('apiPublicInfo').then(r => { PUBINFO = r || { templateUrl: '' }; if (APP && document.getElementById('apf')) { applyCollect(); showApply(); } }).catch(() => { }); }
   clearInterval(cdTimer); $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Borang permohonan Student Mall & SUB';
   if (!APP) APP = { type: 'Student Mall', biz: '', ssm: '', kind: '', st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' };
   const A = APP, sub = A.type === 'SUB';
@@ -399,6 +403,7 @@ function showApply() {
    <div class="card apsec"><h3><span class="apn">3</span> Maklumat pelajar</h3>${A.st.map(stu).join('')}
      ${A.st.length < 4 ? `<button class="btn-line" id="ap_add" type="button" style="margin-top:6px">+ Tambah pelajar</button>` : ''}</div>
    <div class="card apsec"><h3><span class="apn">4</span> Pelan perniagaan</h3>
+     ${PUBINFO && PUBINFO.templateUrl ? `<div class="aptpl"><div><b>Gunakan templat pelan perniagaan</b><small>Muat turun templat, lengkapkan, kemudian muat naik sebagai PDF di bawah.</small></div><a class="btn-solid" href="${esc(PUBINFO.templateUrl)}" target="_blank" rel="noopener">⬇ Muat turun templat</a></div>` : ''}
      <div class="aptype"><label class="opt"><input type="radio" name="ap_mode" value="file" ${A.mode === 'file' ? 'checked' : ''}><span><b>Muat naik fail PDF</b><small>Maksimum 8 MB.</small></span></label>
      <label class="opt"><input type="radio" name="ap_mode" value="link" ${A.mode === 'link' ? 'checked' : ''}><span><b>Beri pautan</b><small>Pautan https, contohnya Google Drive (tetapkan "sesiapa yang mempunyai pautan").</small></span></label></div>
      ${A.mode === 'file' ? `<div class="apdrop"><label class="btn-line" for="ap_file" style="display:inline-block;cursor:pointer">Pilih fail PDF</label><input type="file" id="ap_file" accept="application/pdf,.pdf" style="position:absolute;left:-9999px"><span id="ap_fn" class="note">${A.file ? esc(A.file.name) + ' (' + (A.file.size / 1048576).toFixed(1) + ' MB)' : 'Belum dipilih'}</span></div>` :

@@ -41,6 +41,7 @@ const OTP_REQ_MAX = 3;       // maksimum permintaan kod bagi satu e-mel dalam 10
 const FOLDER_PELAN = 'Pelan Perniagaan UTMXCITE';   // folder Drive bagi pelan yang dimuat naik pelajar
 const MAX_PLAN_MB = 8;
 const SUBMIT_MAX_PER_HOUR = 60;
+const TEMPLATE_CELL = 'B15';   // sel dalam sheet Tetapan yang menyimpan pautan templat pelan perniagaan
 const SESSION_TTL = 21600;   // sesi log masuk 6 jam (had maksimum CacheService)
 let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
@@ -999,6 +1000,14 @@ function apiSubmitApplication(p) {
   });
 }
 
+/** Maklumat awam untuk borang pelajar: pautan templat pelan perniagaan dibaca daripada Tetapan!B15 (hanya pautan https diterima). */
+function apiPublicInfo() {
+  let url = '';
+  try { url = String(cfgSheet_().getRange(TEMPLATE_CELL).getValue() || '').trim(); } catch (e) { }
+  if (!/^https:\/\/[^\s]+$/i.test(url)) url = '';
+  return { templateUrl: url };
+}
+
 function ref_(id) { return 'PM-' + ('0000' + Number(id)).slice(-4); }
 
 /* ===================== Penyediaan sheet dan data awal ===================== */
@@ -1014,6 +1023,11 @@ function setupSheets() {
       sh.setFrozenRows(1);
     }
   });
+  // Tetapan!B15: pautan templat pelan perniagaan (dipaparkan kepada pelajar pada borang permohonan)
+  const ts = cfgSheet_();
+  if (!String(ts.getRange('A15').getValue() || '').trim()) {
+    ts.getRange('A15:C15').setValues([['TemplatPelan', '', '<- Tampal pautan templat pelan perniagaan (https) dalam sel B15. Pelajar akan nampak butang muat turun pada borang permohonan.']]);
+  }
   // KP, matrik dan SSM mesti kekal sebagai teks
   book.getSheetByName(SH.PELAJAR).getRange('C:D').setNumberFormat('@');
   book.getSheetByName(SH.PEMOHON).getRange('D:D').setNumberFormat('@');

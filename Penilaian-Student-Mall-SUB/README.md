@@ -73,6 +73,7 @@ Semua maklumat disimpan. Pemohon tidak terikat kepada satu mesyuarat; urusetia m
 **1. Pelajar memohon** melalui borang awam (tiada log masuk): pautan web app dengan `?page=mohon` (cth. `https://script.google.com/macros/s/.../exec?page=mohon`), atau pautan "Isi borang permohonan" pada skrin log masuk.
 - Pelajar mengisi jenis permohonan (Student Mall / SUB), maklumat perniagaan, maklumat pelajar (sehingga 4 bagi SUB: nama, matrik, No. KP, tahun, fakulti, kursus, CGPA, e-mel, telefon) dan memuat naik pelan perniagaan (PDF, maksimum 8 MB) atau memberi pautan https.
 - Rekod disimpan dengan Sumber = Pelajar, dan **belum masuk mana-mana mesyuarat**. Pelajar menerima no. rujukan (PM-0007) melalui skrin dan e-mel; admin menerima e-mel pemberitahuan.
+- **Templat pelan perniagaan:** pautan dibaca daripada sel **B15** dalam sheet `Tetapan` (A15 ialah label `TemplatPelan`). Jika sel itu mengandungi pautan https, borang pelajar memaparkan butang "Muat turun templat" pada bahagian Pelan perniagaan. Kosongkan sel itu untuk menyembunyikan butang. Tukar pautan pada bila-bila masa tanpa mengubah kod.
 - Pelan yang dimuat naik disimpan dalam folder Drive "Pelan Perniagaan UTMXCITE" milik pemilik skrip, dengan akses "sesiapa yang mempunyai pautan boleh melihat" supaya panel boleh membukanya.
 - Perlindungan: pengesahan di pelayan bagi setiap medan, semakan permohonan berganda (matrik + nama perniagaan), had 60 penghantaran sejam, medan perangkap bot, dan pengesahan fail PDF. Identiti pelajar tidak disahkan, jadi urusetia menyemak sebelum memasukkan ke mesyuarat.
 
