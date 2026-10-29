@@ -468,7 +468,7 @@ function saveEval_(u, pid, p, submit, byAdmin) {
 }
 
 /* ===================== Butiran laporan jawatankuasa ===================== */
-const CFG_KEYS = ['bil', 'tujuan', 'suratFail', 'suratTarikh', 'tamat', 'tempat', 'tarikhSidang', 'masaSidang', 'pengerusi', 'jawatan', 'cgpaMin', 'syor'];
+const CFG_KEYS = ['bil', 'pelantik', 'tujuan', 'suratFail', 'suratTarikh', 'tamat', 'tempat', 'tarikhSidang', 'masaSidang', 'pengerusi', 'jawatan', 'cgpaMin', 'syor'];
 
 function cfgSheet_() {
   let sh = ss_().getSheetByName(SH.TETAPAN);

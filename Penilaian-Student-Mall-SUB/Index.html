@@ -657,7 +657,8 @@ function detailPage(doc, r, P, ranked, newPage) {
 /* ===================== LAPORAN JAWATANKUASA (JPPPDKP) ===================== */
 /* Kandungan dibina sekali sebagai "blok", kemudian dilukis ke PDF dan ke pratonton HTML. */
 let CFG = null;
-const CFG_DEF = () => ({ bil: 'xx/' + new Date().getFullYear(), tujuan: '', suratFail: '', suratTarikh: '', tamat: '', tempat: '', tarikhSidang: D.sesi.tarikh, masaSidang: D.sesi.masa, pengerusi: '', jawatan: '{}', cgpaMin: '2.00', syor: '' });
+const CFG_DEF = () => ({ bil: 'xx/' + new Date().getFullYear(), pelantik: '', tujuan: '', suratFail: '', suratTarikh: '', tamat: '', tempat: '', tarikhSidang: D.sesi.tarikh, masaSidang: D.sesi.masa, pengerusi: '', jawatan: '{}', cgpaMin: '2.00', syor: '' });
+const PELANTIK_DEF = 'Timbalan Naib Canselor Hal Ehwal Pelajar dan Alumni';
 const TUJUAN_DEF = 'Laporan ini disediakan untuk membantu Urusetia UTMXCITE membuat keputusan terhadap permohonan sewaan Lot di Student Mall dan SUB berdasarkan penilaian pelan perniagaan oleh jawatankuasa.';
 const CHAIR_DEFAULT = 'PM. Dr. Syed Norris Hikmi Syed Abdullah';   // Pengerusi JPPPDKP
 function jkCfg() { if (!CFG) { CFG = { ...CFG_DEF(), ...(D.cfg || {}) }; if (!String(CFG.pengerusi || '').trim()) CFG.pengerusi = CHAIR_DEFAULT; } return CFG; }
@@ -679,7 +680,7 @@ function jkBlocks() {
   B.push({ t: 'p', text: C.tujuan || TUJUAN_DEF });
 
   B.push({ t: 'h', num: '2', text: 'Pelantikan Jawatankuasa' });
-  B.push({ t: 'p', num: '2.1', text: 'Jawatankuasa ini dilantik oleh Dekan/Ketua Jabatan melalui surat:' });
+  B.push({ t: 'p', num: '2.1', text: 'Jawatankuasa ini dilantik oleh ' + (String(C.pelantik || '').trim() || PELANTIK_DEF) + ' melalui surat:' });
   B.push({ t: 'kv', rows: [['Fail Rujukan', C.suratFail || DOTS], ['Tarikh', C.suratTarikh || DOTS], ['Tamat Lantikan jawatankuasa', C.tamat || DOTS]] });
   const chair = C.pengerusi.trim() || '(Nama Pegawai)';
   const ahli = P.map(p => p.nama).filter(n => nem(n) !== nem(chair));
@@ -797,7 +798,7 @@ function jkForm() {
   const inp = (k, lab, ph = '', wide) => `<label class="${wide ? 'wide' : ''}">${lab}<input data-cfg="${k}" value="${esc(C[k])}" placeholder="${esc(ph)}"></label>`;
   return `<div class="card" style="margin-bottom:14px"><h3>Butiran laporan jawatankuasa <i>mengikut templat JPPPDKP</i></h3>
    <div class="f">${inp('bil', 'Bil laporan', 'cth. 01/2026')}${inp('cgpaMin', 'CGPA minimum (Perkara 4.1)', '2.00')}
-   ${inp('suratFail', 'Fail rujukan surat pelantikan (2.1)')}${inp('suratTarikh', 'Tarikh surat (2.1)')}${inp('tamat', 'Tamat lantikan jawatankuasa (2.1)')}
+   ${inp('pelantik', 'Dilantik oleh (2.1)', PELANTIK_DEF, true)}${inp('suratFail', 'Fail rujukan surat pelantikan (2.1)')}${inp('suratTarikh', 'Tarikh surat (2.1)')}${inp('tamat', 'Tamat lantikan jawatankuasa (2.1)')}
    <label>Pengerusi (2.2)<input data-cfg="pengerusi" list="jkpan" value="${esc(C.pengerusi)}" placeholder="Nama pengerusi"><datalist id="jkpan">${P.map(p => `<option value="${esc(p.nama)}">`).join('')}</datalist></label>
    ${inp('tarikhSidang', 'Tarikh bersidang (3.1)')}${inp('masaSidang', 'Masa (3.1)')}${inp('tempat', 'Tempat bersidang (3.1)', '', true)}
    <label class="wide">Tujuan laporan (1) <small style="font-weight:400">kosongkan untuk teks lalai</small><textarea data-cfg="tujuan" rows="2" placeholder="${esc(TUJUAN_DEF)}">${esc(C.tujuan)}</textarea></label>
