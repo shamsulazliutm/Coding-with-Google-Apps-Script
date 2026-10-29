@@ -19,8 +19,11 @@ const SH = {
 const HEAD = {
   Panel: ['Nama', 'Emel', 'Peranan', 'Status', 'KodHash', 'KodTamat'],
   // Lajur Slot, Susunan dan StatusAkhir dalam Pemohon ialah versi lama; kini disimpan bagi setiap mesyuarat dalam Agenda.
-  Pemohon: ['ID', 'Perniagaan', 'Jenis', 'SSM', 'JenisPerniagaan', 'PautanPelan', 'Slot', 'Susunan', 'StatusAkhir', 'TarikhMohon', 'Sumber'],
-  Pelajar: ['PemohonID', 'Nama', 'Matrik', 'KP', 'Tahun', 'Fakulti', 'Kursus', 'CGPA', 'Emel', 'Telefon'],
+  Pemohon: ['ID', 'Perniagaan', 'Jenis', 'SSM', 'JenisPerniagaan', 'PautanPelan', 'Slot', 'Susunan', 'StatusAkhir', 'TarikhMohon', 'Sumber',
+    'StatusSSM', 'Bentuk', 'Produk', 'PautanSSM', 'PautanSSMInfo', 'Tifoid', 'PautanTifoid', 'KursusMakanan', 'PautanKursus',
+    'SumberDana', 'PembiayaDana', 'JumlahDana', 'JualanBulanan', 'AlamatPerniagaan', 'MulaPerniagaan', 'BilPekerja', 'LokasiPerniagaan', 'SebabBerniaga'],
+  Pelajar: ['PemohonID', 'Nama', 'Matrik', 'KP', 'Tahun', 'Fakulti', 'Kursus', 'CGPA', 'Emel', 'Telefon',
+    'Jantina', 'Warganegara', 'Bidang', 'PelajarUTM', 'AlamatKolej', 'AlamatRumah', 'PautanMatrik', 'PautanKP'],
   Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status', 'ID', 'Tempat', 'Bil'],
   Agenda: ['SesiID', 'PemohonID', 'Susunan', 'Slot', 'StatusAkhir'],
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
@@ -43,6 +46,8 @@ const MAX_PLAN_MB = 8;
 const SUBMIT_MAX_PER_HOUR = 60;
 const TEMPLATE_CELL = 'B15';   // sel dalam sheet Tetapan yang menyimpan pautan templat pelan perniagaan
 const FOLDER_CELL = 'B16';     // sel dalam sheet Tetapan yang menyimpan pautan folder Drive bagi pelan yang dimuat naik
+const SULIT_CELL = 'B17';      // folder Drive bagi dokumen sulit pelajar (kad matrik, salinan KP, dll.; tidak dikongsi)
+const FOLDER_SULIT = 'Dokumen Sulit UTMXCITE';
 const SESSION_TTL = 21600;   // sesi log masuk 6 jam (had maksimum CacheService)
 let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
@@ -437,13 +442,23 @@ function apps_(mask, sesiId) {
     const st = stud.filter(function (s) { return Number(s.PemohonID) === Number(p.ID); }).map(function (s) {
       const o = { n: String(s.Nama).trim(), m: String(s.Matrik).trim(), kp: mask ? maskKp_(s.KP) : String(s.KP).trim(),
         yr: s.Tahun, fac: s.Fakulti, course: String(s.Kursus).trim(), cgpa: Number(s.CGPA) };
-      if (!mask) { o.email = String(s.Emel || '').trim(); o.tel = String(s.Telefon || '').trim(); }
+      if (!mask) {
+        o.email = String(s.Emel || '').trim(); o.tel = String(s.Telefon || '').trim();
+        o.sex = s.Jantina || ''; o.nat = s.Warganegara || ''; o.bid = s.Bidang || ''; o.utm = s.PelajarUTM || '';
+        o.kol = s.AlamatKolej || ''; o.rmh = s.AlamatRumah || ''; o.docM = s.PautanMatrik || ''; o.docK = s.PautanKP || '';
+      }
       return o;
     });
     return {
       id: Number(p.ID), biz: p.Perniagaan, type: p.Jenis, ssm: p.SSM, kind: p.JenisPerniagaan, plan: p.PautanPelan,
       slot: x.a ? (x.a.Slot || '') : '', order: x.a ? Number(x.a.Susunan) || 0 : 0, final: x.a ? (x.a.StatusAkhir || '') : '', st: st,
-      mohon: fmtDate_(p.TarikhMohon), sumber: p.Sumber || '', sesi: where[Number(p.ID)] || []
+      mohon: fmtDate_(p.TarikhMohon), sumber: p.Sumber || '', sesi: where[Number(p.ID)] || [],
+      x: mask ? null : {
+        ssmStatus: p.StatusSSM || '', bentuk: p.Bentuk || '', produk: p.Produk || '', pautanSsm: p.PautanSSM || '', pautanSsmInfo: p.PautanSSMInfo || '',
+        tifoid: p.Tifoid || '', pautanTifoid: p.PautanTifoid || '', kursusMakanan: p.KursusMakanan || '', pautanKursus: p.PautanKursus || '',
+        sumber: p.SumberDana || '', pembiaya: p.PembiayaDana || '', jumlah: p.JumlahDana === '' ? '' : String(p.JumlahDana), jualan: p.JualanBulanan === '' ? '' : String(p.JualanBulanan),
+        alamat: p.AlamatPerniagaan || '', mula: fmtDate_(p.MulaPerniagaan), pekerja: p.BilPekerja === '' ? '' : String(p.BilPekerja), lokasi: p.LokasiPerniagaan || '', sebab: p.SebabBerniaga || ''
+      }
     };
   });
 }
@@ -630,7 +645,7 @@ function apiSaveApp(token, a) {
   });
 }
 
-/** Teras simpan permohonan (digunakan oleh admin dan borang pelajar). */
+/** Teras simpan permohonan (digunakan oleh admin dan borang pelajar). Medan tambahan sedia ada dikekalkan apabila admin menyunting. */
 function saveApplication_(a, sumber) {
   const t = table_(SH.PEMOHON);
   let id = Number(a.id) || 0;
@@ -645,15 +660,19 @@ function saveApplication_(a, sumber) {
   const row = Object.assign({}, old || {}, {
     ID: id, Perniagaan: a.biz, Jenis: a.type, SSM: a.ssm || '', JenisPerniagaan: a.kind || '', PautanPelan: a.plan || ''
   });
+  if (a.extra) Object.keys(a.extra).forEach(function (k) { row[k] = a.extra[k]; });
   if (!old) { row.TarikhMohon = new Date(); row.Sumber = sumber; }
   if (old) writeRow_(SH.PEMOHON, old._row, row); else append_(SH.PEMOHON, row);
 
   const ps = table_(SH.PELAJAR);
-  ps.rows.filter(function (r) { return Number(r.PemohonID) === id; }).map(function (r) { return r._row; })
-    .sort(function (x, y) { return y - x; }).forEach(function (n) { ps.sh.deleteRow(n); });
+  const oldS = ps.rows.filter(function (r) { return Number(r.PemohonID) === id; });
+  oldS.map(function (r) { return r._row; }).sort(function (x, y) { return y - x; }).forEach(function (n) { ps.sh.deleteRow(n); });
   (a.st || []).forEach(function (s) {
     if (!s.n) return;
-    append_(SH.PELAJAR, { PemohonID: id, Nama: s.n, Matrik: s.m, KP: s.kp, Tahun: s.yr, Fakulti: s.fac, Kursus: s.course, CGPA: s.cgpa, Emel: s.email || '', Telefon: s.tel || '' });
+    const base = oldS.filter(function (r) { return String(r.Matrik).trim() === String(s.m || '').trim() && String(r.Nama).trim() === String(s.n).trim(); })[0] || {};
+    const rec = Object.assign({}, base, { PemohonID: id, Nama: s.n, Matrik: s.m, KP: s.kp, Tahun: s.yr, Fakulti: s.fac, Kursus: s.course, CGPA: s.cgpa, Emel: s.email || '', Telefon: s.tel || '' });
+    if (s.extra) Object.keys(s.extra).forEach(function (k) { rec[k] = s.extra[k]; });
+    append_(SH.PELAJAR, rec);
   });
   return id;
 }
@@ -920,24 +939,26 @@ function folderIdOf_(v) {
 }
 
 /**
- * Folder simpanan pelan: dibaca daripada Tetapan!B16 (pautan folder Drive atau ID folder).
- * Jika kosong atau tidak boleh diakses, folder lalai dicipta dan pautannya ditulis semula ke B16 supaya urusetia nampak lokasinya.
+ * Folder simpanan dibaca daripada sel Tetapan (B16 untuk pelan, B17 untuk dokumen sulit): pautan folder Drive atau ID folder.
+ * Jika kosong atau tidak boleh diakses, folder lalai dicipta dan pautannya ditulis semula ke sel itu supaya urusetia nampak lokasinya.
  */
-function planFolder_() {
-  const cell = cfgSheet_().getRange(FOLDER_CELL);
+function driveFolder_(cellRef, defaultName) {
+  const cell = cfgSheet_().getRange(cellRef);
   const raw = String(cell.getValue() || '').trim();
   const id = folderIdOf_(raw);
   if (id) {
     try { return DriveApp.getFolderById(id); }
-    catch (e) { log_('Folder pelan dalam Tetapan tidak boleh diakses', 'Guna folder lalai. ' + String(e.message || e).slice(0, 120)); }
+    catch (e) { log_('Folder dalam Tetapan!' + cellRef + ' tidak boleh diakses', 'Guna folder lalai. ' + String(e.message || e).slice(0, 120)); }
   } else if (raw) {
-    log_('Pautan folder dalam Tetapan tidak sah', 'Guna folder lalai.');
+    log_('Pautan folder dalam Tetapan!' + cellRef + ' tidak sah', 'Guna folder lalai.');
   }
-  const it = DriveApp.getFoldersByName(FOLDER_PELAN);
-  const f = it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER_PELAN);
+  const it = DriveApp.getFoldersByName(defaultName);
+  const f = it.hasNext() ? it.next() : DriveApp.createFolder(defaultName);
   if (!raw) { try { cell.setValue(f.getUrl()); } catch (e) { } }
   return f;
 }
+
+function planFolder_() { return driveFolder_(FOLDER_CELL, FOLDER_PELAN); }
 
 /**
  * Pelajar mengisi maklumat dan memuat naik (atau memaut) pelan perniagaan. Rekod disimpan dengan Sumber = Pelajar dan belum dimasukkan
