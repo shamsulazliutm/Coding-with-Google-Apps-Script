@@ -1,1 +1,13 @@
-<!-- ViewsKpi: skrin penyegerakan KPI (diisi oleh modul KpiSync) -->
+<!-- Penyegerakan KPI (Admin Penuh) -->
+<section id="v-kpi" class="view" hidden>
+  <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
+  <div class="card">
+    <div class="h1">Penyegerakan KPI</div><div class="e">KPI synchronisation</div>
+    <p class="muted" style="margin:8px 0 0">Data UTMPreneur ditulis ke tab sistem KPI (PELAJAR, CKAI1, CKAI4, CKAI5, CKAI6, CKAI7, KAI3). Baris entri manual tidak disentuh.
+      <span class="e">UTMPreneur data is written to the KPI system tabs. Manually entered rows are never touched.</span></p>
+    <div id="kpi-status" style="margin-top:10px"></div>
+    <div id="kpi-msg" class="msg" hidden></div>
+    <div style="margin-top:12px"><button class="btn" id="kpi-btn-segerak" type="button">Segerak sekarang <span class="e">Sync now</span></button></div>
+  </div>
+  <div class="card" id="kpi-hasil" hidden></div>
+</section>

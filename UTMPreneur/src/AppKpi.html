@@ -1,3 +1,52 @@
 <script>
-(function () { 'use strict'; var UP = window.UP; /* AppKpi: skrip penyegerakan KPI; daftar halaman admin melalui UP.adminPages.push({id, bm, en, roles, open}) */ })();
+(function () {
+  'use strict';
+  var UP = window.UP;
+  var $ = function (id) { return document.getElementById(id); };
+  var node = UP.node, msg = UP.msg, msgErr = UP.msgErr, clearMsg = UP.clearMsg, busy = UP.busy;
+
+  function renderHasil(rep) {
+    var c = $('kpi-hasil'); c.textContent = ''; c.hidden = !rep;
+    if (!rep) return;
+    c.appendChild(node('div', 'Hasil terakhir: ' + String(rep.masa || '').replace('T', ' ').substr(0, 19) + ' oleh ' + (rep.oleh || '-'), 'muted'));
+    var t = node('table'); t.id = 'kpi-jadual';
+    var hr = node('tr');
+    ['Tab', 'Tambah', 'Kemas kini', 'Buang', 'Langkau'].forEach(function (h) { hr.appendChild(node('th', h)); });
+    t.appendChild(hr);
+    Object.keys(rep.tab || {}).forEach(function (k) {
+      var v = rep.tab[k], tr = node('tr');
+      [k, v.tambah, v.kemaskini, v.buang, v.langkau].forEach(function (x) { tr.appendChild(node('td', String(x))); });
+      t.appendChild(tr);
+    });
+    c.appendChild(t);
+    (rep.ralat || []).forEach(function (e) { c.appendChild(node('div', e, 'msg err')); });
+  }
+
+  function open() {
+    UP.show('v-kpi'); clearMsg($('kpi-msg'));
+    UP.api('kpi.status').then(function (r) {
+      var s = $('kpi-status'); s.textContent = '';
+      if (!r.ok) { msgErr($('kpi-msg'), r); return; }
+      s.appendChild(UP.kv([
+        ['ID Sheet KPI', r.data.ditetapkan ? 'Telah ditetapkan' : 'Belum ditetapkan (isi KPI_SHEET_ID dalam Tetapan)'],
+        ['Segerak harian', r.data.auto ? 'Ya' : 'Tidak']
+      ]));
+      renderHasil(r.data.terakhir);
+    });
+  }
+
+  function segerak() {
+    var m = $('kpi-msg'); clearMsg(m);
+    var b = $('kpi-btn-segerak'); busy(b, true);
+    UP.api('kpi.segerak', {}).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      renderHasil(r.data);
+      msg(m, r.data.ralat.length ? 'err' : 'ok', r.data.ralat.length ? 'Selesai dengan ralat.' : 'Penyegerakan selesai.', r.data.ralat.length ? 'Completed with errors.' : 'Sync completed.');
+    });
+  }
+
+  UP.adminPages.push({ id: 'kpi', bm: 'Penyegerakan KPI', en: 'KPI synchronisation', roles: ['Admin Penuh'], open: open });
+  $('kpi-btn-segerak').addEventListener('click', segerak);
+})();
 </script>
