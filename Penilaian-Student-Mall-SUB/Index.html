@@ -834,7 +834,7 @@ function buildPdf() {
     const d = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     centerHeads(d);
     renderBlocksPdf(d, jkBlocks());
-    decorate(d, { title: 'LAPORAN JAWATANKUASA JPPPDKP UTM', sub: 'Universiti Teknologi Malaysia | UTMXCITE | Bil ' + (D.sesi.bil || 'xx') });
+    decorate(d, { margin: 25.4, title: 'LAPORAN JAWATANKUASA JPPPDKP UTM', sub: 'Universiti Teknologi Malaysia | UTMXCITE | Bil ' + (D.sesi.bil || 'xx') });
     return d;
   }
   const { rows, P, ranked } = rpData();
@@ -854,7 +854,7 @@ function centerHeads(doc) { doc.autoTableSetDefaults({ didParseCell: d => { if (
 /* Kepala (logo UTMXCITE) dan kaki dilukis pada setiap halaman selepas kandungan siap, supaya "Halaman x / y" tepat. */
 function decorate(doc, opt) {
   opt = opt || {};
-  const n = doc.getNumberOfPages(), img = logoImg(), now = new Date().toLocaleString('ms-MY'), m = 12;
+  const n = doc.getNumberOfPages(), img = logoImg(), now = new Date().toLocaleString('ms-MY'), m = opt.margin || 12;
   for (let i = 1; i <= n; i++) {
     doc.setPage(i);
     const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
@@ -999,7 +999,7 @@ function jkBlocks() {
   const w1 = P.length > 6 ? 9 : 11;
   B.push({ t: 'table', cap: 'Jadual 1: Jadual markah dan kedudukan pemohon (markah /100)', head: ['Rank', 'Perniagaan', 'Jenis', ...P.map((p, i) => 'P' + (i + 1)), 'Dinilai', 'Purata'],
     body: rows.map(r => [r.rank || '-', r.a.biz, r.a.type, ...r.sc.map(s => s == null ? '-' : s), r.n + '/' + P.length, fmt(r.avg)]),
-    widths: [11, 186 - 11 - 22 - 15 - 17 - P.length * w1, 22, ...P.map(() => w1), 15, 17], center: [0, ...P.map((p, i) => 3 + i), 3 + P.length, 4 + P.length], bold: [1, 4 + P.length],
+    widths: [14, 186 - 14 - 22 - 15 - 17 - P.length * w1, 22, ...P.map(() => w1), 15, 17], center: [0, ...P.map((p, i) => 3 + i), 3 + P.length, 4 + P.length], bold: [1, 4 + P.length],
     note: 'Panel: ' + P.map(panelFull).join('; ') + '. "-" bermaksud belum dihantar. Purata dikira daripada penilaian yang dihantar sahaja.' });
 
   B.push({ t: 'h', num: '4', text: 'Analisis' });
@@ -1052,7 +1052,7 @@ function justLine(doc, line, x, y, width) {
   let cx = x; words.forEach(w => { doc.text(w, cx, y); cx += doc.getTextWidth(w) + gap; });
 }
 function renderBlocksPdf(doc, B) {
-  const m = 12, LH = 4.8, pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), W = pw - 2 * m, bottom = ph - 16;
+  const m = 25.4, LH = 4.8, pw = doc.internal.pageSize.getWidth()   /* jidar kiri dan kanan 1 inci */, ph = doc.internal.pageSize.getHeight(), W = pw - 2 * m, bottom = ph - 16;
   let y = 34;
   doc.setLineHeightFactor(1.35);
   const ensure = hh => { if (y + hh > bottom) { doc.addPage('a4', 'portrait'); y = 34; } };
@@ -1065,7 +1065,7 @@ function renderBlocksPdf(doc, B) {
     else if (b.t === 'list') { ink(); const off = b.roman ? 28 : 20; b.items.forEach((t, i) => { const ln = doc.splitTextToSize(t, W - off - 2); ensure(ln.length * LH + 1); doc.text('(' + (b.roman ? roman(i + 1) : String.fromCharCode(97 + i)) + ')', m + 12, y + 4); ln.forEach((l, k) => { if (k < ln.length - 1) justLine(doc, l, m + off, y + 4 + k * LH, W - off - 2); else doc.text(l, m + off, y + 4 + k * LH); }); y += ln.length * LH + 1.2; }); y += 2; }
     else if (b.t === 'table') {
       ensure(34); doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...MAROON); doc.text(b.cap, m, y + 3); y += 5;
-      const cs = {}; b.widths.forEach((w, i) => cs[i] = { cellWidth: w, halign: (b.center || []).includes(i) ? 'center' : 'left', fontStyle: (b.bold || []).includes(i) ? 'bold' : 'normal' });
+      const cs = {}, kw = W / 186; b.widths.forEach((w, i) => cs[i] = { cellWidth: w * kw, halign: (b.center || []).includes(i) ? 'center' : 'left', fontStyle: (b.bold || []).includes(i) ? 'bold' : 'normal' });
       doc.autoTable({ ...TBL, startY: y, margin: { top: 30, bottom: 16, left: m, right: m }, styles: { ...TBL.styles, fontSize: 8, cellPadding: 1.5 }, head: [b.head], body: b.body.map(r => r.map(String)), columnStyles: cs,
         didParseCell: d => { if (b.flag && d.section === 'body' && d.column.index === b.flag.col) { if (b.flag.bad.includes(d.cell.raw)) { d.cell.styles.textColor = [179, 38, 30]; d.cell.styles.fontStyle = 'bold'; } else if ((b.flag.good || []).includes(d.cell.raw)) { d.cell.styles.textColor = [31, 122, 77]; d.cell.styles.fontStyle = 'bold'; } } } });
       y = doc.lastAutoTable.finalY + 2;
@@ -1132,7 +1132,7 @@ function jkCollect() {
 
 function paperPreview() {
   const { rows, P, ranked } = rpData(), S = D.sesi, img = logoImg();
-  if (RP.type === 'jawatankuasa') return `<div class="paper" style="max-height:80vh;overflow:auto"><div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN JAWATANKUASA JPPPDKP UTM</b><span>Universiti Teknologi Malaysia | UTMXCITE | Bil ${esc(D.sesi.bil || 'xx')}</span></div></div>${blocksHtml(jkBlocks())}</div>`;
+  if (RP.type === 'jawatankuasa') return `<div class="paper" style="max-height:80vh;overflow:auto;padding-left:12.1%;padding-right:12.1%"><div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN JAWATANKUASA JPPPDKP UTM</b><span>Universiti Teknologi Malaysia | UTMXCITE | Bil ${esc(D.sesi.bil || 'xx')}</span></div></div>${blocksHtml(jkBlocks())}</div>`;
   const head = `<div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN PENILAIAN PERMOHONAN STUDENT MALL &amp; SUB</b><span>Universiti Teknologi Malaysia | UTMXCITE | ${esc(S.tarikh)}, ${esc(S.masa)}</span></div></div>`;
   const summary = `<h4>Ringkasan Keputusan Penilaian${RP.jenis ? ' - ' + esc(RP.jenis) : ''}</h4><div class="tw"><table><thead><tr><th>Rank</th><th>Perniagaan</th><th>Jenis</th><th>Pelajar</th>${P.map((p, i) => `<th>P${i + 1}</th>`).join('')}<th>Dinilai</th><th>Purata</th><th>Layak</th><th>Status</th></tr></thead><tbody>
    ${rows.map(r => `<tr><td><b>${r.rank || '-'}</b></td><td><b>${esc(r.a.biz)}</b></td><td>${esc(r.a.type)}</td><td>${r.a.st.map(s => esc(s.n)).join('<br>')}</td>${r.sc.map(s => `<td style="text-align:center">${s == null ? '-' : s}</td>`).join('')}<td style="text-align:center">${r.n}/${P.length}</td><td style="text-align:center"><b>${fmt(r.avg)}</b></td><td style="text-align:center">${r.n ? r.layakY + '/' + r.n : '-'}</td><td>${esc(r.final)}</td></tr>`).join('')}</tbody></table></div>
