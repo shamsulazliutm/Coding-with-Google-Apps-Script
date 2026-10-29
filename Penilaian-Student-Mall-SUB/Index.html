@@ -750,7 +750,8 @@ function renderBlocksPdf(doc, B) {
       y += 3;
     }
     else if (b.t === 'sign') {
-      ensure(60); y += 4; doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(30); doc.text('TANDATANGAN AHLI-AHLI JAWATANKUASA', pw / 2, y + 4, { align: 'center' }); y += 10;
+      doc.addPage('a4', 'portrait'); y = 34;   // tandatangan sentiasa bermula di mukasurat baharu
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(30); doc.text('TANDATANGAN AHLI-AHLI JAWATANKUASA', pw / 2, y + 4, { align: 'center' }); y += 10;
       const cw = (W - 10) / 2;
       for (let i = 0; i < b.members.length; i += 2) {
         ensure(46);
