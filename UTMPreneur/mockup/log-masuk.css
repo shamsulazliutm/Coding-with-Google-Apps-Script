@@ -1,0 +1,30 @@
+/* Ilustrasi log masuk gaya "ASCEND" (pengepala bergradien + kad tengah). Ilustrasi sahaja. */
+*{box-sizing:border-box}
+body{margin:0;font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;color:#2B2023;background:#F3F2F2;font-size:14px}
+.page{width:1100px;height:640px;overflow:hidden;position:relative;background:#F3F2F2}
+.hero{background:linear-gradient(90deg,#FBE8ED 0%,#FFF 70%);border-bottom:6px solid #ECE7E8;padding:22px 0 20px 80px;display:flex;align-items:center;gap:22px;border-top:2px solid #E7D3D9}
+.hero img{height:64px}
+.kick{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#6c5e62}
+.hero h1{margin:2px 0 4px;font-size:30px;font-weight:800;color:#5B0A2A;letter-spacing:.2px}
+.sub{font-size:14px;font-weight:700;color:#1F2A55}
+.uji{background:#D9A02E;color:#3A2A05;text-align:center;font-weight:700;font-size:12px;padding:5px;letter-spacing:.04em}
+.card{width:420px;margin:28px auto 0;background:#fff;border:1px solid #E5CBD3;border-radius:14px;padding:20px 18px 18px;text-align:center}
+.card h2{margin:4px 0 6px;font-size:20px;color:#5B0A2A}
+.card p{margin:0 0 12px;font-size:13px;line-height:1.35}
+label{display:block;font-weight:700;font-size:13px;margin:10px 0 6px}
+.in{border:1px solid #D6B8C2;border-radius:8px;padding:11px 12px;font-size:14px;text-align:left;color:#2B2023;background:#fff}
+.in.ph{color:#9a8d91}.in.off{background:#F3EEEF;color:#a99da0}
+.btns{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.b{background:#5B0A2A;color:#fff;border-radius:8px;padding:10px 16px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.b.off{background:#BDA8B0}.b.alt{background:#fff;color:#5B0A2A;border:1.5px solid #5B0A2A}
+.lnk{display:block;margin-top:14px;font-size:12.5px;color:#5B0A2A;text-decoration:underline}
+.msg{border-radius:9px;padding:9px 11px;font-size:12.5px;margin-top:10px;text-align:left}
+.msg i{display:block;font-size:10.5px;opacity:.85}
+.err{background:#FBE6E4;color:#B3261E}.ok{background:#E3F2E9;color:#2E7D4F}.info{background:#E4EEF9;color:#2B5C9A}
+.cd{font-size:11.5px;color:#74676B;margin-top:8px}
+.en{font-style:italic;font-weight:400;font-size:10.5px;color:#74676B}
+.frame{border:1px solid #d9d2d3}
+.ph1{width:390px;height:844px;overflow:hidden;background:#F3F2F2}
+.ph1 .hero{padding:16px 14px;gap:12px;flex-wrap:nowrap}.ph1 .hero img{height:44px}.ph1 .hero h1{font-size:19px}.ph1 .sub{font-size:11.5px}.ph1 .kick{font-size:9.5px}
+.ph1 .card{width:auto;margin:16px 12px 0}
+.ph1 .btns{flex-direction:column}.ph1 .b{text-align:center;padding:12px}
