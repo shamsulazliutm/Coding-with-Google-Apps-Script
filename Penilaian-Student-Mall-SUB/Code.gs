@@ -396,13 +396,30 @@ function fmtDate_(v) {
   return v instanceof Date ? Utilities.formatDate(v, 'Asia/Kuala_Lumpur', 'd MMMM yyyy') : String(v == null ? '' : v);
 }
 
+/** Sheets menukar "01/2026" menjadi tarikh. Lajur Bil dijadikan teks; nilai yang sudah rosak dipulihkan kepada "NN/tahun" daripada ID dan tahun tarikh itu. */
+function bilStr_(r) {
+  const v = r.Bil;
+  if (v instanceof Date) return ('0' + (Number(r.ID) || 1)).slice(-2) + '/' + Utilities.formatDate(v, 'Asia/Kuala_Lumpur', 'yyyy');
+  return String(v == null ? '' : v);
+}
+function bilText_() {
+  const sh = ss_().getSheetByName(SH.SESI);
+  if (sh) sh.getRange(1, HEAD.Sesi.indexOf('Bil') + 1, Math.max(sh.getLastRow(), 2) + 200, 1).setNumberFormat('@');
+}
+
 function sesiOf_(r) {
   return { id: Number(r.ID), nama: String(r.Nama || ''), tarikh: fmtDate_(r.Tarikh), masa: String(r.Masa == null ? '' : r.Masa),
-    tempat: String(r.Tempat || ''), bil: String(r.Bil || ''), versi: Number(r.RubrikVersi) || 1, status: r.Status || 'Draf', _row: r._row };
+    tempat: String(r.Tempat || ''), bil: bilStr_(r), versi: Number(r.RubrikVersi) || 1, status: r.Status || 'Draf', _row: r._row };
 }
 
 function sesiList_() {
-  return table_(SH.SESI).rows.map(sesiOf_).sort(function (a, b) { return a.id - b.id; });
+  const t = table_(SH.SESI);
+  const rosak = t.rows.filter(function (r) { return r.Bil instanceof Date; });
+  if (rosak.length) {   // pulihkan sel Bil yang ditukar menjadi tarikh oleh Sheets
+    bilText_();
+    rosak.forEach(function (r) { t.sh.getRange(r._row, HEAD.Sesi.indexOf('Bil') + 1).setValue(bilStr_(r)); });
+  }
+  return t.rows.map(sesiOf_).sort(function (a, b) { return a.id - b.id; });
 }
 
 function sesiGet_(id) {
@@ -417,6 +434,7 @@ function sesiAktif_() {
 }
 
 function sesiWrite_(s) {
+  bilText_();
   writeRow_(SH.SESI, s._row, { Nama: s.nama, Tarikh: s.tarikh, Masa: s.masa, RubrikVersi: s.versi, Status: s.status, ID: s.id, Tempat: s.tempat, Bil: s.bil });
 }
 
@@ -701,6 +719,7 @@ function apiSaveSesi(token, s) {
     if (!id) {
       const nid = list.reduce(function (m, x) { return Math.max(m, x.id); }, 0) + 1;
       const rub = table_(SH.RUBRIK).rows.reduce(function (m, r) { return Math.max(m, Number(r.Versi)); }, 1);
+      bilText_();
       append_(SH.SESI, { Nama: s.nama, Tarikh: s.tarikh || '', Masa: s.masa || '', RubrikVersi: (list.length ? list[list.length - 1].versi : rub), Status: 'Draf', ID: nid, Tempat: s.tempat || '', Bil: s.bil || '' });
       log_('Cipta mesyuarat', s.nama);
       return nid;
@@ -1227,6 +1246,7 @@ function setupSheets() {
   book.getSheetByName(SH.PEMOHON).getRange('D:D').setNumberFormat('@');
 
   seedIfEmpty_(SH.PANEL, seedPanel_());
+  bilText_();
   seedIfEmpty_(SH.SESI, [['Mesyuarat JPPPDKP Bil 1/2026', '21 Oktober 2026 (Rabu)', '9.00 pagi', 1, 'Dibuka', 1, '', '01/2026']]);
   seedIfEmpty_(SH.RUBRIK, seedRubrik_());
   seedIfEmpty_(SH.CHIP, [['Pelan kewangan kurang realistik'], ['Idea inovatif'], ['Strategi pemasaran jelas'],
