@@ -678,7 +678,7 @@ function jkBlocks() {
 
   B.push({ t: 'h', num: '2', text: 'Pelantikan Jawatankuasa' });
   B.push({ t: 'p', num: '2.1', text: 'Jawatankuasa ini dilantik oleh Dekan/Ketua Jabatan melalui surat:' });
-  B.push({ t: 'kv', rows: [['Fail Rujukan', C.suratFail || DOTS], ['Tarikh', C.suratTarikh || DOTS], ['Lantikan ahli jawatankuasa tamat pada', C.tamat || DOTS]] });
+  B.push({ t: 'kv', rows: [['Fail Rujukan', C.suratFail || DOTS], ['Tarikh', C.suratTarikh || DOTS], ['Tamat Lantikan jawatankuasa', C.tamat || DOTS]] });
   const chair = C.pengerusi.trim() || '(Nama Pegawai)';
   const ahli = P.map(p => p.nama).filter(n => nem(n) !== nem(chair));
   B.push({ t: 'p', num: '2.2', text: 'Keanggotaan Jawatankuasa:' });
@@ -794,7 +794,7 @@ function jkForm() {
   const inp = (k, lab, ph = '', wide) => `<label class="${wide ? 'wide' : ''}">${lab}<input data-cfg="${k}" value="${esc(C[k])}" placeholder="${esc(ph)}"></label>`;
   return `<div class="card" style="margin-bottom:14px"><h3>Butiran laporan jawatankuasa <i>mengikut templat JPPPDKP</i></h3>
    <div class="f">${inp('bil', 'Bil laporan', 'cth. 01/2026')}${inp('cgpaMin', 'CGPA minimum (Perkara 4.1)', '2.00')}
-   ${inp('suratFail', 'Fail rujukan surat pelantikan (2.1)')}${inp('suratTarikh', 'Tarikh surat (2.1)')}${inp('tamat', 'Lantikan tamat pada (2.1)')}
+   ${inp('suratFail', 'Fail rujukan surat pelantikan (2.1)')}${inp('suratTarikh', 'Tarikh surat (2.1)')}${inp('tamat', 'Tamat lantikan jawatankuasa (2.1)')}
    <label>Pengerusi (2.2)<input data-cfg="pengerusi" list="jkpan" value="${esc(C.pengerusi)}" placeholder="Nama pengerusi"><datalist id="jkpan">${P.map(p => `<option value="${esc(p.nama)}">`).join('')}</datalist></label>
    ${inp('tarikhSidang', 'Tarikh bersidang (3.1)')}${inp('masaSidang', 'Masa (3.1)')}${inp('tempat', 'Tempat bersidang (3.1)', '', true)}
    <label class="wide">Tujuan laporan (1) <small style="font-weight:400">kosongkan untuk teks lalai</small><textarea data-cfg="tujuan" rows="2">${esc(C.tujuan)}</textarea></label>
