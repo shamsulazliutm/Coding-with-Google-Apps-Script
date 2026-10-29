@@ -249,6 +249,7 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .aptype label.opt b{display:block}.aptype label.opt small{color:var(--muted);font-size:12.5px}
 .apst{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;background:var(--bg)}
 .apsth{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.aptop{display:flex;justify-content:flex-end;margin-bottom:10px}
 .apban{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;text-align:center;margin-bottom:12px}
 .apban img{height:78px;max-width:100%}
 .apban .org{font-weight:700;font-size:14.5px;color:#3a3a3a;margin-top:6px;text-wrap:balance}
@@ -353,10 +354,10 @@ function showLogin(msg, em) {
 }
 $('#out').onclick = async () => { try { await rpc('apiLogout'); } catch (e) { } setTok(''); codes = null; showLogin(); };
 
-/* Halaman pertama tanpa log masuk: borang pelajar jika pautan mengandungi ?page=mohon, selain itu skrin log masuk. */
+/* Halaman pertama tanpa log masuk: borang pelajar (pautan utama). Skrin log masuk melalui butang pada borang atau ?page=login. */
 function gotoEntry() {
-  try { if (google.script.url && google.script.url.getLocation) { google.script.url.getLocation(loc => { (loc && loc.parameter && loc.parameter.page === 'mohon') ? showApply() : showLogin(); }); return; } } catch (e) { }
-  showLogin();
+  try { if (google.script.url && google.script.url.getLocation) { google.script.url.getLocation(loc => { (loc && loc.parameter && loc.parameter.page === 'login') ? showLogin() : showApply(); }); return; } } catch (e) { }
+  showApply();
 }
 async function start() {
   if (!TOKEN) return gotoEntry();
@@ -419,6 +420,7 @@ function showApply() {
     </div><p class="note" style="margin:8px 0 0">Kad matrik dan kad pengenalan disimpan dalam folder sulit dan tidak dipaparkan kepada panel.</p></div>`; };
   const fb = isFB(A.kind), reg = A.ssmStatus !== 'Belum berdaftar';
   app.innerHTML = `<div class="apply"><datalist id="apfak">${FAK.map(f => `<option value="${f}">`).join('')}</datalist>
+   <div class="aptop"><button class="btn-line" id="ap_back" type="button">Log masuk Admin / Panel</button></div>
    <div class="apban"><img src="${LOGO_SRC}" alt="UTM dan UTMXCITE"><div class="org">UTM Center for Student Innovation &amp; Technology Entrepreneurship</div><span class="ttl">START-UP REGISTRATION FORM</span></div>
    <div class="card apsec apinst"><h3 style="font-size:20px;margin-bottom:8px;color:var(--maroon)">UTM STUDENT STARTUP REGISTRATION FORM</h3>
     <p>Dear Student,</p>
@@ -429,7 +431,7 @@ function showApply() {
     <p><b>Our office address is:</b><br><address>UTM Centre for Student Innovation and Technology Entrepreneurship (UTMXCITE),<br>Level 1, General office, Department of Office of Student Affairs and Alumni,<br>Student Union Building (SUB),<br>Universiti Teknologi Malaysia,<br>81310 UTM Johor Bahru,<br>Skudai, Johor.</address></p>
     <p>Thank you for your kind cooperation and attention towards this matter.</p>
     <p class="apreq">* Indicates required question</p>
-    <div class="foot" style="margin-top:4px"><button class="btn-ghost" id="ap_back" type="button">Log masuk panel / admin</button></div></div>
+</div>
    <form id="apf" novalidate>
    <div class="card apsec"><h3><span class="apn">1</span> Jenis permohonan</h3><div class="aptype">
      <label class="opt"><input type="radio" name="ap_type" value="Student Mall" ${!sub ? 'checked' : ''}><span><b>Student Mall</b><small>Permohonan sewaan lot di Student Mall.</small></span></label>
