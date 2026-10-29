@@ -355,9 +355,19 @@ function showLogin(msg, em) {
 $('#out').onclick = async () => { try { await rpc('apiLogout'); } catch (e) { } setTok(''); codes = null; showLogin(); };
 
 /* Halaman pertama tanpa log masuk: borang pelajar (pautan utama). Skrin log masuk melalui butang pada borang atau ?page=login. */
+function showCrash(e) {
+  app.innerHTML = `<div class="err"><h2>Ralat memuatkan halaman</h2><p>${esc((e && e.message) || String(e))}</p><p class="note">Muat semula halaman. Jika berulang, hantar mesej ralat ini kepada urusetia.</p></div>`;
+}
 function gotoEntry() {
-  try { if (google.script.url && google.script.url.getLocation) { google.script.url.getLocation(loc => { (loc && loc.parameter && loc.parameter.page === 'login') ? showLogin() : showApply(); }); return; } } catch (e) { }
-  showApply();
+  let done = false;
+  const go = loc => {
+    if (done) return; done = true;
+    try { (loc && loc.parameter && loc.parameter.page === 'login') ? showLogin() : showApply(); } catch (e) { showCrash(e); }
+  };
+  try {
+    if (google.script.url && google.script.url.getLocation) { google.script.url.getLocation(go); setTimeout(() => go(null), 2500); return; }   // tanpa jawapan dalam 2.5s: papar borang
+  } catch (e) { }
+  go(null);
 }
 async function start() {
   if (!TOKEN) return gotoEntry();
@@ -1265,6 +1275,7 @@ function evalView() {
   };
 }
 
+window.addEventListener('error', ev => { if (app && /Memuatkan/.test(app.textContent)) showCrash(ev.error || ev.message); });
 start();
 </script>
 </body>
