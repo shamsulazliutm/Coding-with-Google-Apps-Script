@@ -689,7 +689,7 @@ function jkBlocks() {
 
   B.push({ t: 'h', num: '3', text: 'Pemerhatian Jawatankuasa' });
   B.push({ t: 'p', num: '3.1', text: 'JPPPDKP telah bersidang pada ' + (C.tarikhSidang || DOTS) + ' jam ' + (C.masaSidang || DOTS) + ' bertempat di ' + (C.tempat || DOTS) + '.' });
-  B.push({ t: 'p', num: '3.2', text: 'Sebanyak ' + nApps + ' permohonan (' + nStud + ' pelajar) telah dikemukakan, terdiri daripada Student Mall ' + nSM + ' dan SUB ' + nSUB + '. Penilaian telah dibuat oleh ' + P.length + ' panel dengan jadual markah seperti di Jadual 1:' });
+  B.push({ t: 'p', num: '3.2', text: 'Sebanyak ' + nApps + ' permohonan (' + nStud + ' pelajar) telah dikemukakan, terdiri daripada ' + nSM + ' permohonan untuk lot di Student Mall dan ' + nSUB + ' untuk lot di SUB. Penilaian telah dibuat oleh ' + P.length + ' panel dengan jadual markah seperti di Jadual 1:' });
   const w1 = P.length > 6 ? 9 : 11;
   B.push({ t: 'table', cap: 'Jadual 1: Jadual markah dan kedudukan pemohon (markah /100)', head: ['Rank', 'Perniagaan', 'Jenis', ...P.map((p, i) => 'P' + (i + 1)), 'Dinilai', 'Purata'],
     body: rows.map(r => [r.rank || '-', r.a.biz, r.a.type, ...r.sc.map(s => s == null ? '-' : s), r.n + '/' + P.length, fmt(r.avg)]),
