@@ -1,0 +1,30 @@
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><title>Penyelarasan UTMPreneur dan sistem KPI</title><link rel="stylesheet" href="prestasi.css">
+<style>body{width:1240px;padding:22px;background:#F4F1F0}.panel{margin-bottom:14px}
+.flow2{display:flex;align-items:center;gap:10px}.box{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;flex:1}
+.box h4{margin:0 0 6px;font-size:12.5px;color:var(--mar-d)}.box div{font-size:11.5px;line-height:1.5}
+.arrow{font-size:26px;color:var(--gold);flex:none;text-align:center;width:80px;line-height:1.1}.arrow small{display:block;font-size:10px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip2{background:#ECE7E8;color:#4b3f43;border-radius:8px;padding:3px 9px;font-size:11px}
+td{font-size:11.5px}th{font-size:9.5px}.x{color:var(--bad);text-decoration:line-through}</style></head>
+<body>
+<div class="panel"><div class="cap">Satu kali entry: aliran data antara UTMPreneur dan sistem KPI (UTMXCITE 4 ASCEND 2030 Report)</div>
+ <div class="flow2">
+  <div class="box"><h4>UTMPreneur (proses harian)</h4><div>Profiling · SSU · Sewaan Lot (bil dan bayaran) · Laporan Kewangan bulanan · Makerspace<br><b>Pelajar, admin dan penyelia memasukkan data di sini sahaja.</b></div></div>
+  <div class="arrow">➜<small>sinkron automatik<br>(sekali sehari + butang)</small></div>
+  <div class="box"><h4>Tab sistem KPI (baca sahaja)</h4><div>CKAI1 · CKAI4 · CKAI5 · CKAI6 · CKAI7 · KAI3<br>Setiap baris bertanda <b>sumber = UTMPreneur</b> dan kunci unik (tiada pendua walaupun dijalankan berulang).</div></div>
+  <div class="arrow">➜<small>kiraan sedia ada</small></div>
+  <div class="box"><h4>Infografik, Dashboard, KPT/KAI/DKAI/CKAI</h4><div>Formula KPI sedia ada tidak diubah. KPT 1 dan KPT 5 mengikuti secara automatik.</div></div></div></div>
+<div class="panel"><div class="cap">Entry yang dihapuskan (data diambil terus daripada proses UTMPreneur)</div>
+<table><thead><tr><th style="width:80px">KPI</th><th>Sebelum ini (entry dalam sistem KPI)</th><th>Selepas penyelarasan (sumber dalam UTMPreneur)</th><th>Medan tambahan diperlukan dalam UTMPreneur</th></tr></thead><tbody>
+<tr><td><b>CKAI 7</b><br>KPT 1</td><td class="x">PIC fakulti menaip pendapatan bulanan setiap usahawan</td><td>Laporan Kewangan bulanan berstatus <b>Diterima</b>: pendapatan, modal, pekerja, penyata. KPT 1 dikira daripada CKAI 7 seperti sedia ada</td><td>Bilangan pekerja bulan itu (1 medan baharu pada laporan)</td></tr>
+<tr><td><b>CKAI 4</b><br>KPT 5</td><td class="x">Admin menaip pendaftaran SSU</td><td>Setiap SSU <b>Diluluskan</b>: no. SSU, tarikh daftar, SSM, modal, jualan, ahli, status Aktif / Tamat</td><td><b>Berasaskan inovasi (Ya/Tidak)</b> dan <b>TRL 1 hingga 9</b> (KPT 5 mengira TRL 4 hingga 6); bilangan pekerja; tarikh SSM</td></tr>
+<tr><td><b>CKAI 1</b></td><td class="x">PIC fakulti menaip rekod profiling pelajar</td><td>Setiap Profil yang disimpan pelajar (satu bagi setiap pelajar setiap tahun)</td><td><b>Tahap minat</b> (Tiada/Rendah/Sederhana/Tinggi) dan <b>tahap kesediaan</b> (Belum ada idea hingga Sudah beroperasi)</td></tr>
+<tr><td><b>CKAI 5</b></td><td class="x">Admin menyalin borang Google Form peralatan ke tab DATA</td><td>Tempahan Makerspace <b>Diluluskan</b>: pengguna, peralatan, peserta, tarikh, bayaran dan status bayaran</td><td>Tiada (kelas/kursus pelajar daripada PELAJAR)</td></tr>
+<tr><td><b>CKAI 6</b></td><td class="x">Admin menaip sewaan diterima</td><td><b>Bayaran sewa</b> yang disahkan Dibayar: tempoh, lot, penyewa, jumlah, tarikh bayar, no. resit</td><td>Tiada</td></tr>
+<tr><td><b>KAI 3</b></td><td class="x">Admin menaip lot dan penyewa</td><td>Tab Lot, Sewaan dan Tawaran: jenis, lokasi, keluasan, status, penyewa, tarikh sewa, kadar</td><td>Bangunan dan keluasan lot (lajur sedia ada, diisi)</td></tr>
+<tr><td><b>PELAJAR</b></td><td class="x">Dua senarai pelajar (satu dalam setiap sistem)</td><td>PELAJAR dalam UTMPreneur ialah induk tunggal; sistem KPI membaca atau disegerak daripadanya</td><td>Tiada</td></tr>
+</tbody></table></div>
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+<div class="panel"><div class="cap">Separa automatik</div><div class="note" style="font-size:12px;color:var(--ink)"><b>KPT 4</b> (pelajar inovasi TRL 1 hingga 3): ahli SSU berstatus Startup dengan TRL 1 hingga 3 ditambah ke senarai sedia ada.<br><b>KPT 7</b> (dibiayai): SSU yang disokong geran, dan pada fasa 2 Mikro Kredit serta Dana Program.</div></div>
+<div class="panel"><div class="cap">Kekal dimasukkan dalam sistem KPI (belum ada proses dalam UTMPreneur)</div><div class="chips"><span class="chip2">KPT 2 graduan usahawan</span><span class="chip2">KPT 3 pengajar berpesijilan</span><span class="chip2">KPT 6 kolaborasi</span><span class="chip2">KAI 1 inkubator</span><span class="chip2">KAI 2 Makerspace (kemajuan projek)</span><span class="chip2">KAI 4 GiGA</span><span class="chip2">KAI 5 F-SIP</span><span class="chip2">KAI 6 AI Start Up</span><span class="chip2">DKAI 1 pelan</span><span class="chip2">CKAI 2 program keusahawanan</span><span class="chip2">CKAI 3 program inovasi</span><span class="chip2">CKAI 8 inovasi pelajar</span><span class="chip2">CKAI 9 anugerah</span><span class="chip2">CKAI 10 perbelanjaan</span></div>
+<div class="note">Apabila modul fasa 2 (Program, Inovasi, Anugerah, Mikro Kredit) dibina, CKAI 2, 3, 8, 9 dan KPT 7 mengikut corak yang sama.</div></div></div>
+</body></html>

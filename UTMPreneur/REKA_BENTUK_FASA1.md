@@ -359,3 +359,15 @@ Setiap tab yang memuatkan lajur `No_Matrik*` kini memuatkan lajur `No_KP` tepat 
 Pengisian automatik dalam lapisan data (`Db.append/update/replaceAll`), jadi setiap modul memperolehnya tanpa kod tambahan. `setup()` melengkapkan rekod sedia ada;
 `isiNoKp()` (dari editor) menyegerak semula semua rekod selepas No. KP dalam `PELAJAR` dikemas kini. Lajur disimpan sebagai teks. Paparan skrin kekal
 mengikut PDPA (No. KP penuh hanya kepada Admin Penuh); eksport CSV Kewangan memuatkan No. KP hanya untuk Admin Penuh.
+
+## 16. Penyelarasan dengan sistem KPI sedia ada (UTMXCITE 4 ASCEND 2030 Report): satu kali entry
+
+Sumber: fail `Code_3.gs` dan `Index_3.html` yang dibekalkan pengguna (24 KPI: KPT 1-7, KAI 1-6, DKAI 1, CKAI 1-10; penyata KPI mempunyai tab PELAJAR sendiri, peranan Admin/PIC fakulti, tab data setiap KPI dan sasaran tahunan 2026-2030).
+**Pembetulan:** pemetaan KPT dalam ilustrasi 16 ialah andaian. Definisi sebenar: KPT 1 = jumlah `pendapatan_bulanan` CKAI 7 bagi tahun; KPT 3 = % pengajar berpesijilan profesional; KPT 4 = pelajar TRL 1-3 (daftar KPT 4 + CKAI 8); KPT 5 = SSU Aktif berasaskan inovasi TRL 4-6 (CKAI 4); KPT 7 = daftar pembiayaan + hadiah CKAI 9.
+**Prinsip (keputusan pengguna):** data yang sudah ada dalam proses UTMPreneur tidak ditaip semula dalam sistem KPI.
+- Diambil automatik (tab KPI menjadi baca sahaja, baris bertanda `sumber=UTMPreneur`, kunci unik): **CKAI 7/KPT 1** (laporan kewangan Diterima), **CKAI 4/KPT 5** (SSU Diluluskan), **CKAI 1** (Profil), **CKAI 5** (tempahan Makerspace Diluluskan, menggantikan Google Form), **CKAI 6** (bayaran sewa Dibayar), **KAI 3** (Lot/Sewaan/Tawaran), dan **PELAJAR** (induk tunggal).
+- Separa: KPT 4 (ahli SSU Startup TRL 1-3), KPT 7 (geran; fasa 2 Mikro Kredit/Dana Program).
+- Kekal dimasukkan dalam sistem KPI: KPT 2, 3, 6; KAI 1, 2, 4, 5, 6; DKAI 1; CKAI 2, 3, 8, 9, 10 (CKAI 2, 3, 8, 9 diselaras apabila modul fasa 2 dibina).
+- Medan tambahan dalam UTMPreneur: SSU (berasaskan inovasi Ya/Tidak, TRL 1-9, bilangan pekerja, tarikh SSM), Profiling (tahap minat 4 peringkat, tahap kesediaan), Laporan Kewangan (bilangan pekerja bulan itu). Senarai pilihan diselaraskan dengan sistem KPI (jenis milikan, punca modal, bidang pengajian, bangsa, bilangan pekerja).
+- Menu KPI: halaman KPI dibuka dalam menu utama (infografik, dashboard, KPT/KAI/DKAI/CKAI, sasaran dan input manual). Sistem KPI sedia ada menetapkan `XFrameOptionsMode.ALLOWALL`, jadi boleh dibenamkan. **[TERBUKA]** pendekatan sinkron (menulis ke tab KPI atau KPI membaca terus), ID spreadsheet KPI dan kebenaran akaun pelaksana, pengurusan pengguna KPI (berasingan atau disatukan).
+Ilustrasi: `mockup/25-penyelarasan-kpi.html`.
