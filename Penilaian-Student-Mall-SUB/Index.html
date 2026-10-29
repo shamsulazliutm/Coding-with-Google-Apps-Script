@@ -492,13 +492,17 @@ const fmt = (n, d = 2) => n == null ? '-' : Number(n).toFixed(d);
 const maskKp = kp => String(kp || '').replace(/\d{4}$/, '****');
 
 function rpData(jenis = RP.jenis) {
-  const K = D.keputusan, P = K.panels;
+  const K = D.keputusan;
+  // Laporan hanya memaparkan panel yang telah memberi markah (penilaian dihantar). Panel dinomborkan semula P1, P2, ... tanpa jurang.
+  let idx = K.panels.map((p, i) => i).filter(i => D.nilai.some(n => n.status === 'Dihantar' && nem(n.email) === nem(K.panels[i].emel)));
+  if (!idx.length) idx = K.panels.map((p, i) => i);
+  const P = idx.map(i => K.panels[i]);
   const rows = D.apps.filter(a => !jenis || a.type === jenis).map(a => {
     const kr = K.rows.find(r => r.id === a.id) || {};
     const evs = P.map(p => D.nilai.find(n => n.pid === a.id && nem(n.email) === nem(p.emel) && n.status === 'Dihantar') || null);
     const got = evs.filter(Boolean);
     return {
-      a, evs, n: got.length, avg: kr.avg == null ? null : kr.avg, sc: kr.sc || [],
+      a, evs, n: got.length, avg: kr.avg == null ? null : kr.avg, sc: idx.map(i => (kr.sc || [])[i] == null ? null : kr.sc[i]),
       avgC: D.crit.map((c, i) => got.length ? got.reduce((s, n) => s + n.mk[i], 0) / got.length : null),
       layakY: got.filter(n => n.ok === 'Ya').length, layakN: got.filter(n => n.ok === 'Tidak').length, final: a.final || 'Belum'
     };
@@ -678,10 +682,10 @@ function jkBlocks() {
   B.push({ t: 'h', num: '3', text: 'Pemerhatian Jawatankuasa' });
   B.push({ t: 'p', num: '3.1', text: 'JPPPDKP telah bersidang pada ' + (C.tarikhSidang || DOTS) + ' jam ' + (C.masaSidang || DOTS) + ' bertempat di ' + (C.tempat || DOTS) + '.' });
   B.push({ t: 'p', num: '3.2', text: 'Sebanyak ' + nApps + ' permohonan (' + nStud + ' pelajar) telah dikemukakan, terdiri daripada Student Mall ' + nSM + ' dan SUB ' + nSUB + '. Penilaian telah dibuat oleh ' + P.length + ' panel dengan jadual markah seperti di Jadual 1:' });
-  const w1 = P.length > 6 ? 9 : 10.5;
+  const w1 = P.length > 6 ? 9 : 11;
   B.push({ t: 'table', cap: 'Jadual 1: Jadual markah dan kedudukan pemohon (markah /100)', head: ['Rank', 'Perniagaan', 'Jenis', ...P.map((p, i) => 'P' + (i + 1)), 'Dinilai', 'Purata'],
     body: rows.map(r => [r.rank || '-', r.a.biz, r.a.type, ...r.sc.map(s => s == null ? '-' : s), r.n + '/' + P.length, fmt(r.avg)]),
-    widths: [11, 40, 22, ...P.map(() => w1), 15, 17], center: [0, ...P.map((p, i) => 3 + i), 3 + P.length, 4 + P.length], bold: [1, 4 + P.length],
+    widths: [11, 186 - 11 - 22 - 15 - 17 - P.length * w1, 22, ...P.map(() => w1), 15, 17], center: [0, ...P.map((p, i) => 3 + i), 3 + P.length, 4 + P.length], bold: [1, 4 + P.length],
     note: 'Panel: ' + P.map(panelFull).join('; ') + '. "-" bermaksud belum dihantar. Purata dikira daripada penilaian yang dihantar sahaja.' });
 
   B.push({ t: 'h', num: '4', text: 'Analisis' });
@@ -732,7 +736,7 @@ function renderBlocksPdf(doc, B) {
   const ink = () => { doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(30); };
   B.forEach((b, bi) => {
     if (b.t === 'title') { doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(30); const ln = doc.splitTextToSize(b.text, W); ensure(ln.length * 5.6 + 6); doc.text(ln, pw / 2, y + 4, { align: 'center' }); y += ln.length * 5.6 + 6; }
-    else if (b.t === 'h') { ensure(16); y += 3; doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(...MAROON); doc.text(b.num + '.', m, y + 4); doc.text(b.text, m + 12, y + 4); y += 8; }
+    else if (b.t === 'h') { ensure(B[bi + 1] && B[bi + 1].t === 'p' && B[bi + 2] && B[bi + 2].t === 'table' ? 78 : 32); y += 3; doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(...MAROON); doc.text(b.num + '.', m, y + 4); doc.text(b.text, m + 12, y + 4); y += 8; }
     else if (b.t === 'p') { ink(); const ln = doc.splitTextToSize(b.text, W - 12); ensure(B[bi + 1] && B[bi + 1].t === 'table' ? ln.length * LH + 42 : Math.min(ln.length, 3) * LH + 2); ln.forEach((l, i) => { ensure(LH + 1); if (i === 0 && b.num) doc.text(b.num, m, y + 4); doc.text(l, m + 12, y + 4); y += LH; }); y += 2.2; }
     else if (b.t === 'kv') { ink(); b.rows.forEach(([k, v]) => { const ln = doc.splitTextToSize(String(v), W - 80); ensure(ln.length * LH + 1); if (k) doc.text(k, m + 12, y + 4); doc.text(':', m + 70, y + 4); doc.text(ln, m + 74, y + 4); y += ln.length * LH + 0.6; }); y += 2; }
     else if (b.t === 'list') { ink(); b.items.forEach((t, i) => { const ln = doc.splitTextToSize(t, W - 22); ensure(ln.length * LH + 1); doc.text('(' + String.fromCharCode(97 + i) + ')', m + 12, y + 4); ln.forEach((l, k) => { doc.text(l, m + 20, y + 4 + k * LH); }); y += ln.length * LH + 1.2; }); y += 2; }
