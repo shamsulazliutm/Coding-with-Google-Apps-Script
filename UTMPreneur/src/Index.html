@@ -6,53 +6,57 @@
 <title>UTMPreneur · UTMXCITE</title>
 <?!= include('Styles') ?>
 </head>
-<body>
+<body class="auth">
 <div id="banner-uji" hidden>MOD UJIAN / TEST MODE</div>
-<header class="bar">
+
+<!-- Pengepala log masuk (gaya ASCEND): kelihatan sebelum log masuk sahaja -->
+<header class="hero" id="hero">
   <img id="logo" alt="UTM UTMXCITE" hidden>
-  <div class="t">UTMPreneur<i>Sistem aktiviti keusahawanan dan inovasi pelajar<span class="en-long"> / Student entrepreneurship and innovation system</span></i></div>
+  <div><div class="kick">UTMXCITE · UTM</div><h1>UTMPreneur</h1><div class="sub">Sistem aktiviti keusahawanan dan inovasi pelajar<span class="en-long"> / Student entrepreneurship and innovation system</span></div></div>
+</header>
+
+<!-- Bar atas selepas log masuk -->
+<header class="bar" id="topbar" hidden>
+  <button id="btn-menu" class="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="side">&#9776;</button>
+  <div class="t">UTMPreneur<i>UTMXCITE · UTM</i></div>
   <button id="btn-keluar" type="button" hidden>Log keluar <span style="opacity:.8;font-style:italic">Sign out</span></button>
 </header>
 
+<div id="shell">
+<aside id="side" aria-label="Menu utama" hidden></aside>
+<div id="scrim" hidden></div>
 <main id="main">
 
   <section id="v-loading" class="view"><div class="spinner" role="status" aria-label="Memuatkan / Loading"></div></section>
 
-  <!-- Log masuk: emel -->
-  <section id="v-emel" class="view" hidden>
-    <div class="card">
-      <div class="h1">Log masuk</div><div class="e">Sign in</div>
-      <label class="lab" for="in-emel"><span class="l">Emel</span> <span class="e">Email</span></label>
+  <!-- Log masuk: emel dan OTP pada satu skrin -->
+  <section id="v-emel" class="view login" hidden>
+    <div class="card lcard">
+      <h2 class="lh">Log Masuk <span class="e">Sign in</span></h2>
+      <p class="lp">Masukkan e-mel anda. Kod pengesahan enam digit akan dihantar melalui e-mel.<br><span class="e">Enter your email. A 6-digit code will be sent by email.</span></p>
+      <label class="lab" for="in-emel"><span class="l">E-mel</span> <span class="e">Email</span></label>
       <input id="in-emel" type="email" inputmode="email" autocomplete="email" placeholder="nama@graduate.utm.my">
       <div id="msg-emel" class="msg" hidden></div>
-      <button id="btn-minta" class="btn" type="button">Hantar kod OTP <i>Send OTP code</i></button>
-      <div class="msg info" style="margin-top:14px">
-        <b>Pelajar</b> guna emel <b>@graduate.utm.my</b>. <b>Staf</b> guna <b>@utm.my</b>. Orang luar boleh log masuk dengan emel sendiri.
-        <i>Students use @graduate.utm.my. Staff use @utm.my. External users may sign in with their own email.</i>
+      <div id="v-otp" class="otpwrap off">
+        <label class="lab"><span class="l">Kod OTP</span> <span class="e">OTP code</span></label>
+        <div class="otp" id="otp-boxes">
+          <input inputmode="numeric" maxlength="1" aria-label="Digit 1" disabled>
+          <input inputmode="numeric" maxlength="1" aria-label="Digit 2" disabled>
+          <input inputmode="numeric" maxlength="1" aria-label="Digit 3" disabled>
+          <input inputmode="numeric" maxlength="1" aria-label="Digit 4" disabled>
+          <input inputmode="numeric" maxlength="1" aria-label="Digit 5" disabled>
+          <input inputmode="numeric" maxlength="1" aria-label="Digit 6" disabled>
+        </div>
+        <div id="msg-otp" class="msg" hidden></div>
       </div>
-    </div>
-  </section>
-
-  <!-- Log masuk: OTP -->
-  <section id="v-otp" class="view" hidden>
-    <div class="card">
-      <button class="back" id="btn-ubah-emel" type="button">&larr; Tukar emel <span class="e">Change email</span></button>
-      <div class="h1">Masukkan kod OTP</div><div class="e">Enter the OTP code</div>
-      <p class="muted" style="margin:8px 0 0">Kod 6 digit telah dihantar ke <b id="otp-emel"></b>. <span class="e">A 6-digit code was sent to your email.</span></p>
-      <div class="otp" style="margin-top:12px" id="otp-boxes">
-        <input inputmode="numeric" maxlength="1" aria-label="Digit 1">
-        <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
-        <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
-        <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
-        <input inputmode="numeric" maxlength="1" aria-label="Digit 5">
-        <input inputmode="numeric" maxlength="1" aria-label="Digit 6">
+      <div class="lbtns">
+        <button id="btn-minta" class="btn" type="button">Hantar / Hantar Semula Kod</button>
+        <button id="btn-sahkan" class="btn" type="button" disabled>Sahkan dan Log Masuk</button>
       </div>
-      <div id="msg-otp" class="msg" hidden></div>
-      <button id="btn-sahkan" class="btn" type="button">Sahkan <i>Verify</i></button>
-      <div class="row" style="margin-top:10px;font-size:12px">
-        <span class="muted" id="otp-pemasa"></span><span class="sp"></span>
-        <button id="btn-semula" class="back" type="button" disabled>Hantar semula kod <span class="e">Resend code</span></button>
-      </div>
+      <div class="e" id="otp-pemasa" style="margin-top:8px;text-align:center"></div>
+      <div class="e" style="margin-top:8px;text-align:center">Pelajar guna @graduate.utm.my · Staf guna @utm.my · Orang luar guna e-mel sendiri<br>Students use @graduate.utm.my · Staff use @utm.my · External users use their own email</div>
+      <button class="lnk" id="btn-ubah-emel" type="button" hidden>&larr; Tukar e-mel <span class="e">Change email</span></button>
+      <a class="lnk" id="lnk-laman" href="#" hidden>&larr; Kembali ke laman UTMXCITE</a>
     </div>
   </section>
 
@@ -172,8 +176,10 @@
 <?!= include('ViewsKew') ?>
 <?!= include('ViewsMk') ?>
 <?!= include('ViewsKpi') ?>
+<?!= include('ViewsShell') ?>
 
 </main>
+</div>
 
 <?!= include('LogoData') ?>
 <?!= include('App') ?>
@@ -182,5 +188,6 @@
 <?!= include('AppKew') ?>
 <?!= include('AppMk') ?>
 <?!= include('AppKpi') ?>
+<?!= include('Shell') ?>
 </body>
 </html>

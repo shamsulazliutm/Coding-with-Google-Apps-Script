@@ -34,6 +34,7 @@ function include(name) {
 function rpcTable_() {
   var t = {
     'ping':          { auth: false, fn: function () { return { versi: APP.VERSI, masa: new Date().toISOString() }; } },
+    'app.awam':      { auth: false, fn: function () { return { mode: Mode.current(), laman: String(Cfg.get('LAMAN_UTMXCITE', '') || '') }; } },
     'otp.minta':     { auth: false, fn: function (c, p) { return Auth.requestOtp(p.emel); } },
     'otp.sahkan':    { auth: false, fn: function (c, p) { return Auth.verifyOtp(p.emel, p.kod); } },
     'sesi.saya':     { auth: true,  fn: function (c) { return Auth.me(c); } },

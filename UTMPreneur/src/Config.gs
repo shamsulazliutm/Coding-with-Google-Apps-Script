@@ -159,6 +159,7 @@ var TETAPAN_LALAI = [
   ['DOMAIN_STAF', '@utm.my', 'Domain emel staf (juga domain penyelia)'],
   ['NAMA_PENGHANTAR', 'UTMPreneur · UTMXCITE', 'Nama penghantar emel'],
   ['WEBAPP_URL', '', 'URL web app (digunakan dalam emel)'],
+  ['LAMAN_UTMXCITE', '', 'URL laman UTMXCITE bagi pautan di skrin log masuk (kosong = pautan disembunyikan)'],
   ['PENGUJI_EMEL', '', 'MOD UJI sahaja: emel penguji dibenarkan menerima emel, dipisah koma'],
   ['OTP_TAMAT_MINIT', '5', 'Tempoh sah OTP (minit)'],
   ['OTP_MAKS_PERCUBAAN', '5', 'Percubaan maksimum bagi satu OTP'],

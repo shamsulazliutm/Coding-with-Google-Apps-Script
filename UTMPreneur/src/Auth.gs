@@ -162,6 +162,8 @@ var Auth = (function () {
     if (ADMIN_ROLES.indexOf(role) >= 0) {
       var a = Admins.find(email);
       out.nama = a ? a.nama : email;
+      // Menu KPI: Penilai tidak melihatnya; URL hanya didedahkan kepada peranan yang dibenarkan
+      if (role !== ROLE.PENILAI) { out.kpiUrl = Util.str(Cfg.get('KPI_URL', '')); out.kpiUbah = role === ROLE.ADMIN_PENUH; }
       return out;
     }
     if (role === ROLE.PELAJAR) {
