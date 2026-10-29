@@ -13,20 +13,22 @@ const ADMIN_EMAIL = 'utmxcite@utm.my';
 const LOGO_URL = ''; // pilihan: ganti logo lalai dalam Index.html dengan URL imej lain; kosong = guna logo dalam Index.html
 
 const SH = {
-  PANEL: 'Panel', PEMOHON: 'Pemohon', PELAJAR: 'Pelajar', SESI: 'Sesi',
+  PANEL: 'Panel', PEMOHON: 'Pemohon', PELAJAR: 'Pelajar', SESI: 'Sesi', AGENDA: 'Agenda',
   RUBRIK: 'Rubrik', CHIP: 'Chip', TETAPAN: 'Tetapan', NILAI: 'Penilaian', KEPUTUSAN: 'Keputusan', LOG: 'Log'
 };
 const HEAD = {
   Panel: ['Nama', 'Emel', 'Peranan', 'Status', 'KodHash', 'KodTamat'],
-  Pemohon: ['ID', 'Perniagaan', 'Jenis', 'SSM', 'JenisPerniagaan', 'PautanPelan', 'Slot', 'Susunan', 'StatusAkhir'],
-  Pelajar: ['PemohonID', 'Nama', 'Matrik', 'KP', 'Tahun', 'Fakulti', 'Kursus', 'CGPA'],
-  Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status'],
+  // Lajur Slot, Susunan dan StatusAkhir dalam Pemohon ialah versi lama; kini disimpan bagi setiap mesyuarat dalam Agenda.
+  Pemohon: ['ID', 'Perniagaan', 'Jenis', 'SSM', 'JenisPerniagaan', 'PautanPelan', 'Slot', 'Susunan', 'StatusAkhir', 'TarikhMohon', 'Sumber'],
+  Pelajar: ['PemohonID', 'Nama', 'Matrik', 'KP', 'Tahun', 'Fakulti', 'Kursus', 'CGPA', 'Emel', 'Telefon'],
+  Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status', 'ID', 'Tempat', 'Bil'],
+  Agenda: ['SesiID', 'PemohonID', 'Susunan', 'Slot', 'StatusAkhir'],
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
   Chip: ['Teks'],
   Tetapan: ['Kunci', 'Nilai'],
   Penilaian: ['PemohonID', 'Emel', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
     'Elemen', 'Ulasan', 'Layak', 'Jumlah', 'Status', 'Dikemaskini',
-    'Catatan1', 'Catatan2', 'Catatan3', 'Catatan4', 'Catatan5', 'Catatan6', 'DiisiOleh'],
+    'Catatan1', 'Catatan2', 'Catatan3', 'Catatan4', 'Catatan5', 'Catatan6', 'DiisiOleh', 'SesiID'],
   Log: ['Masa', 'Pengguna', 'Tindakan', 'Butiran']
 };
 const NCRIT = 6;
@@ -36,6 +38,9 @@ const LOGIN_FAILS = 30;      // maksimum cubaan kod salah (seluruh sistem) dalam
 const OTP_TTL = 600;         // kod OTP e-mel sah 10 minit
 const OTP_TRIES = 5;         // maksimum cubaan salah bagi satu kod
 const OTP_REQ_MAX = 3;       // maksimum permintaan kod bagi satu e-mel dalam 10 minit
+const FOLDER_PELAN = 'Pelan Perniagaan UTMXCITE';   // folder Drive bagi pelan yang dimuat naik pelajar
+const MAX_PLAN_MB = 8;
+const SUBMIT_MAX_PER_HOUR = 60;
 const SESSION_TTL = 21600;   // sesi log masuk 6 jam (had maksimum CacheService)
 let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
@@ -112,6 +117,42 @@ function withLock_(fn) {
   try { return fn(); } finally { lock.releaseLock(); }
 }
 
+/* ===================== Migrasi data lama (satu sesi) kepada banyak mesyuarat ===================== */
+
+function ensureSheets_() {
+  Object.keys(HEAD).forEach(function (name) {
+    let sh = ss_().getSheetByName(name);
+    if (!sh) {
+      sh = ss_().insertSheet(name);
+      sh.getRange(1, 1, 1, HEAD[name].length).setValues([HEAD[name]]).setFontWeight('bold').setBackground('#8a2d3b').setFontColor('#ffffff');
+      sh.setFrozenRows(1);
+    }
+  });
+}
+
+/** Sekali sahaja: beri ID kepada sesi lama, bina Agenda daripada pemohon sedia ada dan tandakan penilaian lama sebagai sesi pertama. */
+function migrate_() {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('MIG_V2') === '1') return;
+  ensureSheets_();
+  const st = table_(SH.SESI);
+  let maxId = 0;
+  st.rows.forEach(function (r) { if (r.ID !== '' && r.ID != null) maxId = Math.max(maxId, Number(r.ID)); });
+  st.rows.forEach(function (r) { if (r.ID === '' || r.ID == null) { r.ID = ++maxId; writeRow_(SH.SESI, r._row, r); } });
+  const first = table_(SH.SESI).rows.sort(function (a, b) { return Number(a.ID) - Number(b.ID); })[0];
+  if (first) {
+    if (!table_(SH.AGENDA).rows.length) {
+      table_(SH.PEMOHON).rows.forEach(function (p) {
+        append_(SH.AGENDA, { SesiID: first.ID, PemohonID: p.ID, Susunan: p.Susunan, Slot: p.Slot, StatusAkhir: p.StatusAkhir });
+      });
+    }
+    table_(SH.NILAI).rows.forEach(function (r) {
+      if (r.SesiID === '' || r.SesiID == null) { r.SesiID = first.ID; writeRow_(SH.NILAI, r._row, r); }
+    });
+  }
+  props.setProperty('MIG_V2', '1');
+}
+
 /* ===================== Pengguna dan peranan ===================== */
 
 function roleOf_(email) {
@@ -136,6 +177,7 @@ function me_(token) {
 }
 
 function need_(role, token) {
+  migrate_();
   const u = me_(token);
   if (!u.email) throw new Error('SESI_TAMAT');
   if (u.role !== role) throw new Error('Akses ditolak.');
@@ -336,13 +378,32 @@ function rubrik_(versi) {
   });
 }
 
-function sesi_() {
-  const r = table_(SH.SESI).rows[0];
-  if (!r) throw new Error('Sesi belum dicipta.');
-  return {
-    nama: r.Nama, tarikh: r.Tarikh instanceof Date ? Utilities.formatDate(r.Tarikh, 'Asia/Kuala_Lumpur', 'd MMMM yyyy') : String(r.Tarikh),
-    masa: String(r.Masa), versi: Number(r.RubrikVersi), status: r.Status, _row: r._row
-  };
+function fmtDate_(v) {
+  return v instanceof Date ? Utilities.formatDate(v, 'Asia/Kuala_Lumpur', 'd MMMM yyyy') : String(v == null ? '' : v);
+}
+
+function sesiOf_(r) {
+  return { id: Number(r.ID), nama: String(r.Nama || ''), tarikh: fmtDate_(r.Tarikh), masa: String(r.Masa == null ? '' : r.Masa),
+    tempat: String(r.Tempat || ''), bil: String(r.Bil || ''), versi: Number(r.RubrikVersi) || 1, status: r.Status || 'Draf', _row: r._row };
+}
+
+function sesiList_() {
+  return table_(SH.SESI).rows.map(sesiOf_).sort(function (a, b) { return a.id - b.id; });
+}
+
+function sesiGet_(id) {
+  const s = sesiList_().filter(function (x) { return x.id === Number(id); })[0];
+  if (!s) throw new Error('Mesyuarat tidak dijumpai.');
+  return s;
+}
+
+/** Mesyuarat yang sedang dibuka kepada panel (paling banyak satu). */
+function sesiAktif_() {
+  return sesiList_().filter(function (x) { return x.status === 'Dibuka'; })[0] || null;
+}
+
+function sesiWrite_(s) {
+  writeRow_(SH.SESI, s._row, { Nama: s.nama, Tarikh: s.tarikh, Masa: s.masa, RubrikVersi: s.versi, Status: s.status, ID: s.id, Tempat: s.tempat, Bil: s.bil });
 }
 
 function chips_() {
@@ -353,28 +414,43 @@ function maskKp_(kp) {
   return String(kp || '').trim().replace(/\d{4}$/, '****');
 }
 
-function apps_(mask) {
+/** Pemohon. Dengan sesiId: hanya pemohon dalam agenda mesyuarat itu (mengikut susunan). Tanpa sesiId: semua pemohon. */
+function apps_(mask, sesiId) {
   const stud = table_(SH.PELAJAR).rows;
-  return table_(SH.PEMOHON).rows.sort(function (a, b) { return (Number(a.Susunan) || 99) - (Number(b.Susunan) || 99); })
-    .map(function (a) {
-      const st = stud.filter(function (s) { return Number(s.PemohonID) === Number(a.ID); }).map(function (s) {
-        return {
-          n: String(s.Nama).trim(), m: String(s.Matrik).trim(), kp: mask ? maskKp_(s.KP) : String(s.KP).trim(),
-          yr: s.Tahun, fac: s.Fakulti, course: String(s.Kursus).trim(), cgpa: Number(s.CGPA)
-        };
-      });
-      return {
-        id: Number(a.ID), biz: a.Perniagaan, type: a.Jenis, ssm: a.SSM, kind: a.JenisPerniagaan, plan: a.PautanPelan,
-        slot: a.Slot, order: Number(a.Susunan) || 0, final: a.StatusAkhir || '', st: st
-      };
+  const ag = table_(SH.AGENDA).rows;
+  const where = {};
+  ag.forEach(function (a) { (where[Number(a.PemohonID)] = where[Number(a.PemohonID)] || []).push(Number(a.SesiID)); });
+  const pem = table_(SH.PEMOHON).rows;
+  let list;
+  if (sesiId) {
+    list = ag.filter(function (a) { return Number(a.SesiID) === Number(sesiId); })
+      .sort(function (x, y) { return (Number(x.Susunan) || 99) - (Number(y.Susunan) || 99); })
+      .map(function (a) { return { p: pem.filter(function (p) { return Number(p.ID) === Number(a.PemohonID); })[0], a: a }; })
+      .filter(function (x) { return x.p; });
+  } else {
+    list = pem.sort(function (x, y) { return Number(x.ID) - Number(y.ID); }).map(function (p) { return { p: p, a: null }; });
+  }
+  return list.map(function (x) {
+    const p = x.p;
+    const st = stud.filter(function (s) { return Number(s.PemohonID) === Number(p.ID); }).map(function (s) {
+      const o = { n: String(s.Nama).trim(), m: String(s.Matrik).trim(), kp: mask ? maskKp_(s.KP) : String(s.KP).trim(),
+        yr: s.Tahun, fac: s.Fakulti, course: String(s.Kursus).trim(), cgpa: Number(s.CGPA) };
+      if (!mask) { o.email = String(s.Emel || '').trim(); o.tel = String(s.Telefon || '').trim(); }
+      return o;
     });
+    return {
+      id: Number(p.ID), biz: p.Perniagaan, type: p.Jenis, ssm: p.SSM, kind: p.JenisPerniagaan, plan: p.PautanPelan,
+      slot: x.a ? (x.a.Slot || '') : '', order: x.a ? Number(x.a.Susunan) || 0 : 0, final: x.a ? (x.a.StatusAkhir || '') : '', st: st,
+      mohon: fmtDate_(p.TarikhMohon), sumber: p.Sumber || '', sesi: where[Number(p.ID)] || []
+    };
+  });
 }
 
 function evalRow_(r) {
   const lv = [], mk = [];
   for (let i = 1; i <= NCRIT; i++) { lv.push(Number(r['T' + i]) || 0); mk.push(Number(r['M' + i]) || 0); }
   return {
-    pid: Number(r.PemohonID), email: r.Emel, lv: lv, mk: mk,
+    pid: Number(r.PemohonID), sesi: Number(r.SesiID) || 0, email: r.Emel, lv: lv, mk: mk,
     els: r.Elemen ? String(r.Elemen).split(',').map(function (x) { return x === '1'; }) : [],
     by: r.DiisiOleh || '', cm: r.Ulasan || '', ok: r.Layak || '', total: Number(r.Jumlah) || 0, status: r.Status || 'Draf',
     notes: [1, 2, 3, 4, 5, 6].map(function (i) { return String(r['Catatan' + i] || ''); })
@@ -390,54 +466,56 @@ function apiBoot(token) {
 
 /* ===================== API: panel ===================== */
 
-function panelData_(u) {
-  const s = sesi_();
-  const mine = {};
-  table_(SH.NILAI).rows.filter(function (r) { return em_(r.Emel) === u.email; })
-    .forEach(function (r) { mine[Number(r.PemohonID)] = evalRow_(r); });
+function panelData_(u, sesi) {
   const aktif = table_(SH.PANEL).rows.filter(function (r) { return em_(r.Peranan) === 'panel' && em_(r.Status) === 'aktif'; });
   u.no = aktif.map(function (r) { return em_(r.Emel); }).indexOf(u.email) + 1;
-  return { me: u, sesi: s, crit: rubrik_(s.versi), chips: chips_(), apps: apps_(true), mine: mine };
+  if (!sesi) return { me: u, sesi: null, crit: [], chips: [], apps: [], mine: {} };
+  const mine = {};
+  table_(SH.NILAI).rows.filter(function (r) { return em_(r.Emel) === u.email && Number(r.SesiID) === sesi.id; })
+    .forEach(function (r) { mine[Number(r.PemohonID)] = evalRow_(r); });
+  return { me: u, sesi: sesi, crit: rubrik_(sesi.versi), chips: chips_(), apps: apps_(true, sesi.id), mine: mine };
 }
 
+/** Panel hanya melihat mesyuarat yang sedang dibuka. */
 function apiPanelData(token) {
-  return panelData_(need_('panel', token));
+  return panelData_(need_('panel', token), sesiAktif_());
 }
 
-/** Admin masuk ke paparan penilaian seorang panel (untuk memberi markah bagi pihak panel itu). */
+/** Admin masuk ke paparan penilaian seorang panel bagi mesyuarat tertentu (untuk memberi markah bagi pihak panel itu). */
 function targetPanel_(emel) {
   const t = roleOf_(emel);
   if (!t || t.role !== 'panel') throw new Error('Panel tidak aktif atau tiada dalam senarai.');
   return t;
 }
 
-function apiAdminEvalData(token, emel) {
+function apiAdminEvalData(token, emel, sesiId) {
   need_('admin', token);
-  return panelData_(targetPanel_(emel));
+  return panelData_(targetPanel_(emel), sesiGet_(sesiId));
 }
 
 function apiSaveEval(token, pid, p, submit) {
-  return saveEval_(need_('panel', token), pid, p, submit, false);
+  const u = need_('panel', token);
+  const s = sesiAktif_();
+  if (!s) throw new Error('Tiada mesyuarat dibuka untuk penilaian.');
+  return saveEval_(u, pid, p, submit, false, s);
 }
 
-function apiSaveEvalAs(token, emel, pid, p, submit) {
+function apiSaveEvalAs(token, emel, pid, p, submit, sesiId) {
   need_('admin', token);
-  return saveEval_(targetPanel_(emel), pid, p, submit, true);
+  return saveEval_(targetPanel_(emel), pid, p, submit, true, sesiGet_(sesiId));
 }
 
-/** Teras simpan penilaian. byAdmin=true: admin bertindak bagi pihak panel (sesi tertutup tidak menghalang, dan direkodkan). */
-function saveEval_(u, pid, p, submit, byAdmin) {
+/** Teras simpan penilaian bagi satu mesyuarat. byAdmin=true: admin bertindak bagi pihak panel (direkodkan). */
+function saveEval_(u, pid, p, submit, byAdmin, s) {
   return withLock_(function () {
-    const s = sesi_();
-    if (s.status !== 'Dibuka' && !byAdmin) throw new Error('Sesi telah ditutup.');
-    const app = apps_(true).filter(function (a) { return a.id === Number(pid); })[0];
-    if (!app) throw new Error('Permohonan tidak sah.');
+    const app = apps_(true, s.id).filter(function (a) { return a.id === Number(pid); })[0];
+    if (!app) throw new Error('Permohonan ini tiada dalam agenda ' + (s.bil ? 'Bil ' + s.bil : s.nama) + '.');
     const crit = rubrik_(s.versi);
     const t = table_(SH.NILAI);
-    const old = t.rows.filter(function (r) { return Number(r.PemohonID) === Number(pid) && em_(r.Emel) === u.email; })[0];
+    const old = t.rows.filter(function (r) { return Number(r.PemohonID) === Number(pid) && Number(r.SesiID) === s.id && em_(r.Emel) === u.email; })[0];
     if (old && sent_(old)) throw new Error('Penilaian ini telah dihantar dan dikunci.' + (byAdmin ? ' Buka semula dahulu.' : ''));
 
-    const row = { PemohonID: Number(pid), Emel: u.email };
+    const row = { PemohonID: Number(pid), SesiID: s.id, Emel: u.email };
     let total = 0;
     crit.forEach(function (c, i) {
       const lv = Math.round(Number(p.lv[i]) || 0);
@@ -458,7 +536,7 @@ function saveEval_(u, pid, p, submit, byAdmin) {
     row.DiisiOleh = byAdmin ? ACTOR_ : '';
     if (old) writeRow_(SH.NILAI, old._row, row); else append_(SH.NILAI, row);
     if (submit) {
-      log_(byAdmin ? 'Admin hantar penilaian bagi panel' : 'Hantar penilaian', app.biz + ' · ' + u.email + ' · ' + total + '/100');
+      log_(byAdmin ? 'Admin hantar penilaian bagi panel' : 'Hantar penilaian', (s.bil ? 'Bil ' + s.bil + ' · ' : '') + app.biz + ' · ' + u.email + ' · ' + total + '/100');
       writeKeputusan_();
     } else if (byAdmin && !old) {
       log_('Admin mula menilai bagi panel', app.biz + ' · ' + u.email);
@@ -468,7 +546,8 @@ function saveEval_(u, pid, p, submit, byAdmin) {
 }
 
 /* ===================== Butiran laporan jawatankuasa ===================== */
-const CFG_KEYS = ['bil', 'pelantik', 'tujuan', 'suratFail', 'suratTarikh', 'tamat', 'tempat', 'tarikhSidang', 'masaSidang', 'pengerusi', 'jawatan', 'cgpaMin', 'syor'];
+/* Butiran pelantikan (pelantik, surat, pengerusi...) sama bagi semua mesyuarat. "syor" disimpan bagi setiap mesyuarat (syor:ID). */
+const CFG_KEYS = ['pelantik', 'tujuan', 'suratFail', 'suratTarikh', 'tamat', 'pengerusi', 'jawatan', 'cgpaMin'];
 
 function cfgSheet_() {
   let sh = ss_().getSheetByName(SH.TETAPAN);
@@ -488,18 +567,22 @@ function cfg_() {
   return o;
 }
 
-function apiSaveTetapan(token, obj) {
+function cfgSet_(key, val) {
+  const sh = cfgSheet_();
+  const v = sh.getDataRange().getValues();
+  for (let i = 1; i < v.length; i++) {
+    if (String(v[i][0]) === key) { sh.getRange(i + 1, 2).setValue(val); return; }
+  }
+  sh.appendRow([key, val]);
+}
+
+function apiSaveTetapan(token, obj, sesiId) {
   need_('admin', token);
   return withLock_(function () {
-    const sh = cfgSheet_();
-    const v = sh.getDataRange().getValues();
-    const rowOf = {};
-    v.forEach(function (r, i) { if (i > 0 && r[0]) rowOf[String(r[0])] = i + 1; });
     CFG_KEYS.forEach(function (k) {
-      if (obj[k] === undefined) return;
-      const val = String(obj[k]).slice(0, 4000);
-      if (rowOf[k]) sh.getRange(rowOf[k], 2).setValue(val); else sh.appendRow([k, val]);
+      if (obj[k] !== undefined) cfgSet_(k, String(obj[k]).slice(0, 4000));
     });
+    if (obj.syor !== undefined && sesiId) cfgSet_('syor:' + Number(sesiId), String(obj.syor).slice(0, 4000));
     log_('Simpan butiran laporan', 'Laporan jawatankuasa');
     return cfg_();
   });
@@ -507,18 +590,27 @@ function apiSaveTetapan(token, obj) {
 
 /* ===================== API: admin ===================== */
 
-function apiAdminData(token) {
+function apiAdminData(token, sesiId) {
   need_('admin', token);
-  const s = sesi_();
-  const nilai = table_(SH.NILAI).rows.map(evalRow_);
+  const list = sesiList_();
+  if (!list.length) throw new Error('Tiada mesyuarat. Jalankan menu Penilaian > Sediakan sheet.');
+  const s = sesiId ? sesiGet_(sesiId) : (sesiAktif_() || list[list.length - 1]);
+  const all = table_(SH.NILAI).rows;
+  const allApps = apps_(false);
+  const nilai = all.filter(function (r) { return Number(r.SesiID) === s.id; }).map(evalRow_);
   return {
-    sesi: s, crit: rubrik_(s.versi), chips: chips_(), apps: apps_(false),
+    sesi: s, sesiList: list.map(function (x) {
+      x.n = allApps.filter(function (a) { return a.sesi.indexOf(x.id) >= 0; }).length;
+      return x;
+    }),
+    crit: rubrik_(s.versi), chips: chips_(), apps: apps_(false, s.id), allApps: allApps,
+    belum: allApps.filter(function (a) { return !a.sesi.length; }).length,
     panels: table_(SH.PANEL).rows.map(function (r) {
       const sah = r.KodHash && Number(r.KodTamat) > Date.now();
       return { nama: r.Nama, emel: r.Emel, peranan: r.Peranan, status: r.Status,
         kod: sah ? Utilities.formatDate(new Date(Number(r.KodTamat)), 'Asia/Kuala_Lumpur', 'dd/MM HH:mm') : '' };
     }),
-    nilai: nilai, keputusan: computeKeputusan_(), cfg: cfg_(),
+    nilai: nilai, keputusan: computeKeputusan_(s.id), cfg: cfg_(),
     versi: table_(SH.RUBRIK).rows.map(function (r) { return Number(r.Versi); }).reduce(function (a, b) { return Math.max(a, b); }, 1),
     log: table_(SH.LOG).rows.slice(-200).reverse().map(function (r) {
       return { masa: r.Masa instanceof Date ? Utilities.formatDate(r.Masa, 'Asia/Kuala_Lumpur', 'dd/MM/yyyy HH:mm') : String(r.Masa), user: r.Pengguna, act: r.Tindakan, det: r.Butiran };
@@ -526,35 +618,42 @@ function apiAdminData(token) {
   };
 }
 
+/** Simpan maklumat pemohon (tanpa menukar mesyuarat). */
 function apiSaveApp(token, a) {
   need_('admin', token);
   return withLock_(function () {
-    const t = table_(SH.PEMOHON);
-    let id = Number(a.id);
-    let rowNo = 0, order = 99, final = '';
-    if (id) {
-      const o = t.rows.filter(function (r) { return Number(r.ID) === id; })[0];
-      if (!o) throw new Error('Permohonan tidak dijumpai.');
-      rowNo = o._row; order = o.Susunan; final = o.StatusAkhir;
-    } else {
-      id = t.rows.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
-      order = t.rows.length + 1;
-    }
-    if (!a.biz || (a.type !== 'Student Mall' && a.type !== 'SUB')) throw new Error('Nama perniagaan dan jenis diperlukan.');
-    const row = { ID: id, Perniagaan: a.biz, Jenis: a.type, SSM: a.ssm || '', JenisPerniagaan: a.kind || '', PautanPelan: a.plan || '',
-      Slot: a.slot || '', Susunan: order, StatusAkhir: final };
-    if (rowNo) writeRow_(SH.PEMOHON, rowNo, row); else append_(SH.PEMOHON, row);
-
-    const ps = table_(SH.PELAJAR);
-    ps.rows.filter(function (r) { return Number(r.PemohonID) === id; }).map(function (r) { return r._row; })
-      .sort(function (x, y) { return y - x; }).forEach(function (n) { ps.sh.deleteRow(n); });
-    (a.st || []).forEach(function (s) {
-      if (!s.n) return;
-      append_(SH.PELAJAR, { PemohonID: id, Nama: s.n, Matrik: s.m, KP: s.kp, Tahun: s.yr, Fakulti: s.fac, Kursus: s.course, CGPA: s.cgpa });
-    });
+    const id = saveApplication_(a, 'Admin');
     log_('Simpan permohonan', a.biz);
     return id;
   });
+}
+
+/** Teras simpan permohonan (digunakan oleh admin dan borang pelajar). */
+function saveApplication_(a, sumber) {
+  const t = table_(SH.PEMOHON);
+  let id = Number(a.id) || 0;
+  let old = null;
+  if (id) {
+    old = t.rows.filter(function (r) { return Number(r.ID) === id; })[0];
+    if (!old) throw new Error('Permohonan tidak dijumpai.');
+  } else {
+    id = t.rows.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
+  }
+  if (!a.biz || (a.type !== 'Student Mall' && a.type !== 'SUB')) throw new Error('Nama perniagaan dan jenis diperlukan.');
+  const row = Object.assign({}, old || {}, {
+    ID: id, Perniagaan: a.biz, Jenis: a.type, SSM: a.ssm || '', JenisPerniagaan: a.kind || '', PautanPelan: a.plan || ''
+  });
+  if (!old) { row.TarikhMohon = new Date(); row.Sumber = sumber; }
+  if (old) writeRow_(SH.PEMOHON, old._row, row); else append_(SH.PEMOHON, row);
+
+  const ps = table_(SH.PELAJAR);
+  ps.rows.filter(function (r) { return Number(r.PemohonID) === id; }).map(function (r) { return r._row; })
+    .sort(function (x, y) { return y - x; }).forEach(function (n) { ps.sh.deleteRow(n); });
+  (a.st || []).forEach(function (s) {
+    if (!s.n) return;
+    append_(SH.PELAJAR, { PemohonID: id, Nama: s.n, Matrik: s.m, KP: s.kp, Tahun: s.yr, Fakulti: s.fac, Kursus: s.course, CGPA: s.cgpa, Emel: s.email || '', Telefon: s.tel || '' });
+  });
+  return id;
 }
 
 function apiSavePanel(token, p) {
@@ -573,36 +672,113 @@ function apiSavePanel(token, p) {
   });
 }
 
+/* ---------- Mesyuarat (sesi) ---------- */
+
+/** Cipta (id=0) atau kemas kini mesyuarat. Mesyuarat baharu bermula sebagai Draf dan tidak kelihatan kepada panel. */
 function apiSaveSesi(token, s) {
   need_('admin', token);
   return withLock_(function () {
-    const cur = sesi_();
-    const row = { Nama: s.nama, Tarikh: s.tarikh, Masa: s.masa, RubrikVersi: cur.versi, Status: cur.status };
-    writeRow_(SH.SESI, cur._row, row);
-    (s.order || []).forEach(function (o, i) {
-      const r = table_(SH.PEMOHON).rows.filter(function (x) { return Number(x.ID) === Number(o.id); })[0];
-      if (r) { r.Susunan = i + 1; r.Slot = o.slot || ''; writeRow_(SH.PEMOHON, r._row, r); }
-    });
-    log_('Kemas kini sesi', row.Nama);
-    return true;
+    if (!String(s.nama || '').trim()) throw new Error('Nama mesyuarat diperlukan.');
+    const list = sesiList_();
+    const id = Number(s.id) || 0;
+    if (!id) {
+      const nid = list.reduce(function (m, x) { return Math.max(m, x.id); }, 0) + 1;
+      const rub = table_(SH.RUBRIK).rows.reduce(function (m, r) { return Math.max(m, Number(r.Versi)); }, 1);
+      append_(SH.SESI, { Nama: s.nama, Tarikh: s.tarikh || '', Masa: s.masa || '', RubrikVersi: (list.length ? list[list.length - 1].versi : rub), Status: 'Draf', ID: nid, Tempat: s.tempat || '', Bil: s.bil || '' });
+      log_('Cipta mesyuarat', s.nama);
+      return nid;
+    }
+    const cur = sesiGet_(id);
+    cur.nama = s.nama; cur.tarikh = s.tarikh || ''; cur.masa = s.masa || ''; cur.tempat = s.tempat || ''; cur.bil = s.bil || '';
+    sesiWrite_(cur);
+    log_('Kemas kini mesyuarat', s.nama);
+    return id;
   });
 }
 
-function apiSetSesiStatus(token, status) {
+/** Buka atau tutup mesyuarat. Hanya satu mesyuarat boleh dibuka pada satu masa. */
+function apiSetSesiStatus(token, id, status) {
   need_('admin', token);
   if (status !== 'Dibuka' && status !== 'Ditutup') throw new Error('Status tidak sah.');
   return withLock_(function () {
-    const cur = sesi_();
-    writeRow_(SH.SESI, cur._row, { Nama: cur.nama, Tarikh: cur.tarikh, Masa: cur.masa, RubrikVersi: cur.versi, Status: status });
-    log_(status === 'Ditutup' ? 'Tutup sesi' : 'Buka sesi', cur.nama);
+    const cur = sesiGet_(id);
+    if (status === 'Dibuka') {
+      const other = sesiList_().filter(function (x) { return x.status === 'Dibuka' && x.id !== cur.id; })[0];
+      if (other) throw new Error('Tutup "' + other.nama + '" dahulu. Hanya satu mesyuarat boleh dibuka kepada panel.');
+    }
+    cur.status = status;
+    sesiWrite_(cur);
+    log_(status === 'Ditutup' ? 'Tutup mesyuarat' : 'Buka mesyuarat', cur.nama);
+    writeKeputusan_();
     return true;
   });
 }
 
-function apiReopen(token, pid, emel) {
+/* ---------- Agenda: urusetia menentukan pemohon masuk mesyuarat mana ---------- */
+
+function hasEval_(sesiId, pid) {
+  return table_(SH.NILAI).rows.some(function (r) { return Number(r.SesiID) === Number(sesiId) && Number(r.PemohonID) === Number(pid); });
+}
+
+/** Masukkan beberapa pemohon ke agenda sesuatu mesyuarat. Pemohon boleh berada dalam lebih daripada satu mesyuarat. */
+function apiAssign(token, sesiId, pids) {
   need_('admin', token);
   return withLock_(function () {
-    const r = table_(SH.NILAI).rows.filter(function (x) { return Number(x.PemohonID) === Number(pid) && em_(x.Emel) === em_(emel); })[0];
+    const s = sesiGet_(sesiId);
+    if (s.status === 'Ditutup') throw new Error('Mesyuarat telah ditutup. Buka semula dahulu untuk menambah pemohon.');
+    const ag = table_(SH.AGENDA).rows;
+    let n = ag.filter(function (a) { return Number(a.SesiID) === s.id; }).reduce(function (m, a) { return Math.max(m, Number(a.Susunan) || 0); }, 0);
+    let added = 0;
+    const pem = table_(SH.PEMOHON).rows;
+    (pids || []).forEach(function (pid) {
+      pid = Number(pid);
+      if (!pem.some(function (p) { return Number(p.ID) === pid; })) return;
+      if (ag.some(function (a) { return Number(a.SesiID) === s.id && Number(a.PemohonID) === pid; })) return;
+      append_(SH.AGENDA, { SesiID: s.id, PemohonID: pid, Susunan: ++n, Slot: '', StatusAkhir: '' });
+      added++;
+    });
+    log_('Masukkan ke mesyuarat', s.nama + ' · ' + added + ' pemohon');
+    writeKeputusan_();
+    return added;
+  });
+}
+
+/** Keluarkan pemohon daripada agenda (hanya jika belum ada penilaian bagi mesyuarat itu). */
+function apiUnassign(token, sesiId, pid) {
+  need_('admin', token);
+  return withLock_(function () {
+    const s = sesiGet_(sesiId);
+    if (s.status === 'Ditutup') throw new Error('Mesyuarat telah ditutup.');
+    if (hasEval_(s.id, pid)) throw new Error('Pemohon ini sudah mempunyai penilaian dalam mesyuarat ini, jadi tidak boleh dikeluarkan.');
+    const t = table_(SH.AGENDA);
+    const r = t.rows.filter(function (a) { return Number(a.SesiID) === s.id && Number(a.PemohonID) === Number(pid); })[0];
+    if (!r) return false;
+    t.sh.deleteRow(r._row);
+    log_('Keluarkan daripada mesyuarat', s.nama + ' · pemohon ' + pid);
+    writeKeputusan_();
+    return true;
+  });
+}
+
+/** Susunan pembentangan dan slot masa bagi sesuatu mesyuarat. */
+function apiSaveAgenda(token, sesiId, order) {
+  need_('admin', token);
+  return withLock_(function () {
+    const s = sesiGet_(sesiId);
+    const t = table_(SH.AGENDA);
+    (order || []).forEach(function (o, i) {
+      const r = t.rows.filter(function (a) { return Number(a.SesiID) === s.id && Number(a.PemohonID) === Number(o.id); })[0];
+      if (r) { r.Susunan = i + 1; r.Slot = o.slot || ''; writeRow_(SH.AGENDA, r._row, r); }
+    });
+    log_('Kemas kini agenda', s.nama);
+    return true;
+  });
+}
+
+function apiReopen(token, pid, emel, sesiId) {
+  need_('admin', token);
+  return withLock_(function () {
+    const r = table_(SH.NILAI).rows.filter(function (x) { return Number(x.PemohonID) === Number(pid) && Number(x.SesiID) === Number(sesiId) && em_(x.Emel) === em_(emel); })[0];
     if (!r) throw new Error('Penilaian tidak dijumpai.');
     r.Status = 'Draf';
     writeRow_(SH.NILAI, r._row, r);
@@ -612,21 +788,22 @@ function apiReopen(token, pid, emel) {
   });
 }
 
-function apiSetStatusAkhir(token, pid, status) {
+function apiSetStatusAkhir(token, sesiId, pid, status) {
   need_('admin', token);
   return withLock_(function () {
-    const r = table_(SH.PEMOHON).rows.filter(function (x) { return Number(x.ID) === Number(pid); })[0];
-    if (!r) throw new Error('Permohonan tidak dijumpai.');
+    const s = sesiGet_(sesiId);
+    const r = table_(SH.AGENDA).rows.filter(function (a) { return Number(a.SesiID) === s.id && Number(a.PemohonID) === Number(pid); })[0];
+    if (!r) throw new Error('Pemohon tiada dalam agenda mesyuarat ini.');
     r.StatusAkhir = status === 'Belum' ? '' : status;
-    writeRow_(SH.PEMOHON, r._row, r);
-    log_('Status akhir', r.Perniagaan + ' → ' + status);
+    writeRow_(SH.AGENDA, r._row, r);
+    log_('Status akhir', (s.bil ? 'Bil ' + s.bil + ' · ' : '') + 'pemohon ' + pid + ' → ' + status);
     writeKeputusan_();
     return true;
   });
 }
 
-/** Simpan rubrik sebagai versi baharu. useNow=true menukar sesi kepada versi baharu (hanya jika tiada penilaian dihantar). */
-function apiSaveRubrik(token, crit, chips, useNow) {
+/** Simpan rubrik sebagai versi baharu. useNow=true menukar mesyuarat terpilih kepada versi baharu (hanya jika tiada penilaian dihantar dalam mesyuarat itu). */
+function apiSaveRubrik(token, crit, chips, useNow, sesiId) {
   need_('admin', token);
   return withLock_(function () {
     let total = 0;
@@ -646,13 +823,13 @@ function apiSaveRubrik(token, crit, chips, useNow) {
     (chips || []).filter(String).forEach(function (t) { append_(SH.CHIP, { Teks: t }); });
     let used = false;
     if (useNow) {
-      const submitted = table_(SH.NILAI).rows.some(function (r) { return r.Status === 'Dihantar'; });
-      if (submitted) throw new Error('Versi ' + ver + ' disimpan, tetapi sesi tidak boleh bertukar versi kerana sudah ada penilaian dihantar.');
-      const cur = sesi_();
-      writeRow_(SH.SESI, cur._row, { Nama: cur.nama, Tarikh: cur.tarikh, Masa: cur.masa, RubrikVersi: ver, Status: cur.status });
+      const cur = sesiGet_(sesiId);
+      const submitted = table_(SH.NILAI).rows.some(function (r) { return Number(r.SesiID) === cur.id && sent_(r); });
+      if (submitted) throw new Error('Versi ' + ver + ' disimpan, tetapi mesyuarat ini tidak boleh bertukar versi kerana sudah ada penilaian dihantar.');
+      cur.versi = ver; sesiWrite_(cur);
       used = true;
     }
-    log_('Simpan rubrik', 'Versi ' + ver + (used ? ' (digunakan oleh sesi)' : ''));
+    log_('Simpan rubrik', 'Versi ' + ver + (used ? ' (digunakan oleh mesyuarat terpilih)' : ''));
     return ver;
   });
 }
@@ -671,12 +848,12 @@ function apiRefreshKeputusan(token) {
 
 /* ===================== Keputusan ===================== */
 
-function computeKeputusan_() {
+function computeKeputusan_(sesiId) {
   const panels = table_(SH.PANEL).rows.filter(function (r) { return em_(r.Peranan) === 'panel' && em_(r.Status) === 'aktif'; });
-  const all = table_(SH.NILAI).rows;
+  const all = table_(SH.NILAI).rows.filter(function (r) { return Number(r.SesiID) === Number(sesiId); });
   const nilai = all.filter(sent_);
   const draf = all.filter(function (r) { return !sent_(r); });
-  const apps = apps_(false);
+  const apps = apps_(false, sesiId);
   const rows = apps.map(function (a) {
     const pick = function (list, p) {
       return list.filter(function (r) { return Number(r.PemohonID) === a.id && em_(r.Emel) === em_(p.Emel); })[0];
@@ -706,14 +883,19 @@ function computeKeputusan_() {
   };
 }
 
+/** Tab Keputusan dalam Sheet: semua mesyuarat disusun berturutan, dengan lajur Mesyuarat. */
 function writeKeputusan_() {
-  const k = computeKeputusan_();
   const sh = ss_().getSheetByName(SH.KEPUTUSAN) || ss_().insertSheet(SH.KEPUTUSAN);
   sh.clear();
-  const head = ['Rank', 'Perniagaan', 'Jenis'].concat(k.panels.map(function (p) { return p.nama; }), ['Dinilai', 'Draf (belum hantar)', 'Purata (/100)', 'Layak (Ya)', 'Status Akhir']);
-  const body = k.rows.map(function (r) {
-    return [r.rank || '', r.biz, r.type].concat(r.sc.map(function (x) { return x === null ? '' : x; }),
-      [r.n + '/' + k.panels.length, r.nd - 0, r.avg === null ? '' : Math.round(r.avg * 100) / 100, r.layak, r.final || 'Belum']);
+  const panels = table_(SH.PANEL).rows.filter(function (r) { return em_(r.Peranan) === 'panel' && em_(r.Status) === 'aktif'; });
+  const head = ['Mesyuarat', 'Rank', 'Perniagaan', 'Jenis'].concat(panels.map(function (p) { return p.Nama; }), ['Dinilai', 'Draf (belum hantar)', 'Purata (/100)', 'Layak (Ya)', 'Status Akhir']);
+  const body = [];
+  sesiList_().forEach(function (s) {
+    const k = computeKeputusan_(s.id);
+    k.rows.forEach(function (r) {
+      body.push([s.bil ? 'Bil ' + s.bil : s.nama, r.rank || '', r.biz, r.type].concat(r.sc.map(function (x) { return x === null ? '' : x; }),
+        [r.n + '/' + k.panels.length, r.nd - 0, r.avg === null ? '' : Math.round(r.avg * 100) / 100, r.layak, r.final || 'Belum']));
+    });
   });
   sh.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold').setBackground('#8a2d3b').setFontColor('#ffffff').setWrap(true);
   if (body.length) sh.getRange(2, 1, body.length, head.length).setValues(body);
@@ -724,6 +906,100 @@ function refreshKeputusan() {
   writeKeputusan_();
   SpreadsheetApp.getActive().toast('Tab Keputusan dikemas kini.');
 }
+
+/* ===================== Borang permohonan pelajar (awam, tanpa log masuk) ===================== */
+
+function cleanStr_(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max || 200); }
+
+function planFolder_() {
+  const it = DriveApp.getFoldersByName(FOLDER_PELAN);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER_PELAN);
+}
+
+/**
+ * Pelajar mengisi maklumat dan memuat naik (atau memaut) pelan perniagaan. Rekod disimpan dengan Sumber = Pelajar dan belum dimasukkan
+ * ke mana-mana mesyuarat; urusetia menentukan mesyuarat dalam tab Permohonan.
+ */
+function apiSubmitApplication(p) {
+  migrate_();
+  p = p || {};
+  if (cleanStr_(p.website, 50)) throw new Error('Permohonan tidak sah.');                 // honeypot untuk bot
+  const type = p.type;
+  if (type !== 'Student Mall' && type !== 'SUB') throw new Error('Pilih jenis permohonan: Student Mall atau SUB.');
+  const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.kind, 160), ssm = cleanStr_(p.ssm, 80);
+  if (biz.length < 2) throw new Error('Masukkan nama perniagaan.');
+  if (ssm.length < 5) throw new Error('Masukkan No. SSM / pendaftaran perniagaan.');
+  if (kind.length < 3) throw new Error('Nyatakan jenis perniagaan.');
+  const sts = (p.st || []).slice(0, 4);
+  if (!sts.length) throw new Error('Masukkan sekurang-kurangnya seorang pelajar.');
+  const students = sts.map(function (x, i) {
+    const k = 'Pelajar ' + (i + 1) + ': ';
+    const n = cleanStr_(x.n, 120).toUpperCase(), m = cleanStr_(x.m, 20).toUpperCase().replace(/\s+/g, '');
+    const kpd = String(x.kp || '').replace(/\D/g, '');
+    const yr = Math.round(Number(x.yr)), cg = Number(x.cgpa);
+    const email = cleanStr_(x.email, 120).toLowerCase(), tel = String(x.tel || '').replace(/[^\d+]/g, '');
+    if (n.length < 3) throw new Error(k + 'masukkan nama penuh.');
+    if (!/^[A-Z0-9]{7,12}$/.test(m)) throw new Error(k + 'No. Matrik tidak sah.');
+    if (kpd.length !== 12) throw new Error(k + 'No. Kad Pengenalan mesti 12 digit.');
+    if (!(yr >= 1 && yr <= 6)) throw new Error(k + 'tahun pengajian mesti 1 hingga 6.');
+    if (cleanStr_(x.fac, 40).length < 2) throw new Error(k + 'masukkan fakulti.');
+    if (cleanStr_(x.course, 200).length < 3) throw new Error(k + 'masukkan kursus.');
+    if (!(cg >= 0 && cg <= 4)) throw new Error(k + 'CGPA mesti antara 0.00 dan 4.00.');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error(k + 'e-mel tidak sah.');
+    if (tel.length < 9 || tel.length > 14) throw new Error(k + 'no. telefon tidak sah.');
+    return { n: n, m: m, kp: kpd.slice(0, 6) + '-' + kpd.slice(6, 8) + '-' + kpd.slice(8), yr: yr, fac: cleanStr_(x.fac, 40).toUpperCase(),
+      course: cleanStr_(x.course, 200).toUpperCase(), cgpa: Math.round(cg * 100) / 100, email: email, tel: tel };
+  });
+  let planUrl = cleanStr_(p.planUrl, 500);
+  if (planUrl && !/^https:\/\/[^\s]+$/i.test(planUrl)) throw new Error('Pautan pelan perniagaan mesti bermula dengan https://');
+  const hasFile = !!(p.file && p.file.b64);
+  if (!planUrl && !hasFile) throw new Error('Muat naik pelan perniagaan (PDF) atau berikan pautan.');
+  if (p.ack !== true) throw new Error('Sila tandakan pengakuan sebelum menghantar.');
+
+  return withLock_(function () {
+    const cache = CacheService.getScriptCache();
+    const cnt = Number(cache.get('subm') || 0);
+    if (cnt >= SUBMIT_MAX_PER_HOUR) throw new Error('Terlalu banyak permohonan dihantar buat masa ini. Cuba lagi sebentar lagi.');
+    cache.put('subm', String(cnt + 1), 3600);
+
+    // elak permohonan berganda: matrik pelajar pertama + nama perniagaan yang sama
+    const pem = table_(SH.PEMOHON).rows, stu = table_(SH.PELAJAR).rows;
+    const dup = pem.filter(function (r) {
+      return em_(r.Perniagaan) === em_(biz) && stu.some(function (x) { return Number(x.PemohonID) === Number(r.ID) && String(x.Matrik).trim().toUpperCase() === students[0].m; });
+    })[0];
+    if (dup) throw new Error('Permohonan ini telah direkodkan (rujukan ' + ref_(dup.ID) + '). Tiada keperluan menghantar semula.');
+
+    if (hasFile) {
+      let bytes;
+      try { bytes = Utilities.base64Decode(String(p.file.b64)); } catch (e) { throw new Error('Fail tidak dapat dibaca. Cuba lagi.'); }
+      if (bytes.length > MAX_PLAN_MB * 1024 * 1024) throw new Error('Saiz fail melebihi ' + MAX_PLAN_MB + ' MB.');
+      if (!(bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46)) throw new Error('Fail mesti dalam format PDF.');
+      const nextId = pem.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
+      const fname = ref_(nextId) + '_' + biz.replace(/[^A-Za-z0-9]+/g, '_').slice(0, 40) + '.pdf';
+      const f = planFolder_().createFile(Utilities.newBlob(bytes, 'application/pdf', fname));
+      f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      planUrl = f.getUrl();
+    }
+
+    ACTOR_ = students[0].email;
+    const id = saveApplication_({ id: 0, biz: biz.toUpperCase(), type: type, ssm: ssm, kind: kind, plan: planUrl, st: students }, 'Pelajar');
+    log_('Permohonan baharu daripada pelajar', ref_(id) + ' · ' + biz + ' · ' + students[0].m);
+    const ref = ref_(id);
+    try {
+      MailApp.sendEmail({ to: students[0].email, name: 'UTMXCITE', subject: 'Permohonan ' + type + ' diterima (rujukan ' + ref + ')',
+        body: 'Salam ' + students[0].n + ',\n\nPermohonan ' + type + ' bagi ' + biz + ' telah diterima dan direkodkan.\n\nNo. rujukan: ' + ref +
+          '\n\nUrusetia UTMXCITE akan menentukan mesyuarat penilaian dan memaklumkan anda. Simpan no. rujukan ini untuk semakan.' });
+    } catch (e) { }
+    try {
+      MailApp.sendEmail({ to: ADMIN_EMAIL, name: 'UTMPreneur Penilaian', subject: 'Permohonan baharu: ' + biz + ' (' + ref + ')',
+        body: 'Permohonan ' + type + ' baharu telah diterima.\n\n' + biz + '\nPelajar: ' + students.map(function (x) { return x.n + ' (' + x.m + ')'; }).join(', ') +
+          '\nRujukan: ' + ref + '\n\nMasukkan ke mesyuarat melalui tab Permohonan dalam sistem penilaian.' });
+    } catch (e) { }
+    return { ok: true, ref: ref, id: id };
+  });
+}
+
+function ref_(id) { return 'PM-' + ('0000' + Number(id)).slice(-4); }
 
 /* ===================== Penyediaan sheet dan data awal ===================== */
 /* Menu Penilaian > Sediakan sheet. Selamat dijalankan semula: sheet yang sudah ada isi tidak ditimpa. */
@@ -743,7 +1019,7 @@ function setupSheets() {
   book.getSheetByName(SH.PEMOHON).getRange('D:D').setNumberFormat('@');
 
   seedIfEmpty_(SH.PANEL, seedPanel_());
-  seedIfEmpty_(SH.SESI, [['Penilaian Student Mall & SUB', '21 Oktober 2026 (Rabu)', '9.00 pagi', 1, 'Dibuka']]);
+  seedIfEmpty_(SH.SESI, [['Mesyuarat JPPPDKP Bil 1/2026', '21 Oktober 2026 (Rabu)', '9.00 pagi', 1, 'Dibuka', 1, '', '01/2026']]);
   seedIfEmpty_(SH.RUBRIK, seedRubrik_());
   seedIfEmpty_(SH.CHIP, [['Pelan kewangan kurang realistik'], ['Idea inovatif'], ['Strategi pemasaran jelas'],
     ['Objektif tidak boleh diukur'], ['Analisis pesaing lemah'], ['Pembentangan yakin']]);
@@ -751,6 +1027,7 @@ function setupSheets() {
   seedIfEmpty_(SH.PEMOHON, s.pemohon);
   seedIfEmpty_(SH.PELAJAR, s.pelajar);
 
+  migrate_();   // bina Agenda mesyuarat pertama daripada pemohon sedia ada
   const def = book.getSheetByName('Sheet1');
   if (def && def.getLastRow() === 0 && book.getSheets().length > 1) book.deleteSheet(def);
   writeKeputusan_();

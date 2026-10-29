@@ -6,7 +6,7 @@ Web app Google Apps Script dengan rekod disimpan dalam Google Sheets.
 
 | Fail | Isi |
 |---|---|
-| `Code.gs` | Pelayan: pengesahan peranan, API panel dan admin, pengiraan keputusan, serta penyediaan sheet dan data awal |
+| `Code.gs` | Pelayan: pengesahan peranan, API panel dan admin, mesyuarat dan agenda, borang pelajar, pengiraan keputusan, serta penyediaan sheet dan data awal |
 | `Index.html` | Antara muka lengkap (tema maroon dan emas, CSS dan JavaScript dalam satu fail) |
 
 ## Pemasangan
@@ -58,13 +58,34 @@ Admin boleh memuat turun laporan PDF A4 dengan **logo UTM dan UTMXCITE pada kepa
 | Laporan lengkap | Ringkasan diikuti halaman terperinci semua pemohon dalam satu fail |
 
 **Laporan Jawatankuasa (JPPPDKP)** mengikut templat rasmi `draf_laporan.docx`: 1 Tujuan, 2 Pelantikan Jawatankuasa (surat, keanggotaan), 3 Pemerhatian (sidang, bilangan permohonan, **Jadual 1** markah dan ranking), **4 Analisis**, 5 Syor, dan tandatangan setiap ahli.
-Perkara 4 dijana automatik daripada data sistem (catatan panel tidak dimasukkan supaya laporan ringkas): **4.1** kelayakan asas (CGPA minimum, pelan perniagaan, SSM; Jadual 2), **4.2** kaedah penilaian dan rubrik (Jadual 3), **4.3** analisis markah dan kriteria paling kukuh/lemah (Jadual 4), **4.4** kesepakatan panel tentang kelayakan (Jadual 5). Perkara 5 memaparkan **Jadual 6: Syor Jawatankuasa** (Bil, Nama Pemohon, Syor: Diluluskan / Tidak diluluskan / Belum diputuskan) berdasarkan **Status akhir** dalam tab Keputusan. Pengerusi lalai ialah PM. Dr. Syed Norris Hikmi Syed Abdullah (`CHAIR_DEFAULT` dalam `Index.html`), ditanda "Pengerusi" dalam tab Panel dan dikecualikan daripada senarai Ahli; boleh ditukar dalam borang. **Syor tambahan (5.2)** boleh lebih daripada satu: tambah atau buang baris dalam borang, dicetak sebagai (i), (ii), (iii). Pelantik jawatankuasa (para 2.1) lalai ialah Timbalan Naib Canselor Hal Ehwal Pelajar dan Alumni dan boleh ditukar dalam borang. Butiran seperti bil laporan, fail rujukan surat, tarikh, tempat, pengerusi, jawatan dan CGPA minimum diisi dalam borang tab Laporan dan disimpan dalam sheet `Tetapan`.
+Perkara 4 dijana automatik daripada data sistem (catatan panel tidak dimasukkan supaya laporan ringkas): **4.1** kelayakan asas (CGPA minimum, pelan perniagaan, SSM; Jadual 2), **4.2** kaedah penilaian dan rubrik (Jadual 3), **4.3** analisis markah dan kriteria paling kukuh/lemah (Jadual 4), **4.4** kesepakatan panel tentang kelayakan (Jadual 5). Perkara 5 memaparkan **Jadual 6: Syor Jawatankuasa** (Bil, Nama Pemohon, Syor: Diluluskan / Tidak diluluskan / Belum diputuskan) berdasarkan **Status akhir** dalam tab Keputusan. Pengerusi lalai ialah PM. Dr. Syed Norris Hikmi Syed Abdullah (`CHAIR_DEFAULT` dalam `Index.html`), ditanda "Pengerusi" dalam tab Panel dan dikecualikan daripada senarai Ahli; boleh ditukar dalam borang. **Syor tambahan (5.2)** boleh lebih daripada satu: tambah atau buang baris dalam borang, dicetak sebagai (i), (ii), (iii). Pelantik jawatankuasa (para 2.1) lalai ialah Timbalan Naib Canselor Hal Ehwal Pelajar dan Alumni dan boleh ditukar dalam borang. Bil laporan, tarikh, masa dan tempat bersidang diambil daripada rekod mesyuarat (tab Mesyuarat). Butiran pelantikan (surat, pengerusi, jawatan, CGPA minimum) sama bagi semua mesyuarat dan disimpan dalam sheet `Tetapan`; syor tambahan disimpan bagi setiap mesyuarat.
 
 **Panel dalam laporan:** semua format hanya memaparkan panel yang telah memberi markah (penilaian dihantar), dinomborkan semula P1, P2, ... tanpa jurang. Dalam laporan jawatankuasa, ahli dan ruang tandatangan mengikut panel itu, manakala Pengerusi sentiasa disenaraikan walaupun tidak memberi markah.
 
 Pilihan: tapis jenis (Student Mall / SUB) dan pilih satu pemohon. Kaki halaman memaparkan tarikh jana, nama admin dan "Halaman x / y". Hanya penilaian yang dihantar dikira. Jana laporan direkodkan dalam `Log`.
 
 PDF dijana dalam pelayar menggunakan jsPDF 2.5.1 dan jspdf-autotable 3.8.2 yang dimuat daripada cdnjs, jadi sambungan internet diperlukan. Jika muat turun disekat oleh pelayar, gunakan **Buka dalam tab baharu** kemudian simpan.
+
+## Permohonan dan mesyuarat berbilang
+
+Semua maklumat disimpan. Pemohon tidak terikat kepada satu mesyuarat; urusetia menentukan mesyuarat mana yang menilai setiap pemohon.
+
+**1. Pelajar memohon** melalui borang awam (tiada log masuk): pautan web app dengan `?page=mohon` (cth. `https://script.google.com/macros/s/.../exec?page=mohon`), atau pautan "Isi borang permohonan" pada skrin log masuk.
+- Pelajar mengisi jenis permohonan (Student Mall / SUB), maklumat perniagaan, maklumat pelajar (sehingga 4 bagi SUB: nama, matrik, No. KP, tahun, fakulti, kursus, CGPA, e-mel, telefon) dan memuat naik pelan perniagaan (PDF, maksimum 8 MB) atau memberi pautan https.
+- Rekod disimpan dengan Sumber = Pelajar, dan **belum masuk mana-mana mesyuarat**. Pelajar menerima no. rujukan (PM-0007) melalui skrin dan e-mel; admin menerima e-mel pemberitahuan.
+- Pelan yang dimuat naik disimpan dalam folder Drive "Pelan Perniagaan UTMXCITE" milik pemilik skrip, dengan akses "sesiapa yang mempunyai pautan boleh melihat" supaya panel boleh membukanya.
+- Perlindungan: pengesahan di pelayan bagi setiap medan, semakan permohonan berganda (matrik + nama perniagaan), had 60 penghantaran sejam, medan perangkap bot, dan pengesahan fail PDF. Identiti pelajar tidak disahkan, jadi urusetia menyemak sebelum memasukkan ke mesyuarat.
+
+**2. Urusetia menentukan mesyuarat** (tab Permohonan): tapis "Belum dijadualkan", tanda satu atau lebih pemohon, pilih mesyuarat dan tekan **Masukkan ke mesyuarat**. Pemohon yang sudah dinilai dalam Bil 1 (contohnya "Belum diputuskan" atau tidak lulus) boleh dibawa semula ke Bil 2: penilaian Bil 1 kekal sebagai sejarah dan Bil 2 bermula dengan penilaian kosong.
+
+**3. Mesyuarat** (tab Mesyuarat): cipta mesyuarat baharu (bermula sebagai Draf, tidak kelihatan kepada panel), tetapkan bil laporan, tarikh, masa dan tempat, susun agenda dan slot masa.
+- **Hanya satu mesyuarat dibuka kepada panel pada satu masa.** Tutup Bil 1 dahulu sebelum membuka Bil 2. Selepas ditutup, Bil 1 terkunci dan dianggap selesai.
+- Panel hanya nampak pemohon dalam agenda mesyuarat yang sedang dibuka. Jika tiada mesyuarat dibuka, panel melihat mesej menunggu.
+- Penilaian, markah purata, ranking, status akhir dan syor tambahan disimpan **bagi setiap mesyuarat**. Pemilih "Mesyuarat" di menu sisi menukar paparan Dashboard, Keputusan, Rubrik dan Laporan.
+- Pemohon yang sudah dinilai dalam sesuatu mesyuarat tidak boleh dikeluarkan daripada agendanya.
+- Tab Keputusan dalam Sheet menyatukan semua mesyuarat dengan lajur "Mesyuarat".
+
+**Naik taraf daripada versi satu mesyuarat:** jalankan menu **Penilaian > Sediakan sheet** sekali. Sheet Agenda dicipta, mesyuarat sedia ada menjadi Bil 1, semua pemohon sedia ada dimasukkan ke agenda Bil 1, dan penilaian lama dipautkan kepada Bil 1. Tiada data hilang. Google akan meminta kebenaran baharu (Drive, untuk muat naik pelan) selepas Deploy versi baharu.
 
 ## Peranan dan akses
 

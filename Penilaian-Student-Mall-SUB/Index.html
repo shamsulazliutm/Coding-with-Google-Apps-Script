@@ -238,6 +238,27 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .paper .tot td{background:#f6eeee;font-weight:700}
 .paper .sign{display:flex;gap:40px;margin-top:22px}.paper .sign div{flex:1;border-top:1px solid #999;padding-top:4px;color:#555;font-size:11.5px;margin-top:34px}
 @media (max-width:860px){.rp{grid-template-columns:1fr}}
+.apply{max-width:820px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px))}
+.apply .head h2{font-size:24px;color:var(--maroon)}
+.apsec{margin-bottom:14px;padding:18px 20px}
+.apsec h3{display:flex;align-items:center;gap:10px;font-size:17px;margin:0 0 12px}
+.apn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#8a2d3b;color:#fff;font-size:13px;font-weight:700}
+.aptype{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:12px}
+.aptype label.opt{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--surface);margin:0}
+.aptype label.opt:has(input:checked){border-color:var(--maroon);background:var(--maroon-soft)}
+.aptype label.opt b{display:block}.aptype label.opt small{color:var(--muted);font-size:12.5px}
+.apst{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;background:var(--bg)}
+.apsth{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.apdrop{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1.5px dashed var(--line);border-radius:10px;padding:14px;position:relative}
+.apack{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}.apack input{margin-top:4px;width:18px;height:18px}
+.apmsg{min-height:1.3em;margin:12px 0 0;color:var(--bad);font-weight:600;font-size:14px}
+.apdone{text-align:center;padding:34px 24px}
+.apok{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.apref{display:inline-block;font-size:30px;font-weight:700;letter-spacing:.12em;color:var(--maroon);border:2px solid var(--gold);border-radius:10px;padding:8px 22px;font-variant-numeric:tabular-nums}
+.sesisel{display:grid;gap:4px;padding:6px 8px 12px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.sesisel select{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:inherit;font-size:14px;text-transform:none;letter-spacing:0;font-weight:600}
+nav.side .n{white-space:nowrap}
+.asgn select{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 </style>
 </head>
 <body>
@@ -254,7 +275,7 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 /* Klien: semua data datang daripada pelayan (Code.gs). Tapisan akses dibuat di pelayan. */
 const $ = s => document.querySelector(s), app = $('#app');
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const PUBLIC = { apiRequestOtp: 1, apiVerifyOtp: 1, apiLogin: 1 };
+const PUBLIC = { apiRequestOtp: 1, apiVerifyOtp: 1, apiLogin: 1, apiSubmitApplication: 1 };
 let TOKEN = '';
 try { TOKEN = localStorage.getItem('utm_tok') || ''; } catch (e) { try { TOKEN = sessionStorage.getItem('utm_tok') || ''; } catch (e2) { } }
 function setTok(t) { TOKEN = t || ''; [() => localStorage, () => sessionStorage].forEach(f => { try { t ? f().setItem('utm_tok', t) : f().removeItem('utm_tok'); } catch (e) { } }); }
@@ -291,7 +312,9 @@ function showLogin(msg, em) {
    <input id="l_c" inputmode="numeric" maxlength="9" autocomplete="one-time-code" placeholder="Masukkan kod 6 digit">
    <div class="lgbtns"><button class="btn-solid" id="l_send">Hantar / Hantar Semula Kod</button><button class="btn-solid" id="l_ok">Sahkan dan Log Masuk</button></div>
    <p class="lgmsg" id="l_msg" role="status" aria-live="polite"></p>
-   <p class="lgsmall">Tiada akaun Google atau Gmail diperlukan. Ada kod 8 digit daripada admin? Kosongkan e-mel dan masukkan kod itu pada ruang Kod OTP.</p></div>`;
+   <p class="lgsmall">Tiada akaun Google atau Gmail diperlukan. Ada kod 8 digit daripada admin? Kosongkan e-mel dan masukkan kod itu pada ruang Kod OTP.</p>
+   <p class="lgsmall" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px;font-style:normal">Pelajar yang mahu memohon lot? <button class="elsum" id="l_apply" style="color:var(--maroon);font-weight:700;font-style:normal">Isi borang permohonan</button></p></div>`;
+  $('#l_apply').onclick = () => showApply();
   const E = $('#l_e'), C = $('#l_c'), S = $('#l_send'), O = $('#l_ok'), M = $('#l_msg');
   const say = (t, bad) => { M.textContent = t; M.style.color = bad ? 'var(--bad)' : 'var(--ok)'; };
   const cooldown = () => { let left = 60; S.disabled = true; clearInterval(cdTimer); cdTimer = setInterval(() => { if (!S.isConnected) return clearInterval(cdTimer); left--; if (left <= 0) { clearInterval(cdTimer); S.disabled = false; S.textContent = 'Hantar / Hantar Semula Kod'; } else S.textContent = 'Hantar semula (' + left + 's)'; }, 1000); S.textContent = 'Hantar semula (60s)'; };
@@ -318,8 +341,13 @@ function showLogin(msg, em) {
 }
 $('#out').onclick = async () => { try { await rpc('apiLogout'); } catch (e) { } setTok(''); codes = null; showLogin(); };
 
+/* Halaman pertama tanpa log masuk: borang pelajar jika pautan mengandungi ?page=mohon, selain itu skrin log masuk. */
+function gotoEntry() {
+  try { if (google.script.url && google.script.url.getLocation) { google.script.url.getLocation(loc => { (loc && loc.parameter && loc.parameter.page === 'mohon') ? showApply() : showLogin(); }); return; } } catch (e) { }
+  showLogin();
+}
 async function start() {
-  if (!TOKEN) return showLogin();
+  if (!TOKEN) return gotoEntry();
   try {
     B = await rpc('apiBoot');
     if (B.me.role === 'none') { setTok(''); return showLogin('Sesi tamat atau akaun tidak aktif. Sila log masuk semula.'); }
@@ -330,19 +358,108 @@ async function start() {
   } catch (e) { app.innerHTML = `<div class="err"><h2>Ralat</h2><p>${esc(e.message)}</p></div>`; }
 }
 
+/* ===================== BORANG PERMOHONAN PELAJAR (awam) ===================== */
+let APP = null;
+const FAK = ['FKE', 'FKA', 'FKM', 'FKT', 'FC', 'FS', 'FM', 'FAB', 'FP', 'FSSH', 'FEST'];
+const newStudent = () => ({ n: '', m: '', kp: '', yr: '', fac: '', course: '', cgpa: '', email: '', tel: '' });
+const MAXPLAN = 8 * 1024 * 1024;
+
+function applyCollect() {
+  const A = APP;
+  document.querySelectorAll('[data-f]').forEach(i => A[i.dataset.f] = i.type === 'checkbox' ? i.checked : i.value);
+  document.querySelectorAll('[data-s]').forEach(i => A.st[+i.dataset.s][i.dataset.k] = i.value);
+  const t = document.querySelector('[name=ap_type]:checked'); if (t) A.type = t.value;
+  const m = document.querySelector('[name=ap_mode]:checked'); if (m) A.mode = m.value;
+}
+function showApply() {
+  clearInterval(cdTimer); $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Borang permohonan Student Mall & SUB';
+  if (!APP) APP = { type: 'Student Mall', biz: '', ssm: '', kind: '', st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' };
+  const A = APP, sub = A.type === 'SUB';
+  const stu = (s, i) => `<div class="apst"><div class="apsth"><b>Pelajar ${i + 1}</b>${A.st.length > 1 ? `<button class="btn-ghost" data-rm="${i}" type="button">Buang</button>` : ''}</div>
+    <div class="f">
+     <label class="wide">Nama penuh (seperti dalam kad pengenalan)<input data-s="${i}" data-k="n" value="${esc(s.n)}" autocomplete="name"></label>
+     <label>No. Matrik<input data-s="${i}" data-k="m" value="${esc(s.m)}" placeholder="cth. A24KE0000" autocapitalize="characters"></label>
+     <label>No. Kad Pengenalan<input data-s="${i}" data-k="kp" value="${esc(s.kp)}" inputmode="numeric" placeholder="cth. 030101-01-0001"></label>
+     <label>Tahun pengajian<select data-s="${i}" data-k="yr"><option value="">Pilih</option>${[1, 2, 3, 4, 5, 6].map(y => `<option ${String(s.yr) === String(y) ? 'selected' : ''}>${y}</option>`).join('')}</select></label>
+     <label>Fakulti<input data-s="${i}" data-k="fac" value="${esc(s.fac)}" list="apfak" placeholder="cth. FKE"></label>
+     <label class="wide">Kursus<input data-s="${i}" data-k="course" value="${esc(s.course)}" placeholder="cth. Sarjana Muda Kejuruteraan Elektrik"></label>
+     <label>CGPA terkini<input data-s="${i}" data-k="cgpa" value="${esc(s.cgpa)}" inputmode="decimal" placeholder="cth. 3.25"></label>
+     <label>No. telefon<input data-s="${i}" data-k="tel" value="${esc(s.tel)}" inputmode="tel" placeholder="cth. 0123456789" autocomplete="tel"></label>
+     <label class="wide">E-mel (untuk pengesahan permohonan)<input data-s="${i}" data-k="email" type="email" value="${esc(s.email)}" autocomplete="email" placeholder="nama@graduate.utm.my"></label></div></div>`;
+  app.innerHTML = `<div class="apply"><datalist id="apfak">${FAK.map(f => `<option value="${f}">`).join('')}</datalist>
+   <div class="head" style="margin-bottom:10px"><div><h2>Permohonan Student Mall &amp; SUB</h2><p>Isi maklumat di bawah. Urusetia UTMXCITE akan menentukan mesyuarat penilaian dan memaklumkan anda melalui e-mel.</p></div><button class="btn-ghost" id="ap_back" type="button">Log masuk panel / admin</button></div>
+   <form id="apf" novalidate>
+   <div class="card apsec"><h3><span class="apn">1</span> Jenis permohonan</h3><div class="aptype">
+     <label class="opt"><input type="radio" name="ap_type" value="Student Mall" ${!sub ? 'checked' : ''}><span><b>Student Mall</b><small>Permohonan sewaan lot di Student Mall. Seorang pelajar.</small></span></label>
+     <label class="opt"><input type="radio" name="ap_type" value="SUB" ${sub ? 'checked' : ''}><span><b>SUB</b><small>Permohonan lot di SUB. Boleh dikemukakan secara berpasukan (sehingga 4 pelajar).</small></span></label></div></div>
+   <div class="card apsec"><h3><span class="apn">2</span> Maklumat perniagaan</h3><div class="f">
+     <label class="wide">Nama perniagaan / syarikat<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
+     <label>No. SSM / pendaftaran<input data-f="ssm" value="${esc(A.ssm)}" placeholder="cth. 202503331550"></label>
+     <label>Jenis perniagaan<input data-f="kind" value="${esc(A.kind)}" placeholder="cth. Kedai gunting rambut"></label></div></div>
+   <div class="card apsec"><h3><span class="apn">3</span> Maklumat pelajar</h3>${A.st.map(stu).join('')}
+     ${A.st.length < 4 ? `<button class="btn-line" id="ap_add" type="button" style="margin-top:6px">+ Tambah pelajar</button>` : ''}</div>
+   <div class="card apsec"><h3><span class="apn">4</span> Pelan perniagaan</h3>
+     <div class="aptype"><label class="opt"><input type="radio" name="ap_mode" value="file" ${A.mode === 'file' ? 'checked' : ''}><span><b>Muat naik fail PDF</b><small>Maksimum 8 MB.</small></span></label>
+     <label class="opt"><input type="radio" name="ap_mode" value="link" ${A.mode === 'link' ? 'checked' : ''}><span><b>Beri pautan</b><small>Pautan https, contohnya Google Drive (tetapkan "sesiapa yang mempunyai pautan").</small></span></label></div>
+     ${A.mode === 'file' ? `<div class="apdrop"><label class="btn-line" for="ap_file" style="display:inline-block;cursor:pointer">Pilih fail PDF</label><input type="file" id="ap_file" accept="application/pdf,.pdf" style="position:absolute;left:-9999px"><span id="ap_fn" class="note">${A.file ? esc(A.file.name) + ' (' + (A.file.size / 1048576).toFixed(1) + ' MB)' : 'Belum dipilih'}</span></div>` :
+       `<div class="f"><label class="wide">Pautan pelan perniagaan<input data-f="planUrl" type="url" value="${esc(A.planUrl)}" placeholder="https://drive.google.com/..."></label></div>`}</div>
+   <div class="card apsec"><label class="apack"><input type="checkbox" data-f="ack" ${A.ack ? 'checked' : ''}> <span>Saya mengesahkan bahawa semua maklumat di atas adalah benar dan lengkap, serta bersetuju maklumat ini digunakan oleh UTMXCITE untuk penilaian permohonan.</span></label>
+     <input data-f="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+     <div class="foot"><button class="btn-solid" id="ap_go" type="submit" style="padding:14px 26px;font-size:16px">Hantar permohonan</button></div>
+     <p class="apmsg" id="ap_msg" role="alert"></p></div></form></div>`;
+  $('#ap_back').onclick = () => { applyCollect(); showLogin(); };
+  document.querySelectorAll('[name=ap_type]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
+  document.querySelectorAll('[name=ap_mode]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
+  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { applyCollect(); A.st.splice(+b.dataset.rm, 1); showApply(); });
+  const ad = $('#ap_add'); if (ad) ad.onclick = () => { applyCollect(); A.st.push(newStudent()); showApply(); };
+  const fi = $('#ap_file'); if (fi) fi.onchange = () => {
+    const f = fi.files[0]; if (!f) return;
+    if (f.size > MAXPLAN) { A.file = null; $('#ap_fn').textContent = 'Fail terlalu besar (maksimum 8 MB).'; return; }
+    if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { A.file = null; $('#ap_fn').textContent = 'Fail mesti PDF.'; return; }
+    const rd = new FileReader(); rd.onload = () => { A.file = { name: f.name, size: f.size, b64: String(rd.result).split(',')[1] || '' }; $('#ap_fn').textContent = f.name + ' (' + (f.size / 1048576).toFixed(1) + ' MB)'; };
+    rd.readAsDataURL(f);
+  };
+  $('#apf').onsubmit = async ev => {
+    ev.preventDefault(); applyCollect();
+    const msg = $('#ap_msg'), b = $('#ap_go'); msg.textContent = '';
+    const pl = { type: A.type, biz: A.biz, ssm: A.ssm, kind: A.kind, ack: !!A.ack, website: A.website, st: A.st.map(s => ({ ...s, cgpa: String(s.cgpa).replace(',', '.') })), planUrl: A.mode === 'link' ? A.planUrl : '', file: A.mode === 'file' && A.file ? { name: A.file.name, b64: A.file.b64 } : null };
+    b.disabled = true; b.textContent = 'Menghantar…';
+    try { const r = await rpc('apiSubmitApplication', pl); const em = A.st[0].email; APP = null; showApplyDone(r, em); }
+    catch (e) { msg.textContent = e.message; b.disabled = false; b.textContent = 'Hantar permohonan'; msg.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  };
+  window.scrollTo(0, 0);
+}
+function showApplyDone(r, email) {
+  app.innerHTML = `<div class="apply"><div class="card apdone"><div class="apok" aria-hidden="true">✓</div><h2>Permohonan diterima</h2>
+   <p>Terima kasih. Permohonan anda telah direkodkan. Salinan pengesahan dihantar ke <b>${esc(email)}</b>.</p>
+   <p class="note" style="margin:14px 0 4px">No. rujukan</p><div class="apref">${esc(r.ref)}</div>
+   <p class="note">Simpan no. rujukan ini. Urusetia UTMXCITE akan menentukan mesyuarat penilaian dan memaklumkan anda.</p>
+   <div class="foot" style="justify-content:center"><button class="btn-line" id="ap_more">Hantar permohonan lain</button><button class="btn-ghost" id="ap_home">Tutup</button></div></div></div>`;
+  $('#ap_more').onclick = () => showApply(); $('#ap_home').onclick = () => showLogin();
+  window.scrollTo(0, 0);
+}
+
 /* ===================== ADMIN ===================== */
-let tab = 'dashboard', openRow = null, filt = { q: '', t: '' }, openKey = null;
-const TABS = [['dashboard', 'Dashboard'], ['permohonan', 'Permohonan'], ['sesi', 'Sesi penilaian'], ['panel', 'Panel'], ['rubrik', 'Rubrik'], ['keputusan', 'Keputusan'], ['laporan', 'Laporan'], ['log', 'Log']];
+let tab = 'dashboard', openRow = null, filt = { q: '', t: '', m: '' }, openKey = null, SEL = 0, sesiNew = false;
+const SELP = new Set();   // pemohon yang ditanda untuk dimasukkan ke mesyuarat
+const TABS = [['dashboard', 'Dashboard'], ['permohonan', 'Permohonan'], ['sesi', 'Mesyuarat'], ['panel', 'Panel'], ['rubrik', 'Rubrik'], ['keputusan', 'Keputusan'], ['laporan', 'Laporan'], ['log', 'Log']];
+const refNo = id => 'PM-' + String(id).padStart(4, '0');
+const sLbl = s => s.bil ? 'Bil ' + s.bil : s.nama;
+const sPill = st => `<span class="pill ${st === 'Dibuka' ? 'p-ok' : st === 'Draf' ? 'p-warn' : 'p-mute'}">${esc(st)}</span>`;
 
 setInterval(async () => {
   if (B && B.me && B.me.role === 'admin' && !ACT_AS && !document.hidden && (tab === 'dashboard' || tab === 'keputusan') && !(document.activeElement && document.activeElement.tagName === 'SELECT')) {
-    try { const d = await rpc('apiAdminData'); if (!ACT_AS) { D = d; adminShell(); } } catch (e) { }
+    try { const d = await rpc('apiAdminData', SEL || 0); if (!ACT_AS) { D = d; adminShell(); } } catch (e) { }
   }
 }, 30000);
-async function loadAdmin() { D = await rpc('apiAdminData'); CFG = null; SY = null; adminShell(); }
+async function loadAdmin(sel) { D = await rpc('apiAdminData', sel !== undefined ? sel : (SEL || 0)); SEL = D.sesi.id; CFG = null; SY = null; adminShell(); }
 function adminShell() {
-  app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? `<span class="n">${D.apps.length}</span>` : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
-  app.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t !== 'panel') codes = null; tab = b.dataset.t; openRow = null; openKey = null; adminShell(); });
+  const badge = D.belum ? `<span class="n" title="Permohonan belum dijadualkan">${D.belum} baharu</span>` : `<span class="n">${D.allApps.length}</span>`;
+  app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">
+   <label class="sesisel">Mesyuarat<select id="sesisel" aria-label="Pilih mesyuarat">${D.sesiList.map(s => `<option value="${s.id}" ${s.id === SEL ? 'selected' : ''}>${esc(sLbl(s))} · ${esc(s.status)}</option>`).join('')}</select></label>
+   ${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? badge : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
+  app.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t !== 'panel') codes = null; tab = b.dataset.t; openRow = null; openKey = null; sesiNew = false; adminShell(); });
+  $('#sesisel').onchange = async e => { try { SEL = +e.target.value; openKey = null; await loadAdmin(SEL); } catch (x) { toast(x.message, true); } };
   ({ dashboard, permohonan, sesi, panel, rubrik, keputusan, laporan, log })[tab]();
 }
 async function act(fn, msg, ...a) {
@@ -350,6 +467,7 @@ async function act(fn, msg, ...a) {
 }
 const head = (t, en, right = '') => `<div class="head"><div><h2>${t}</h2><p>${en}</p></div><div>${right}</div></div>`;
 const sent = (pid, email) => D.nilai.find(n => n.pid === pid && n.email.toLowerCase() === email.toLowerCase());
+const sesiHead = () => `<span class="pill p-info" style="font-size:13px">${esc(sLbl(D.sesi))}</span> ${sPill(D.sesi.status)}`;
 
 function dashboard() {
   const P = D.keputusan.panels, total = P.length * D.apps.length;
@@ -357,70 +475,115 @@ function dashboard() {
   const done = per.reduce((a, x) => a + x.n, 0);
   const pend = D.keputusan.rows.filter(r => r.n < P.length).map(r => `<tr><td><b>${esc(r.biz)}</b><small>${P.length - r.n} panel belum hantar</small></td><td class="num"><span class="pill ${r.n < P.length / 2 ? 'p-bad' : 'p-warn'}">${r.n}/${P.length}</span></td></tr>`).join('');
   const sm = D.apps.filter(a => a.type === 'Student Mall').length;
-  $('#main').innerHTML = head('Ringkasan', 'Overview · ' + esc(D.sesi.tarikh)) + `
+  $('#main').innerHTML = head('Ringkasan', 'Overview · ' + esc(D.sesi.nama) + ' · ' + esc(D.sesi.tarikh), sesiHead()) + `
+  ${D.belum ? `<div class="lock" style="background:var(--warn-soft);color:var(--warn);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span><b>${D.belum}</b> permohonan baharu belum dijadualkan ke mana-mana mesyuarat.</span><button class="btn-line" id="gobelum" style="padding:6px 12px">Tetapkan mesyuarat</button></div>` : ''}
   <div class="cards">
-   <div class="card stat"><div class="l">Permohonan</div><div class="v">${D.apps.length}</div><div class="s">Student Mall ${sm} · SUB ${D.apps.length - sm}</div></div>
+   <div class="card stat"><div class="l">Permohonan dalam mesyuarat</div><div class="v">${D.apps.length}</div><div class="s">Student Mall ${sm} · SUB ${D.apps.length - sm}</div></div>
    <div class="card stat"><div class="l">Panel aktif</div><div class="v">${P.length}</div><div class="s">Active evaluators</div></div>
    <div class="card stat"><div class="l">Penilaian dihantar</div><div class="v">${done} / ${total}</div><div class="s">Submitted · ${total ? Math.round(done / total * 100) : 0}%</div></div>
-   <div class="card stat"><div class="l">Sesi</div><div class="v" style="font-size:24px;padding:6px 0"><span class="pill ${D.sesi.status === 'Dibuka' ? 'p-ok' : 'p-mute'}" style="font-size:16px">${esc(D.sesi.status)}</span></div><div class="s">${esc(D.sesi.tarikh)} · ${esc(D.sesi.masa)}</div></div></div>
-  <div class="two"><div class="card"><h3>Kemajuan panel <i>Panel progress</i></h3>${per.map(x => `<div class="prog"><span>${esc(short(x.p.nama))}</span><div class="bar"><i style="width:${D.apps.length ? x.n / D.apps.length * 100 : 0}%"></i></div><b class="num">${x.n}/${D.apps.length}</b></div>${x.d ? `<div class="note" style="margin:-4px 0 6px 0">${esc(short(x.p.nama))}: ${x.d} draf belum dihantar</div>` : ''}`).join('')}</div>
+   <div class="card stat"><div class="l">Status mesyuarat</div><div class="v" style="font-size:24px;padding:6px 0">${sPill(D.sesi.status)}</div><div class="s">${esc(D.sesi.tarikh)} · ${esc(D.sesi.masa)}</div></div></div>
+  <div class="two"><div class="card"><h3>Kemajuan panel <i>Panel progress</i></h3>${D.apps.length ? per.map(x => `<div class="prog"><span>${esc(short(x.p.nama))}</span><div class="bar"><i style="width:${D.apps.length ? x.n / D.apps.length * 100 : 0}%"></i></div><b class="num">${x.n}/${D.apps.length}</b></div>${x.d ? `<div class="note" style="margin:-4px 0 6px 0">${esc(short(x.p.nama))}: ${x.d} draf belum dihantar</div>` : ''}`).join('') : '<p class="note">Belum ada permohonan dalam mesyuarat ini. Masukkan melalui tab Permohonan.</p>'}</div>
   <div class="card"><h3>Perlu tindakan <i>Needs action</i></h3>${pend ? `<div class="tw"><table><tbody>${pend}</tbody></table></div>` : '<p class="note">Semua panel telah menghantar.</p>'}
-   <div class="foot">${D.sesi.status === 'Dibuka' ? '<button class="btn-solid" id="close">Tutup sesi & kunci</button>' : '<button class="btn-line" id="open">Buka semula sesi</button>'}</div></div></div>`;
-  const c = $('#close'); if (c) c.onclick = () => armed(c, 'Sahkan tutup sesi', () => act('apiSetSesiStatus', 'Sesi ditutup', 'Ditutup'));
-  const o = $('#open'); if (o) o.onclick = () => act('apiSetSesiStatus', 'Sesi dibuka', 'Dibuka');
+   <div class="foot">${D.sesi.status === 'Dibuka' ? '<button class="btn-solid" id="close">Tutup mesyuarat & kunci</button>' : '<button class="btn-line" id="open">Buka mesyuarat kepada panel</button>'}</div></div></div>`;
+  const gb = $('#gobelum'); if (gb) gb.onclick = () => { tab = 'permohonan'; filt.m = 'belum'; adminShell(); };
+  const c = $('#close'); if (c) c.onclick = () => armed(c, 'Sahkan tutup mesyuarat', () => act('apiSetSesiStatus', 'Mesyuarat ditutup', D.sesi.id, 'Ditutup'));
+  const o = $('#open'); if (o) o.onclick = () => act('apiSetSesiStatus', 'Mesyuarat dibuka', D.sesi.id, 'Dibuka');
 }
 function armed(btn, label, fn) { if (btn.dataset.arm) return fn(); btn.dataset.arm = 1; btn.textContent = label; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.arm; } }, 4000); }
 
+/* ---------- Permohonan: semua rekod; urusetia menentukan mesyuarat ---------- */
 function permohonan() {
-  const list = D.apps.filter(a => (!filt.t || a.type === filt.t) && (a.biz + a.st.map(s => s.n + s.m).join()).toLowerCase().includes(filt.q.toLowerCase()));
-  $('#main').innerHTML = head('Permohonan', 'Applications', '<button class="btn-solid" id="add">+ Tambah</button>') + `
-  <div class="toolbar"><select id="ft" aria-label="Jenis"><option value="">Semua jenis</option><option ${filt.t === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${filt.t === 'SUB' ? 'selected' : ''}>SUB</option></select><input id="fq" placeholder="Cari nama / matrik / perniagaan" value="${esc(filt.q)}" style="flex:1;min-width:200px"></div>
-  <div class="card tw"><table><thead><tr><th>Bil</th><th>Perniagaan</th><th>Pelajar</th><th>Jenis</th><th class="num">CGPA</th><th>Pelan</th></tr></thead><tbody>
-  ${list.map(a => `<tr class="click" data-i="${a.id}"><td>${a.id}</td><td><b>${esc(a.biz)}</b><small>${esc(a.kind)}</small></td><td>${esc(a.st[0] ? a.st[0].n : '')}${a.st.length > 1 ? `<small>+ ${a.st.length - 1} pelajar lagi</small>` : ''}</td><td>${typePill(a.type)}</td><td class="num">${a.st.map(s => s.cgpa.toFixed(2)).join(' / ')}</td><td>${a.plan ? '📄' : '–'}</td></tr>`).join('')}</tbody></table></div><div id="det"></div>`;
+  const sid = D.sesi.id, byId = Object.fromEntries(D.sesiList.map(s => [s.id, s]));
+  const list = D.allApps.filter(a => (!filt.t || a.type === filt.t) && (a.biz + a.st.map(s => s.n + s.m).join() + refNo(a.id)).toLowerCase().includes(filt.q.toLowerCase())
+    && (!filt.m || (filt.m === 'belum' ? !a.sesi.length : filt.m === 'dalam' ? a.sesi.includes(sid) : !a.sesi.includes(sid))));
+  [...SELP].forEach(id => { if (!D.allApps.some(a => a.id === id)) SELP.delete(id); });
+  const open = D.sesiList.filter(s => s.status !== 'Ditutup');
+  $('#main').innerHTML = head('Permohonan', 'Applications · semua rekod disimpan; urusetia menentukan mesyuarat', '<button class="btn-solid" id="add">+ Tambah</button>') + `
+  <div class="toolbar"><select id="fm" aria-label="Penapis mesyuarat"><option value="">Semua permohonan (${D.allApps.length})</option><option value="belum" ${filt.m === 'belum' ? 'selected' : ''}>Belum dijadualkan (${D.belum})</option><option value="dalam" ${filt.m === 'dalam' ? 'selected' : ''}>Dalam ${esc(sLbl(D.sesi))}</option><option value="luar" ${filt.m === 'luar' ? 'selected' : ''}>Bukan dalam ${esc(sLbl(D.sesi))}</option></select>
+   <select id="ft" aria-label="Jenis"><option value="">Semua jenis</option><option ${filt.t === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${filt.t === 'SUB' ? 'selected' : ''}>SUB</option></select><input id="fq" placeholder="Cari nama / matrik / perniagaan / rujukan" value="${esc(filt.q)}" style="flex:1;min-width:200px"></div>
+  <div class="card asgn" id="asgn" ${SELP.size ? '' : 'hidden'} style="margin-bottom:12px;border-color:var(--gold)"><div class="foot" style="margin:0"><b><span id="nsel">${SELP.size}</span> dipilih</b><span>Masukkan ke:</span>
+   <select id="tosesi" aria-label="Mesyuarat sasaran">${open.map(s => `<option value="${s.id}" ${s.id === sid ? 'selected' : ''}>${esc(sLbl(s))} · ${esc(s.status)}</option>`).join('')}</select>
+   <button class="btn-solid" id="doasgn" ${open.length ? '' : 'disabled'}>Masukkan ke mesyuarat</button><button class="btn-ghost" id="clrsel">Kosongkan</button></div></div>
+  <div class="card tw"><table><thead><tr><th style="width:34px"><input type="checkbox" id="allsel" aria-label="Pilih semua"></th><th>Rujukan</th><th>Perniagaan</th><th>Pelajar</th><th>Jenis</th><th class="num">CGPA</th><th>Mesyuarat</th><th>Pelan</th></tr></thead><tbody>
+  ${list.map(a => `<tr class="click" data-i="${a.id}"><td><input type="checkbox" class="sel" data-i="${a.id}" ${SELP.has(a.id) ? 'checked' : ''} aria-label="Pilih ${esc(a.biz)}"></td><td>${refNo(a.id)}<small>${a.sumber === 'Pelajar' ? 'daripada pelajar' : 'admin'}${a.mohon ? ' · ' + esc(a.mohon) : ''}</small></td><td><b>${esc(a.biz)}</b><small>${esc(a.kind)}</small></td><td>${esc(a.st[0] ? a.st[0].n : '')}${a.st.length > 1 ? `<small>+ ${a.st.length - 1} pelajar lagi</small>` : ''}</td><td>${typePill(a.type)}</td><td class="num">${a.st.map(s => s.cgpa.toFixed(2)).join(' / ')}</td><td>${a.sesi.length ? a.sesi.map(i => `<span class="pill ${i === sid ? 'p-info' : 'p-mute'}" title="${esc(byId[i] ? byId[i].nama : '')}">${esc(byId[i] ? sLbl(byId[i]) : '?')}</span>`).join(' ') : '<span class="pill p-warn">Belum dijadualkan</span>'}</td><td>${a.plan ? `<a href="${esc(a.plan)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Buka pelan">📄</a>` : '–'}</td></tr>`).join('') || '<tr><td colspan="8" class="note">Tiada permohonan sepadan.</td></tr>'}</tbody></table></div><div id="det"></div>`;
+  $('#fm').onchange = e => { filt.m = e.target.value; permohonan(); };
   $('#ft').onchange = e => { filt.t = e.target.value; permohonan(); };
   $('#fq').oninput = e => { filt.q = e.target.value; const p = e.target.selectionStart; permohonan(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); };
+  const upd = () => { $('#asgn').hidden = !SELP.size; $('#nsel').textContent = SELP.size; };
+  app.querySelectorAll('.sel').forEach(c => { c.onclick = e => e.stopPropagation(); c.onchange = () => { c.checked ? SELP.add(+c.dataset.i) : SELP.delete(+c.dataset.i); upd(); }; });
+  $('#allsel').onchange = e => { app.querySelectorAll('.sel').forEach(c => { c.checked = e.target.checked; e.target.checked ? SELP.add(+c.dataset.i) : SELP.delete(+c.dataset.i); }); upd(); };
+  $('#allsel').onclick = e => e.stopPropagation();
+  $('#clrsel').onclick = () => { SELP.clear(); permohonan(); };
+  $('#doasgn').onclick = async () => { const to = +$('#tosesi').value, ids = [...SELP]; try { const n = await rpc('apiAssign', to, ids); SELP.clear(); toast(n + ' pemohon dimasukkan ke mesyuarat'); await loadAdmin(); } catch (e) { toast(e.message, true); } };
   app.querySelectorAll('tr.click').forEach(r => r.onclick = () => { openRow = +r.dataset.i; detail(); });
   $('#add').onclick = () => { openRow = 0; detail(); };
   if (openRow !== null) detail();
 }
 function stRow(s = {}) {
-  return `<tr class="srow"><td><input data-k="n" value="${esc(s.n)}" placeholder="Nama"></td><td><input data-k="m" value="${esc(s.m)}" style="width:100px"></td><td><input data-k="kp" value="${esc(s.kp)}" style="width:130px"></td><td><input data-k="yr" value="${esc(s.yr)}" style="width:44px"></td><td><input data-k="fac" value="${esc(s.fac)}" style="width:60px"></td><td><input data-k="course" value="${esc(s.course)}"></td><td><input data-k="cgpa" value="${esc(s.cgpa)}" style="width:60px"></td></tr>`;
+  return `<tr class="srow"><td><input data-k="n" value="${esc(s.n)}" placeholder="Nama"></td><td><input data-k="m" value="${esc(s.m)}" style="width:100px"></td><td><input data-k="kp" value="${esc(s.kp)}" style="width:130px"></td><td><input data-k="yr" value="${esc(s.yr)}" style="width:44px"></td><td><input data-k="fac" value="${esc(s.fac)}" style="width:60px"></td><td><input data-k="course" value="${esc(s.course)}"></td><td><input data-k="cgpa" value="${esc(s.cgpa)}" style="width:60px"></td><td><input data-k="email" value="${esc(s.email)}" style="width:170px"></td><td><input data-k="tel" value="${esc(s.tel)}" style="width:110px"></td></tr>`;
 }
 function detail() {
-  const a = openRow ? D.apps.find(x => x.id === openRow) : { id: 0, biz: '', type: 'Student Mall', ssm: '', kind: '', plan: '', slot: '', st: [{}] };
-  $('#det').innerHTML = `<div class="card detail"><h3>${a.id ? 'Edit: ' + esc(a.biz) : 'Permohonan baharu'}</h3><div class="f">
+  const a = openRow ? D.allApps.find(x => x.id === openRow) : { id: 0, biz: '', type: 'Student Mall', ssm: '', kind: '', plan: '', sesi: [], st: [{}] };
+  const byId = Object.fromEntries(D.sesiList.map(s => [s.id, s]));
+  $('#det').innerHTML = `<div class="card detail"><h3>${a.id ? esc(refNo(a.id)) + ' · ' + esc(a.biz) : 'Permohonan baharu'} ${a.id ? `<i>${a.sumber === 'Pelajar' ? 'dikemukakan oleh pelajar' : 'dimasukkan oleh admin'}${a.mohon ? ', ' + esc(a.mohon) : ''}</i>` : ''}</h3><div class="f">
   <label>Nama perniagaan<input id="e_biz" value="${esc(a.biz)}"></label>
   <label>Jenis permohonan<select id="e_type"><option ${a.type === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${a.type === 'SUB' ? 'selected' : ''}>SUB</option></select></label>
   <label>No. SSM<input id="e_ssm" value="${esc(a.ssm)}"></label>
   <label>Jenis perniagaan<input id="e_kind" value="${esc(a.kind)}"></label>
-  <label class="wide">Pautan pelan perniagaan<input id="e_plan" value="${esc(a.plan)}"></label>
-  <label>Slot masa (pilihan)<input id="e_slot" value="${esc(a.slot)}" placeholder="cth. 3.00 – 3.20 ptg"></label></div>
-  <h3 style="margin-top:16px">Pelajar <i>Students</i></h3><div class="tw"><table><thead><tr><th>Nama</th><th>Matrik</th><th>No. KP</th><th>Thn</th><th>Fakulti</th><th>Kursus</th><th>CGPA</th></tr></thead><tbody id="strows">${a.st.map(stRow).join('')}</tbody></table></div>
+  <label class="wide">Pautan pelan perniagaan ${a.plan ? `<a href="${esc(a.plan)}" target="_blank" rel="noopener" style="font-weight:400">buka ↗</a>` : ''}<input id="e_plan" value="${esc(a.plan)}"></label></div>
+  ${a.id ? `<h3 style="margin-top:16px">Mesyuarat <i>satu pemohon boleh dibawa ke beberapa mesyuarat</i></h3><div class="chips">${a.sesi.length ? a.sesi.map(i => `<span class="chip">${esc(byId[i] ? sLbl(byId[i]) : '?')} <button class="btn-ghost unas" data-s="${i}" style="padding:0 6px;border:0" aria-label="Keluarkan" title="Keluarkan daripada mesyuarat">✕</button></span>`).join('') : '<span class="pill p-warn">Belum dijadualkan</span>'}
+   ${D.sesiList.filter(s => s.status !== 'Ditutup' && !a.sesi.includes(s.id)).map(s => `<button class="chip as1" data-s="${s.id}" style="border-style:dashed">+ ${esc(sLbl(s))}</button>`).join('')}</div>` : ''}
+  <h3 style="margin-top:16px">Pelajar <i>Students</i></h3><div class="tw"><table><thead><tr><th>Nama</th><th>Matrik</th><th>No. KP</th><th>Thn</th><th>Fakulti</th><th>Kursus</th><th>CGPA</th><th>E-mel</th><th>Telefon</th></tr></thead><tbody id="strows">${a.st.map(stRow).join('')}</tbody></table></div>
   <div class="foot"><button class="btn-ghost" id="addst">+ Tambah pelajar</button><span class="spacer"></span><button class="btn-ghost" id="cancel">Batal</button><button class="btn-solid" id="save">Simpan</button></div></div>`;
   $('#addst').onclick = () => $('#strows').insertAdjacentHTML('beforeend', stRow());
   $('#cancel').onclick = () => { openRow = null; $('#det').innerHTML = ''; };
+  document.querySelectorAll('.as1').forEach(b => b.onclick = async () => { try { await rpc('apiAssign', +b.dataset.s, [a.id]); toast('Dimasukkan ke mesyuarat'); await loadAdmin(); } catch (e) { toast(e.message, true); } });
+  document.querySelectorAll('.unas').forEach(b => b.onclick = async () => { try { await rpc('apiUnassign', +b.dataset.s, a.id); toast('Dikeluarkan daripada mesyuarat'); await loadAdmin(); } catch (e) { toast(e.message, true); } });
   $('#save').onclick = () => {
     const st = [...document.querySelectorAll('.srow')].map(r => { const o = {}; r.querySelectorAll('input').forEach(i => o[i.dataset.k] = i.value.trim()); o.cgpa = parseFloat(o.cgpa) || 0; return o; }).filter(s => s.n);
     openRow = null;
-    act('apiSaveApp', 'Permohonan disimpan', { id: a.id, biz: $('#e_biz').value.trim(), type: $('#e_type').value, ssm: $('#e_ssm').value.trim(), kind: $('#e_kind').value.trim(), plan: $('#e_plan').value.trim(), slot: $('#e_slot').value.trim(), st });
+    act('apiSaveApp', 'Permohonan disimpan', { id: a.id, biz: $('#e_biz').value.trim(), type: $('#e_type').value, ssm: $('#e_ssm').value.trim(), kind: $('#e_kind').value.trim(), plan: $('#e_plan').value.trim(), st });
   };
   $('#det').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+/* ---------- Mesyuarat ---------- */
 function sesi() {
   const S = D.sesi, P = D.panels.filter(p => p.peranan.toLowerCase() === 'panel');
-  $('#main').innerHTML = head('Sesi penilaian', 'Evaluation session', `<span class="pill ${S.status === 'Dibuka' ? 'p-ok' : 'p-mute'}">${esc(S.status)}</span>`) + `
-  <div class="card"><div class="f"><label>Nama sesi<input id="s_n" value="${esc(S.nama)}"></label><label>Tarikh<input id="s_t" value="${esc(S.tarikh)}"></label><label>Masa<input id="s_m" value="${esc(S.masa)}"></label><label>Versi rubrik<input value="Versi ${S.versi}" disabled></label></div>
+  const yr = new Date().getFullYear(), nextN = D.sesiList.length + 1;
+  const F = sesiNew ? { id: 0, nama: 'Mesyuarat JPPPDKP Bil ' + nextN + '/' + yr, bil: String(nextN).padStart(2, '0') + '/' + yr, tarikh: '', masa: '', tempat: '', versi: S.versi, status: 'Draf' } : S;
+  const opened = D.sesiList.find(s => s.status === 'Dibuka');
+  $('#main').innerHTML = head('Mesyuarat', 'Meetings · satu mesyuarat dibuka kepada panel pada satu masa', '<button class="btn-solid" id="newsesi">+ Mesyuarat baharu</button>') + `
+  <div class="card tw" style="margin-bottom:14px"><table><thead><tr><th>Mesyuarat</th><th>Tarikh / Masa</th><th>Tempat</th><th class="num">Pemohon</th><th>Status</th><th></th></tr></thead><tbody>
+  ${D.sesiList.map(s => `<tr ${s.id === S.id && !sesiNew ? 'style="background:var(--maroon-soft)"' : ''}><td><b>${esc(s.nama)}</b>${s.bil ? `<small>Bil ${esc(s.bil)}</small>` : ''}</td><td>${esc(s.tarikh)}<small>${esc(s.masa)}</small></td><td>${esc(s.tempat) || '–'}</td><td class="num">${s.n}</td><td>${sPill(s.status)}</td><td class="num">
+   ${s.id !== S.id || sesiNew ? `<button class="btn-ghost pick" data-s="${s.id}">Pilih</button> ` : ''}${s.status === 'Dibuka' ? `<button class="btn-line cls" data-s="${s.id}">Tutup</button>` : `<button class="btn-line opn" data-s="${s.id}">Buka</button>`}</td></tr>`).join('')}</tbody></table></div>
+  ${opened && !sesiNew ? '' : (sesiNew ? '' : '<p class="note" style="margin:-4px 0 12px">Tiada mesyuarat dibuka. Panel tidak boleh menilai sehingga satu mesyuarat dibuka.</p>')}
+  <div class="card"><h3>${sesiNew ? 'Mesyuarat baharu' : 'Butiran: ' + esc(sLbl(S))} ${sesiNew ? '' : sPill(S.status)}</h3><div class="f">
+   <label>Nama mesyuarat<input id="s_n" value="${esc(F.nama)}"></label><label>Bil laporan (cth. 02/2026)<input id="s_b" value="${esc(F.bil)}"></label>
+   <label>Tarikh<input id="s_t" value="${esc(F.tarikh)}" placeholder="cth. 21 Oktober 2026 (Rabu)"></label><label>Masa<input id="s_m" value="${esc(F.masa)}" placeholder="cth. 9.00 pagi"></label>
+   <label class="wide">Tempat bersidang<input id="s_p" value="${esc(F.tempat)}"></label>${sesiNew ? '' : `<label>Versi rubrik<input value="Versi ${S.versi} (tukar dalam tab Rubrik)" disabled></label>`}</div>
+  ${sesiNew ? `<p class="note">Mesyuarat baharu bermula sebagai <b>Draf</b>: tidak kelihatan kepada panel sehingga anda membukanya. Selepas disimpan, masukkan pemohon melalui tab Permohonan.</p>` : `
   <h3 style="margin-top:18px">Panel <i>diurus dalam tab Panel</i></h3><div class="chips">${P.map(p => `<span class="chip">${esc(p.nama)}${p.status !== 'Aktif' ? ' (tidak aktif)' : ''}</span>`).join('')}</div>
-  <h3 style="margin-top:18px">Calon dan susunan pembentangan <i>slot masa tidak wajib</i></h3>
-  <div class="tw"><table><tbody id="ord">${D.apps.map(a => `<tr data-id="${a.id}"><td style="width:36px" class="ix"></td><td><b>${esc(a.biz)}</b></td><td>${typePill(a.type)}</td><td><input class="slot" placeholder="Slot (pilihan)" value="${esc(a.slot)}" style="width:150px"></td><td class="num"><button class="btn-ghost up" aria-label="Naik">↑</button> <button class="btn-ghost dn" aria-label="Turun">↓</button></td></tr>`).join('')}</tbody></table></div>
-  <div class="foot"><button class="btn-solid" id="sv">Simpan</button><span class="spacer"></span>${S.status === 'Dibuka' ? '<button class="btn-line" id="cl">Tutup sesi & kunci</button>' : '<button class="btn-line" id="op">Buka semula sesi</button>'}</div></div>`;
+  <h3 style="margin-top:18px">Agenda dan susunan pembentangan <i>slot masa tidak wajib</i></h3>
+  ${D.apps.length ? `<div class="tw"><table><tbody id="ord">${D.apps.map(a => `<tr data-id="${a.id}"><td style="width:36px" class="ix"></td><td><b>${esc(a.biz)}</b><small>${esc(refNo(a.id))}</small></td><td>${typePill(a.type)}</td><td><input class="slot" placeholder="Slot (pilihan)" value="${esc(a.slot)}" style="width:150px"></td><td class="num"><button class="btn-ghost up" aria-label="Naik">↑</button> <button class="btn-ghost dn" aria-label="Turun">↓</button> <button class="btn-ghost out" data-id="${a.id}" title="Keluarkan daripada mesyuarat">Keluarkan</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="note">Agenda kosong. Masukkan pemohon melalui tab Permohonan.</p>'}`}
+  <div class="foot"><button class="btn-solid" id="sv">${sesiNew ? 'Cipta mesyuarat' : 'Simpan'}</button>${sesiNew ? '<button class="btn-ghost" id="cancelnew">Batal</button>' : ''}</div></div>`;
   const num = () => document.querySelectorAll('#ord tr').forEach((r, i) => r.querySelector('.ix').textContent = i + 1); num();
   document.querySelectorAll('.up').forEach(b => b.onclick = () => { const r = b.closest('tr'); if (r.previousElementSibling) r.parentNode.insertBefore(r, r.previousElementSibling); num(); });
   document.querySelectorAll('.dn').forEach(b => b.onclick = () => { const r = b.closest('tr'); if (r.nextElementSibling) r.parentNode.insertBefore(r.nextElementSibling, r); num(); });
-  $('#sv').onclick = () => act('apiSaveSesi', 'Sesi disimpan', { nama: $('#s_n').value, tarikh: $('#s_t').value, masa: $('#s_m').value, order: [...document.querySelectorAll('#ord tr')].map(r => ({ id: +r.dataset.id, slot: r.querySelector('.slot').value.trim() })) });
-  const cl = $('#cl'); if (cl) cl.onclick = () => armed(cl, 'Sahkan tutup sesi', () => act('apiSetSesiStatus', 'Sesi ditutup', 'Ditutup'));
-  const op = $('#op'); if (op) op.onclick = () => act('apiSetSesiStatus', 'Sesi dibuka', 'Dibuka');
+  document.querySelectorAll('.out').forEach(b => b.onclick = async () => { try { await rpc('apiUnassign', S.id, +b.dataset.id); toast('Dikeluarkan daripada mesyuarat'); await loadAdmin(); } catch (e) { toast(e.message, true); } });
+  document.querySelectorAll('.pick').forEach(b => b.onclick = () => { sesiNew = false; loadAdmin(+b.dataset.s); });
+  document.querySelectorAll('.opn').forEach(b => b.onclick = () => act('apiSetSesiStatus', 'Mesyuarat dibuka kepada panel', +b.dataset.s, 'Dibuka'));
+  document.querySelectorAll('.cls').forEach(b => b.onclick = () => armed(b, 'Sahkan tutup', () => act('apiSetSesiStatus', 'Mesyuarat ditutup', +b.dataset.s, 'Ditutup')));
+  $('#newsesi').onclick = () => { sesiNew = true; sesi(); };
+  const cn = $('#cancelnew'); if (cn) cn.onclick = () => { sesiNew = false; sesi(); };
+  $('#sv').onclick = async () => {
+    const f = { id: sesiNew ? 0 : S.id, nama: $('#s_n').value.trim(), bil: $('#s_b').value.trim(), tarikh: $('#s_t').value.trim(), masa: $('#s_m').value.trim(), tempat: $('#s_p').value.trim() };
+    try {
+      const id = await rpc('apiSaveSesi', f);
+      if (!sesiNew && document.querySelector('#ord')) await rpc('apiSaveAgenda', S.id, [...document.querySelectorAll('#ord tr')].map(r => ({ id: +r.dataset.id, slot: r.querySelector('.slot').value.trim() })));
+      toast(sesiNew ? 'Mesyuarat dicipta (Draf)' : 'Mesyuarat disimpan'); const was = sesiNew; sesiNew = false; await loadAdmin(was ? id : S.id);
+    } catch (e) { toast(e.message, true); }
+  };
 }
 
 let codes = null;
@@ -435,7 +598,7 @@ function panel() {
   $('#ap').onclick = () => { $('#addp').hidden = false; $('#p_n').focus(); };
   $('#sp').onclick = () => act('apiSavePanel', 'Panel disimpan. Tekan "Jana OTP" untuk memberi kod.', { nama: $('#p_n').value.trim(), emel: $('#p_e').value.trim(), status: 'Aktif' });
   document.querySelectorAll('.tg').forEach(b => b.onclick = () => { const p = D.panels[+b.dataset.i]; act('apiSavePanel', 'Status dikemas kini', { nama: p.nama, emel: p.emel, status: p.status === 'Aktif' ? 'Tidak aktif' : 'Aktif' }); });
-  document.querySelectorAll('.as').forEach(b => b.onclick = () => enterAs(D.panels[+b.dataset.i].emel, 0 + (D.apps[0] ? D.apps[0].id : 0)));
+  document.querySelectorAll('.as').forEach(b => b.onclick = () => enterAs(D.panels[+b.dataset.i].emel, D.apps[0] ? D.apps[0].id : 0));
   document.querySelectorAll('.ic').forEach(b => b.onclick = async () => { const p = D.panels[+b.dataset.i]; try { codes = [await rpc('apiIssueCode', p.emel, mail())]; toast(codes[0].emailed ? 'Kod dihantar ke e-mel' : 'Kod dijana'); await loadAdmin(); } catch (e) { toast(e.message, true); } });
   $('#ia').onclick = async () => { try { codes = await rpc('apiIssueAll', mail()); toast(codes.length + ' kod dijana'); await loadAdmin(); } catch (e) { toast(e.message, true); } };
   const hd = $('#hide'); if (hd) hd.onclick = () => { codes = null; panel(); };
@@ -443,7 +606,7 @@ function panel() {
 }
 
 function rubrik() {
-  $('#main').innerHTML = head('Rubrik', `Versi ${D.sesi.versi} digunakan sesi · versi terkini ${D.versi}`, '<button class="btn-solid" id="nv">Simpan sebagai versi baharu</button>') + `
+  $('#main').innerHTML = head('Rubrik', `Versi ${D.sesi.versi} digunakan oleh ${esc(sLbl(D.sesi))} · versi terkini ${D.versi}`, '<button class="btn-solid" id="nv">Simpan sebagai versi baharu</button>') + `
   <div class="card">${D.crit.map((c, i) => `<div class="rubrow" data-i="${i}"><span class="no">${c.id}</span><div><input class="bm" value="${esc(c.bm)}"><i><input class="en" value="${esc(c.en)}" style="margin-top:4px;width:100%"></i></div><input class="mx" type="number" min="1" value="${c.max}" aria-label="Markah maksimum"><div class="sub"><textarea class="sb" rows="2" style="width:100%">${esc(c.sub)}</textarea><div class="anch"><div><b>Tahap 5</b><textarea class="a5" rows="3" style="width:100%">${esc(c.a5)}</textarea></div><div><b>Tahap 3</b><textarea class="a3" rows="3" style="width:100%">${esc(c.a3)}</textarea></div><div><b>Tahap 1</b><textarea class="a1" rows="3" style="width:100%">${esc(c.a1)}</textarea></div></div>${c.els.length ? `<b style="font-size:12px">Elemen semakan (satu setiap baris)</b><textarea class="el" rows="${c.els.length}" style="width:100%">${esc(c.els.join('\n'))}</textarea>` : ''}</div></div>`).join('')}
   <p class="num" style="font-size:15px;margin:12px 0 0"><b>Jumlah markah maksimum: <span id="rt"></span></b> <span id="rv"></span></p></div>
   <div class="card" style="margin-top:14px"><h3>Cip ulasan pantas <i>satu setiap baris</i></h3><textarea id="chips" rows="6" style="width:100%">${esc(D.chips.join('\n'))}</textarea>
@@ -452,14 +615,14 @@ function rubrik() {
   document.querySelectorAll('.mx').forEach(i => i.oninput = sum);
   $('#nv').onclick = () => {
     const crit = [...document.querySelectorAll('.rubrow')].map(r => ({ id: D.crit[+r.dataset.i].id, bm: r.querySelector('.bm').value, en: r.querySelector('.en').value, max: +r.querySelector('.mx').value, sub: r.querySelector('.sb').value, a5: r.querySelector('.a5').value, a3: r.querySelector('.a3').value, a1: r.querySelector('.a1').value, els: r.querySelector('.el') ? r.querySelector('.el').value.split('\n').map(s => s.trim()).filter(Boolean) : [] }));
-    act('apiSaveRubrik', 'Rubrik disimpan sebagai versi baharu', crit, $('#chips').value.split('\n').map(s => s.trim()).filter(Boolean), $('#use').checked);
+    act('apiSaveRubrik', 'Rubrik disimpan sebagai versi baharu', crit, $('#chips').value.split('\n').map(s => s.trim()).filter(Boolean), $('#use').checked, SEL);
   };
 }
 
 function keputusan() {
   const K = D.keputusan, P = K.panels;
   const anyDraf = K.rows.some(r => r.nd > 0);
-  $('#main').innerHTML = head('Keputusan', 'Results · purata panel /100', '<button class="btn-ghost" id="rl">↻ Muat semula</button> <button class="btn-line" id="rf">Kemas kini tab Sheet</button>') + `
+  $('#main').innerHTML = head('Keputusan', 'Results · ' + esc(D.sesi.nama) + ' · purata panel /100', sesiHead() + ' <button class="btn-ghost" id="rl">↻ Muat semula</button> <button class="btn-line" id="rf">Kemas kini tab Sheet</button>') + `
   <p class="note" id="stamp" style="margin:-8px 0 12px">Dikemas kini ${esc(K.at || '')} · muat semula automatik setiap 30 saat. Hanya penilaian yang telah <b>dihantar</b> (butang "Hantar skor & kunci") dikira. Draf ditunjukkan sahaja.</p>
   <div class="card" style="margin-bottom:14px"><h3>Status panel <i>Panel progress</i></h3><div class="chips">${P.map((p, i) => `<span class="chip" title="${esc(p.nama)}">P${i + 1} ${esc(short(p.nama))}: <b>${p.sent}/${K.total}</b> dihantar${p.draf ? ` · <span style="color:var(--warn)">${p.draf} draf</span>` : ''}</span>`).join('')}</div></div>
   <div class="card tw"><table><thead><tr><th>Rank</th><th>Perniagaan</th><th>Jenis</th>${P.map((p, i) => `<th class="num" title="${esc(p.nama)}">P${i + 1}</th>`).join('')}<th class="num">Dinilai</th><th class="num">Purata</th><th class="num">Layak</th><th>Status akhir</th></tr></thead><tbody>
@@ -467,7 +630,7 @@ function keputusan() {
   <p class="note">P1–P${P.length}: ${P.map((p, i) => `P${i + 1} ${esc(short(p.nama))}`).join(' · ')}. Admin menetapkan status akhir. Klik baris untuk melihat markah dan ulasan setiap panel.${anyDraf ? ' <b>Ada penilaian berstatus draf: minta panel menekan "Hantar skor & kunci".</b>' : ''}</p><div id="kd"></div>`;
   $('#rl').onclick = async () => { const b = $('#rl'); b.disabled = true; b.textContent = 'Memuat…'; await loadAdmin(); toast('Data dimuat semula'); };
   $('#rf').onclick = () => act('apiRefreshKeputusan', 'Tab Keputusan dalam sheet dikemas kini');
-  document.querySelectorAll('.fin').forEach(s => { s.onclick = e => e.stopPropagation(); s.onchange = () => act('apiSetStatusAkhir', 'Status akhir disimpan', +s.dataset.id, s.value); });
+  document.querySelectorAll('.fin').forEach(s => { s.onclick = e => e.stopPropagation(); s.onchange = () => act('apiSetStatusAkhir', 'Status akhir disimpan', SEL, +s.dataset.id, s.value); });
   document.querySelectorAll('tr.click').forEach(r => r.onclick = () => kdetail(+r.dataset.id));
   if (openKey) kdetail(openKey);
 }
@@ -477,7 +640,7 @@ function kdetail(id) {
   ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return `<tr><td>${esc(short(p.nama))}</td>${n ? n.mk.map(m => `<td class="num">${m}</td>`).join('') : D.crit.map(() => '<td class="num">–</td>').join('')}<td class="num"><b>${n ? n.total : '–'}</b></td><td>${n ? esc(n.ok) : ''}</td><td>${n ? esc(n.cm) : ''}${n && n.status !== 'Dihantar' ? ' <span class="pill p-warn">draf, belum dihantar</span>' : ''}</td><td class="num">${n && n.status === 'Dihantar' ? `<button class="btn-ghost ro" data-e="${esc(p.emel)}">Buka semula</button> ` : ''}<button class="btn-line asp" data-e="${esc(p.emel)}" style="padding:6px 10px">${n ? 'Lihat / sunting' : 'Isi markah'}</button>${n && n.by ? ' <span class="pill p-info" title="Diisi oleh admin">admin</span>' : ''}</td></tr>`; }).join('')}</tbody></table></div>
   ${D.keputusan.panels.map(p => { const n = sent(id, p.emel); const l = n ? n.notes.map((t, i) => t ? `<li><b>${esc(short(p.nama))} · ${esc(D.crit[i].bm)}:</b> ${esc(t)}</li>` : '').join('') : ''; return l; }).join('') ? `<h3 style="margin-top:14px">Catatan setiap kriteria <i>Notes</i></h3><ul class="notes-list">${D.keputusan.panels.map(p => { const n = sent(id, p.emel); return n ? n.notes.map((t, i) => t ? `<li><b>${esc(short(p.nama))} · ${esc(D.crit[i].bm)}:</b> ${esc(t)}</li>` : '').join('') : ''; }).join('')}</ul>` : ''}</div>`;
   document.querySelectorAll('.asp').forEach(b => b.onclick = () => enterAs(b.dataset.e, id));
-  document.querySelectorAll('.ro').forEach(b => b.onclick = () => armed(b, 'Sahkan', () => act('apiReopen', 'Penilaian dibuka semula', id, b.dataset.e)));
+  document.querySelectorAll('.ro').forEach(b => b.onclick = () => armed(b, 'Sahkan', () => act('apiReopen', 'Penilaian dibuka semula', id, b.dataset.e, SEL)));
 }
 
 function log() {
@@ -531,7 +694,7 @@ function buildPdf() {
     const d = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     centerHeads(d);
     renderBlocksPdf(d, jkBlocks());
-    decorate(d, { title: 'LAPORAN JAWATANKUASA JPPPDKP UTM', sub: 'Universiti Teknologi Malaysia | UTMXCITE | Bil ' + jkCfg().bil });
+    decorate(d, { title: 'LAPORAN JAWATANKUASA JPPPDKP UTM', sub: 'Universiti Teknologi Malaysia | UTMXCITE | Bil ' + (D.sesi.bil || 'xx') });
     return d;
   }
   const { rows, P, ranked } = rpData();
@@ -580,7 +743,7 @@ function summaryPages(doc, rows, P) {
   doc.text('Ringkasan Keputusan Penilaian' + (RP.jenis ? ' - ' + RP.jenis : ''), m, y); y += 3;
   const done = rows.filter(r => r.avg != null).length;
   doc.autoTable({ ...TBL, startY: y, theme: 'plain', styles: { fontSize: 9, cellPadding: 1 }, body: [
-    ['Sesi', S.nama, 'Tarikh / Masa', S.tarikh + ' / ' + S.masa],
+    ['Mesyuarat', S.nama, 'Tarikh / Masa', S.tarikh + ' / ' + S.masa],
     ['Bilangan permohonan', rows.length + (RP.jenis ? ' (' + RP.jenis + ')' : ' (Student Mall ' + rows.filter(r => r.a.type !== 'SUB').length + ', SUB ' + rows.filter(r => r.a.type === 'SUB').length + ')'), 'Bilangan panel', String(P.length)],
     ['Telah dinilai (min. seorang panel)', done + ' / ' + rows.length, 'Rubrik', 'Versi ' + S.versi + ' (markah penuh 100)']],
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 72 }, 1: { cellWidth: 78 }, 2: { fontStyle: 'bold', cellWidth: 32 } } });
@@ -657,11 +820,13 @@ function detailPage(doc, r, P, ranked, newPage) {
 /* ===================== LAPORAN JAWATANKUASA (JPPPDKP) ===================== */
 /* Kandungan dibina sekali sebagai "blok", kemudian dilukis ke PDF dan ke pratonton HTML. */
 let CFG = null;
-const CFG_DEF = () => ({ bil: 'xx/' + new Date().getFullYear(), pelantik: '', tujuan: '', suratFail: '', suratTarikh: '', tamat: '', tempat: '', tarikhSidang: D.sesi.tarikh, masaSidang: D.sesi.masa, pengerusi: '', jawatan: '{}', cgpaMin: '2.00', syor: '' });
+const CFG_DEF = () => ({ pelantik: '', tujuan: '', suratFail: '', suratTarikh: '', tamat: '', pengerusi: '', jawatan: '{}', cgpaMin: '2.00', syor: '' });
 const PELANTIK_DEF = 'Timbalan Naib Canselor Hal Ehwal Pelajar dan Alumni';
 const TUJUAN_DEF = 'Laporan ini disediakan untuk membantu Urusetia UTMXCITE membuat keputusan terhadap permohonan sewaan Lot di Student Mall dan SUB berdasarkan penilaian pelan perniagaan oleh jawatankuasa.';
 const CHAIR_DEFAULT = 'PM. Dr. Syed Norris Hikmi Syed Abdullah';   // Pengerusi JPPPDKP
-function jkCfg() { if (!CFG) { CFG = { ...CFG_DEF(), ...(D.cfg || {}) }; if (!String(CFG.pengerusi || '').trim()) CFG.pengerusi = CHAIR_DEFAULT; } return CFG; }
+/* Syor tambahan disimpan bagi setiap mesyuarat (syor:ID). Syor lama (tanpa ID) dianggap milik mesyuarat pertama. */
+function syorOf_() { const c = D.cfg || {}, k = 'syor:' + D.sesi.id; if (c[k] !== undefined) return c[k]; return D.sesi.id === Math.min(...D.sesiList.map(s => s.id)) ? (c.syor || '') : ''; }
+function jkCfg() { if (!CFG) { CFG = { ...CFG_DEF(), ...(D.cfg || {}) }; CFG.syor = syorOf_(); if (!String(CFG.pengerusi || '').trim()) CFG.pengerusi = CHAIR_DEFAULT; } return CFG; }
 const isChair = n => nem(n) === nem(jkCfg().pengerusi);
 const DOTS = '..............................';
 const ORD = ['Pertama', 'Kedua', 'Ketiga', 'Keempat', 'Kelima', 'Keenam', 'Ketujuh', 'Kelapan', 'Kesembilan', 'Kesepuluh'];
@@ -674,7 +839,8 @@ function jkBlocks() {
   let jw = {}; try { jw = JSON.parse(C.jawatan || '{}') || {}; } catch (e) { }
   const nApps = rows.length, nStud = rows.reduce((s, r) => s + r.a.st.length, 0), nSM = rows.filter(r => r.a.type !== 'SUB').length, nSUB = nApps - nSM;
   const min = parseFloat(C.cgpaMin) || 0;
-  B.push({ t: 'title', text: 'LAPORAN JAWATANKUASA PENILAIAN PELAN PERNIAGAAN DAN DANA KEUSAHAWANAN PELAJAR (JPPPDKP) UTM BIL ' + C.bil });
+  const BIL = S.bil || ('xx/' + new Date().getFullYear());
+  B.push({ t: 'title', text: 'LAPORAN JAWATANKUASA PENILAIAN PELAN PERNIAGAAN DAN DANA KEUSAHAWANAN PELAJAR (JPPPDKP) UTM BIL ' + BIL });
 
   B.push({ t: 'h', num: '1', text: 'Tujuan' });
   B.push({ t: 'p', text: C.tujuan || TUJUAN_DEF });
@@ -688,7 +854,7 @@ function jkBlocks() {
   B.push({ t: 'kv', rows: [['Pengerusi', chair], ...(ahli.length ? ahli : ['(Nama Pegawai)']).map((n, i) => [i ? '' : 'Ahli', n])] });
 
   B.push({ t: 'h', num: '3', text: 'Pemerhatian Jawatankuasa' });
-  B.push({ t: 'p', num: '3.1', text: 'JPPPDKP telah bersidang pada ' + (C.tarikhSidang || DOTS) + ' jam ' + (C.masaSidang || DOTS) + ' bertempat di ' + (C.tempat || DOTS) + '.' });
+  B.push({ t: 'p', num: '3.1', text: 'JPPPDKP telah bersidang pada ' + (S.tarikh || DOTS) + ' jam ' + (S.masa || DOTS) + ' bertempat di ' + (S.tempat || DOTS) + '.' });
   B.push({ t: 'p', num: '3.2', text: 'Sebanyak ' + nApps + ' permohonan (' + nStud + ' pelajar) telah dikemukakan, terdiri daripada ' + nSM + ' permohonan untuk lot di Student Mall dan ' + nSUB + ' untuk lot di SUB. Penilaian telah dibuat oleh ' + P.length + ' panel dengan jadual markah seperti di Jadual 1:' });
   const w1 = P.length > 6 ? 9 : 11;
   B.push({ t: 'table', cap: 'Jadual 1: Jadual markah dan kedudukan pemohon (markah /100)', head: ['Rank', 'Perniagaan', 'Jenis', ...P.map((p, i) => 'P' + (i + 1)), 'Dinilai', 'Purata'],
@@ -805,10 +971,10 @@ function jkForm() {
   const P = D.keputusan.panels;
   const inp = (k, lab, ph = '', wide) => `<label class="${wide ? 'wide' : ''}">${lab}<input data-cfg="${k}" value="${esc(C[k])}" placeholder="${esc(ph)}"></label>`;
   return `<div class="card" style="margin-bottom:14px"><h3>Butiran laporan jawatankuasa <i>mengikut templat JPPPDKP</i></h3>
-   <div class="f">${inp('bil', 'Bil laporan', 'cth. 01/2026')}${inp('cgpaMin', 'CGPA minimum (Perkara 4.1)', '2.00')}
+   <p class="note" style="margin:0 0 10px">Laporan bagi <b>${esc(sLbl(D.sesi))}</b>. Bil laporan, tarikh, masa dan tempat bersidang diambil daripada tab <b>Mesyuarat</b>. Butiran pelantikan di bawah sama bagi semua mesyuarat; syor tambahan disimpan bagi mesyuarat ini sahaja.</p>
+   <div class="f">${inp('cgpaMin', 'CGPA minimum (Perkara 4.1)', '2.00')}
    ${inp('pelantik', 'Dilantik oleh (2.1)', PELANTIK_DEF, true)}${inp('suratFail', 'Fail rujukan surat pelantikan (2.1)')}${inp('suratTarikh', 'Tarikh surat (2.1)')}${inp('tamat', 'Tamat lantikan jawatankuasa (2.1)')}
    <label>Pengerusi (2.2)<input data-cfg="pengerusi" list="jkpan" value="${esc(C.pengerusi)}" placeholder="Nama pengerusi"><datalist id="jkpan">${P.map(p => `<option value="${esc(p.nama)}">`).join('')}</datalist></label>
-   ${inp('tarikhSidang', 'Tarikh bersidang (3.1)')}${inp('masaSidang', 'Masa (3.1)')}${inp('tempat', 'Tempat bersidang (3.1)', '', true)}
    <label class="wide">Tujuan laporan (1) <small style="font-weight:400">kosongkan untuk teks lalai</small><textarea data-cfg="tujuan" rows="2" placeholder="${esc(TUJUAN_DEF)}">${esc(C.tujuan)}</textarea></label>
    <div class="wide"><b style="font-size:12.5px;color:var(--muted)">Syor tambahan (5.2) <span style="font-weight:400">pilihan; dicetak sebagai (i), (ii), (iii). Syor lulus/tidak lulus dijana daripada Status akhir dalam tab Keputusan.</span></b>
     ${SYR().map((s, i) => `<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><b style="min-width:34px;padding-top:9px">(${roman(i + 1)})</b><textarea data-syor="${i}" rows="2" style="flex:1" placeholder="Tulis syor tambahan">${esc(s)}</textarea><button class="btn-ghost sydel" data-i="${i}" aria-label="Buang syor ${i + 1}" title="Buang">✕</button></div>`).join('')}
@@ -826,7 +992,7 @@ function jkCollect() {
 
 function paperPreview() {
   const { rows, P, ranked } = rpData(), S = D.sesi, img = logoImg();
-  if (RP.type === 'jawatankuasa') return `<div class="paper" style="max-height:80vh;overflow:auto"><div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN JAWATANKUASA JPPPDKP UTM</b><span>Universiti Teknologi Malaysia | UTMXCITE | Bil ${esc(jkCfg().bil)}</span></div></div>${blocksHtml(jkBlocks())}</div>`;
+  if (RP.type === 'jawatankuasa') return `<div class="paper" style="max-height:80vh;overflow:auto"><div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN JAWATANKUASA JPPPDKP UTM</b><span>Universiti Teknologi Malaysia | UTMXCITE | Bil ${esc(D.sesi.bil || 'xx')}</span></div></div>${blocksHtml(jkBlocks())}</div>`;
   const head = `<div class="ph">${img ? `<img src="${esc(img.src)}" alt="UTMXCITE">` : '<b>UTMXCITE</b>'}<div><b>LAPORAN PENILAIAN PERMOHONAN STUDENT MALL &amp; SUB</b><span>Universiti Teknologi Malaysia | UTMXCITE | ${esc(S.tarikh)}, ${esc(S.masa)}</span></div></div>`;
   const summary = `<h4>Ringkasan Keputusan Penilaian${RP.jenis ? ' - ' + esc(RP.jenis) : ''}</h4><div class="tw"><table><thead><tr><th>Rank</th><th>Perniagaan</th><th>Jenis</th><th>Pelajar</th>${P.map((p, i) => `<th>P${i + 1}</th>`).join('')}<th>Dinilai</th><th>Purata</th><th>Layak</th><th>Status</th></tr></thead><tbody>
    ${rows.map(r => `<tr><td><b>${r.rank || '-'}</b></td><td><b>${esc(r.a.biz)}</b></td><td>${esc(r.a.type)}</td><td>${r.a.st.map(s => esc(s.n)).join('<br>')}</td>${r.sc.map(s => `<td style="text-align:center">${s == null ? '-' : s}</td>`).join('')}<td style="text-align:center">${r.n}/${P.length}</td><td style="text-align:center"><b>${fmt(r.avg)}</b></td><td style="text-align:center">${r.n ? r.layakY + '/' + r.n : '-'}</td><td>${esc(r.final)}</td></tr>`).join('')}</tbody></table></div>
@@ -846,7 +1012,7 @@ function laporan() {
     ['lengkap', 'Laporan lengkap', 'Ringkasan keputusan diikuti halaman terperinci semua pemohon dalam satu fail PDF.'],
     ['jawatankuasa', 'Laporan Jawatankuasa (JPPPDKP)', 'Laporan rasmi mengikut templat: Tujuan, Pelantikan, Pemerhatian, Analisis (kelayakan, kaedah, markah, kesepakatan panel), Syor dan tandatangan ahli. A4 menegak.']];
   const { rows } = rpData(), jk = RP.type === 'jawatankuasa';
-  $('#main').innerHTML = head('Laporan', 'Reports · muat turun PDF dengan kepala UTMXCITE', '<button class="btn-ghost" id="rl">↻ Data terkini</button>') + `
+  $('#main').innerHTML = head('Laporan', 'Reports · ' + esc(D.sesi.nama) + ' · muat turun PDF dengan kepala UTMXCITE', sesiHead() + ' <button class="btn-ghost" id="rl">↻ Data terkini</button>') + `
   <div class="rp"><div class="ctl card"><h3>Format laporan</h3>
    ${T.map(t => `<label class="opt"><input type="radio" name="rt" value="${t[0]}" ${RP.type === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><small>${t[2]}</small></span></label>`).join('')}
    <div class="f">${jk ? '' : `<label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option></select></label>`}
@@ -866,11 +1032,11 @@ function laporan() {
     document.querySelectorAll('.sydel').forEach(b => b.onclick = () => { jkCollect(); SY.splice(+b.dataset.i, 1); jkCfg().syor = SY.map(s => s.trim()).filter(Boolean).join('\n'); if (!SY.length) SY = ['']; laporan(); });
     $('#syadd').onclick = () => { jkCollect(); SY.push(''); laporan(); const t = document.querySelectorAll('[data-syor]'); if (t.length) t[t.length - 1].focus(); };
     const ch = document.querySelector('[data-cfg="pengerusi"]'); if (ch) ch.onchange = () => { jkCollect(); laporan(); };   // senarai jawatan mengikut pengerusi baharu
-    $('#jsave').onclick = async () => { try { const c = jkCollect(); D.cfg = await rpc('apiSaveTetapan', c); $('#jmsg').textContent = ' Disimpan.'; toast('Butiran laporan disimpan'); } catch (e) { toast(e.message, true); } };
+    $('#jsave').onclick = async () => { try { const c = jkCollect(); D.cfg = await rpc('apiSaveTetapan', c, SEL); $('#jmsg').textContent = ' Disimpan.'; toast('Butiran laporan disimpan'); } catch (e) { toast(e.message, true); } };
   }
   $('#rl').onclick = async () => { await loadAdmin(); toast('Data dimuat semula'); };
   const name = () => 'Laporan_' + { ringkasan: 'Penilaian_Ringkasan', terperinci: 'Penilaian_Terperinci', lengkap: 'Penilaian_Lengkap', jawatankuasa: 'JPPPDKP' }[RP.type] + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
-  const make = (fn) => { try { if (jk) { const c = jkCollect(); rpc('apiSaveTetapan', c).then(x => { D.cfg = x; }).catch(() => { }); } const doc = buildPdf(); fn(doc); rpc('apiLogReport', RP.type + (RP.jenis ? ' / ' + RP.jenis : '')).catch(() => { }); } catch (e) { toast(e.message, true); } };
+  const make = (fn) => { try { if (jk) { const c = jkCollect(); rpc('apiSaveTetapan', c, SEL).then(x => { D.cfg = x; }).catch(() => { }); } const doc = buildPdf(); fn(doc); rpc('apiLogReport', RP.type + (RP.jenis ? ' / ' + RP.jenis : '')).catch(() => { }); } catch (e) { toast(e.message, true); } };
   $('#dl').onclick = () => make(doc => { doc.save(name()); toast('PDF dijana'); });
   $('#op').onclick = () => make(doc => { const w = window.open(doc.output('bloburl'), '_blank'); if (!w) toast('Pelayar menyekat tab baharu. Benarkan pop-up atau guna Muat turun.', true); });
 }
@@ -884,13 +1050,20 @@ function prepPanel() {
 async function loadPanel() {
   D = await rpc('apiPanelData'); prepPanel();
   $('#whoR').textContent = 'Penilai / Evaluator' + (D.me.no ? ' · Panel ' + D.me.no : '');
+  if (!D.sesi) {   // tiada mesyuarat dibuka oleh urusetia
+    $('#sub').textContent = 'Penilaian permohonan Student Mall & SUB';
+    app.innerHTML = `<div class="login card" style="max-width:520px;text-align:center"><h2>Tiada mesyuarat dibuka</h2><p class="note">Penilaian belum dibuka. Urusetia akan membuka mesyuarat penilaian dan memaklumkan anda. Muat semula halaman ini selepas itu.</p><div class="foot" style="justify-content:center"><button class="btn-line" id="rl2">Muat semula</button></div></div>`;
+    $('#rl2').onclick = () => loadPanel();
+    return;
+  }
+  $('#sub').textContent = D.sesi.nama + ' · ' + D.sesi.tarikh;
   evalView();
 }
-const saveEv = (id, m, submit) => ACT_AS ? rpc('apiSaveEvalAs', ACT_AS, id, m, submit) : rpc('apiSaveEval', id, m, submit);
+const saveEv = (id, m, submit) => ACT_AS ? rpc('apiSaveEvalAs', ACT_AS, id, m, submit, SEL) : rpc('apiSaveEval', id, m, submit);
 /** Admin masuk ke paparan penilaian seorang panel untuk memberi markah bagi pihaknya. */
 async function enterAs(email, pid) {
   try {
-    const d = await rpc('apiAdminEvalData', email);
+    const d = await rpc('apiAdminEvalData', email, SEL);
     ACT_AS = email; D = d; prepPanel();
     cur = Math.max(0, D.apps.findIndex(x => x.id === pid)); openAnch = null; openEls = false; armSend = false; saving = '';
     evalView(); window.scrollTo(0, 0);
@@ -948,8 +1121,8 @@ function evalView() {
   window.scrollTo(0, y);
   const go = d => { cur += d; openAnch = null; openEls = false; armSend = false; saving = ''; evalView(); window.scrollTo(0, 0); };
   $('#pv').onclick = () => go(-1); $('#nx').onclick = () => go(1);
-  const bk = $('#back'); if (bk) bk.onclick = async () => { ACT_AS = null; clearTimeout(saveT); cur = 0; await loadAdmin(); };
-  const ro = $('#reopen'); if (ro) ro.onclick = async () => { try { await rpc('apiReopen', a.id, ACT_AS); toast('Dibuka semula'); await enterAs(ACT_AS, a.id); } catch (e) { toast(e.message, true); } };
+  const bk = $('#back'); if (bk) bk.onclick = async () => { ACT_AS = null; clearTimeout(saveT); cur = 0; await loadAdmin(SEL); };
+  const ro = $('#reopen'); if (ro) ro.onclick = async () => { try { await rpc('apiReopen', a.id, ACT_AS, SEL); toast('Dibuka semula'); await enterAs(ACT_AS, a.id); } catch (e) { toast(e.message, true); } };
   app.querySelectorAll('[data-an]').forEach(b => b.onclick = () => { openAnch = openAnch === +b.dataset.an ? null : +b.dataset.an; evalView(); });
   app.querySelectorAll('[data-elx]').forEach(b => b.onclick = () => { openEls = !openEls; evalView(); });
   app.querySelectorAll('[data-nt]').forEach(b => b.onclick = () => { const k = a.id + '-' + b.dataset.nt; openNote[k] = !(openNote[k]); evalView(); });
