@@ -711,12 +711,6 @@ function jkBlocks() {
   const cons = rows.map(r => [r.a.biz, r.avg == null ? '-' : fmt(r.avg), r.layakY, r.layakN, r.n ? pct(r.layakY, r.n) + '%' : '-', !r.n ? '-' : r.layakY > r.layakN ? 'Majoriti layak' : r.layakN > r.layakY ? 'Majoriti tidak layak' : 'Seimbang']);
   B.push({ t: 'p', num: '4.4', text: 'Kesepakatan panel. Setiap panel turut menyatakan sama ada pelajar layak. Ringkasan kesepakatan panel seperti di Jadual 5:' });
   B.push({ t: 'table', cap: 'Jadual 5: Kesepakatan panel tentang kelayakan', head: ['Perniagaan', 'Purata', 'Layak (Ya)', 'Tidak', '% Layak', 'Kesepakatan'], body: cons, widths: [52, 20, 24, 18, 22, 46], center: [1, 2, 3, 4], bold: [0], flag: { col: 5, bad: ['Majoriti tidak layak', 'Seimbang'] } });
-  if (RP.notes) {
-    const nb = [];
-    rows.forEach(r => r.evs.forEach((e, i) => { if (!e) return; e.notes.forEach((t, k) => { if (t) nb.push([r.a.biz, panelLbl(P[i], i) + ' - ' + D.crit[k].bm, t]); }); if (e.cm) nb.push([r.a.biz, panelLbl(P[i], i) + ' - Keseluruhan', e.cm]); }));
-    B.push({ t: 'p', num: '4.5', text: 'Catatan dan ulasan panel. ' + (nb.length ? 'Catatan utama yang dikemukakan oleh panel seperti di Jadual 6:' : 'Tiada catatan khusus daripada panel.') });
-    if (nb.length) B.push({ t: 'table', cap: 'Jadual 6: Catatan dan ulasan panel', head: ['Perniagaan', 'Panel - Kriteria', 'Catatan'], body: nb, widths: [38, 52, 96], bold: [0] });
-  }
 
   B.push({ t: 'h', num: '5', text: 'Syor' });
   const by = f => rows.filter(r => (r.final || 'Belum') === f).map(r => r.a.biz + (r.avg != null ? ' (' + fmt(r.avg) + ')' : ''));
@@ -834,7 +828,7 @@ function laporan() {
    ${T.map(t => `<label class="opt"><input type="radio" name="rt" value="${t[0]}" ${RP.type === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><small>${t[2]}</small></span></label>`).join('')}
    <div class="f">${jk ? '' : `<label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option></select></label>`}
    ${RP.type === 'terperinci' || RP.type === 'lengkap' ? `<label>Pemohon (laporan terperinci)<select id="rp"><option value="0">Semua pemohon (${rows.length})</option>${rows.map(r => `<option value="${r.a.id}" ${RP.pid === r.a.id ? 'selected' : ''}>${esc(r.a.biz)}</option>`).join('')}</select></label>` : ''}
-   ${RP.type !== 'ringkasan' ? `<label class="chip" style="border-radius:8px"><input type="checkbox" id="rn" ${RP.notes ? 'checked' : ''}> Sertakan catatan panel</label>` : ''}</div>
+   ${RP.type !== 'ringkasan' && !jk ? `<label class="chip" style="border-radius:8px"><input type="checkbox" id="rn" ${RP.notes ? 'checked' : ''}> Sertakan catatan panel</label>` : ''}</div>
    <div class="foot" style="margin-top:6px"><button class="btn-solid" id="dl" style="flex:1">⬇ Muat turun PDF</button></div>
    <div class="foot" style="margin-top:8px"><button class="btn-line" id="op" style="flex:1">Buka dalam tab baharu</button></div>
    <p class="note" style="margin:10px 0 0">Kepala setiap halaman mempunyai logo UTM dan UTMXCITE. Hanya penilaian yang telah dihantar dikira. No. KP dipaparkan bertopeng. Jika muat turun disekat oleh pelayar, gunakan "Buka dalam tab baharu" kemudian simpan.</p></div>
