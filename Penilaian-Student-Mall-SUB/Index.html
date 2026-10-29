@@ -339,7 +339,7 @@ setInterval(async () => {
     try { const d = await rpc('apiAdminData'); if (!ACT_AS) { D = d; adminShell(); } } catch (e) { }
   }
 }, 30000);
-async function loadAdmin() { D = await rpc('apiAdminData'); CFG = null; adminShell(); }
+async function loadAdmin() { D = await rpc('apiAdminData'); CFG = null; SY = null; adminShell(); }
 function adminShell() {
   app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? `<span class="n">${D.apps.length}</span>` : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
   app.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t !== 'panel') codes = null; tab = b.dataset.t; openRow = null; openKey = null; adminShell(); });
@@ -663,6 +663,7 @@ function jkCfg() { if (!CFG) { CFG = { ...CFG_DEF(), ...(D.cfg || {}) }; if (!St
 const isChair = n => nem(n) === nem(jkCfg().pengerusi);
 const DOTS = '..............................';
 const ORD = ['Pertama', 'Kedua', 'Ketiga', 'Keempat', 'Kelima', 'Keenam', 'Ketujuh', 'Kelapan', 'Kesembilan', 'Kesepuluh'];
+const roman = n => { const r = [[10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']]; let s = ''; r.forEach(([v, c]) => { while (n >= v) { s += c; n -= v; } }); return s; };
 const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
 const join = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' dan ' + a[a.length - 1] : a.join('');
 
@@ -726,7 +727,8 @@ function jkBlocks() {
   const syorOf = r => r.final === 'Lulus' ? 'Diluluskan' : r.final === 'Tidak lulus' ? 'Tidak diluluskan' : 'Belum diputuskan';
   B.push({ t: 'table', cap: 'Jadual 6: Syor Jawatankuasa', head: ['Bil', 'Nama Pemohon', 'Syor'], body: rows.map((r, i) => [i + 1, r.a.biz, syorOf(r)]),
     widths: [16, 98, 72], center: [0], bold: [1, 2], flag: { col: 2, bad: ['Tidak diluluskan'], good: ['Diluluskan'] } });
-  if (C.syor.trim()) B.push({ t: 'p', num: '5.2', text: C.syor.trim() });
+  const sy = String(C.syor || '').split('\n').map(s => s.trim()).filter(Boolean);
+  if (sy.length) { B.push({ t: 'p', num: '5.2', text: 'Jawatankuasa turut mengesyorkan perkara berikut:' }); B.push({ t: 'list', roman: true, items: sy }); }
 
   B.push({ t: 'sign', members: [{ role: 'Pengerusi', name: chair, jw: jw[nem(chair)] || '' }, ...ahli.map((n, i) => ({ role: 'Ahli ' + (ORD[i] || (i + 1)), name: n, jw: jw[nem(n)] || '' }))] });
   return B;
@@ -744,7 +746,7 @@ function renderBlocksPdf(doc, B) {
     else if (b.t === 'h') { ensure(B[bi + 1] && B[bi + 1].t === 'p' && B[bi + 2] && B[bi + 2].t === 'table' ? 78 : 32); y += 3; doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(...MAROON); doc.text(b.num + '.', m, y + 4); doc.text(b.text, m + 12, y + 4); y += 8; }
     else if (b.t === 'p') { ink(); const ln = doc.splitTextToSize(b.text, W - 12); ensure(B[bi + 1] && B[bi + 1].t === 'table' ? ln.length * LH + 42 : Math.min(ln.length, 3) * LH + 2); ln.forEach((l, i) => { ensure(LH + 1); if (i === 0 && b.num) doc.text(b.num, m, y + 4); doc.text(l, m + 12, y + 4); y += LH; }); y += 2.2; }
     else if (b.t === 'kv') { ink(); b.rows.forEach(([k, v]) => { const ln = doc.splitTextToSize(String(v), W - 80); ensure(ln.length * LH + 1); if (k) doc.text(k, m + 12, y + 4); doc.text(':', m + 70, y + 4); doc.text(ln, m + 74, y + 4); y += ln.length * LH + 0.6; }); y += 2; }
-    else if (b.t === 'list') { ink(); b.items.forEach((t, i) => { const ln = doc.splitTextToSize(t, W - 22); ensure(ln.length * LH + 1); doc.text('(' + String.fromCharCode(97 + i) + ')', m + 12, y + 4); ln.forEach((l, k) => { doc.text(l, m + 20, y + 4 + k * LH); }); y += ln.length * LH + 1.2; }); y += 2; }
+    else if (b.t === 'list') { ink(); const off = b.roman ? 28 : 20; b.items.forEach((t, i) => { const ln = doc.splitTextToSize(t, W - off - 2); ensure(ln.length * LH + 1); doc.text('(' + (b.roman ? roman(i + 1) : String.fromCharCode(97 + i)) + ')', m + 12, y + 4); ln.forEach((l, k) => { doc.text(l, m + off, y + 4 + k * LH); }); y += ln.length * LH + 1.2; }); y += 2; }
     else if (b.t === 'table') {
       ensure(34); doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...MAROON); doc.text(b.cap, m, y + 3); y += 5;
       const cs = {}; b.widths.forEach((w, i) => cs[i] = { cellWidth: w, halign: (b.center || []).includes(i) ? 'center' : 'left', fontStyle: (b.bold || []).includes(i) ? 'bold' : 'normal' });
@@ -780,7 +782,7 @@ function blocksHtml(B) {
     if (b.t === 'h') return `<h4 style="color:#8a2d3b;font-size:14px;margin:14px 0 4px">${b.num}. ${esc(b.text)}</h4>`;
     if (b.t === 'p') return `<p style="margin:4px 0 4px ${b.num ? 0 : 34}px">${b.num ? `<b style="display:inline-block;width:34px">${b.num}</b>` : ''}${esc(b.text)}</p>`;
     if (b.t === 'kv') return `<table style="min-width:0;margin:2px 0 6px 34px;width:auto">${b.rows.map(([k, v]) => `<tr><td style="border:0;padding:1px 14px 1px 0;white-space:nowrap">${esc(k)}</td><td style="border:0;padding:1px 6px">${k || v ? ':' : ''}</td><td style="border:0;padding:1px 0">${esc(v)}</td></tr>`).join('')}</table>`;
-    if (b.t === 'list') return `<div style="margin:2px 0 6px 34px">${b.items.map((t, i) => `<div>(${String.fromCharCode(97 + i)}) ${esc(t)}</div>`).join('')}</div>`;
+    if (b.t === 'list') return `<div style="margin:2px 0 6px 34px">${b.items.map((t, i) => `<div style="display:flex;gap:8px"><span style="min-width:${b.roman ? 34 : 24}px">(${b.roman ? roman(i + 1) : String.fromCharCode(97 + i)})</span><span>${esc(t)}</span></div>`).join('')}</div>`;
     if (b.t === 'table') return `<p style="margin:10px 0 3px;color:#8a2d3b;font-weight:700;font-size:12px">${esc(b.cap)}</p><div class="tw"><table><thead><tr>${b.head.map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${b.body.map(r => `<tr>${r.map((c, i) => `<td style="${(b.center || []).includes(i) ? 'text-align:center;' : ''}${(b.bold || []).includes(i) ? 'font-weight:700;' : ''}">${esc(c).replace(/\n/g, '<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.note ? `<p style="color:#6f6266;font-size:11px;margin:3px 0">${esc(b.note)}</p>` : ''}`;
     if (b.t === 'sign') return `<h4 style="text-align:center;margin:22px 0 4px">TANDATANGAN AHLI-AHLI JAWATANKUASA</h4><div style="display:flex;flex-wrap:wrap;gap:6px 30px">${b.members.map(mb => `<div style="flex:1 1 220px;margin-top:6px"><b>${esc(mb.role)}</b><div style="border-bottom:1px solid #999;height:36px"></div>${esc(mb.name)}${mb.jw ? `<br><span style="color:#6f6266">${esc(mb.jw)}</span>` : ''}<br><span style="color:#6f6266">Tarikh: ............</span></div>`).join('')}</div>`;
     return '';
@@ -798,12 +800,17 @@ function jkForm() {
    <label>Pengerusi (2.2)<input data-cfg="pengerusi" list="jkpan" value="${esc(C.pengerusi)}" placeholder="Nama pengerusi"><datalist id="jkpan">${P.map(p => `<option value="${esc(p.nama)}">`).join('')}</datalist></label>
    ${inp('tarikhSidang', 'Tarikh bersidang (3.1)')}${inp('masaSidang', 'Masa (3.1)')}${inp('tempat', 'Tempat bersidang (3.1)', '', true)}
    <label class="wide">Tujuan laporan (1) <small style="font-weight:400">kosongkan untuk teks lalai</small><textarea data-cfg="tujuan" rows="2">${esc(C.tujuan)}</textarea></label>
-   <label class="wide">Syor tambahan (5.2) <small style="font-weight:400">pilihan; syor lulus/tidak lulus dijana daripada Status akhir dalam tab Keputusan</small><textarea data-cfg="syor" rows="2">${esc(C.syor)}</textarea></label></div>
+   <div class="wide"><b style="font-size:12.5px;color:var(--muted)">Syor tambahan (5.2) <span style="font-weight:400">pilihan; dicetak sebagai (i), (ii), (iii). Syor lulus/tidak lulus dijana daripada Status akhir dalam tab Keputusan.</span></b>
+    ${SYR().map((s, i) => `<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><b style="min-width:34px;padding-top:9px">(${roman(i + 1)})</b><textarea data-syor="${i}" rows="2" style="flex:1" placeholder="Tulis syor tambahan">${esc(s)}</textarea><button class="btn-ghost sydel" data-i="${i}" aria-label="Buang syor ${i + 1}" title="Buang">✕</button></div>`).join('')}
+    <div class="foot" style="margin-top:8px"><button class="btn-line" id="syadd">+ Tambah syor</button></div></div></div>
    <h3 style="margin-top:14px">Jawatan untuk tandatangan <i>pilihan</i></h3><div class="f">${[...new Set([C.pengerusi.trim(), ...P.map(p => p.nama)].filter(Boolean))].map(n => `<label>${esc(n)}<input data-jw="${esc(nem(n))}" value="${esc(jw[nem(n)] || '')}" placeholder="Jawatan pegawai"></label>`).join('')}</div>
    <div class="foot"><button class="btn-line" id="jsave">Simpan butiran</button><span class="note" id="jmsg"></span></div></div>`;
 }
+let SY = null;   // baris syor tambahan dalam borang (termasuk baris kosong sementara)
+const SYR = () => { if (!SY) { SY = String(jkCfg().syor || '').split('\n').map(s => s.trim()).filter(Boolean); if (!SY.length) SY = ['']; } return SY; };
 function jkCollect() {
   const C = jkCfg(); document.querySelectorAll('[data-cfg]').forEach(i => C[i.dataset.cfg] = i.value);
+  const sa = document.querySelectorAll('[data-syor]'); if (sa.length) { SY = [...sa].map(t => t.value.replace(/\s*\n\s*/g, ' ')); C.syor = SY.map(s => s.trim()).filter(Boolean).join('\n'); }
   const jw = {}; document.querySelectorAll('[data-jw]').forEach(i => { if (i.value.trim()) jw[i.dataset.jw] = i.value.trim(); }); C.jawatan = JSON.stringify(jw); return C;
 }
 
@@ -845,7 +852,9 @@ function laporan() {
   const rn = $('#rn'); if (rn) rn.onchange = e => { RP.notes = e.target.checked; if (jk) $('#pvbox').innerHTML = paperPreview(); };
   if (jk) {
     let t = null;
-    document.querySelectorAll('[data-cfg],[data-jw]').forEach(i => i.oninput = () => { clearTimeout(t); t = setTimeout(() => { jkCollect(); $('#pvbox').innerHTML = paperPreview(); }, 400); });
+    document.querySelectorAll('[data-cfg],[data-jw],[data-syor]').forEach(i => i.oninput = () => { clearTimeout(t); t = setTimeout(() => { jkCollect(); $('#pvbox').innerHTML = paperPreview(); }, 400); });
+    document.querySelectorAll('.sydel').forEach(b => b.onclick = () => { jkCollect(); SY.splice(+b.dataset.i, 1); jkCfg().syor = SY.map(s => s.trim()).filter(Boolean).join('\n'); if (!SY.length) SY = ['']; laporan(); });
+    $('#syadd').onclick = () => { jkCollect(); SY.push(''); laporan(); const t = document.querySelectorAll('[data-syor]'); if (t.length) t[t.length - 1].focus(); };
     const ch = document.querySelector('[data-cfg="pengerusi"]'); if (ch) ch.onchange = () => { jkCollect(); laporan(); };   // senarai jawatan mengikut pengerusi baharu
     $('#jsave').onclick = async () => { try { const c = jkCollect(); D.cfg = await rpc('apiSaveTetapan', c); $('#jmsg').textContent = ' Disimpan.'; toast('Butiran laporan disimpan'); } catch (e) { toast(e.message, true); } };
   }
