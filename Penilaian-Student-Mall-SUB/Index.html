@@ -737,6 +737,14 @@ function jkBlocks() {
 }
 
 /* --- penjana PDF bagi blok --- */
+/* Baris dijustifikasikan dengan merenggangkan jarak antara perkataan; baris terakhir perenggan dibiarkan rata kiri. */
+function justLine(doc, line, x, y, width) {
+  const words = line.split(' ').filter(Boolean);
+  if (words.length < 2) { doc.text(line, x, y); return; }
+  const tw = words.reduce((s, w) => s + doc.getTextWidth(w), 0), gap = (width - tw) / (words.length - 1);
+  if (gap > doc.getTextWidth(' ') * 4) { doc.text(line, x, y); return; }   // elak jarak terlalu lebar
+  let cx = x; words.forEach(w => { doc.text(w, cx, y); cx += doc.getTextWidth(w) + gap; });
+}
 function renderBlocksPdf(doc, B) {
   const m = 12, LH = 4.8, pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), W = pw - 2 * m, bottom = ph - 16;
   let y = 34;
@@ -746,9 +754,9 @@ function renderBlocksPdf(doc, B) {
   B.forEach((b, bi) => {
     if (b.t === 'title') { doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(30); const ln = doc.splitTextToSize(b.text, W); ensure(ln.length * 5.6 + 6); doc.text(ln, pw / 2, y + 4, { align: 'center' }); y += ln.length * 5.6 + 6; }
     else if (b.t === 'h') { ensure(B[bi + 1] && B[bi + 1].t === 'p' && B[bi + 2] && B[bi + 2].t === 'table' ? 78 : 32); y += 3; doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(...MAROON); doc.text(b.num + '.', m, y + 4); doc.text(b.text, m + 12, y + 4); y += 8; }
-    else if (b.t === 'p') { ink(); const ln = doc.splitTextToSize(b.text, W - 12); ensure(B[bi + 1] && B[bi + 1].t === 'table' ? ln.length * LH + 42 : Math.min(ln.length, 3) * LH + 2); ln.forEach((l, i) => { ensure(LH + 1); if (i === 0 && b.num) doc.text(b.num, m, y + 4); doc.text(l, m + 12, y + 4); y += LH; }); y += 2.2; }
+    else if (b.t === 'p') { ink(); const ln = doc.splitTextToSize(b.text, W - 12); ensure(B[bi + 1] && B[bi + 1].t === 'table' ? ln.length * LH + 42 : Math.min(ln.length, 3) * LH + 2); ln.forEach((l, i) => { ensure(LH + 1); if (i === 0 && b.num) doc.text(b.num, m, y + 4); if (i < ln.length - 1) justLine(doc, l, m + 12, y + 4, W - 12); else doc.text(l, m + 12, y + 4); y += LH; }); y += 2.2; }
     else if (b.t === 'kv') { ink(); b.rows.forEach(([k, v]) => { const ln = doc.splitTextToSize(String(v), W - 80); ensure(ln.length * LH + 1); if (k) doc.text(k, m + 12, y + 4); doc.text(':', m + 70, y + 4); doc.text(ln, m + 74, y + 4); y += ln.length * LH + 0.6; }); y += 2; }
-    else if (b.t === 'list') { ink(); const off = b.roman ? 28 : 20; b.items.forEach((t, i) => { const ln = doc.splitTextToSize(t, W - off - 2); ensure(ln.length * LH + 1); doc.text('(' + (b.roman ? roman(i + 1) : String.fromCharCode(97 + i)) + ')', m + 12, y + 4); ln.forEach((l, k) => { doc.text(l, m + off, y + 4 + k * LH); }); y += ln.length * LH + 1.2; }); y += 2; }
+    else if (b.t === 'list') { ink(); const off = b.roman ? 28 : 20; b.items.forEach((t, i) => { const ln = doc.splitTextToSize(t, W - off - 2); ensure(ln.length * LH + 1); doc.text('(' + (b.roman ? roman(i + 1) : String.fromCharCode(97 + i)) + ')', m + 12, y + 4); ln.forEach((l, k) => { if (k < ln.length - 1) justLine(doc, l, m + off, y + 4 + k * LH, W - off - 2); else doc.text(l, m + off, y + 4 + k * LH); }); y += ln.length * LH + 1.2; }); y += 2; }
     else if (b.t === 'table') {
       ensure(34); doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...MAROON); doc.text(b.cap, m, y + 3); y += 5;
       const cs = {}; b.widths.forEach((w, i) => cs[i] = { cellWidth: w, halign: (b.center || []).includes(i) ? 'center' : 'left', fontStyle: (b.bold || []).includes(i) ? 'bold' : 'normal' });
@@ -782,9 +790,9 @@ function blocksHtml(B) {
   return B.map(b => {
     if (b.t === 'title') return `<h3 style="text-align:center;font-size:14px;margin:6px 0 10px">${esc(b.text)}</h3>`;
     if (b.t === 'h') return `<h4 style="color:#8a2d3b;font-size:14px;margin:14px 0 4px">${b.num}. ${esc(b.text)}</h4>`;
-    if (b.t === 'p') return `<p style="margin:4px 0 4px ${b.num ? 0 : 34}px">${b.num ? `<b style="display:inline-block;width:34px">${b.num}</b>` : ''}${esc(b.text)}</p>`;
+    if (b.t === 'p') return `<p style="text-align:justify;margin:4px 0 4px ${b.num ? 0 : 34}px">${b.num ? `<b style="display:inline-block;width:34px">${b.num}</b>` : ''}${esc(b.text)}</p>`;
     if (b.t === 'kv') return `<table style="min-width:0;margin:2px 0 6px 34px;width:auto">${b.rows.map(([k, v]) => `<tr><td style="border:0;padding:1px 14px 1px 0;white-space:nowrap">${esc(k)}</td><td style="border:0;padding:1px 6px">${k || v ? ':' : ''}</td><td style="border:0;padding:1px 0">${esc(v)}</td></tr>`).join('')}</table>`;
-    if (b.t === 'list') return `<div style="margin:2px 0 6px 34px">${b.items.map((t, i) => `<div style="display:flex;gap:8px"><span style="min-width:${b.roman ? 34 : 24}px">(${b.roman ? roman(i + 1) : String.fromCharCode(97 + i)})</span><span>${esc(t)}</span></div>`).join('')}</div>`;
+    if (b.t === 'list') return `<div style="margin:2px 0 6px 34px">${b.items.map((t, i) => `<div style="display:flex;gap:8px"><span style="min-width:${b.roman ? 34 : 24}px">(${b.roman ? roman(i + 1) : String.fromCharCode(97 + i)})</span><span style="text-align:justify">${esc(t)}</span></div>`).join('')}</div>`;
     if (b.t === 'table') return `<p style="margin:10px 0 3px;color:#8a2d3b;font-weight:700;font-size:12px">${esc(b.cap)}</p><div class="tw"><table><thead><tr>${b.head.map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${b.body.map(r => `<tr>${r.map((c, i) => `<td style="${(b.center || []).includes(i) ? 'text-align:center;' : ''}${(b.bold || []).includes(i) ? 'font-weight:700;' : ''}">${esc(c).replace(/\n/g, '<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.note ? `<p style="color:#6f6266;font-size:11px;margin:3px 0">${esc(b.note)}</p>` : ''}`;
     if (b.t === 'sign') return `<h4 style="text-align:center;margin:22px 0 4px">TANDATANGAN AHLI-AHLI JAWATANKUASA</h4><div style="display:flex;flex-wrap:wrap;gap:6px 30px">${b.members.map(mb => `<div style="flex:1 1 220px;margin-top:6px"><b>${esc(mb.role)}</b><div style="border-bottom:1px solid #999;height:36px"></div>${esc(mb.name)}${mb.jw ? `<br><span style="color:#6f6266">${esc(mb.jw)}</span>` : ''}<br><span style="color:#6f6266">Tarikh: ............</span></div>`).join('')}</div>`;
     return '';
