@@ -658,6 +658,7 @@ function detailPage(doc, r, P, ranked, newPage) {
 /* Kandungan dibina sekali sebagai "blok", kemudian dilukis ke PDF dan ke pratonton HTML. */
 let CFG = null;
 const CFG_DEF = () => ({ bil: 'xx/' + new Date().getFullYear(), tujuan: '', suratFail: '', suratTarikh: '', tamat: '', tempat: '', tarikhSidang: D.sesi.tarikh, masaSidang: D.sesi.masa, pengerusi: '', jawatan: '{}', cgpaMin: '2.00', syor: '' });
+const TUJUAN_DEF = 'Laporan ini disediakan untuk membantu Urusetia UTMXCITE membuat keputusan terhadap permohonan sewaan Lot di Student Mall dan SUB berdasarkan penilaian pelan perniagaan oleh jawatankuasa.';
 const CHAIR_DEFAULT = 'PM. Dr. Syed Norris Hikmi Syed Abdullah';   // Pengerusi JPPPDKP
 function jkCfg() { if (!CFG) { CFG = { ...CFG_DEF(), ...(D.cfg || {}) }; if (!String(CFG.pengerusi || '').trim()) CFG.pengerusi = CHAIR_DEFAULT; } return CFG; }
 const isChair = n => nem(n) === nem(jkCfg().pengerusi);
@@ -675,7 +676,7 @@ function jkBlocks() {
   B.push({ t: 'title', text: 'LAPORAN JAWATANKUASA PENILAIAN PELAN PERNIAGAAN DAN DANA KEUSAHAWANAN PELAJAR (JPPPDKP) UTM BIL ' + C.bil });
 
   B.push({ t: 'h', num: '1', text: 'Tujuan' });
-  B.push({ t: 'p', text: C.tujuan || 'Laporan ini disediakan untuk membantu Urusetia UTMXCITE membuat keputusan terhadap permohonan Student Mall dan SUB berdasarkan penilaian pelan perniagaan oleh jawatankuasa.' });
+  B.push({ t: 'p', text: C.tujuan || TUJUAN_DEF });
 
   B.push({ t: 'h', num: '2', text: 'Pelantikan Jawatankuasa' });
   B.push({ t: 'p', num: '2.1', text: 'Jawatankuasa ini dilantik oleh Dekan/Ketua Jabatan melalui surat:' });
@@ -799,7 +800,7 @@ function jkForm() {
    ${inp('suratFail', 'Fail rujukan surat pelantikan (2.1)')}${inp('suratTarikh', 'Tarikh surat (2.1)')}${inp('tamat', 'Tamat lantikan jawatankuasa (2.1)')}
    <label>Pengerusi (2.2)<input data-cfg="pengerusi" list="jkpan" value="${esc(C.pengerusi)}" placeholder="Nama pengerusi"><datalist id="jkpan">${P.map(p => `<option value="${esc(p.nama)}">`).join('')}</datalist></label>
    ${inp('tarikhSidang', 'Tarikh bersidang (3.1)')}${inp('masaSidang', 'Masa (3.1)')}${inp('tempat', 'Tempat bersidang (3.1)', '', true)}
-   <label class="wide">Tujuan laporan (1) <small style="font-weight:400">kosongkan untuk teks lalai</small><textarea data-cfg="tujuan" rows="2">${esc(C.tujuan)}</textarea></label>
+   <label class="wide">Tujuan laporan (1) <small style="font-weight:400">kosongkan untuk teks lalai</small><textarea data-cfg="tujuan" rows="2" placeholder="${esc(TUJUAN_DEF)}">${esc(C.tujuan)}</textarea></label>
    <div class="wide"><b style="font-size:12.5px;color:var(--muted)">Syor tambahan (5.2) <span style="font-weight:400">pilihan; dicetak sebagai (i), (ii), (iii). Syor lulus/tidak lulus dijana daripada Status akhir dalam tab Keputusan.</span></b>
     ${SYR().map((s, i) => `<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><b style="min-width:34px;padding-top:9px">(${roman(i + 1)})</b><textarea data-syor="${i}" rows="2" style="flex:1" placeholder="Tulis syor tambahan">${esc(s)}</textarea><button class="btn-ghost sydel" data-i="${i}" aria-label="Buang syor ${i + 1}" title="Buang">✕</button></div>`).join('')}
     <div class="foot" style="margin-top:8px"><button class="btn-line" id="syadd">+ Tambah syor</button></div></div></div>
