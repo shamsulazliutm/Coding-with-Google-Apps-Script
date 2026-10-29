@@ -713,14 +713,10 @@ function jkBlocks() {
   B.push({ t: 'table', cap: 'Jadual 5: Kesepakatan panel tentang kelayakan', head: ['Perniagaan', 'Purata', 'Layak (Ya)', 'Tidak', '% Layak', 'Kesepakatan'], body: cons, widths: [52, 20, 24, 18, 22, 46], center: [1, 2, 3, 4], bold: [0], flag: { col: 5, bad: ['Majoriti tidak layak', 'Seimbang'] } });
 
   B.push({ t: 'h', num: '5', text: 'Syor' });
-  const by = f => rows.filter(r => (r.final || 'Belum') === f).map(r => r.a.biz + (r.avg != null ? ' (' + fmt(r.avg) + ')' : ''));
-  const yes = by('Lulus'), no = by('Tidak lulus'), pend = by('Belum');
-  B.push({ t: 'p', num: '5.1', text: 'Berdasarkan kepada analisis di para 4 di atas, Jawatankuasa mengesyorkan agar:' });
-  const L = [];
-  if (yes.length) L.push('Permohonan berikut DILULUSKAN: ' + join(yes) + '.');
-  if (no.length) L.push('Permohonan berikut TIDAK DILULUSKAN: ' + join(no) + '.');
-  if (pend.length) L.push('Keputusan belum ditetapkan bagi: ' + join(pend) + '.');
-  B.push({ t: 'list', items: L.length ? L : ['Keputusan akhir belum ditetapkan.'] });
+  B.push({ t: 'p', num: '5.1', text: 'Berdasarkan kepada analisis di para 4 di atas, Jawatankuasa mengesyorkan agar permohonan berikut diputuskan seperti di Jadual 6:' });
+  const syorOf = r => r.final === 'Lulus' ? 'Diluluskan' : r.final === 'Tidak lulus' ? 'Tidak diluluskan' : 'Belum diputuskan';
+  B.push({ t: 'table', cap: 'Jadual 6: Syor Jawatankuasa', head: ['Bil', 'Nama Pemohon', 'Syor'], body: rows.map((r, i) => [i + 1, r.a.biz, syorOf(r)]),
+    widths: [16, 98, 72], center: [0], bold: [1, 2], flag: { col: 2, bad: ['Tidak diluluskan'], good: ['Diluluskan'] } });
   if (C.syor.trim()) B.push({ t: 'p', num: '5.2', text: C.syor.trim() });
 
   B.push({ t: 'sign', members: [{ role: 'Pengerusi', name: chair, jw: jw[nem(chair)] || '' }, ...ahli.map((n, i) => ({ role: 'Ahli ' + (ORD[i] || (i + 1)), name: n, jw: jw[nem(n)] || '' }))] });
@@ -744,7 +740,7 @@ function renderBlocksPdf(doc, B) {
       ensure(34); doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...MAROON); doc.text(b.cap, m, y + 3); y += 5;
       const cs = {}; b.widths.forEach((w, i) => cs[i] = { cellWidth: w, halign: (b.center || []).includes(i) ? 'center' : 'left', fontStyle: (b.bold || []).includes(i) ? 'bold' : 'normal' });
       doc.autoTable({ ...TBL, startY: y, margin: { top: 30, bottom: 16, left: m, right: m }, styles: { ...TBL.styles, fontSize: 8, cellPadding: 1.5 }, head: [b.head], body: b.body.map(r => r.map(String)), columnStyles: cs,
-        didParseCell: d => { if (b.flag && d.section === 'body' && d.column.index === b.flag.col && b.flag.bad.includes(d.cell.raw)) { d.cell.styles.textColor = [179, 38, 30]; d.cell.styles.fontStyle = 'bold'; } } });
+        didParseCell: d => { if (b.flag && d.section === 'body' && d.column.index === b.flag.col) { if (b.flag.bad.includes(d.cell.raw)) { d.cell.styles.textColor = [179, 38, 30]; d.cell.styles.fontStyle = 'bold'; } else if ((b.flag.good || []).includes(d.cell.raw)) { d.cell.styles.textColor = [31, 122, 77]; d.cell.styles.fontStyle = 'bold'; } } } });
       y = doc.lastAutoTable.finalY + 2;
       if (b.note) { doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(...GREY); const ln = doc.splitTextToSize(b.note, W); ensure(ln.length * 3.4); doc.text(ln, m, y + 3); y += ln.length * 3.4 + 2; }
       y += 3;
