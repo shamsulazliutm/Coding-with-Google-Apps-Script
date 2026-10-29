@@ -236,6 +236,8 @@ var Auth = (function () {
     if (ADMIN_ROLES.indexOf(role) >= 0) {
       var a = Admins.find(email);
       out.nama = a ? a.nama : email;
+      // Menu KPI: Penilai tidak melihatnya; URL hanya didedahkan kepada peranan yang dibenarkan
+      if (role !== ROLE.PENILAI) { out.kpiUrl = Util.str(Cfg.get('KPI_URL', '')); out.kpiUbah = role === ROLE.ADMIN_PENUH; }
       return out;
     }
     if (role === ROLE.PELAJAR) {
@@ -433,6 +435,7 @@ function include(name) {
 function rpcTable_() {
   var t = {
     'ping':          { auth: false, fn: function () { return { versi: APP.VERSI, masa: new Date().toISOString() }; } },
+    'app.awam':      { auth: false, fn: function () { return { mode: Mode.current(), laman: String(Cfg.get('LAMAN_UTMXCITE', '') || '') }; } },
     'otp.minta':     { auth: false, fn: function (c, p) { return Auth.requestOtp(p.emel); } },
     'otp.sahkan':    { auth: false, fn: function (c, p) { return Auth.verifyOtp(p.emel, p.kod); } },
     'sesi.saya':     { auth: true,  fn: function (c) { return Auth.me(c); } },
@@ -667,6 +670,7 @@ var TETAPAN_LALAI = [
   ['DOMAIN_STAF', '@utm.my', 'Domain emel staf (juga domain penyelia)'],
   ['NAMA_PENGHANTAR', 'UTMPreneur · UTMXCITE', 'Nama penghantar emel'],
   ['WEBAPP_URL', '', 'URL web app (digunakan dalam emel)'],
+  ['LAMAN_UTMXCITE', '', 'URL laman UTMXCITE bagi pautan di skrin log masuk (kosong = pautan disembunyikan)'],
   ['PENGUJI_EMEL', '', 'MOD UJI sahaja: emel penguji dibenarkan menerima emel, dipisah koma'],
   ['OTP_TAMAT_MINIT', '5', 'Tempoh sah OTP (minit)'],
   ['OTP_MAKS_PERCUBAAN', '5', 'Percubaan maksimum bagi satu OTP'],

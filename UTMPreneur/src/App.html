@@ -55,7 +55,7 @@
 
   // ---------- Log masuk ----------
   function startTimer(sec) {
-    var btn = $('btn-semula'), lab = $('otp-pemasa');
+    var btn = $('btn-minta'), lab = $('otp-pemasa');
     clearInterval(S.timer);
     var left = sec;
     btn.disabled = true;
@@ -66,10 +66,19 @@
         lab.textContent = '';
         btn.disabled = false;
       } else {
-        lab.textContent = 'Hantar semula dalam ' + left + ' saat';
+        lab.textContent = 'Hantar semula dalam ' + left + ' saat / Resend in ' + left + 's';
       }
     }, 1000);
-    lab.textContent = 'Hantar semula dalam ' + left + ' saat';
+    lab.textContent = 'Hantar semula dalam ' + left + ' saat / Resend in ' + left + 's';
+  }
+
+  /** Bahagian OTP pada skrin log masuk yang sama: dikunci sehingga kod dihantar. */
+  function otpMode(on) {
+    $('v-otp').classList.toggle('off', !on);
+    otpBoxes().forEach(function (b) { b.disabled = !on; });
+    $('btn-sahkan').disabled = !on;
+    $('btn-ubah-emel').hidden = !on;
+    $('in-emel').readOnly = !!on;
   }
 
   function otpBoxes() { return Array.prototype.slice.call($('otp-boxes').querySelectorAll('input')); }
@@ -77,7 +86,7 @@
   function otpClear() { otpBoxes().forEach(function (b) { b.value = ''; }); }
 
   function requestOtp() {
-    var emel = $('in-emel').value.trim().toLowerCase();
+    var emel = ($('in-emel').readOnly ? S.emel : $('in-emel').value).trim().toLowerCase();
     var m = $('msg-emel');
     clearMsg(m);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emel)) { msg(m, 'err', 'Sila masukkan emel yang sah.', 'Please enter a valid email.'); return; }
@@ -86,9 +95,9 @@
       busy(btn, false);
       if (!r.ok) { msgErr(m, r); return; }
       S.emel = emel;
-      $('otp-emel').textContent = emel;
+      otpMode(true);
       otpClear(); clearMsg($('msg-otp'));
-      show('v-otp');
+      msg(m, 'ok', 'Kod dihantar ke e-mel anda.', 'Code sent to your email.');
       startTimer((r.data && r.data.jedaSaat) || 60);
       otpBoxes()[0].focus();
     });
@@ -135,6 +144,7 @@
     S.session = session;
     $('banner-uji').hidden = session.mode !== 'UJI';
     $('btn-keluar').hidden = false;
+    if (session.perlu && UP.shell) UP.shell.mode('half');
     if (session.perlu === 'MATRIK') { clearMsg($('msg-matrik')); show('v-matrik'); $('in-matrik').focus(); return; }
     if (session.perlu === 'PROFIL') {
       var staf = session.role === 'Staf';
@@ -208,7 +218,11 @@
     if (t) { try { google.script.run.rpc('sesi.keluar', t, {}); } catch (e) {} }
     $('btn-keluar').hidden = true;
     $('in-emel').value = '';
+    clearInterval(S.timer); $('otp-pemasa').textContent = ''; $('btn-minta').disabled = false;
+    otpMode(false); otpClear(); clearMsg($('msg-otp'));
     clearMsg($('msg-emel'));
+    if (UP.shell) UP.shell.mode('auth');
+    publicInfo();
     show('v-emel');
   }
 
@@ -322,15 +336,28 @@
     });
   }
 
+  // ---------- Maklumat awam skrin log masuk (mod ujian, pautan laman UTMXCITE) ----------
+  function publicInfo() {
+    api('app.awam').then(function (r) {
+      if (!r.ok || !r.data || S.token) return;
+      $('banner-uji').hidden = r.data.mode !== 'UJI';
+      var a = $('lnk-laman'), u = String(r.data.laman || '');
+      if (/^https?:\/\//i.test(u)) { a.href = u; a.hidden = false; } else a.hidden = true;
+    });
+  }
+
   // ---------- Mula ----------
   function init() {
-    if (window.LOGO_DEFAULT) { var lg = $('logo'); lg.src = window.LOGO_DEFAULT; lg.hidden = false; }
+    if (window.LOGO_DEFAULT) { ['logo'].forEach(function (id) { var lg = $(id); lg.src = window.LOGO_DEFAULT; lg.hidden = false; }); }
+    publicInfo();
     wireOtpBoxes();
     $('btn-minta').addEventListener('click', requestOtp);
     $('in-emel').addEventListener('keydown', function (e) { if (e.key === 'Enter') requestOtp(); });
     $('btn-sahkan').addEventListener('click', verifyOtp);
-    $('btn-semula').addEventListener('click', function () { $('in-emel').value = S.emel; requestOtp(); });
-    $('btn-ubah-emel').addEventListener('click', function () { clearInterval(S.timer); show('v-emel'); });
+    $('btn-ubah-emel').addEventListener('click', function () {
+      clearInterval(S.timer); $('otp-pemasa').textContent = ''; $('btn-minta').disabled = false;
+      otpMode(false); otpClear(); clearMsg($('msg-otp')); clearMsg($('msg-emel')); $('in-emel').focus();
+    });
     $('btn-matrik').addEventListener('click', claimMatric);
     $('in-matrik').addEventListener('keydown', function (e) { if (e.key === 'Enter') claimMatric(); });
     $('btn-profil').addEventListener('click', saveProfile);

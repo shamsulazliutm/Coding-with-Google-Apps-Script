@@ -1,0 +1,263 @@
+<script>
+(function () {
+  'use strict';
+  var UP = window.UP;
+  var $ = function (id) { return document.getElementById(id); };
+  var node = UP.node;
+  var PHONE = window.matchMedia ? window.matchMedia('(max-width: 900px)') : { matches: false };
+  var ST = { key: 'utama', sub: 0, open: {}, kpiUrl: '', kpiUbah: false };
+
+  var KPI_VIEWS = [
+    ['infografik', 'Infografik', 'Infographic'],
+    ['dashboard', 'Dashboard', 'Dashboard'],
+    ['kpt', 'KPT · Kementerian', 'KPT · Ministry'],
+    ['kai', 'KAI · Universiti', 'KAI · University'],
+    ['dkai', 'DKAI · Jabatan (JTNC HEPA)', 'DKAI · Department'],
+    ['ckai', 'CKAI · Pusat (UTMXCITE)', 'CKAI · Centre'],
+    ['sasaran', 'Sasaran dan input manual', 'Targets and manual input']
+  ];
+
+  // ---------- Pembantu navigasi ke skrin modul sedia ada ----------
+  function press(id) { var b = $(id); if (b && !b.disabled && !b.hidden) { b.click(); return true; } return false; }
+  /** Tunggu elemen muncul (skrin modul memuat data secara tak segerak), kemudian lakukan sesuatu. */
+  function when(fn, done) {
+    var n = 0, t = setInterval(function () {
+      var r = null; try { r = fn(); } catch (e) { r = null; }
+      if (r || ++n > 40) { clearInterval(t); if (r) done(r); }
+    }, 100);
+  }
+  function scrollText(re) {
+    when(function () {
+      var vis = document.querySelector('#main > .view:not([hidden])'); if (!vis) return null;
+      var hs = vis.querySelectorAll('.h1, .h2, .sech');
+      for (var i = 0; i < hs.length; i++) if (re.test(hs[i].textContent)) return hs[i];
+      return null;
+    }, function (el) { el.scrollIntoView({ block: 'start' }); });
+  }
+  function tab(sel, v) {
+    when(function () { return document.querySelector(sel + ' [data-tab="' + v + '"]'); }, function (b) { if (!b.classList.contains('on')) b.click(); });
+  }
+  function open(id, after) { return function () { if (press(id) && after) after(); }; }
+
+  // ---------- Model menu ----------
+  function sub(bm, go) { return { bm: bm, go: go }; }
+  function groups(s) {
+    var pel = s.role === 'Pelajar';
+    var adm = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati', 'Penilai'].indexOf(s.role) >= 0;
+    var G = [];
+    function add(g, btnId) { if (btnId) { var b = $(btnId); if (!b || b.hidden || b.disabled) return; } G.push(g); }
+    if (adm) {
+      add({ key: 'ssu', bm: 'SSU', ids: ['go-ssu-admin'], pill: 'pill-ssu-admin', go: open('go-ssu-admin'), subs: [
+        sub('Permohonan', open('go-ssu-admin')),
+        sub('Hampir tamat dan tamat', open('go-ssu-admin', function () { scrollText(/hampir tamat/i); })),
+        sub('Daftar SSU sedia ada', open('go-ssu-admin', function () { when(function () { var b = $('btn-sa-sedia'); return b && !b.hidden && b; }, function (b) { b.click(); }); }))] }, 'go-ssu-admin');
+      add({ key: 'lot', bm: 'Sewaan Lot', ids: ['go-rn-admin'], pill: 'pill-rn-admin', go: open('go-rn-admin'), subs: s.role === 'Penilai' ? [] : [
+        sub('Ringkasan', open('go-rn-admin', function () { tab('#rn-a-tabs', 'ringkasan'); })),
+        sub('Lot dan tempoh permohonan', open('go-rn-admin', function () { tab('#rn-a-tabs', 'lot'); })),
+        sub('Permohonan', open('go-rn-admin', function () { tab('#rn-a-tabs', 'perm'); })),
+        sub('Penilaian jawatankuasa', open('go-rn-admin', function () { tab('#rn-a-tabs', 'sesi'); })),
+        sub('Sewaan', open('go-rn-admin', function () { tab('#rn-a-tabs', 'sewaan'); })),
+        sub('Bil sewa', open('go-rn-admin', function () { tab('#rn-a-tabs', 'bil'); }))] }, 'go-rn-admin');
+      add({ key: 'kew', bm: 'Laporan Kewangan', ids: ['go-kew-admin'], pill: 'pill-kew-admin', go: open('go-kew-admin'), subs: [] }, 'go-kew-admin');
+      add({ key: 'mk', bm: 'Makerspace', ids: ['go-mk-admin'], pill: 'pill-mk-admin', go: open('go-mk-admin'), subs: [
+        sub('Tempahan', open('go-mk-admin', function () { tab('#mk-ad-tabs', 'tempahan'); })),
+        sub('Jadual', open('go-mk-admin', function () { tab('#mk-ad-tabs', 'jadual'); })),
+        sub('Bil dan bayaran', open('go-mk-admin', function () { tab('#mk-ad-tabs', 'bayaran'); })),
+        sub('Alat pinjaman', open('go-mk-admin', function () { tab('#mk-ad-tabs', 'alat'); })),
+        sub('Ruang, mesin dan kadar', open('go-mk-admin', function () { tab('#mk-ad-tabs', 'peralatan'); }))] }, 'go-mk-admin');
+    } else {
+      // Pelajar: semua kumpulan sentiasa kelihatan (butang kad Utama boleh dikunci sementara data dimuat). Staf dan orang luar: Makerspace sahaja.
+      var add = function (g) { if (pel || g.key === 'mk') G.push(g); };
+      add({ key: 'profiling', bm: 'Profiling', ids: ['go-profil'], pill: 'pill-profil', go: open('go-profil'), subs: [] });
+      add({ key: 'ssu', bm: 'SSU', ids: ['go-ssu'], pill: 'pill-ssu', go: open('go-ssu'), subs: [
+        sub('Status dan permohonan', open('go-ssu')),
+        sub('Sijil dan pembaharuan', open('go-ssu', function () { scrollText(/sijil|pembaharuan/i); }))] });
+      var rn = function (re) { return open('go-rn', function () { scrollText(re); }); };
+      add({ key: 'lot', bm: 'Sewaan Lot', ids: ['go-rn'], pill: 'pill-rn', go: open('go-rn'), subs: [
+        sub('Lot tersedia', open('go-rn')), sub('Permohonan saya', rn(/permohonan/i)), sub('Tawaran dan dokumen', rn(/tawaran|dokumen/i)),
+        sub('Bil dan bayaran', rn(/bil|bayar/i)), sub('Pekerja dan peralatan', rn(/pekerja|peralatan/i))] });
+      add({ key: 'kew', bm: 'Laporan Kewangan', ids: ['go-kew'], pill: 'pill-kew', go: open('go-kew'), subs: [] });
+      var mk = function (btn) { return open('go-mk', function () { when(function () { var b = $(btn); return b && !b.disabled && b; }, function (b) { b.click(); }); }); };
+      var mkScroll = function (sel) { return open('go-mk', function () { when(function () { return document.querySelector(sel); }, function (e) { e.scrollIntoView({ block: 'start' }); }); }); };
+      add({ key: 'mk', bm: 'Makerspace', ids: ['go-mk'], pill: 'pill-mk', go: open('go-mk'), subs: [
+        sub('Tempah ruang', mk('mk-new-ruang')), sub('Laser Cut dan 3D Printer', mkScroll('#mk-new')),
+        sub('Pinjaman peralatan', mk('mk-new-pinjam')), sub('Tempahan dan bayaran saya', mkScroll('#mk-list'))] });
+    }
+    return G;
+  }
+
+  // ---------- Pembinaan bar sisi ----------
+  function item(cls, ic, text) {
+    var b = node('button', null, cls); b.type = 'button';
+    b.appendChild(node('span', ic, 'ic')); b.appendChild(node('span', text, 'tx'));
+    return b;
+  }
+  function section(t) { return node('div', t, 'sec'); }
+
+  function closeDrawer() { $('side').classList.remove('open'); $('scrim').hidden = true; $('btn-menu').setAttribute('aria-expanded', 'false'); }
+  function toggleDrawer() {
+    var o = !$('side').classList.contains('open');
+    $('side').classList.toggle('open', o); $('scrim').hidden = !o; $('btn-menu').setAttribute('aria-expanded', o ? 'true' : 'false');
+  }
+
+  function go(key, i, fn) {
+    ST.key = key; ST.sub = i || 0;
+    if (PHONE.matches) closeDrawer();
+    fn();
+    renderSide();
+  }
+
+  function renderSide() {
+    var s = UP.S.session; if (!s) return;
+    var side = $('side'); side.textContent = '';
+    var adm = ['Admin Penuh', 'Pegawai Modul', 'Pemerhati', 'Penilai'].indexOf(s.role) >= 0;
+
+    var u = node('div', null, 'user');
+    var nm = (s.nama || s.email || '').trim();
+    var ini = nm.split(/\s+/).slice(0, 2).map(function (x) { return x.charAt(0); }).join('').toUpperCase() || '?';
+    u.appendChild(node('div', ini, 'av'));
+    var ub = node('div'); ub.appendChild(node('b', nm)); ub.appendChild(node('span', (s.noMatrik ? s.noMatrik + ' · ' : '') + s.role)); u.appendChild(ub);
+    side.appendChild(u);
+    var out = node('button', 'Log keluar', 'out'); out.type = 'button'; out.id = 'side-keluar';
+    out.addEventListener('click', function () { $('btn-keluar').click(); });
+    side.appendChild(out);
+
+    var nav = node('div', null, 'nav');
+    var ut = item(ST.key === 'utama' ? 'on' : '', '⌂', 'Utama'); ut.id = 'nav-utama';
+    ut.addEventListener('click', function () { go('utama', 0, function () { UP.home(); }); });
+    nav.appendChild(ut);
+    if (adm && !$('go-bantu').hidden) {
+      var bt = item(ST.key === 'bantu' ? 'on' : '', '☺', 'Bantu pelajar'); bt.id = 'nav-bantu';
+      bt.addEventListener('click', function () { go('bantu', 0, function () { press('go-bantu'); }); });
+      nav.appendChild(bt);
+    }
+    side.appendChild(nav);
+
+    var gs = groups(s);
+    if (gs.length) {
+      side.appendChild(section('PROSES'));
+      var pn = node('div', null, 'nav'); side.appendChild(pn);
+      gs.forEach(function (g) { pn.appendChild(group('nav-' + g.key, g.key, g.bm, g.subs, g.go, g.pill, '◎', g.ids[0])); });
+    }
+
+    if (s.kpiUrl !== undefined) {
+      side.appendChild(section('KPI'));
+      var kn = node('div', null, 'nav'); side.appendChild(kn);
+      var ks = KPI_VIEWS.map(function (v, i) { return { bm: v[1], go: function () { openKpi(i); } }; });
+      kn.appendChild(group('nav-kpi', 'kpi', 'Laporan KPI', ks, function () { openKpi(0); }, null, '▥'));
+    }
+
+    if (!adm) {
+      side.appendChild(section('LAIN-LAIN'));
+      var ln = node('div', null, 'nav'); side.appendChild(ln);
+      ['Mikro Kredit', 'Dana Program', 'Inovasi dan Anugerah'].forEach(function (t) {
+        var b = item('off', '◌', t); b.disabled = true; b.appendChild(node('span', 'AKAN DATANG', 'soon')); ln.appendChild(b);
+      });
+    } else {
+      var ps = [];
+      ps.push(['Status sistem', 'go-status']);
+      if (s.role === 'Admin Penuh') { ps.unshift(['Urus admin', 'go-admin']); ps.unshift(['Import pelajar', 'go-import']); }
+      var extra = UP.adminPages.filter(function (pg) { return !pg.roles || pg.roles.indexOf(s.role) >= 0; });
+      var subs = ps.map(function (p) { return { bm: p[0], go: function () { press(p[1]); } }; })
+        .concat(extra.map(function (pg) { return { bm: pg.bm, go: function () { pg.open(); } }; }));
+      side.appendChild(section('ADMIN'));
+      var an = node('div', null, 'nav'); side.appendChild(an);
+      an.appendChild(group('nav-pentadbiran', 'pentadbiran', 'Pentadbiran', subs, null, null, '⚙'));
+    }
+    updateBadges();
+  }
+
+  /** Satu kumpulan: pengepala + (jika terbuka) sub-halaman. Tanpa sub, pengepala terus membuka halaman. */
+  function group(id, key, label, subs, goFn, pillId, ic, btnId) {
+    var wrap = node('div', null, 'grpw'); wrap.id = id;
+    var has = !!(subs && subs.length);
+    var isOpen = !!ST.open[key] && has;
+    var active = ST.key === key;
+    var h = item((active && (!has || !isOpen) ? 'on ' : '') + 'grp', active ? '◉' : ic, label); h.setAttribute('data-key', key);
+    if (pillId) h.setAttribute('data-pill', pillId);
+    if (btnId) h.setAttribute('data-btn', btnId);
+    var bd = node('span', '', 'bd'); bd.hidden = true; h.appendChild(bd);
+    if (has) { h.appendChild(node('span', isOpen ? '⌃' : '⌄', 'ch')); h.setAttribute('aria-expanded', isOpen ? 'true' : 'false'); }
+    h.addEventListener('click', function () {
+      if (!has) { go(key, 0, goFn); return; }
+      if (isOpen) { ST.open[key] = false; renderSide(); return; }
+      ST.open[key] = true;
+      go(key, 0, subs[0].go);
+    });
+    wrap.appendChild(h);
+    if (isOpen) subs.forEach(function (sb, i) {
+      var b = item('sub' + (active && ST.sub === i ? ' on' : ''), '', sb.bm); b.setAttribute('data-sub', String(i));
+      b.addEventListener('click', function () { go(key, i, sb.go); });
+      wrap.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function updateBadges() {
+    Array.prototype.forEach.call(document.querySelectorAll('#side [data-btn]'), function (h) {
+      var b = $(h.getAttribute('data-btn')); h.classList.toggle('dim', !!(b && b.disabled));
+    });
+    var hs = document.querySelectorAll('#side [data-pill]');
+    Array.prototype.forEach.call(hs, function (h) {
+      var p = $(h.getAttribute('data-pill')), bd = h.querySelector('.bd'); if (!p || !bd) return;
+      var m = /^(\d+)\b/.exec(p.textContent.trim()), n = m ? parseInt(m[1], 10) : 0;
+      var warn = p.classList.contains('warn');
+      bd.hidden = !(n > 0 || warn);
+      bd.textContent = n > 0 ? String(n) : '!';
+      bd.className = 'bd' + (warn || n > 0 ? ' w' : '');
+    });
+  }
+
+  // ---------- Menu KPI (sistem KPI sedia ada dalam iframe) ----------
+  function openKpi(i) {
+    var v = KPI_VIEWS[i], url = ST.kpiUrl;
+    UP.show('v-kpi-frame');
+    $('kf-tajuk').textContent = v[1]; $('kf-en').textContent = v[2];
+    $('kf-ro').hidden = !(v[0] === 'sasaran' && !ST.kpiUbah);
+    var fr = $('kf-frame');
+    if (!url) { $('kf-kosong').hidden = false; fr.hidden = true; fr.removeAttribute('src'); $('kf-buka-wrap').hidden = true; return; }
+    $('kf-kosong').hidden = true;
+    var full = url + (url.indexOf('?') < 0 ? '?' : '&') + 'view=' + v[0] + '&embed=1' + (ST.kpiUbah ? '' : '&mode=baca');
+    fr.hidden = false;
+    if (fr.getAttribute('src') !== full) fr.setAttribute('src', full);
+    $('kf-buka').setAttribute('href', full); $('kf-buka-wrap').hidden = false;
+  }
+
+  // ---------- Mod paparan ----------
+  function mode(m) {
+    document.body.className = m;
+    if (m === 'auth') { ST.open = {}; ST.key = 'utama'; ST.sub = 0; }
+    $('hero').hidden = m !== 'auth';
+    $('topbar').hidden = m === 'auth';
+    $('btn-menu').hidden = m !== 'app';
+    $('side').hidden = m !== 'app';
+    if (m !== 'app') closeDrawer();
+  }
+
+  UP.shell = { mode: mode, render: renderSide, state: ST, openKpi: openKpi };
+
+  UP.homeHooks.push(function (s) {
+    ST.kpiUrl = s.kpiUrl || ''; ST.kpiUbah = !!s.kpiUbah;
+    ST.key = 'utama'; ST.sub = 0;
+    mode('app');
+    renderSide();
+  });
+
+  function init() {
+    $('btn-menu').addEventListener('click', toggleDrawer);
+    $('scrim').addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+    // Kad Utama: tandakan kumpulan aktif dalam bar sisi tanpa menavigasi semula
+    document.getElementById('v-home').addEventListener('click', function (e) {
+      if (!e.isTrusted) return; // klik atur cara daripada bar sisi mengekalkan sub-halaman yang dipilih
+      var b = e.target.closest && e.target.closest('.item[id^="go-"]'); if (!b) return;
+      var map = { 'go-profil': 'profiling', 'go-ssu': 'ssu', 'go-rn': 'lot', 'go-kew': 'kew', 'go-mk': 'mk', 'go-ssu-admin': 'ssu', 'go-rn-admin': 'lot', 'go-kew-admin': 'kew', 'go-mk-admin': 'mk', 'go-bantu': 'bantu' };
+      if (map[b.id]) { ST.key = map[b.id]; ST.sub = 0; setTimeout(renderSide, 0); }
+    });
+    var home = document.getElementById('v-home');
+    if (window.MutationObserver) new MutationObserver(function () { updateBadges(); }).observe(home, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'hidden'] });
+    mode('auth');
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>

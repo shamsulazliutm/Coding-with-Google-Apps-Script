@@ -1,0 +1,10 @@
+<!-- ViewsShell: paparan sistem KPI sedia ada (iframe) dalam bar sisi. Dibina oleh Shell.html -->
+  <section id="v-kpi-frame" class="view" data-wide hidden>
+    <div class="card kpi-head">
+      <div class="h1" id="kf-tajuk">Laporan KPI</div><div class="e" id="kf-en">KPI report</div>
+      <div id="kf-ro" class="msg info" hidden>Paparan sahaja. Hanya Admin Penuh boleh mengubah sasaran dan input manual. <i>View only. Only Full Admins can change targets and manual inputs.</i></div>
+      <div id="kf-kosong" class="msg err" hidden>URL sistem KPI belum ditetapkan. Pentadbir: isi <code>KPI_URL</code> dalam tab Tetapan. <i>The KPI system URL is not set. Admin: fill KPI_URL in the Tetapan tab.</i></div>
+    </div>
+    <iframe id="kf-frame" title="Sistem KPI" class="kpi-frame" referrerpolicy="no-referrer" hidden></iframe>
+    <p class="e" id="kf-buka-wrap" hidden><a id="kf-buka" target="_blank" rel="noopener">Buka dalam tab baharu / Open in a new tab</a></p>
+  </section>

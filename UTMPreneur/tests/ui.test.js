@@ -57,7 +57,7 @@ test('UI hujung ke hujung: log masuk OTP, tuntut matrik, admin (status, import, 
     // 1. Skrin emel
     await page.waitForSelector('#v-emel:not([hidden])');
     assert.equal(await visible('v-emel'), true);
-    assert.equal(await visible('banner-uji'), false);
+    assert.equal(await visible('banner-uji'), true, 'MOD UJIAN dipaparkan pada skrin log masuk');
     await shot('ui-01-emel');
 
     // 2. Emel tidak sah
