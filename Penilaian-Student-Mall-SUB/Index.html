@@ -1149,14 +1149,13 @@ function paperPreview() {
 function laporan() {
   const T = [['ringkasan', 'Ringkasan keputusan', 'Satu jadual ranking semua pemohon dengan markah setiap panel, purata, layak dan status akhir. A4 melintang, ruang tandatangan.'],
     ['terperinci', 'Terperinci setiap pemohon', 'Satu halaman bagi setiap pemohon: maklumat pelajar, markah mengikut kriteria dan panel, keputusan serta catatan panel. A4 menegak.'],
-    ['lengkap', 'Laporan lengkap', 'Ringkasan keputusan diikuti halaman terperinci semua pemohon dalam satu fail PDF.'],
     ['jawatankuasa', 'Laporan Jawatankuasa (JPPPDKP)', 'Laporan rasmi mengikut templat: Tujuan, Pelantikan, Pemerhatian, Analisis (kelayakan, kaedah, markah, kesepakatan panel), Syor dan tandatangan ahli. A4 menegak.']];
   const { rows } = rpData(), jk = RP.type === 'jawatankuasa';
   $('#main').innerHTML = head('Laporan', 'Reports · ' + esc(D.sesi.nama) + ' · muat turun PDF dengan kepala UTMXCITE', sesiHead() + ' <button class="btn-ghost" id="rl">↻ Data terkini</button>') + `
   <div class="rp"><div class="ctl card"><h3>Format laporan</h3>
    ${T.map(t => `<label class="opt"><input type="radio" name="rt" value="${t[0]}" ${RP.type === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><small>${t[2]}</small></span></label>`).join('')}
    <div class="f">${jk ? '' : `<label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option></select></label>`}
-   ${RP.type === 'terperinci' || RP.type === 'lengkap' ? `<label>Pemohon (laporan terperinci)<select id="rp"><option value="0">Semua pemohon (${rows.length})</option>${rows.map(r => `<option value="${r.a.id}" ${RP.pid === r.a.id ? 'selected' : ''}>${esc(r.a.biz)}</option>`).join('')}</select></label>` : ''}
+   ${RP.type === 'terperinci' ? `<label>Pemohon (laporan terperinci)<select id="rp"><option value="0">Semua pemohon (${rows.length})</option>${rows.map(r => `<option value="${r.a.id}" ${RP.pid === r.a.id ? 'selected' : ''}>${esc(r.a.biz)}</option>`).join('')}</select></label>` : ''}
    ${RP.type !== 'ringkasan' && !jk ? `<label class="chip" style="border-radius:8px"><input type="checkbox" id="rn" ${RP.notes ? 'checked' : ''}> Sertakan catatan panel</label>` : ''}</div>
    <div class="foot" style="margin-top:6px"><button class="btn-solid" id="dl" style="flex:1">⬇ Muat turun PDF</button></div>
    <div class="foot" style="margin-top:8px"><button class="btn-line" id="op" style="flex:1">Buka dalam tab baharu</button></div>
@@ -1175,7 +1174,7 @@ function laporan() {
     $('#jsave').onclick = async () => { try { const c = jkCollect(); D.cfg = await rpc('apiSaveTetapan', c, SEL); $('#jmsg').textContent = ' Disimpan.'; toast('Butiran laporan disimpan'); } catch (e) { toast(e.message, true); } };
   }
   $('#rl').onclick = async () => { await loadAdmin(); toast('Data dimuat semula'); };
-  const name = () => 'Laporan_' + { ringkasan: 'Penilaian_Ringkasan', terperinci: 'Penilaian_Terperinci', lengkap: 'Penilaian_Lengkap', jawatankuasa: 'JPPPDKP' }[RP.type] + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+  const name = () => 'Laporan_' + { ringkasan: 'Penilaian_Ringkasan', terperinci: 'Penilaian_Terperinci', jawatankuasa: 'JPPPDKP' }[RP.type] + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
   const make = (fn) => { try { if (jk) { const c = jkCollect(); rpc('apiSaveTetapan', c, SEL).then(x => { D.cfg = x; }).catch(() => { }); } const doc = buildPdf(); fn(doc); rpc('apiLogReport', RP.type + (RP.jenis ? ' / ' + RP.jenis : '')).catch(() => { }); } catch (e) { toast(e.message, true); } };
   $('#dl').onclick = () => make(doc => { doc.save(name()); toast('PDF dijana'); });
   $('#op').onclick = () => make(doc => { const w = window.open(doc.output('bloburl'), '_blank'); if (!w) toast('Pelayar menyekat tab baharu. Benarkan pop-up atau guna Muat turun.', true); });
