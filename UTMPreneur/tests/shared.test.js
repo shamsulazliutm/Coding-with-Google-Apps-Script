@@ -56,3 +56,13 @@ test('Laluan modul lain digabungkan, mesej modul dikenali, Bantu.ctx menyokong k
   assert.equal(env.run(`Bantu.allowed({ role: 'Pegawai Modul', email: 'pegawai@utm.my' }, 'ruang niaga')`), false);
   assert.equal(env.run(`Bantu.allowed({ role: 'Pegawai Modul', email: 'pegawai@utm.my' })`), false);
 });
+
+test('Titik sambungan KPI: KpiSync digabungkan dalam laluan, kerja harian, Tetapan dan mesej', () => {
+  const env = ready();
+  env.run(`var KpiSync = { routes: function () { return { 'kpi.ping': { auth: false, fn: function () { return 'ok'; } } }; }, jobHarian: function () { return { x: 1 }; } };
+    var TETAPAN_KPI = [['KPI_UJI', 'a', 'ujian']]; var MSG_KPI = { KPI_UJI: ['Mesej KPI', 'KPI message'] };`);
+  assert.equal(call(env, 'kpi.ping', null).data, 'ok');
+  assert.deepEqual(env.plain(env.run('Jobs.harian()')).kpi, { x: 1 });
+  assert.equal(env.plain(env.run(`Seed.tetapan().some(function (t) { return t.Kunci === 'KPI_UJI'; })`)), true);
+  assert.equal(env.plain(env.run(`appError_('KPI_UJI').bm`)), 'Mesej KPI');
+});

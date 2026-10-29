@@ -68,7 +68,7 @@ function rpcTable_() {
   };
   // Laluan modul lain: setiap modul menyediakan routes() yang memulangkan {nama: {auth, roles, matrik, fn}}
   [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
-   typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+   typeof Makerspace !== 'undefined' ? Makerspace : null, typeof KpiSync !== 'undefined' ? KpiSync : null].forEach(function (m) {
     if (m && typeof m.routes === 'function') {
       var r = m.routes();
       Object.keys(r).forEach(function (k) { t[k] = r[k]; });

@@ -291,7 +291,7 @@ var Seed = (function () {
 
   function tetapan_() {
     var all = TETAPAN_LALAI.concat(typeof TETAPAN_RN !== 'undefined' ? TETAPAN_RN : [], typeof TETAPAN_KEW !== 'undefined' ? TETAPAN_KEW : [],
-      typeof TETAPAN_MK !== 'undefined' ? TETAPAN_MK : []);
+      typeof TETAPAN_MK !== 'undefined' ? TETAPAN_MK : [], typeof TETAPAN_KPI !== 'undefined' ? TETAPAN_KPI : []);
     return all.map(function (t) { return { Kunci: t[0], Nilai: t[1], Penerangan: t[2] }; });
   }
 

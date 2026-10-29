@@ -293,6 +293,7 @@ function appError_(code, extra) {
     (typeof MSG_RN !== 'undefined' && MSG_RN[code]) ||
     (typeof MSG_KEW !== 'undefined' && MSG_KEW[code]) ||
     (typeof MSG_MK !== 'undefined' && MSG_MK[code]) ||
+    (typeof MSG_KPI !== 'undefined' && MSG_KPI[code]) ||
     MSG.RALAT_DALAMAN;
   return new AppError(code, m[0], m[1], extra);
 }

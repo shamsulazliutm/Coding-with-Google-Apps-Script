@@ -467,7 +467,7 @@ function rpcTable_() {
   };
   // Laluan modul lain: setiap modul menyediakan routes() yang memulangkan {nama: {auth, roles, matrik, fn}}
   [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
-   typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+   typeof Makerspace !== 'undefined' ? Makerspace : null, typeof KpiSync !== 'undefined' ? KpiSync : null].forEach(function (m) {
     if (m && typeof m.routes === 'function') {
       var r = m.routes();
       Object.keys(r).forEach(function (k) { t[k] = r[k]; });
@@ -1365,7 +1365,7 @@ var Jobs = {
     var out = {};
     try { out.ssu = Ssu.jobHarian(); } catch (e) { console.error('Kerja SSU gagal: ' + e); out.ssu = { ralat: String(e) }; }
     [['rn', typeof RuangNiaga !== 'undefined' ? RuangNiaga : null], ['kew', typeof Kewangan !== 'undefined' ? Kewangan : null],
-     ['mk', typeof Makerspace !== 'undefined' ? Makerspace : null]].forEach(function (x) {
+     ['mk', typeof Makerspace !== 'undefined' ? Makerspace : null], ['kpi', typeof KpiSync !== 'undefined' ? KpiSync : null]].forEach(function (x) {
       if (!x[1] || typeof x[1].jobHarian !== 'function') return;
       try { out[x[0]] = x[1].jobHarian(); } catch (e) { console.error('Kerja ' + x[0] + ' gagal: ' + e); out[x[0]] = { ralat: String(e) }; }
     });
@@ -8317,7 +8317,7 @@ var Seed = (function () {
 
   function tetapan_() {
     var all = TETAPAN_LALAI.concat(typeof TETAPAN_RN !== 'undefined' ? TETAPAN_RN : [], typeof TETAPAN_KEW !== 'undefined' ? TETAPAN_KEW : [],
-      typeof TETAPAN_MK !== 'undefined' ? TETAPAN_MK : []);
+      typeof TETAPAN_MK !== 'undefined' ? TETAPAN_MK : [], typeof TETAPAN_KPI !== 'undefined' ? TETAPAN_KPI : []);
     return all.map(function (t) { return { Kunci: t[0], Nilai: t[1], Penerangan: t[2] }; });
   }
 
@@ -8478,7 +8478,7 @@ var Setup = (function () {
     }
     // Data awal modul (pilihan): setiap modul boleh menyediakan seed(appendMany, isEmpty, log)
     [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
-     typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+     typeof Makerspace !== 'undefined' ? Makerspace : null, typeof KpiSync !== 'undefined' ? KpiSync : null].forEach(function (m) {
       if (m && typeof m.seed === 'function') m.seed(appendMany_, isEmpty_, log);
     });
     Cfg.invalidate();
@@ -9804,6 +9804,7 @@ function appError_(code, extra) {
     (typeof MSG_RN !== 'undefined' && MSG_RN[code]) ||
     (typeof MSG_KEW !== 'undefined' && MSG_KEW[code]) ||
     (typeof MSG_MK !== 'undefined' && MSG_MK[code]) ||
+    (typeof MSG_KPI !== 'undefined' && MSG_KPI[code]) ||
     MSG.RALAT_DALAMAN;
   return new AppError(code, m[0], m[1], extra);
 }

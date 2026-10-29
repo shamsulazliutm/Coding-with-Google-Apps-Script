@@ -143,7 +143,7 @@ var Setup = (function () {
     }
     // Data awal modul (pilihan): setiap modul boleh menyediakan seed(appendMany, isEmpty, log)
     [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,
-     typeof Makerspace !== 'undefined' ? Makerspace : null].forEach(function (m) {
+     typeof Makerspace !== 'undefined' ? Makerspace : null, typeof KpiSync !== 'undefined' ? KpiSync : null].forEach(function (m) {
       if (m && typeof m.seed === 'function') m.seed(appendMany_, isEmpty_, log);
     });
     Cfg.invalidate();

@@ -8,7 +8,7 @@ var Jobs = {
     var out = {};
     try { out.ssu = Ssu.jobHarian(); } catch (e) { console.error('Kerja SSU gagal: ' + e); out.ssu = { ralat: String(e) }; }
     [['rn', typeof RuangNiaga !== 'undefined' ? RuangNiaga : null], ['kew', typeof Kewangan !== 'undefined' ? Kewangan : null],
-     ['mk', typeof Makerspace !== 'undefined' ? Makerspace : null]].forEach(function (x) {
+     ['mk', typeof Makerspace !== 'undefined' ? Makerspace : null], ['kpi', typeof KpiSync !== 'undefined' ? KpiSync : null]].forEach(function (x) {
       if (!x[1] || typeof x[1].jobHarian !== 'function') return;
       try { out[x[0]] = x[1].jobHarian(); } catch (e) { console.error('Kerja ' + x[0] + ' gagal: ' + e); out[x[0]] = { ralat: String(e) }; }
     });

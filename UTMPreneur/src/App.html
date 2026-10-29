@@ -6,7 +6,7 @@
   var S = { token: null, session: null, emel: '', timer: null, confirmImport: false };
   var $ = function (id) { return document.getElementById(id); };
   // Antara muka dikongsi dengan AppModul.html (Profiling, SSU)
-  var UP = window.UP = { hooks: {}, S: S, homeHooks: [], backHooks: [], initHooks: [], formTypes: {} };
+  var UP = window.UP = { hooks: {}, S: S, homeHooks: [], backHooks: [], initHooks: [], formTypes: {}, adminPages: [] };
 
   function store(k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
@@ -161,6 +161,18 @@
     $('admin-menu-wrap').hidden = !isAdmin;
     $('go-import').hidden = s.role !== 'Admin Penuh';
     $('go-admin').hidden = s.role !== 'Admin Penuh';
+    // Halaman admin tambahan daripada modul: UP.adminPages = [{id, bm, en, roles:[...], open: fn}]
+    var apw = $('admin-pages-wrap');
+    if (apw) {
+      apw.textContent = '';
+      UP.adminPages.forEach(function (pg) {
+        if (pg.roles && pg.roles.indexOf(s.role) < 0) return;
+        var b = node('button', null, 'item'); b.type = 'button'; b.id = 'go-' + pg.id;
+        b.appendChild(node('div', pg.bm, 'l')); b.appendChild(node('div', pg.en, 'e'));
+        b.addEventListener('click', function () { pg.open(); });
+        apw.appendChild(b);
+      });
+    }
     UP.homeHooks.forEach(function (fn) { fn(s); });
     show('v-home');
   }
