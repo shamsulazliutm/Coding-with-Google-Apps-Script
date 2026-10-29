@@ -42,6 +42,7 @@ const FOLDER_PELAN = 'Pelan Perniagaan UTMXCITE';   // folder Drive bagi pelan y
 const MAX_PLAN_MB = 8;
 const SUBMIT_MAX_PER_HOUR = 60;
 const TEMPLATE_CELL = 'B15';   // sel dalam sheet Tetapan yang menyimpan pautan templat pelan perniagaan
+const FOLDER_CELL = 'B16';     // sel dalam sheet Tetapan yang menyimpan pautan folder Drive bagi pelan yang dimuat naik
 const SESSION_TTL = 21600;   // sesi log masuk 6 jam (had maksimum CacheService)
 let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
@@ -912,9 +913,30 @@ function refreshKeputusan() {
 
 function cleanStr_(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max || 200); }
 
+function folderIdOf_(v) {
+  v = String(v || '').trim();
+  const m = v.match(/\/folders\/([A-Za-z0-9_-]{10,})/) || v.match(/[?&]id=([A-Za-z0-9_-]{10,})/) || v.match(/^([A-Za-z0-9_-]{15,})$/);
+  return m ? m[1] : '';
+}
+
+/**
+ * Folder simpanan pelan: dibaca daripada Tetapan!B16 (pautan folder Drive atau ID folder).
+ * Jika kosong atau tidak boleh diakses, folder lalai dicipta dan pautannya ditulis semula ke B16 supaya urusetia nampak lokasinya.
+ */
 function planFolder_() {
+  const cell = cfgSheet_().getRange(FOLDER_CELL);
+  const raw = String(cell.getValue() || '').trim();
+  const id = folderIdOf_(raw);
+  if (id) {
+    try { return DriveApp.getFolderById(id); }
+    catch (e) { log_('Folder pelan dalam Tetapan tidak boleh diakses', 'Guna folder lalai. ' + String(e.message || e).slice(0, 120)); }
+  } else if (raw) {
+    log_('Pautan folder dalam Tetapan tidak sah', 'Guna folder lalai.');
+  }
   const it = DriveApp.getFoldersByName(FOLDER_PELAN);
-  return it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER_PELAN);
+  const f = it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER_PELAN);
+  if (!raw) { try { cell.setValue(f.getUrl()); } catch (e) { } }
+  return f;
 }
 
 /**
@@ -978,7 +1000,8 @@ function apiSubmitApplication(p) {
       const nextId = pem.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
       const fname = ref_(nextId) + '_' + biz.replace(/[^A-Za-z0-9]+/g, '_').slice(0, 40) + '.pdf';
       const f = planFolder_().createFile(Utilities.newBlob(bytes, 'application/pdf', fname));
-      f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }
+      catch (e) { log_('Perkongsian fail pelan disekat (dasar domain)', ref_(nextId) + '. Kongsi folder kepada panel secara manual.'); }
       planUrl = f.getUrl();
     }
 
@@ -1027,6 +1050,10 @@ function setupSheets() {
   const ts = cfgSheet_();
   if (!String(ts.getRange('A15').getValue() || '').trim()) {
     ts.getRange('A15:C15').setValues([['TemplatPelan', '', '<- Tampal pautan templat pelan perniagaan (https) dalam sel B15. Pelajar akan nampak butang muat turun pada borang permohonan.']]);
+  }
+  // Tetapan!B16: folder Drive bagi pelan yang dimuat naik pelajar (kosong = folder lalai dicipta dan pautannya ditulis di sini)
+  if (!String(ts.getRange('A16').getValue() || '').trim()) {
+    ts.getRange('A16:C16').setValues([['FolderPelan', '', '<- Tampal pautan folder Drive untuk menyimpan pelan yang dimuat naik pelajar (pilihan). Kosongkan untuk folder lalai.']]);
   }
   // KP, matrik dan SSM mesti kekal sebagai teks
   book.getSheetByName(SH.PELAJAR).getRange('C:D').setNumberFormat('@');
