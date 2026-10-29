@@ -14,16 +14,18 @@ const LOGO_URL = ''; // pilihan: ganti logo lalai dalam Index.html dengan URL im
 
 const SH = {
   PANEL: 'Panel', PEMOHON: 'Pemohon', PELAJAR: 'Pelajar', SESI: 'Sesi', AGENDA: 'Agenda',
-  RUBRIK: 'Rubrik', CHIP: 'Chip', TETAPAN: 'Tetapan', NILAI: 'Penilaian', KEPUTUSAN: 'Keputusan', LOG: 'Log'
+  DAFTAR: 'Daftar', RUBRIK: 'Rubrik', CHIP: 'Chip', TETAPAN: 'Tetapan', NILAI: 'Penilaian', KEPUTUSAN: 'Keputusan', LOG: 'Log'
 };
 const HEAD = {
   Panel: ['Nama', 'Emel', 'Peranan', 'Status', 'KodHash', 'KodTamat'],
   // Lajur Slot, Susunan dan StatusAkhir dalam Pemohon ialah versi lama; kini disimpan bagi setiap mesyuarat dalam Agenda.
-  Pemohon: ['ID', 'Perniagaan', 'Jenis', 'SSM', 'JenisPerniagaan', 'PautanPelan', 'Slot', 'Susunan', 'StatusAkhir', 'TarikhMohon', 'Sumber',
-    'StatusSSM', 'Bentuk', 'Produk', 'PautanSSM', 'PautanSSMInfo', 'Tifoid', 'PautanTifoid', 'KursusMakanan', 'PautanKursus',
-    'SumberDana', 'PembiayaDana', 'JumlahDana', 'JualanBulanan', 'AlamatPerniagaan', 'MulaPerniagaan', 'BilPekerja', 'LokasiPerniagaan', 'SebabBerniaga'],
-  Pelajar: ['PemohonID', 'Nama', 'Matrik', 'KP', 'Tahun', 'Fakulti', 'Kursus', 'CGPA', 'Emel', 'Telefon',
-    'Jantina', 'Warganegara', 'Bidang', 'PelajarUTM', 'AlamatKolej', 'AlamatRumah', 'PautanMatrik', 'PautanKP'],
+  Pemohon: ['ID', 'Perniagaan', 'Jenis', 'SSM', 'JenisPerniagaan', 'PautanPelan', 'Slot', 'Susunan', 'StatusAkhir', 'TarikhMohon', 'Sumber'],
+  Pelajar: ['PemohonID', 'Nama', 'Matrik', 'KP', 'Tahun', 'Fakulti', 'Kursus', 'CGPA', 'Emel', 'Telefon'],
+  // Rekod mentah borang pelajar. Hanya yang disahkan urusetia disalin ke Pemohon/Pelajar (medan semasa sahaja).
+  Daftar: ['ID', 'Tarikh', 'Status', 'PemohonID', 'Jenis', 'Lot', 'Perniagaan', 'JenisPerniagaan', 'Produk', 'StatusSSM', 'SSM', 'PautanSSM', 'PautanSSMInfo',
+    'Tifoid', 'PautanTifoid', 'KursusMakanan', 'PautanKursus', 'SumberDana', 'PembiayaDana', 'JumlahDana', 'JualanBulanan',
+    'AlamatPerniagaan', 'MulaPerniagaan', 'BilPekerja', 'LokasiPerniagaan', 'SebabBerniaga', 'PautanPelan',
+    'Ketua', 'Matrik', 'Emel', 'Pelajar', 'Catatan', 'DisahkanOleh', 'TarikhSah'],
   Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status', 'ID', 'Tempat', 'Bil'],
   Agenda: ['SesiID', 'PemohonID', 'Susunan', 'Slot', 'StatusAkhir'],
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
@@ -85,7 +87,12 @@ function em_(x) { return String(x == null ? '' : x).trim().toLowerCase(); }
 function sent_(r) { return em_(r.Status) === 'dihantar'; }
 
 function table_(name) {
-  const sh = ss_().getSheetByName(name);
+  let sh = ss_().getSheetByName(name);
+  if (!sh && name === SH.DAFTAR) {   // sheet baharu untuk pemasangan lama
+    sh = ss_().insertSheet(name);
+    sh.getRange(1, 1, 1, HEAD[name].length).setValues([HEAD[name]]).setFontWeight('bold').setBackground('#8a2d3b').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+  }
   if (!sh) throw new Error('Sheet "' + name + '" tiada. Jalankan menu Penilaian > Sediakan sheet.');
   const v = sh.getDataRange().getValues();
   const head = v.shift();
@@ -442,23 +449,13 @@ function apps_(mask, sesiId) {
     const st = stud.filter(function (s) { return Number(s.PemohonID) === Number(p.ID); }).map(function (s) {
       const o = { n: String(s.Nama).trim(), m: String(s.Matrik).trim(), kp: mask ? maskKp_(s.KP) : String(s.KP).trim(),
         yr: s.Tahun, fac: s.Fakulti, course: String(s.Kursus).trim(), cgpa: Number(s.CGPA) };
-      if (!mask) {
-        o.email = String(s.Emel || '').trim(); o.tel = String(s.Telefon || '').trim();
-        o.sex = s.Jantina || ''; o.nat = s.Warganegara || ''; o.bid = s.Bidang || ''; o.utm = s.PelajarUTM || '';
-        o.kol = s.AlamatKolej || ''; o.rmh = s.AlamatRumah || ''; o.docM = s.PautanMatrik || ''; o.docK = s.PautanKP || '';
-      }
+      if (!mask) { o.email = String(s.Emel || '').trim(); o.tel = String(s.Telefon || '').trim(); }
       return o;
     });
     return {
       id: Number(p.ID), biz: p.Perniagaan, type: p.Jenis, ssm: p.SSM, kind: p.JenisPerniagaan, plan: p.PautanPelan,
       slot: x.a ? (x.a.Slot || '') : '', order: x.a ? Number(x.a.Susunan) || 0 : 0, final: x.a ? (x.a.StatusAkhir || '') : '', st: st,
-      mohon: fmtDate_(p.TarikhMohon), sumber: p.Sumber || '', sesi: where[Number(p.ID)] || [],
-      x: mask ? null : {
-        ssmStatus: p.StatusSSM || '', bentuk: p.Bentuk || '', produk: p.Produk || '', pautanSsm: p.PautanSSM || '', pautanSsmInfo: p.PautanSSMInfo || '',
-        tifoid: p.Tifoid || '', pautanTifoid: p.PautanTifoid || '', kursusMakanan: p.KursusMakanan || '', pautanKursus: p.PautanKursus || '',
-        sumber: p.SumberDana || '', pembiaya: p.PembiayaDana || '', jumlah: p.JumlahDana === '' ? '' : String(p.JumlahDana), jualan: p.JualanBulanan === '' ? '' : String(p.JualanBulanan),
-        alamat: p.AlamatPerniagaan || '', mula: fmtDate_(p.MulaPerniagaan), pekerja: p.BilPekerja === '' ? '' : String(p.BilPekerja), lokasi: p.LokasiPerniagaan || '', sebab: p.SebabBerniaga || ''
-      }
+      mohon: fmtDate_(p.TarikhMohon), sumber: p.Sumber || '', sesi: where[Number(p.ID)] || []
     };
   });
 }
@@ -622,6 +619,7 @@ function apiAdminData(token, sesiId) {
     }),
     crit: rubrik_(s.versi), chips: chips_(), apps: apps_(false, s.id), allApps: allApps,
     belum: allApps.filter(function (a) { return !a.sesi.length; }).length,
+    daftar: table_(SH.DAFTAR).rows.map(daftarOf_).reverse(),
     panels: table_(SH.PANEL).rows.map(function (r) {
       const sah = r.KodHash && Number(r.KodTamat) > Date.now();
       return { nama: r.Nama, emel: r.Emel, peranan: r.Peranan, status: r.Status,
@@ -645,7 +643,7 @@ function apiSaveApp(token, a) {
   });
 }
 
-/** Teras simpan permohonan (digunakan oleh admin dan borang pelajar). Medan tambahan sedia ada dikekalkan apabila admin menyunting. */
+/** Teras simpan permohonan (admin, atau pengesahan rekod Daftar). */
 function saveApplication_(a, sumber) {
   const t = table_(SH.PEMOHON);
   let id = Number(a.id) || 0;
@@ -660,7 +658,6 @@ function saveApplication_(a, sumber) {
   const row = Object.assign({}, old || {}, {
     ID: id, Perniagaan: a.biz, Jenis: a.type, SSM: a.ssm || '', JenisPerniagaan: a.kind || '', PautanPelan: a.plan || ''
   });
-  if (a.extra) Object.keys(a.extra).forEach(function (k) { row[k] = a.extra[k]; });
   if (!old) { row.TarikhMohon = new Date(); row.Sumber = sumber; }
   if (old) writeRow_(SH.PEMOHON, old._row, row); else append_(SH.PEMOHON, row);
 
@@ -671,7 +668,6 @@ function saveApplication_(a, sumber) {
     if (!s.n) return;
     const base = oldS.filter(function (r) { return String(r.Matrik).trim() === String(s.m || '').trim() && String(r.Nama).trim() === String(s.n).trim(); })[0] || {};
     const rec = Object.assign({}, base, { PemohonID: id, Nama: s.n, Matrik: s.m, KP: s.kp, Tahun: s.yr, Fakulti: s.fac, Kursus: s.course, CGPA: s.cgpa, Emel: s.email || '', Telefon: s.tel || '' });
-    if (s.extra) Object.keys(s.extra).forEach(function (k) { rec[k] = s.extra[k]; });
     append_(SH.PELAJAR, rec);
   });
   return id;
@@ -964,6 +960,31 @@ function planFolder_() { return driveFolder_(FOLDER_CELL, FOLDER_PELAN); }
  * Pelajar mengisi maklumat dan memuat naik (atau memaut) pelan perniagaan. Rekod disimpan dengan Sumber = Pelajar dan belum dimasukkan
  * ke mana-mana mesyuarat; urusetia menentukan mesyuarat dalam tab Permohonan.
  */
+const DOC_MAX_MB = 5;
+const SUBMIT_MAX_TOTAL_MB = 24;
+
+/** Semak jenis fail melalui bait awal. Pulangkan { mime, ext } atau null. */
+function sniffDoc_(bytes, pdfOnly) {
+  const b = [0, 1, 2, 3].map(function (i) { return i < bytes.length ? bytes[i] & 255 : -1; });   // bait GAS bertanda (-128..127)
+  if (b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46) return { mime: 'application/pdf', ext: 'pdf' };
+  if (pdfOnly) return null;
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return { mime: 'image/png', ext: 'png' };
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { mime: 'image/jpeg', ext: 'jpg' };
+  return null;
+}
+function hasDoc_(d) { return !!(d && d.b64); }
+function oneOf_(v, list, label) {
+  v = cleanStr_(v, 60);
+  if (list.indexOf(v) < 0) throw new Error('Pilih ' + label + '.');
+  return v;
+}
+function numOpt_(v, label) {
+  if (v === '' || v == null) return '';
+  const n = Number(String(v).replace(/,/g, ''));
+  if (!(n >= 0 && n < 1e9)) throw new Error(label + ' tidak sah.');
+  return Math.round(n * 100) / 100;
+}
+
 function apiSubmitApplication(p) {
   migrate_();
   p = p || {};
@@ -972,27 +993,60 @@ function apiSubmitApplication(p) {
   if (type !== 'Student Mall' && type !== 'SUB') throw new Error('Pilih jenis permohonan: Student Mall atau SUB.');
   const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.kind, 160), ssm = cleanStr_(p.ssm, 80);
   if (biz.length < 2) throw new Error('Masukkan nama perniagaan.');
-  if (ssm.length < 5) throw new Error('Masukkan No. SSM / pendaftaran perniagaan.');
-  if (kind.length < 3) throw new Error('Nyatakan jenis perniagaan.');
+  if (kind.length < 3) throw new Error('Pilih jenis perniagaan.');
+  const produk = cleanStr_(p.produk, 600);
+  if (produk.length < 3) throw new Error('Nyatakan produk atau perkhidmatan utama.');
+  const isFB = /^makanan/i.test(kind);
+  const docs = p.docs || {};
+  const ssmSts = oneOf_(p.ssmStatus, ['Berdaftar', 'Belum berdaftar'], 'status pendaftaran SSM');
+  const ssmPlan = cleanStr_(p.ssmPlan, 160);
+  if (ssmSts === 'Berdaftar') {
+    if (ssm.length < 5) throw new Error('Masukkan No. pendaftaran SSM.');
+    if (!hasDoc_(docs.ssm)) throw new Error('Muat naik sijil SSM.');
+  }
+  let ssmInfo = cleanStr_(p.ssmInfo, 500);
+  if (ssmInfo && !/^https:\/\/[^\s]+$/i.test(ssmInfo)) throw new Error('Pautan maklumat SSM mesti bermula dengan https://');
+  let tifoid = '', kursus = '';
+  if (isFB) {
+    tifoid = oneOf_(p.tifoid, ['Sudah (semua pengendali)', 'Sebahagian', 'Belum'], 'status suntikan tifoid');
+    kursus = oneOf_(p.kursus, ['Sudah', 'Belum'], 'status kursus pengendali makanan');
+    if (tifoid !== 'Belum' && !hasDoc_(docs.tifoid)) throw new Error('Muat naik bukti suntikan tifoid.');
+    if (kursus === 'Sudah' && !hasDoc_(docs.kursus)) throw new Error('Muat naik sijil kursus pengendali makanan.');
+  }
+  const sumber = cleanStr_(p.sumber, 40), pembiaya = cleanStr_(p.pembiaya, 120);
+  const jumlah = numOpt_(p.jumlah, 'Jumlah modal'), jualan = numOpt_(p.jualan, 'Jangkaan jualan');
+  const pekerja = p.pekerja === '' || p.pekerja == null ? '' : Math.round(Number(p.pekerja));
+  if (pekerja !== '' && !(pekerja >= 0 && pekerja < 1000)) throw new Error('Bilangan pekerja tidak sah.');
+  let mula = '';
+  if (cleanStr_(p.mula, 20)) { const d = new Date(String(p.mula).slice(0, 10) + 'T00:00:00+08:00'); if (isNaN(d.getTime())) throw new Error('Tarikh mula berniaga tidak sah.'); mula = d; }
+
   const sts = (p.st || []).slice(0, 4);
   if (!sts.length) throw new Error('Masukkan sekurang-kurangnya seorang pelajar.');
   const students = sts.map(function (x, i) {
     const k = 'Pelajar ' + (i + 1) + ': ';
+    const utm = x.utm === 'Tidak' ? 'Tidak' : 'Ya';
+    if (utm === 'Tidak' && i === 0) throw new Error(k + 'ketua mesti pelajar UTM.');
+    const need = utm === 'Ya';
     const n = cleanStr_(x.n, 120).toUpperCase(), m = cleanStr_(x.m, 20).toUpperCase().replace(/\s+/g, '');
-    const kpd = String(x.kp || '').replace(/\D/g, '');
-    const yr = Math.round(Number(x.yr)), cg = Number(x.cgpa);
+    const kpd = String(x.kp || '').replace(/[^0-9A-Za-z]/g, '');
+    const yr = x.yr === '' || x.yr == null ? '' : Math.round(Number(x.yr)), cg = x.cgpa === '' || x.cgpa == null ? '' : Number(x.cgpa);
     const email = cleanStr_(x.email, 120).toLowerCase(), tel = String(x.tel || '').replace(/[^\d+]/g, '');
+    const sex = oneOf_(x.sex, ['Lelaki', 'Perempuan'], 'jantina (' + k.trim() + ')');
+    const nat = oneOf_(x.nat, ['Malaysia', 'Antarabangsa'], 'warganegara (' + k.trim() + ')');
     if (n.length < 3) throw new Error(k + 'masukkan nama penuh.');
-    if (!/^[A-Z0-9]{7,12}$/.test(m)) throw new Error(k + 'No. Matrik tidak sah.');
-    if (kpd.length !== 12) throw new Error(k + 'No. Kad Pengenalan mesti 12 digit.');
-    if (!(yr >= 1 && yr <= 6)) throw new Error(k + 'tahun pengajian mesti 1 hingga 6.');
-    if (cleanStr_(x.fac, 40).length < 2) throw new Error(k + 'masukkan fakulti.');
-    if (cleanStr_(x.course, 200).length < 3) throw new Error(k + 'masukkan kursus.');
-    if (!(cg >= 0 && cg <= 4)) throw new Error(k + 'CGPA mesti antara 0.00 dan 4.00.');
+    if (need && !/^[A-Z0-9]{7,12}$/.test(m)) throw new Error(k + 'No. Matrik tidak sah.');
+    if (nat === 'Malaysia' ? kpd.length !== 12 || /\D/.test(kpd) : kpd.length < 5) throw new Error(k + (nat === 'Malaysia' ? 'No. Kad Pengenalan mesti 12 digit.' : 'No. pasport tidak sah.'));
+    if (need && !(yr >= 1 && yr <= 6)) throw new Error(k + 'tahun pengajian mesti 1 hingga 6.');
+    if (need && cleanStr_(x.fac, 40).length < 2) throw new Error(k + 'masukkan fakulti.');
+    if (need && cleanStr_(x.course, 200).length < 3) throw new Error(k + 'masukkan program / kursus.');
+    if (need && !(cg >= 0 && cg <= 4)) throw new Error(k + 'CGPA mesti antara 0.00 dan 4.00.');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error(k + 'e-mel tidak sah.');
     if (tel.length < 9 || tel.length > 14) throw new Error(k + 'no. telefon tidak sah.');
-    return { n: n, m: m, kp: kpd.slice(0, 6) + '-' + kpd.slice(6, 8) + '-' + kpd.slice(8), yr: yr, fac: cleanStr_(x.fac, 40).toUpperCase(),
-      course: cleanStr_(x.course, 200).toUpperCase(), cgpa: Math.round(cg * 100) / 100, email: email, tel: tel };
+    return { n: n, m: m, kp: nat === 'Malaysia' ? kpd.slice(0, 6) + '-' + kpd.slice(6, 8) + '-' + kpd.slice(8) : kpd.toUpperCase(),
+      yr: yr, fac: cleanStr_(x.fac, 40).toUpperCase(), course: cleanStr_(x.course, 200).toUpperCase(),
+      cgpa: cg === '' ? '' : Math.round(cg * 100) / 100, email: email, tel: tel,
+      extra: { Jantina: sex, Warganegara: nat, Bidang: cleanStr_(x.bid, 120), PelajarUTM: utm, AlamatKolej: cleanStr_(x.kol, 200), AlamatRumah: cleanStr_(x.rmh, 300) },
+      docM: x.docM, docK: x.docK };
   });
   let planUrl = cleanStr_(p.planUrl, 500);
   if (planUrl && !/^https:\/\/[^\s]+$/i.test(planUrl)) throw new Error('Pautan pelan perniagaan mesti bermula dengan https://');
@@ -1007,40 +1061,127 @@ function apiSubmitApplication(p) {
     cache.put('subm', String(cnt + 1), 3600);
 
     // elak permohonan berganda: matrik pelajar pertama + nama perniagaan yang sama
-    const pem = table_(SH.PEMOHON).rows, stu = table_(SH.PELAJAR).rows;
-    const dup = pem.filter(function (r) {
-      return em_(r.Perniagaan) === em_(biz) && stu.some(function (x) { return Number(x.PemohonID) === Number(r.ID) && String(x.Matrik).trim().toUpperCase() === students[0].m; });
-    })[0];
-    if (dup) throw new Error('Permohonan ini telah direkodkan (rujukan ' + ref_(dup.ID) + '). Tiada keperluan menghantar semula.');
+    const dafs = table_(SH.DAFTAR).rows;
+    const dup = dafs.filter(function (r) { return r.Status !== 'Ditolak' && em_(r.Perniagaan) === em_(biz) && String(r.Matrik).trim().toUpperCase() === students[0].m; })[0];
+    if (dup) throw new Error('Permohonan ini telah direkodkan (rujukan ' + dref_(dup.ID) + '). Tiada keperluan menghantar semula.');
 
-    if (hasFile) {
+    // semua fail disahkan dahulu sebelum apa-apa ditulis ke Drive
+    const nextId = dafs.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
+    const stem = dref_(nextId) + '_' + biz.replace(/[^A-Za-z0-9]+/g, '_').slice(0, 30);
+    const jobs = [];
+    let total = 0;
+    function queue(d, label, pdfOnly, kind, put) {
+      if (!hasDoc_(d)) return;
       let bytes;
-      try { bytes = Utilities.base64Decode(String(p.file.b64)); } catch (e) { throw new Error('Fail tidak dapat dibaca. Cuba lagi.'); }
-      if (bytes.length > MAX_PLAN_MB * 1024 * 1024) throw new Error('Saiz fail melebihi ' + MAX_PLAN_MB + ' MB.');
-      if (!(bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46)) throw new Error('Fail mesti dalam format PDF.');
-      const nextId = pem.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
-      const fname = ref_(nextId) + '_' + biz.replace(/[^A-Za-z0-9]+/g, '_').slice(0, 40) + '.pdf';
-      const f = planFolder_().createFile(Utilities.newBlob(bytes, 'application/pdf', fname));
-      try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }
-      catch (e) { log_('Perkongsian fail pelan disekat (dasar domain)', ref_(nextId) + '. Kongsi folder kepada panel secara manual.'); }
-      planUrl = f.getUrl();
+      try { bytes = Utilities.base64Decode(String(d.b64)); } catch (e) { throw new Error('Fail ' + label + ' tidak dapat dibaca. Cuba lagi.'); }
+      const lim = (pdfOnly ? MAX_PLAN_MB : DOC_MAX_MB) * 1024 * 1024;
+      if (bytes.length > lim) throw new Error('Fail ' + label + ' melebihi ' + (pdfOnly ? MAX_PLAN_MB : DOC_MAX_MB) + ' MB.');
+      total += bytes.length;
+      const t = sniffDoc_(bytes, pdfOnly);
+      if (!t) throw new Error('Fail ' + label + ' mesti ' + (pdfOnly ? 'PDF.' : 'PDF, JPG atau PNG.'));
+      jobs.push({ bytes: bytes, t: t, name: stem + '_' + label.replace(/[^A-Za-z0-9]+/g, '_') + '.' + t.ext, kind: kind, put: put });
     }
+    const out = { ssm: '', tifoid: '', kursus: '', plan: '' };
+    queue(p.file, 'pelan perniagaan', true, 'pub', function (u) { out.plan = u; });
+    queue(docs.ssm, 'sijil SSM', false, 'pub', function (u) { out.ssm = u; });
+    if (isFB) { queue(docs.tifoid, 'bukti tifoid', false, 'pub', function (u) { out.tifoid = u; }); queue(docs.kursus, 'sijil makanan', false, 'pub', function (u) { out.kursus = u; }); }
+    students.forEach(function (x, i) {
+      queue(x.docM, 'kad matrik pelajar ' + (i + 1), false, 'prv', function (u) { x.extra.PautanMatrik = u; });
+      queue(x.docK, 'kad pengenalan pelajar ' + (i + 1), false, 'prv', function (u) { x.extra.PautanKP = u; });
+    });
+    if (total > SUBMIT_MAX_TOTAL_MB * 1024 * 1024) throw new Error('Jumlah saiz fail melebihi ' + SUBMIT_MAX_TOTAL_MB + ' MB. Kecilkan fail atau gunakan pautan.');
+    let pubF = null, prvF = null;
+    jobs.forEach(function (j) {
+      let f;
+      if (j.kind === 'pub') { pubF = pubF || planFolder_(); f = pubF.createFile(Utilities.newBlob(j.bytes, j.t.mime, j.name)); }
+      else { prvF = prvF || driveFolder_(SULIT_CELL, FOLDER_SULIT); f = prvF.createFile(Utilities.newBlob(j.bytes, j.t.mime, j.name)); }
+      if (j.kind === 'pub') {
+        try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }
+        catch (e) { log_('Perkongsian fail disekat (dasar domain)', dref_(nextId) + '. Kongsi folder kepada panel secara manual.'); }
+      }
+      j.put(f.getUrl());
+    });
+    if (out.plan) planUrl = out.plan;
 
     ACTOR_ = students[0].email;
-    const id = saveApplication_({ id: 0, biz: biz.toUpperCase(), type: type, ssm: ssm, kind: kind, plan: planUrl, st: students }, 'Pelajar');
-    log_('Permohonan baharu daripada pelajar', ref_(id) + ' · ' + biz + ' · ' + students[0].m);
-    const ref = ref_(id);
+    const extra = {
+      StatusSSM: ssmSts === 'Berdaftar' ? 'Berdaftar' : ('Belum berdaftar' + (ssmPlan ? ': ' + ssmPlan : '')),
+      Bentuk: cleanStr_(p.lot, 80), Produk: produk, PautanSSM: out.ssm, PautanSSMInfo: ssmInfo,
+      Tifoid: tifoid, PautanTifoid: out.tifoid, KursusMakanan: kursus, PautanKursus: out.kursus,
+      SumberDana: sumber, PembiayaDana: pembiaya, JumlahDana: jumlah, JualanBulanan: jualan,
+      AlamatPerniagaan: cleanStr_(p.alamat, 300), MulaPerniagaan: mula, BilPekerja: pekerja,
+      LokasiPerniagaan: cleanStr_(p.lokasi, 160), SebabBerniaga: cleanStr_(p.sebab, 600)
+    };
+    const id = nextId;
+    append_(SH.DAFTAR, Object.assign({ ID: id, Tarikh: new Date(), Status: 'Baharu', Jenis: type, Perniagaan: biz.toUpperCase(), JenisPerniagaan: kind, SSM: ssmSts === 'Berdaftar' ? ssm : '',
+      PautanPelan: planUrl, Ketua: students[0].n, Matrik: students[0].m, Emel: students[0].email, Pelajar: JSON.stringify(students.map(stuJson_)) }, extra));
+    log_('Daftar baharu daripada pelajar', dref_(id) + ' · ' + biz + ' · ' + students[0].m);
+    const ref = dref_(id);
     try {
       MailApp.sendEmail({ to: students[0].email, name: 'UTMXCITE', subject: 'Permohonan ' + type + ' diterima (rujukan ' + ref + ')',
         body: 'Salam ' + students[0].n + ',\n\nPermohonan ' + type + ' bagi ' + biz + ' telah diterima dan direkodkan.\n\nNo. rujukan: ' + ref +
-          '\n\nUrusetia UTMXCITE akan menentukan mesyuarat penilaian dan memaklumkan anda. Simpan no. rujukan ini untuk semakan.' });
+          '\n\nUrusetia UTMXCITE akan menyemak dan mengesahkan pendaftaran anda, kemudian menentukan mesyuarat penilaian. Simpan no. rujukan ini untuk semakan.' });
     } catch (e) { }
     try {
-      MailApp.sendEmail({ to: ADMIN_EMAIL, name: 'UTMPreneur Penilaian', subject: 'Permohonan baharu: ' + biz + ' (' + ref + ')',
-        body: 'Permohonan ' + type + ' baharu telah diterima.\n\n' + biz + '\nPelajar: ' + students.map(function (x) { return x.n + ' (' + x.m + ')'; }).join(', ') +
-          '\nRujukan: ' + ref + '\n\nMasukkan ke mesyuarat melalui tab Permohonan dalam sistem penilaian.' });
+      MailApp.sendEmail({ to: ADMIN_EMAIL, name: 'UTMPreneur Penilaian', subject: 'Pendaftaran baharu: ' + biz + ' (' + ref + ')',
+        body: 'Permohonan ' + type + ' baharu telah diterima.\n\n' + biz + '\nPelajar: ' + students.map(function (x) { return x.n + ' (' + (x.m || 'bukan pelajar UTM') + ')'; }).join(', ') +
+          '\nRujukan: ' + ref + '\n\nSemak dan sahkan dalam tab Daftar di sistem penilaian. Selepas disahkan, rekod masuk ke Permohonan.' });
     } catch (e) { }
     return { ok: true, ref: ref, id: id };
+  });
+}
+
+function stuJson_(x) {
+  return { n: x.n, m: x.m, kp: x.kp, yr: x.yr, fac: x.fac, course: x.course, cgpa: x.cgpa, email: x.email, tel: x.tel,
+    sex: x.extra.Jantina, nat: x.extra.Warganegara, bid: x.extra.Bidang, utm: x.extra.PelajarUTM, kol: x.extra.AlamatKolej, rmh: x.extra.AlamatRumah,
+    docM: x.extra.PautanMatrik || '', docK: x.extra.PautanKP || '' };
+}
+function daftarOf_(r) {
+  let st = [];
+  try { st = JSON.parse(r.Pelajar || '[]'); } catch (e) { }
+  return { id: Number(r.ID), ref: dref_(r.ID), tarikh: fmtDate_(r.Tarikh), status: r.Status || 'Baharu', pid: r.PemohonID === '' ? 0 : Number(r.PemohonID),
+    jenis: r.Jenis, lot: r.Lot, biz: r.Perniagaan, kind: r.JenisPerniagaan, produk: r.Produk, ssmStatus: r.StatusSSM, ssm: r.SSM, pautanSsm: r.PautanSSM, pautanSsmInfo: r.PautanSSMInfo,
+    tifoid: r.Tifoid, pautanTifoid: r.PautanTifoid, kursusMakanan: r.KursusMakanan, pautanKursus: r.PautanKursus,
+    sumber: r.SumberDana, pembiaya: r.PembiayaDana, jumlah: r.JumlahDana === '' ? '' : String(r.JumlahDana), jualan: r.JualanBulanan === '' ? '' : String(r.JualanBulanan),
+    alamat: r.AlamatPerniagaan, mula: fmtDate_(r.MulaPerniagaan), pekerja: r.BilPekerja === '' ? '' : String(r.BilPekerja), lokasi: r.LokasiPerniagaan, sebab: r.SebabBerniaga,
+    plan: r.PautanPelan, ketua: r.Ketua, matrik: r.Matrik, emel: r.Emel, st: st, catatan: r.Catatan || '', oleh: r.DisahkanOleh || '', sah: fmtDate_(r.TarikhSah) };
+}
+
+/** Urusetia mengesahkan rekod Daftar: disalin ke Pemohon/Pelajar (medan semasa sahaja) supaya boleh dimasukkan ke mesyuarat. */
+function apiSahkanDaftar(token, id) {
+  const u = need_('admin', token);
+  return withLock_(function () {
+    const t = table_(SH.DAFTAR);
+    const r = t.rows.filter(function (x) { return Number(x.ID) === Number(id); })[0];
+    if (!r) throw new Error('Rekod pendaftaran tidak dijumpai.');
+    if (r.Status === 'Disahkan' && r.PemohonID !== '') return { pid: Number(r.PemohonID), already: true };
+    const d = daftarOf_(r);
+    const pid = saveApplication_({ id: 0, biz: d.biz, type: d.jenis, ssm: d.ssm, kind: d.kind, plan: d.plan,
+      st: d.st.map(function (x) { return { n: x.n, m: x.m, kp: x.kp, yr: x.yr, fac: x.fac, course: x.course, cgpa: x.cgpa === '' ? 0 : x.cgpa, email: x.email, tel: x.tel }; }) }, 'Pelajar');
+    const pem = table_(SH.PEMOHON).rows.filter(function (x) { return Number(x.ID) === pid; })[0];
+    if (pem && r.Tarikh instanceof Date) { pem.TarikhMohon = r.Tarikh; writeRow_(SH.PEMOHON, pem._row, pem); }
+    r.Status = 'Disahkan'; r.PemohonID = pid; r.DisahkanOleh = u.email; r.TarikhSah = new Date();
+    writeRow_(SH.DAFTAR, r._row, r);
+    log_('Sahkan pendaftaran', d.ref + ' -> ' + ref_(pid) + ' · ' + d.biz);
+    try {
+      MailApp.sendEmail({ to: d.emel, name: 'UTMXCITE', subject: 'Permohonan ' + d.jenis + ' disahkan (' + d.ref + ')',
+        body: 'Salam ' + d.ketua + ',\n\nPermohonan ' + d.jenis + ' bagi ' + d.biz + ' telah disahkan oleh urusetia dan akan diproses untuk penilaian.\n\nRujukan pendaftaran: ' + d.ref + '\nRujukan permohonan: ' + ref_(pid) + '\n\nUrusetia akan memaklumkan mesyuarat penilaian anda.' });
+    } catch (e) { }
+    return { pid: pid };
+  });
+}
+
+/** Tolak (atau pulihkan) rekod Daftar. Rekod yang sudah disahkan tidak boleh ditolak. */
+function apiTolakDaftar(token, id, catatan, pulih) {
+  const u = need_('admin', token);
+  return withLock_(function () {
+    const r = table_(SH.DAFTAR).rows.filter(function (x) { return Number(x.ID) === Number(id); })[0];
+    if (!r) throw new Error('Rekod pendaftaran tidak dijumpai.');
+    if (r.Status === 'Disahkan') throw new Error('Rekod sudah disahkan. Sunting atau gugurkan melalui tab Permohonan.');
+    r.Status = pulih ? 'Baharu' : 'Ditolak'; r.Catatan = cleanStr_(catatan, 300); r.DisahkanOleh = u.email; r.TarikhSah = new Date();
+    writeRow_(SH.DAFTAR, r._row, r);
+    log_(pulih ? 'Pulihkan pendaftaran' : 'Tolak pendaftaran', dref_(id) + ' · ' + r.Perniagaan);
+    return true;
   });
 }
 
@@ -1053,6 +1194,7 @@ function apiPublicInfo() {
 }
 
 function ref_(id) { return 'PM-' + ('0000' + Number(id)).slice(-4); }
+function dref_(id) { return 'DF-' + ('0000' + Number(id)).slice(-4); }
 
 /* ===================== Penyediaan sheet dan data awal ===================== */
 /* Menu Penilaian > Sediakan sheet. Selamat dijalankan semula: sheet yang sudah ada isi tidak ditimpa. */
@@ -1075,6 +1217,10 @@ function setupSheets() {
   // Tetapan!B16: folder Drive bagi pelan yang dimuat naik pelajar (kosong = folder lalai dicipta dan pautannya ditulis di sini)
   if (!String(ts.getRange('A16').getValue() || '').trim()) {
     ts.getRange('A16:C16').setValues([['FolderPelan', '', '<- Tampal pautan folder Drive untuk menyimpan pelan yang dimuat naik pelajar (pilihan). Kosongkan untuk folder lalai.']]);
+  }
+  // Tetapan!B17: folder Drive sulit bagi kad matrik / kad pengenalan pelajar (tidak dikongsi dengan sesiapa)
+  if (!String(ts.getRange('A17').getValue() || '').trim()) {
+    ts.getRange('A17:C17').setValues([['FolderSulit', '', '<- Pilihan: pautan folder Drive untuk kad matrik dan kad pengenalan pelajar. Fail di sini tidak dikongsi. Kosongkan untuk folder lalai.']]);
   }
   // KP, matrik dan SSM mesti kekal sebagai teks
   book.getSheetByName(SH.PELAJAR).getRange('C:D').setNumberFormat('@');

@@ -249,6 +249,15 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .aptype label.opt b{display:block}.aptype label.opt small{color:var(--muted);font-size:12.5px}
 .apst{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;background:var(--bg)}
 .apsth{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.apban{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;text-align:center;margin-bottom:12px}
+.apban img{height:78px;max-width:100%}
+.apban .org{font-weight:700;font-size:14.5px;color:#3a3a3a;margin-top:6px;text-wrap:balance}
+.apban .ttl{display:block;margin:10px auto 0;max-width:520px;border-top:3px solid #b8860b;border-bottom:3px solid #b8860b;padding:5px 0;font-weight:800;font-size:clamp(18px,4vw,26px);letter-spacing:.03em;color:#b8860b}
+.dfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 16px}.dfk{display:grid;gap:2px;font-size:12.5px;color:var(--muted)}.dfk b{color:var(--fg);font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.apinst{font-size:14px;line-height:1.55}.apinst p{margin:0 0 10px}.apinst address{font-style:normal}
+.apreq{font-size:12.5px;color:#c0392b;margin:0}
+.apcond{border-left:3px solid var(--gold);padding-left:14px;margin-top:12px}
+.fld{display:grid;gap:4px;font-size:12.5px;color:var(--muted);font-weight:600}
 .apdrop{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1.5px dashed var(--line);border-radius:10px;padding:14px;position:relative}
 .apack{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}.apack input{margin-top:4px;width:18px;height:18px}
 .aptpl{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;margin-bottom:12px}
@@ -364,7 +373,12 @@ async function start() {
 /* ===================== BORANG PERMOHONAN PELAJAR (awam) ===================== */
 let APP = null, PUBINFO = null;   // PUBINFO.templateUrl dibaca daripada Tetapan!B15
 const FAK = ['FKE', 'FKA', 'FKM', 'FKT', 'FC', 'FS', 'FM', 'FAB', 'FP', 'FSSH', 'FEST'];
-const newStudent = () => ({ n: '', m: '', kp: '', yr: '', fac: '', course: '', cgpa: '', email: '', tel: '' });
+const newStudent = () => ({ n: '', m: '', kp: '', yr: '', fac: '', course: '', cgpa: '', email: '', tel: '', sex: '', nat: 'Malaysia', bid: '', utm: 'Ya', kol: '', rmh: '', docM: null, docK: null });
+const KINDS = ['Makanan & Minuman (F&B)', 'Runcit / Barangan', 'Perkhidmatan', 'Digital / Teknologi', 'Lain-lain'];
+const newApp = () => ({ type: 'Student Mall', lot: '', biz: '', kind: '', ssm: '', ssmStatus: 'Berdaftar', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
+  tifoid: '', kursus: '', sumber: '', pembiaya: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
+const MAXDOC = 5 * 1024 * 1024;
+const isFB = k => /^makanan/i.test(k || '');
 const MAXPLAN = 8 * 1024 * 1024;
 
 function applyCollect() {
@@ -373,36 +387,82 @@ function applyCollect() {
   document.querySelectorAll('[data-s]').forEach(i => A.st[+i.dataset.s][i.dataset.k] = i.value);
   const t = document.querySelector('[name=ap_type]:checked'); if (t) A.type = t.value;
   const m = document.querySelector('[name=ap_mode]:checked'); if (m) A.mode = m.value;
+  const q = document.querySelector('[name=ap_ssm]:checked'); if (q) A.ssmStatus = q.value;
 }
 function showApply() {
   if (PUBINFO === null) { PUBINFO = { templateUrl: '' }; rpc('apiPublicInfo').then(r => { PUBINFO = r || { templateUrl: '' }; if (APP && document.getElementById('apf')) { applyCollect(); showApply(); } }).catch(() => { }); }
   clearInterval(cdTimer); $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Borang permohonan Student Mall & SUB';
-  if (!APP) APP = { type: 'Student Mall', biz: '', ssm: '', kind: '', st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' };
+  if (!APP) APP = newApp();
   const A = APP, sub = A.type === 'SUB';
-  const stu = (s, i) => `<div class="apst"><div class="apsth"><b>Pelajar ${i + 1}</b>${A.st.length > 1 ? `<button class="btn-ghost" data-rm="${i}" type="button">Buang</button>` : ''}</div>
+  const LOGO_SRC = ((document.querySelector('#logo img') || {}).src) || '';
+  const opt = (list, cur, ph) => `<option value="">${ph || 'Pilih'}</option>` + list.map(v => `<option ${cur === v ? 'selected' : ''}>${esc(v)}</option>`).join('');
+  const fbox = (key, label, cur, onInfo) => `<div class="fld">${label}<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_d_${key}" style="display:inline-block;cursor:pointer;margin:0">Pilih fail</label><input type="file" id="ap_d_${key}" data-doc="${key}" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_${key}">${cur ? esc(cur.name) + ' (' + (cur.size / 1048576).toFixed(1) + ' MB)' : 'Belum dipilih (PDF/JPG/PNG, maks 5 MB)'}</span></div></div>`;
+  const stu = (s, i) => { const utm = s.utm !== 'Tidak', k = i === 0; return `<div class="apst"><div class="apsth"><b>Pelajar ${i + 1}${k ? ' (ketua)' : ''}</b>${A.st.length > 1 ? `<button class="btn-ghost" data-rm="${i}" type="button">Buang</button>` : ''}</div>
     <div class="f">
-     <label class="wide">Nama penuh (seperti dalam kad pengenalan)<input data-s="${i}" data-k="n" value="${esc(s.n)}" autocomplete="name"></label>
-     <label>No. Matrik<input data-s="${i}" data-k="m" value="${esc(s.m)}" placeholder="cth. A24KE0000" autocapitalize="characters"></label>
-     <label>No. Kad Pengenalan<input data-s="${i}" data-k="kp" value="${esc(s.kp)}" inputmode="numeric" placeholder="cth. 030101-01-0001"></label>
-     <label>Tahun pengajian<select data-s="${i}" data-k="yr"><option value="">Pilih</option>${[1, 2, 3, 4, 5, 6].map(y => `<option ${String(s.yr) === String(y) ? 'selected' : ''}>${y}</option>`).join('')}</select></label>
-     <label>Fakulti<input data-s="${i}" data-k="fac" value="${esc(s.fac)}" list="apfak" placeholder="cth. FKE"></label>
-     <label class="wide">Kursus<input data-s="${i}" data-k="course" value="${esc(s.course)}" placeholder="cth. Sarjana Muda Kejuruteraan Elektrik"></label>
-     <label>CGPA terkini<input data-s="${i}" data-k="cgpa" value="${esc(s.cgpa)}" inputmode="decimal" placeholder="cth. 3.25"></label>
-     <label>No. telefon<input data-s="${i}" data-k="tel" value="${esc(s.tel)}" inputmode="tel" placeholder="cth. 0123456789" autocomplete="tel"></label>
-     <label class="wide">E-mel (untuk pengesahan permohonan)<input data-s="${i}" data-k="email" type="email" value="${esc(s.email)}" autocomplete="email" placeholder="nama@graduate.utm.my"></label></div></div>`;
+     <label class="wide">Nama penuh (seperti dalam kad pengenalan) *<input data-s="${i}" data-k="n" value="${esc(s.n)}" autocomplete="name"></label>
+     <label>Jantina *<select data-s="${i}" data-k="sex">${opt(['Lelaki', 'Perempuan'], s.sex)}</select></label>
+     <label>Warganegara *<select data-s="${i}" data-k="nat">${opt(['Malaysia', 'Antarabangsa'], s.nat)}</select></label>
+     <label>${s.nat === 'Antarabangsa' ? 'No. pasport' : 'No. Kad Pengenalan'} *<input data-s="${i}" data-k="kp" value="${esc(s.kp)}" placeholder="${s.nat === 'Antarabangsa' ? '' : 'cth. 030101-01-0001'}"></label>
+     ${k ? '' : `<label>Pelajar UTM aktif?<select data-s="${i}" data-k="utm"><option ${utm ? 'selected' : ''}>Ya</option><option value="Tidak" ${!utm ? 'selected' : ''}>Tidak (rakan kongsi luar)</option></select></label>`}
+     <label>No. Matrik ${utm ? '*' : '(jika ada)'}<input data-s="${i}" data-k="m" value="${esc(s.m)}" placeholder="cth. A24KE0000" autocapitalize="characters"></label>
+     <label>Tahun pengajian ${utm ? '*' : ''}<select data-s="${i}" data-k="yr"><option value="">Pilih</option>${[1, 2, 3, 4, 5, 6].map(y => `<option ${String(s.yr) === String(y) ? 'selected' : ''}>${y}</option>`).join('')}</select></label>
+     <label>Fakulti ${utm ? '*' : ''}<input data-s="${i}" data-k="fac" value="${esc(s.fac)}" list="apfak" placeholder="cth. FKE"></label>
+     <label>Bidang pengajian<input data-s="${i}" data-k="bid" value="${esc(s.bid)}" placeholder="cth. Kejuruteraan Elektrik"></label>
+     <label class="wide">Program / kursus ${utm ? '*' : ''}<input data-s="${i}" data-k="course" value="${esc(s.course)}" placeholder="cth. Sarjana Muda Kejuruteraan Elektrik"></label>
+     <label>CGPA terkini ${utm ? '*' : ''}<input data-s="${i}" data-k="cgpa" value="${esc(s.cgpa)}" inputmode="decimal" placeholder="cth. 3.25"></label>
+     <label>No. telefon *<input data-s="${i}" data-k="tel" value="${esc(s.tel)}" inputmode="tel" placeholder="cth. 0123456789" autocomplete="tel"></label>
+     <label class="wide">E-mel (untuk pengesahan permohonan) *<input data-s="${i}" data-k="email" type="email" value="${esc(s.email)}" autocomplete="email" placeholder="nama@graduate.utm.my"></label>
+     <label class="wide">Alamat kolej / penginapan<input data-s="${i}" data-k="kol" value="${esc(s.kol)}"></label>
+     <label class="wide">Alamat rumah<input data-s="${i}" data-k="rmh" value="${esc(s.rmh)}"></label>
+     <div class="fld">Salinan kad matrik<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_s${i}_docM" style="display:inline-block;cursor:pointer;margin:0">Pilih fail</label><input type="file" id="ap_s${i}_docM" data-sf="${i}" data-k="docM" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_s${i}_docM">${s.docM ? esc(s.docM.name) : 'Belum dipilih (maks 5 MB)'}</span></div></div>
+     <div class="fld">Salinan kad pengenalan / pasport<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_s${i}_docK" style="display:inline-block;cursor:pointer;margin:0">Pilih fail</label><input type="file" id="ap_s${i}_docK" data-sf="${i}" data-k="docK" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_s${i}_docK">${s.docK ? esc(s.docK.name) : 'Belum dipilih (maks 5 MB)'}</span></div></div>
+    </div><p class="note" style="margin:8px 0 0">Kad matrik dan kad pengenalan disimpan dalam folder sulit dan tidak dipaparkan kepada panel.</p></div>`; };
+  const fb = isFB(A.kind), reg = A.ssmStatus !== 'Belum berdaftar';
   app.innerHTML = `<div class="apply"><datalist id="apfak">${FAK.map(f => `<option value="${f}">`).join('')}</datalist>
-   <div class="head" style="margin-bottom:10px"><div><h2>Permohonan Student Mall &amp; SUB</h2><p>Isi maklumat di bawah. Urusetia UTMXCITE akan menentukan mesyuarat penilaian dan memaklumkan anda melalui e-mel.</p></div><button class="btn-ghost" id="ap_back" type="button">Log masuk panel / admin</button></div>
+   <div class="apban"><img src="${LOGO_SRC}" alt="UTM dan UTMXCITE"><div class="org">UTM Center for Student Innovation &amp; Technology Entrepreneurship</div><span class="ttl">START-UP REGISTRATION FORM</span></div>
+   <div class="card apsec apinst"><h3 style="font-size:20px;margin-bottom:8px;color:var(--maroon)">UTM STUDENT STARTUP REGISTRATION FORM</h3>
+    <p>Dear Student,</p>
+    <p>All UTM Students who are operating a business are required to fill in the UTMXCITE Student Startup Registration Form in order to get a license (certificate). This form is also required for students who would like to apply for incubator or business premises in UTM. This process will allow the university via UTMXCITE to collect the students' enterprise and startup information which will eventually provide effective entrepreneurship ecosystem at the university.</p>
+    <p>With this submission, you have agreed to let us (UTMXCITE) use your details to contact you for further collaboration/discussion. Your data will not be shared or used for any other purposes, except for the reporting to the university and Ministry of Higher Education.</p>
+    <p>In order to fill up this form, please make sure that the business name you are registering has never registered with SSM. To check on this, please refer to this website: <a href="https://www.ssm-einfo.my/" target="_blank" rel="noopener">https://www.ssm-einfo.my/</a>. You have to register before you can login into the system and start your search.</p>
+    <p>For any queries, please contact UTMXCITE via email at <b>utmxcite@utm.my</b> or Hotline Number <b>018-967 0791</b>.</p>
+    <p><b>Our office address is:</b><br><address>UTM Centre for Student Innovation and Technology Entrepreneurship (UTMXCITE),<br>Level 1, General office, Department of Office of Student Affairs and Alumni,<br>Student Union Building (SUB),<br>Universiti Teknologi Malaysia,<br>81310 UTM Johor Bahru,<br>Skudai, Johor.</address></p>
+    <p>Thank you for your kind cooperation and attention towards this matter.</p>
+    <p class="apreq">* Indicates required question</p>
+    <div class="foot" style="margin-top:4px"><button class="btn-ghost" id="ap_back" type="button">Log masuk panel / admin</button></div></div>
    <form id="apf" novalidate>
    <div class="card apsec"><h3><span class="apn">1</span> Jenis permohonan</h3><div class="aptype">
-     <label class="opt"><input type="radio" name="ap_type" value="Student Mall" ${!sub ? 'checked' : ''}><span><b>Student Mall</b><small>Permohonan sewaan lot di Student Mall. Seorang pelajar.</small></span></label>
-     <label class="opt"><input type="radio" name="ap_type" value="SUB" ${sub ? 'checked' : ''}><span><b>SUB</b><small>Permohonan lot di SUB. Boleh dikemukakan secara berpasukan (sehingga 4 pelajar).</small></span></label></div></div>
+     <label class="opt"><input type="radio" name="ap_type" value="Student Mall" ${!sub ? 'checked' : ''}><span><b>Student Mall</b><small>Permohonan sewaan lot di Student Mall.</small></span></label>
+     <label class="opt"><input type="radio" name="ap_type" value="SUB" ${sub ? 'checked' : ''}><span><b>SUB</b><small>Permohonan lot di SUB. Boleh dikemukakan secara berpasukan (sehingga 4 pelajar).</small></span></label></div>
+     <div class="f"><label>Lot / lokasi dipohon<select data-f="lot">${opt(sub ? ['SUB – Lot'] : ['Student Mall – Kiosk', 'Student Mall – Lot dalam'], A.lot)}</select></label></div></div>
    <div class="card apsec"><h3><span class="apn">2</span> Maklumat perniagaan</h3><div class="f">
-     <label class="wide">Nama perniagaan / syarikat<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
-     <label>No. SSM / pendaftaran<input data-f="ssm" value="${esc(A.ssm)}" placeholder="cth. 202503331550"></label>
-     <label>Jenis perniagaan<input data-f="kind" value="${esc(A.kind)}" placeholder="cth. Kedai gunting rambut"></label></div></div>
-   <div class="card apsec"><h3><span class="apn">3</span> Maklumat pelajar</h3>${A.st.map(stu).join('')}
+     <label class="wide">Nama perniagaan / syarikat *<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
+     <label>Jenis perniagaan *<select data-f="kind" id="ap_kind">${opt(KINDS, A.kind)}</select></label>
+     <label>Tarikh mula berniaga<input data-f="mula" type="date" value="${esc(A.mula)}"></label>
+     <label class="wide">Produk / perkhidmatan utama *<textarea data-f="produk" rows="2">${esc(A.produk)}</textarea></label>
+     <label class="wide">Alamat perniagaan<input data-f="alamat" value="${esc(A.alamat)}"></label>
+     <label>Bilangan pekerja<input data-f="pekerja" type="number" min="0" value="${esc(A.pekerja)}"></label>
+     <label>Lokasi perniagaan dirancang<input data-f="lokasi" value="${esc(A.lokasi)}"></label>
+     <label class="wide">Sebab ingin berniaga<textarea data-f="sebab" rows="2">${esc(A.sebab)}</textarea></label></div></div>
+   <div class="card apsec"><h3><span class="apn">3</span> Status pendaftaran SSM</h3>
+     <div class="aptype"><label class="opt"><input type="radio" name="ap_ssm" value="Berdaftar" ${reg ? 'checked' : ''}><span><b>Sudah berdaftar</b></span></label><label class="opt"><input type="radio" name="ap_ssm" value="Belum berdaftar" ${!reg ? 'checked' : ''}><span><b>Belum berdaftar</b><small>Tidak menghalang permohonan.</small></span></label></div>
+     ${reg ? `<div class="apcond f"><label>No. pendaftaran SSM *<input data-f="ssm" value="${esc(A.ssm)}" placeholder="cth. 202503331550"></label>
+       ${fbox('ssm', 'Sijil SSM *', A.docs.ssm)}
+       <label class="wide">Pautan maklumat SSM / e-Info (pilihan)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https://"></label></div>` :
+       `<div class="apcond f"><label class="wide">Rancangan mendaftar SSM<input data-f="ssmPlan" value="${esc(A.ssmPlan)}" placeholder="cth. sebelum 30 Jun"></label></div>`}</div>
+   ${fb ? `<div class="card apsec"><h3><span class="apn">4</span> Keselamatan makanan</h3><div class="f">
+     <label>Suntikan tifoid *<select data-f="tifoid">${opt(['Sudah (semua pengendali)', 'Sebahagian', 'Belum'], A.tifoid)}</select></label>
+     ${A.tifoid && A.tifoid !== 'Belum' ? fbox('tifoid', 'Bukti suntikan tifoid *', A.docs.tifoid) : '<span></span>'}
+     <label>Kursus pengendali makanan *<select data-f="kursus">${opt(['Sudah', 'Belum'], A.kursus)}</select></label>
+     ${A.kursus === 'Sudah' ? fbox('kursus', 'Sijil kursus pengendali makanan *', A.docs.kursus) : '<span></span>'}</div></div>` : ''}
+   <div class="card apsec"><h3><span class="apn">${fb ? 5 : 4}</span> Pembiayaan dan jangkaan jualan</h3><div class="f">
+     <label>Sumber modal<select data-f="sumber">${opt(['Simpanan sendiri', 'Pinjaman / biasiswa', 'Geran', 'Rakan kongsi'], A.sumber)}</select></label>
+     <label>Pembiaya<input data-f="pembiaya" value="${esc(A.pembiaya)}" placeholder="cth. TEKUN, UTM, keluarga"></label>
+     <label>Jumlah modal (RM)<input data-f="jumlah" inputmode="decimal" value="${esc(A.jumlah)}"></label>
+     <label>Jangkaan jualan sebulan (RM)<input data-f="jualan" inputmode="decimal" value="${esc(A.jualan)}"></label></div></div>
+   <div class="card apsec"><h3><span class="apn">${fb ? 6 : 5}</span> Maklumat pelajar</h3>${A.st.map(stu).join('')}
      ${A.st.length < 4 ? `<button class="btn-line" id="ap_add" type="button" style="margin-top:6px">+ Tambah pelajar</button>` : ''}</div>
-   <div class="card apsec"><h3><span class="apn">4</span> Pelan perniagaan</h3>
+   <div class="card apsec"><h3><span class="apn">${fb ? 7 : 6}</span> Pelan perniagaan</h3>
      ${PUBINFO && PUBINFO.templateUrl ? `<div class="aptpl"><div><b>Gunakan templat pelan perniagaan</b><small>Muat turun templat, lengkapkan, kemudian muat naik sebagai PDF di bawah.</small></div><a class="btn-solid" href="${esc(PUBINFO.templateUrl)}" target="_blank" rel="noopener">⬇ Muat turun templat</a></div>` : ''}
      <div class="aptype"><label class="opt"><input type="radio" name="ap_mode" value="file" ${A.mode === 'file' ? 'checked' : ''}><span><b>Muat naik fail PDF</b><small>Maksimum 8 MB.</small></span></label>
      <label class="opt"><input type="radio" name="ap_mode" value="link" ${A.mode === 'link' ? 'checked' : ''}><span><b>Beri pautan</b><small>Pautan https, contohnya Google Drive (tetapkan "sesiapa yang mempunyai pautan").</small></span></label></div>
@@ -416,6 +476,18 @@ function showApply() {
   document.querySelectorAll('[name=ap_type]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[name=ap_mode]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { applyCollect(); A.st.splice(+b.dataset.rm, 1); showApply(); });
+  const kd = $('#ap_kind'); if (kd) kd.onchange = () => { applyCollect(); showApply(); };
+  document.querySelectorAll('[name=ap_ssm]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
+  document.querySelectorAll('[data-f=tifoid],[data-f=kursus],[data-s][data-k=nat],[data-s][data-k=utm]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
+  document.querySelectorAll('[data-doc],[data-sf]').forEach(inp => inp.onchange = () => {
+    const f = inp.files[0], isS = inp.dataset.sf !== undefined, nid = isS ? 'ap_n_s' + inp.dataset.sf + '_' + inp.dataset.k : 'ap_n_' + inp.dataset.doc, nEl = document.getElementById(nid);
+    const set = v => { if (isS) A.st[+inp.dataset.sf][inp.dataset.k] = v; else A.docs[inp.dataset.doc] = v; };
+    if (!f) return;
+    if (f.size > MAXDOC) { set(null); nEl.textContent = 'Fail terlalu besar (maksimum 5 MB).'; return; }
+    if (!/\.(pdf|jpe?g|png)$/i.test(f.name)) { set(null); nEl.textContent = 'Fail mesti PDF, JPG atau PNG.'; return; }
+    const rd = new FileReader(); rd.onload = () => { set({ name: f.name, size: f.size, b64: String(rd.result).split(',')[1] || '' }); nEl.textContent = f.name + ' (' + (f.size / 1048576).toFixed(1) + ' MB)'; };
+    rd.readAsDataURL(f);
+  });
   const ad = $('#ap_add'); if (ad) ad.onclick = () => { applyCollect(); A.st.push(newStudent()); showApply(); };
   const fi = $('#ap_file'); if (fi) fi.onchange = () => {
     const f = fi.files[0]; if (!f) return;
@@ -427,7 +499,13 @@ function showApply() {
   $('#apf').onsubmit = async ev => {
     ev.preventDefault(); applyCollect();
     const msg = $('#ap_msg'), b = $('#ap_go'); msg.textContent = '';
-    const pl = { type: A.type, biz: A.biz, ssm: A.ssm, kind: A.kind, ack: !!A.ack, website: A.website, st: A.st.map(s => ({ ...s, cgpa: String(s.cgpa).replace(',', '.') })), planUrl: A.mode === 'link' ? A.planUrl : '', file: A.mode === 'file' && A.file ? { name: A.file.name, b64: A.file.b64 } : null };
+    const dd = d => d ? { name: d.name, b64: d.b64 } : null;
+    const pl = { type: A.type, lot: A.lot, biz: A.biz, kind: A.kind, mula: A.mula, produk: A.produk, alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
+      ssmStatus: A.ssmStatus, ssm: A.ssmStatus === 'Berdaftar' ? A.ssm : '', ssmPlan: A.ssmPlan, ssmInfo: A.ssmStatus === 'Berdaftar' ? A.ssmInfo : '',
+      tifoid: isFB(A.kind) ? A.tifoid : '', kursus: isFB(A.kind) ? A.kursus : '', sumber: A.sumber, pembiaya: A.pembiaya, jumlah: A.jumlah, jualan: A.jualan,
+      docs: { ssm: A.ssmStatus === 'Berdaftar' ? dd(A.docs.ssm) : null, tifoid: dd(A.docs.tifoid), kursus: dd(A.docs.kursus) },
+      ack: !!A.ack, website: A.website,
+      st: A.st.map(s => ({ ...s, cgpa: String(s.cgpa).replace(',', '.'), docM: dd(s.docM), docK: dd(s.docK) })), planUrl: A.mode === 'link' ? A.planUrl : '', file: A.mode === 'file' && A.file ? { name: A.file.name, b64: A.file.b64 } : null };
     b.disabled = true; b.textContent = 'Menghantar…';
     try { const r = await rpc('apiSubmitApplication', pl); const em = A.st[0].email; APP = null; showApplyDone(r, em); }
     catch (e) { msg.textContent = e.message; b.disabled = false; b.textContent = 'Hantar permohonan'; msg.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
@@ -436,9 +514,9 @@ function showApply() {
 }
 function showApplyDone(r, email) {
   app.innerHTML = `<div class="apply"><div class="card apdone"><div class="apok" aria-hidden="true">✓</div><h2>Permohonan diterima</h2>
-   <p>Terima kasih. Permohonan anda telah direkodkan. Salinan pengesahan dihantar ke <b>${esc(email)}</b>.</p>
+   <p>Terima kasih. Pendaftaran anda telah direkodkan dan menunggu pengesahan urusetia. Salinan pengesahan dihantar ke <b>${esc(email)}</b>.</p>
    <p class="note" style="margin:14px 0 4px">No. rujukan</p><div class="apref">${esc(r.ref)}</div>
-   <p class="note">Simpan no. rujukan ini. Urusetia UTMXCITE akan menentukan mesyuarat penilaian dan memaklumkan anda.</p>
+   <p class="note">Simpan no. rujukan ini. Urusetia UTMXCITE akan menyemak dan mengesahkan pendaftaran anda, kemudian menentukan mesyuarat penilaian.</p>
    <div class="foot" style="justify-content:center"><button class="btn-line" id="ap_more">Hantar permohonan lain</button><button class="btn-ghost" id="ap_home">Tutup</button></div></div></div>`;
   $('#ap_more').onclick = () => showApply(); $('#ap_home').onclick = () => showLogin();
   window.scrollTo(0, 0);
@@ -447,7 +525,7 @@ function showApplyDone(r, email) {
 /* ===================== ADMIN ===================== */
 let tab = 'dashboard', openRow = null, filt = { q: '', t: '', m: '' }, openKey = null, SEL = 0, sesiNew = false;
 const SELP = new Set();   // pemohon yang ditanda untuk dimasukkan ke mesyuarat
-const TABS = [['dashboard', 'Dashboard'], ['permohonan', 'Permohonan'], ['sesi', 'Mesyuarat'], ['panel', 'Panel'], ['rubrik', 'Rubrik'], ['keputusan', 'Keputusan'], ['laporan', 'Laporan'], ['log', 'Log']];
+const TABS = [['dashboard', 'Dashboard'], ['daftar', 'Daftar'], ['permohonan', 'Permohonan'], ['sesi', 'Mesyuarat'], ['panel', 'Panel'], ['rubrik', 'Rubrik'], ['keputusan', 'Keputusan'], ['laporan', 'Laporan'], ['log', 'Log']];
 const refNo = id => 'PM-' + String(id).padStart(4, '0');
 const sLbl = s => s.bil ? 'Bil ' + s.bil : s.nama;
 const sPill = st => `<span class="pill ${st === 'Dibuka' ? 'p-ok' : st === 'Draf' ? 'p-warn' : 'p-mute'}">${esc(st)}</span>`;
@@ -459,13 +537,14 @@ setInterval(async () => {
 }, 30000);
 async function loadAdmin(sel) { D = await rpc('apiAdminData', sel !== undefined ? sel : (SEL || 0)); SEL = D.sesi.id; CFG = null; SY = null; adminShell(); }
 function adminShell() {
+  const nDf = (D.daftar || []).filter(x => x.status === 'Baharu').length, dbadge = nDf ? `<span class="n" title="Pendaftaran menunggu pengesahan">${nDf} baharu</span>` : '';
   const badge = D.belum ? `<span class="n" title="Permohonan belum dijadualkan">${D.belum} baharu</span>` : `<span class="n">${D.allApps.length}</span>`;
   app.innerHTML = `<div class="shell"><nav class="side" aria-label="Menu admin">
    <label class="sesisel">Mesyuarat<select id="sesisel" aria-label="Pilih mesyuarat">${D.sesiList.map(s => `<option value="${s.id}" ${s.id === SEL ? 'selected' : ''}>${esc(sLbl(s))} · ${esc(s.status)}</option>`).join('')}</select></label>
-   ${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? badge : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
+   ${TABS.map(t => `<button data-t="${t[0]}" ${tab === t[0] ? 'aria-current="page"' : ''}>${t[1]}${t[0] === 'permohonan' ? badge : t[0] === 'daftar' ? dbadge : ''}</button>`).join('')}</nav><main id="main"></main></div>`;
   app.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t !== 'panel') codes = null; tab = b.dataset.t; openRow = null; openKey = null; sesiNew = false; adminShell(); });
   $('#sesisel').onchange = async e => { try { SEL = +e.target.value; openKey = null; await loadAdmin(SEL); } catch (x) { toast(x.message, true); } };
-  ({ dashboard, permohonan, sesi, panel, rubrik, keputusan, laporan, log })[tab]();
+  ({ dashboard, daftar, permohonan, sesi, panel, rubrik, keputusan, laporan, log })[tab]();
 }
 async function act(fn, msg, ...a) {
   try { await rpc(fn, ...a); toast(msg); await loadAdmin(); } catch (e) { toast(e.message, true); }
@@ -473,6 +552,41 @@ async function act(fn, msg, ...a) {
 const head = (t, en, right = '') => `<div class="head"><div><h2>${t}</h2><p>${en}</p></div><div>${right}</div></div>`;
 const sent = (pid, email) => D.nilai.find(n => n.pid === pid && n.email.toLowerCase() === email.toLowerCase());
 const sesiHead = () => `<span class="pill p-info" style="font-size:13px">${esc(sLbl(D.sesi))}</span> ${sPill(D.sesi.status)}`;
+
+/* ---------- Daftar (rekod mentah borang pelajar; disahkan urusetia baru masuk Pemohon) ---------- */
+let dfFilt = 'Baharu', dfOpen = 0;
+const dfPill = st => `<span class="pill ${st === 'Baharu' ? 'p-warn' : st === 'Disahkan' ? 'p-ok' : 'p-mute'}">${esc(st)}</span>`;
+const lnk = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t || 'buka')} ↗</a>` : '–';
+function daftar() {
+  const L = D.daftar || [], cnt = st => L.filter(x => x.status === st).length;
+  const rows = L.filter(x => !dfFilt || x.status === dfFilt);
+  const sel = dfOpen ? L.find(x => x.id === dfOpen) : null;
+  $('#main').innerHTML = head('Daftar', 'Pendaftaran daripada pelajar · hanya yang disahkan masuk ke Permohonan') + `
+  <div class="toolbar"><select id="dfs" aria-label="Penapis status"><option value="">Semua (${L.length})</option>${['Baharu', 'Disahkan', 'Ditolak'].map(st => `<option value="${st}" ${dfFilt === st ? 'selected' : ''}>${st} (${cnt(st)})</option>`).join('')}</select></div>
+  <div class="card tw" style="margin-bottom:14px">${rows.length ? `<table><thead><tr><th>Rujukan</th><th>Perniagaan</th><th>Jenis</th><th>Ketua</th><th>Tarikh</th><th>Status</th><th></th></tr></thead><tbody>
+   ${rows.map(x => `<tr ${x.id === dfOpen ? 'style="background:var(--maroon-soft)"' : ''}><td>${esc(x.ref)}</td><td><b>${esc(x.biz)}</b><small>${esc(x.kind)}</small></td><td>${esc(x.jenis)}</td><td>${esc(x.ketua)}<small>${esc(x.matrik)}</small></td><td>${esc(x.tarikh)}</td><td>${dfPill(x.status)}${x.pid ? `<small>${esc(refNo(x.pid))}</small>` : ''}</td><td class="num"><button class="btn-ghost dfo" data-id="${x.id}">Buka</button></td></tr>`).join('')}</tbody></table>` : '<p class="note" style="padding:16px">Tiada rekod untuk penapis ini.</p>'}</div>
+  <div id="dfd"></div>`;
+  $('#dfs').onchange = e => { dfFilt = e.target.value; dfOpen = 0; daftar(); };
+  document.querySelectorAll('.dfo').forEach(b => b.onclick = () => { dfOpen = +b.dataset.id; daftar(); });
+  if (!sel) return;
+  const kv = (k, v) => `<div class="dfk"><span>${k}</span><b>${v === '' || v == null ? '–' : esc(v)}</b></div>`;
+  $('#dfd').innerHTML = `<div class="card detail"><h3>${esc(sel.ref)} · ${esc(sel.biz)} ${dfPill(sel.status)}<i>${esc(sel.tarikh)}</i></h3>
+   <div class="dfg">${kv('Jenis permohonan', sel.jenis)}${kv('Lot dipohon', sel.lot)}${kv('Jenis perniagaan', sel.kind)}${kv('Tarikh mula', sel.mula)}${kv('Produk / perkhidmatan', sel.produk)}${kv('Alamat perniagaan', sel.alamat)}${kv('Bil. pekerja', sel.pekerja)}${kv('Lokasi dirancang', sel.lokasi)}${kv('Sebab berniaga', sel.sebab)}
+   ${kv('Status SSM', sel.ssmStatus)}${kv('No. SSM', sel.ssm)}<div class="dfk"><span>Sijil SSM</span><b>${lnk(sel.pautanSsm)}</b></div><div class="dfk"><span>Pautan e-Info</span><b>${lnk(sel.pautanSsmInfo)}</b></div>
+   ${sel.tifoid || sel.kursusMakanan ? `${kv('Suntikan tifoid', sel.tifoid)}<div class="dfk"><span>Bukti tifoid</span><b>${lnk(sel.pautanTifoid)}</b></div>${kv('Kursus pengendali makanan', sel.kursusMakanan)}<div class="dfk"><span>Sijil kursus</span><b>${lnk(sel.pautanKursus)}</b></div>` : ''}
+   ${kv('Sumber modal', sel.sumber)}${kv('Pembiaya', sel.pembiaya)}${kv('Jumlah modal (RM)', sel.jumlah)}${kv('Jangkaan jualan sebulan (RM)', sel.jualan)}<div class="dfk"><span>Pelan perniagaan</span><b>${lnk(sel.plan)}</b></div></div>
+   <h3 style="margin-top:16px">Pelajar</h3><div class="tw"><table><thead><tr><th>Nama</th><th>Jantina</th><th>Warga</th><th>Matrik</th><th>No. KP / pasport</th><th>Fakulti</th><th>Bidang</th><th>Kursus</th><th>Thn</th><th>CGPA</th><th>Emel</th><th>Telefon</th><th>Alamat kolej / rumah</th><th>Kad matrik</th><th>Kad KP</th></tr></thead><tbody>
+   ${sel.st.map(x => `<tr><td><b>${esc(x.n)}</b>${x.utm === 'Tidak' ? '<small>Bukan pelajar UTM</small>' : ''}</td><td>${esc(x.sex)}</td><td>${esc(x.nat)}</td><td>${esc(x.m)}</td><td>${esc(x.kp)}</td><td>${esc(x.fac)}</td><td>${esc(x.bid)}</td><td>${esc(x.course)}</td><td>${esc(x.yr)}</td><td>${esc(x.cgpa)}</td><td>${esc(x.email)}</td><td>${esc(x.tel)}</td><td>${esc(x.kol)}${x.kol && x.rmh ? '<br>' : ''}${esc(x.rmh)}</td><td>${lnk(x.docM)}</td><td>${lnk(x.docK)}</td></tr>`).join('')}</tbody></table></div>
+   ${sel.status === 'Disahkan' ? `<p class="note" style="margin-top:10px">Disahkan oleh ${esc(sel.oleh)} pada ${esc(sel.sah)}. Rekod dalam Permohonan: <b>${esc(refNo(sel.pid))}</b>.</p>` :
+     `<div class="f" style="margin-top:12px"><label class="wide">Catatan (pilihan, untuk penolakan)<input id="dfc" value="${esc(sel.catatan)}"></label></div>
+      <div class="foot"><button class="btn-ghost" id="dfx">Tutup</button><span class="spacer"></span>${sel.status === 'Ditolak' ? '<button class="btn-line" id="dfp">Pulihkan</button>' : '<button class="btn-line" id="dft">Tolak</button>'}<button class="btn-solid" id="dfok">Sahkan dan masukkan ke Permohonan</button></div>`}
+   ${sel.status === 'Disahkan' ? '<div class="foot"><button class="btn-ghost" id="dfx">Tutup</button></div>' : ''}</div>`;
+  const x = $('#dfx'); if (x) x.onclick = () => { dfOpen = 0; daftar(); };
+  const ok = $('#dfok'); if (ok) ok.onclick = async () => { ok.disabled = true; try { const r = await rpc('apiSahkanDaftar', sel.id); toast('Disahkan: ' + refNo(r.pid)); dfOpen = sel.id; await loadAdmin(); } catch (e) { toast(e.message, true); ok.disabled = false; } };
+  const tl = $('#dft'); if (tl) tl.onclick = () => { dfOpen = 0; act('apiTolakDaftar', 'Pendaftaran ditolak', sel.id, $('#dfc').value, false); };
+  const pl = $('#dfp'); if (pl) pl.onclick = () => act('apiTolakDaftar', 'Dipulihkan', sel.id, '', true);
+  $('#dfd').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 
 function dashboard() {
   const P = D.keputusan.panels, total = P.length * D.apps.length;
