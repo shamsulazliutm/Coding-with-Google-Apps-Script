@@ -57,7 +57,7 @@ let ACTOR_ = '';            // e-mel pengguna semasa, untuk Log
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('UTMPreneur · Penilaian')
+    .setTitle('UTMPreneur')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -243,7 +243,7 @@ function issueCode_(emel, sendMail) {
       let url = '';
       try { url = ScriptApp.getService().getUrl() || ''; } catch (e) { }
       MailApp.sendEmail({
-        to: row.Emel, name: 'UTMPreneur Penilaian',
+        to: row.Emel, name: 'UTMPreneur',
         subject: 'Kod OTP log masuk Penilaian Student Mall & SUB',
         body: 'Salam ' + row.Nama + ',\n\nKod OTP anda untuk sistem Penilaian Student Mall & SUB (UTMPreneur):\n\n    ' + groupCode_(code) +
           '\n\n' + (url ? 'Buka sistem: ' + url + '\n\n' : '') +
@@ -275,7 +275,7 @@ function apiRequestOtp(email) {
       const code = ('000000' + (parseInt(Utilities.getUuid().replace(/-/g, '').slice(0, 8), 16) % 1000000)).slice(-6);
       cache.put('otp:' + em, JSON.stringify({ h: hash_(code + em), t: 0 }), OTP_TTL);
       MailApp.sendEmail({
-        to: em, name: 'UTMPreneur Penilaian',
+        to: em, name: 'UTMPreneur',
         subject: 'Kod OTP anda: ' + code,
         body: 'Kod OTP untuk log masuk sistem Penilaian Student Mall & SUB (UTMPreneur):\n\n    ' + code +
           '\n\nKod sah selama 10 minit. Jangan kongsikan kod ini. Abaikan e-mel ini jika anda tidak memintanya.'
@@ -1142,7 +1142,7 @@ function apiSubmitApplication(p) {
           '\n\nUrusetia UTMXCITE akan menyemak dan mengesahkan pendaftaran anda, kemudian menentukan mesyuarat penilaian. Simpan no. rujukan ini untuk semakan.' });
     } catch (e) { }
     try {
-      MailApp.sendEmail({ to: ADMIN_EMAIL, name: 'UTMPreneur Penilaian', subject: 'Pendaftaran baharu: ' + biz + ' (' + ref + ')',
+      MailApp.sendEmail({ to: ADMIN_EMAIL, name: 'UTMPreneur', subject: 'Pendaftaran baharu: ' + biz + ' (' + ref + ')',
         body: 'Permohonan ' + type + ' baharu telah diterima.\n\n' + biz + '\nPelajar: ' + students.map(function (x) { return x.n + ' (' + (x.m || 'bukan pelajar UTM') + ')'; }).join(', ') +
           '\nRujukan: ' + ref + '\n\nSemak dan sahkan dalam tab Daftar di sistem penilaian. Selepas disahkan, rekod masuk ke Permohonan.' });
     } catch (e) { }
