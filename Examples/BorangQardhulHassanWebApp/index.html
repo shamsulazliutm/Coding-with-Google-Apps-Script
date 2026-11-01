@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root { --c:#673ab7; --err:#d93025; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#f0ebf8; font-family: Roboto, Arial, sans-serif; color:#202124; }
+  .wrap { max-width:640px; margin:0 auto; padding:12px 16px 40px; }
+  .card { background:#fff; border:1px solid #dadce0; border-radius:8px; padding:22px 24px; margin-top:12px; }
+  .head { border-top:10px solid var(--c); }
+  h1 { font-size:28px; font-weight:400; margin:0 0 12px; line-height:1.25; }
+  .desc p { margin:0 0 12px; font-size:14px; line-height:1.5; }
+  .req-note { color:var(--err); font-size:13px; margin-top:8px; }
+  label.q { display:block; font-size:16px; margin-bottom:4px; }
+  .req { color:var(--err); }
+  .help { font-size:13px; color:#5f6368; margin-bottom:8px; }
+  input { width:100%; max-width:360px; border:0; border-bottom:1px solid #dadce0; padding:8px 0; font-size:15px; outline:none; background:transparent; }
+  input:focus { border-bottom:2px solid var(--c); }
+  .err { color:var(--err); font-size:12px; margin-top:6px; display:none; }
+  .invalid input { border-bottom-color:var(--err); }
+  .invalid .err { display:block; }
+  button { background:var(--c); color:#fff; border:0; border-radius:4px; padding:10px 24px; font-size:14px; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:default; }
+  #done { display:none; }
+  #msg { color:var(--err); font-size:13px; margin-left:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="formView">
+    <div class="card head">
+      <h1>BORANG PERMOHONAN SURAT PENGESAHAN PEMBIAYAAN SKIM QARDHUL HASSAN BAKES</h1>
+      <div class="desc">
+        <p><b>Ahli BAKES Yang Dihormati,</b></p>
+        <p>Mohon lengkapkan maklumat ini untuk tujuan penyediaan surat pengesahan pembiayaaan Skim Qardul Hassn BAKES.</p>
+        <p>Surat Pengesahan akan di email sebaik maklumat diterima. Sila semak email yang didaftarkan dan maklumkan pada infoBAKES ditalian dibawah jika Surat pengesahan tidak diterima selepas maklumat diberikan.</p>
+        <p>Sekian, Terima Kasih.</p>
+        <p><b>BENDAHARI</b><br>Badan Kebajikan Staf (BAKES) UTM<br>
+          <a href="https://wa.me/601163363803" target="_blank">wa.me/601163363803</a></p>
+      </div>
+      <div class="req-note">* Menunjukkan soalan wajib</div>
+    </div>
+
+    <form id="f" novalidate>
+      <div class="card" data-f="email">
+        <label class="q" for="email">Email <span class="req">*</span></label>
+        <input id="email" type="email" autocomplete="email">
+        <div class="err">Sila masukkan email yang sah.</div>
+      </div>
+      <div class="card" data-f="phone">
+        <label class="q" for="phone">No Whatsapp <span class="req">*</span></label>
+        <div class="help">Mulakan dengan 60. Pastikan Nombor WhatsApp ini aktif kerana INFOBAKES akan hantar salinan surat melalui whatsapp juga.</div>
+        <input id="phone" type="tel" inputmode="numeric" placeholder="60123456789">
+        <div class="err">Mesti bermula dengan 60, nombor sahaja (10-12 digit).</div>
+      </div>
+      <div class="card" data-f="nama">
+        <label class="q" for="nama">Nama (huruf Besar) <span class="req">*</span></label>
+        <input id="nama" type="text" style="text-transform:uppercase" autocomplete="name">
+        <div class="err">Soalan ini wajib diisi.</div>
+      </div>
+      <div class="card" data-f="noPekerja">
+        <label class="q" for="noPekerja">No. Pekerja <span class="req">*</span></label>
+        <input id="noPekerja" type="text">
+        <div class="err">Soalan ini wajib diisi.</div>
+      </div>
+      <div class="card" data-f="ic">
+        <label class="q" for="ic">No. Kad Pengenalan (Tanpa -) <span class="req">*</span></label>
+        <input id="ic" type="text" inputmode="numeric" maxlength="12" placeholder="12 digit">
+        <div class="err">Mesti 12 digit tanpa tanda "-".</div>
+      </div>
+      <div style="margin-top:16px">
+        <button id="btn" type="submit">Hantar</button><span id="msg"></span>
+      </div>
+    </form>
+  </div>
+
+  <div id="done" class="card head">
+    <h1 style="font-size:24px">Permohonan diterima</h1>
+    <div class="desc"><p>Terima kasih. Surat Pengesahan akan di-email kepada anda. Sila semak email yang didaftarkan.</p></div>
+  </div>
+</div>
+
+<script>
+  var rules = {
+    email:     function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); },
+    phone:     function(v){ return /^60[0-9]{8,10}$/.test(v); },
+    nama:      function(v){ return v.length > 0; },
+    noPekerja: function(v){ return v.length > 0; },
+    ic:        function(v){ return /^[0-9]{12}$/.test(v); }
+  };
+  function val(k){ return document.getElementById(k).value.trim(); }
+
+  document.getElementById('f').addEventListener('submit', function(e){
+    e.preventDefault();
+    var ok = true, data = {};
+    Object.keys(rules).forEach(function(k){
+      var good = rules[k](val(k));
+      document.querySelector('[data-f="'+k+'"]').classList.toggle('invalid', !good);
+      if (!good) ok = false;
+      data[k] = val(k);
+    });
+    if (!ok) return;
+    var btn = document.getElementById('btn'), msg = document.getElementById('msg');
+    btn.disabled = true; msg.textContent = 'Menghantar...';
+    google.script.run
+      .withSuccessHandler(function(){
+        document.getElementById('formView').style.display = 'none';
+        document.getElementById('done').style.display = 'block';
+        window.scrollTo(0,0);
+      })
+      .withFailureHandler(function(err){
+        btn.disabled = false; msg.textContent = (err && err.message) || 'Ralat. Cuba lagi.';
+      })
+      .submitForm(data);
+  });
+</script>
+</body>
+</html>
