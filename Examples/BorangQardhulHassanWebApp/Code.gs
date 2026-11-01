@@ -86,6 +86,8 @@ function prosesSatu_(row) {
   ];
   ds.getRange(r, 1).setValue(new Date());
   ds.getRange(r, 2, 1, 5).setValues([[row[1], row[2], "'" + row[3], "'" + row[4], "'" + row[5]]]);
+  // Lajur P (No Whatsapp) dibaca oleh notisWhatsapp(); isi terus kerana F akan ditimpa oleh onFormSubmit
+  ds.getRange(r, 16).setValue("'" + row[5]);
   SpreadsheetApp.flush();
 
   // Event tiruan (sama bentuk dengan trigger borang Google) untuk kod sedia ada
