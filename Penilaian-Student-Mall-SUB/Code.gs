@@ -1010,15 +1010,15 @@ function apiSubmitApplication(p) {
   if (cleanStr_(p.website, 50)) throw new Error('Permohonan tidak sah.');                 // honeypot untuk bot
   const type = p.type;
   if (type !== 'Student Mall' && type !== 'SUB') throw new Error('Pilih jenis permohonan: Student Mall atau SUB.');
-  const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.kind, 160), ssm = cleanStr_(p.ssm, 80);
+  const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.produk, 160), ssm = cleanStr_(p.ssm, 80);   // jenis perniagaan = kategori produk / perkhidmatan utama
   if (biz.length < 2) throw new Error('Masukkan nama perniagaan.');
-  if (kind.length < 3) throw new Error('Pilih jenis perniagaan.');
   let bentuk = cleanStr_(p.bentuk, 120);
   if (/^Other:/.test(bentuk)) { if (bentuk.replace(/^Other:\s*/, '').length < 2) throw new Error('Nyatakan bentuk perniagaan (Other).'); }
   else bentuk = oneOf_(bentuk, ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)', 'Free Lance'], 'bentuk perniagaan (Type of Business)');
-  const produk = cleanStr_(p.produk, 600);
-  if (produk.length < 3) throw new Error('Nyatakan produk atau perkhidmatan utama.');
-  const isFB = /^makanan/i.test(kind);
+  const produk = kind;
+  if (/^Others/.test(produk)) { if (produk.replace(/^Others:?\s*/, '').length < 2) throw new Error('Nyatakan produk atau perkhidmatan utama (Others).'); }
+  else oneOf_(produk, ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics'], 'produk / perkhidmatan utama');
+  const isFB = /^(food|makanan)/i.test(kind);
   const docs = p.docs || {};
   const ssmSts = oneOf_(p.ssmStatus, ['Berdaftar', 'Belum berdaftar'], 'status pendaftaran SSM');
   const ssmPlan = cleanStr_(p.ssmPlan, 160);
@@ -1030,13 +1030,21 @@ function apiSubmitApplication(p) {
   if (ssmInfo && !/^https:\/\/[^\s]+$/i.test(ssmInfo)) throw new Error('Pautan maklumat SSM mesti bermula dengan https://');
   let tifoid = '', kursus = '';
   if (isFB) {
-    tifoid = oneOf_(p.tifoid, ['Sudah (semua pengendali)', 'Sebahagian', 'Belum'], 'status suntikan tifoid');
-    kursus = oneOf_(p.kursus, ['Sudah', 'Belum'], 'status kursus pengendali makanan');
-    if (tifoid !== 'Belum' && !hasDoc_(docs.tifoid)) throw new Error('Muat naik bukti suntikan tifoid.');
-    if (kursus === 'Sudah' && !hasDoc_(docs.kursus)) throw new Error('Muat naik sijil kursus pengendali makanan.');
+    tifoid = oneOf_(p.tifoid, ['Yes', 'No', 'In progress'], 'status suntikan tifoid');
+    kursus = oneOf_(p.kursus, ['Yes', 'No'], 'status sijil kursus pengendali makanan');
+    if (tifoid === 'Yes' && !hasDoc_(docs.tifoid)) throw new Error('Muat naik bukti suntikan tifoid.');
+    if (kursus === 'Yes' && !hasDoc_(docs.kursus)) throw new Error('Muat naik sijil kursus pengendali makanan.');
   }
-  const sumber = cleanStr_(p.sumber, 40), pembiaya = cleanStr_(p.pembiaya, 120);
-  const jumlah = numOpt_(p.jumlah, 'Jumlah modal'), jualan = numOpt_(p.jualan, 'Jangkaan jualan');
+  let sumber = cleanStr_(p.sumber, 120);
+  if (/^Other:/.test(sumber)) { if (sumber.replace(/^Other:\s*/, '').length < 2) throw new Error('Nyatakan sumber pembiayaan (Other).'); }
+  else sumber = oneOf_(sumber, ['Own Money / Savings', 'Contribution from Parents', 'Funding from Other Agencies', 'Crowdfunding', 'None'], 'sumber pembiayaan (Source of Financing / Funding)');
+  let pembiaya = cleanStr_(p.pembiaya, 120);
+  if (/^Other:/.test(pembiaya)) { if (pembiaya.replace(/^Other:\s*/, '').length < 2) throw new Error('Nyatakan penyedia pembiayaan (Other).'); }
+  else pembiaya = oneOf_(pembiaya, ['Government Agency', 'Private Agency / Industry', 'Bank', 'NGO', 'Use Own Saving / Contributions from Parents', 'None'], 'penyedia pembiayaan (Funding Provider)');
+  const jumlahIn = cleanStr_(p.jumlah, 40);
+  if (!jumlahIn) throw new Error('Masukkan jumlah pembiayaan diterima (RM), atau N/A jika tiada.');
+  const jumlah = /^n\/?a$/i.test(jumlahIn) ? 'N/A' : numOpt_(jumlahIn, 'Jumlah pembiayaan');
+  const jualan = numOpt_(p.jualan, 'Jangkaan jualan');
   const pekerja = p.pekerja === '' || p.pekerja == null ? '' : Math.round(Number(p.pekerja));
   if (pekerja !== '' && !(pekerja >= 0 && pekerja < 1000)) throw new Error('Bilangan pekerja tidak sah.');
   let mula = '';

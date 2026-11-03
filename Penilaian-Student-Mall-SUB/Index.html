@@ -396,11 +396,14 @@ const FAK = ['FKE', 'FKA', 'FKM', 'FKT', 'FC', 'FS', 'FM', 'FAB', 'FP', 'FSSH', 
 const newStudent = () => ({ n: '', m: '', kp: '', yr: '', fac: '', course: '', cgpa: '', email: '', tel: '', sex: '', nat: 'Malaysia', bid: '', utm: 'Ya', kol: '', rmh: '', docM: null, docK: null });
 const BIDANG = ['Engineering', 'Science', 'Education', 'Business Management and Accounting', 'Information, Technology and Communication', 'Social Science and Psychology', 'Architecture, Planning and Survey', 'N/A (Only tick if the partner is not a UTM student)', 'Other:'];
 const BENTUK = ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)', 'Free Lance', 'Other:'];
-const KINDS = ['Makanan & Minuman (F&B)', 'Runcit / Barangan', 'Perkhidmatan', 'Digital / Teknologi', 'Lain-lain'];
-const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', kind: '', ssm: '', ssmStatus: 'Berdaftar', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
-  tifoid: '', kursus: '', sumber: '', pembiaya: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
+const SUMBER = ['Own Money / Savings', 'Contribution from Parents', 'Funding from Other Agencies', 'Crowdfunding', 'None', 'Other:'];
+const PEMBIAYA = ['Government Agency', 'Private Agency / Industry', 'Bank', 'NGO', 'Use Own Saving / Contributions from Parents', 'None', 'Other:'];
+const PRODUK = ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics', 'Others'];
+const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', produkx: '', ssm: '', ssmStatus: 'Berdaftar', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
+  tifoid: '', kursus: '', sumber: '', sumberx: '', pembiaya: '', pembiayax: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
 const MAXDOC = 5 * 1024 * 1024;
-const isFB = k => /^makanan/i.test(k || '');
+const isFB = k => /^(food|makanan)/i.test(k || '');
+const produkVal = A => A.produk === 'Others' ? ('Others: ' + (A.produkx || '').trim()) : A.produk;
 const MAXPLAN = 8 * 1024 * 1024;
 
 function applyCollect() {
@@ -439,7 +442,7 @@ function showApply() {
      <div class="fld">Salinan kad matrik<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_s${i}_docM" style="display:inline-block;cursor:pointer;margin:0">Pilih fail</label><input type="file" id="ap_s${i}_docM" data-sf="${i}" data-k="docM" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_s${i}_docM">${s.docM ? esc(s.docM.name) : 'Belum dipilih (maks 5 MB)'}</span></div></div>
      <div class="fld">Salinan kad pengenalan / pasport<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_s${i}_docK" style="display:inline-block;cursor:pointer;margin:0">Pilih fail</label><input type="file" id="ap_s${i}_docK" data-sf="${i}" data-k="docK" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_s${i}_docK">${s.docK ? esc(s.docK.name) : 'Belum dipilih (maks 5 MB)'}</span></div></div>
     </div><p class="note" style="margin:8px 0 0">Kad matrik dan kad pengenalan disimpan dalam folder sulit dan tidak dipaparkan kepada panel.</p></div>`; };
-  const fb = isFB(A.kind), reg = A.ssmStatus !== 'Belum berdaftar';
+  const fb = isFB(A.produk), reg = A.ssmStatus !== 'Belum berdaftar';
   app.innerHTML = `<div class="apply"><datalist id="apfak">${FAK.map(f => `<option value="${f}">`).join('')}</datalist>
    <div class="aptop"><button class="btn-line" id="ap_back" type="button">Log masuk Admin / Panel</button></div>
    <div class="apban"><img src="${LOGO_SRC}" alt="UTM dan UTMXCITE"><div class="org">UTM Center for Student Innovation &amp; Technology Entrepreneurship</div><span class="ttl">START-UP REGISTRATION FORM</span></div>
@@ -459,11 +462,11 @@ function showApply() {
      <label>Pilihan ruang (Kiosk atau Lot)<select data-f="lot">${opt(['Kiosk', 'Lot'], A.lot)}</select></label></div></div>
    <div class="card apsec"><h3><span class="apn">2</span> Maklumat perniagaan</h3><div class="f">
      <label class="wide">Nama perniagaan / syarikat *<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
-     <label>Jenis perniagaan *<select data-f="kind" id="ap_kind">${opt(KINDS, A.kind)}</select></label>
      <label>Bentuk perniagaan (Type of Business) *<select data-f="bentuk" id="ap_bentuk">${opt(BENTUK, A.bentuk)}</select></label>
      ${A.bentuk === 'Other:' ? `<label>Bentuk lain (nyatakan) *<input data-f="bentukx" value="${esc(A.bentukx)}"></label>` : ''}
      <label>Tarikh mula berniaga<input data-f="mula" type="date" value="${esc(A.mula)}"></label>
-     <label class="wide">Produk / perkhidmatan utama *<textarea data-f="produk" rows="2">${esc(A.produk)}</textarea></label>
+     <label class="wide">Produk / perkhidmatan utama *<select data-f="produk" id="ap_kind">${opt(PRODUK, A.produk)}</select></label>
+     ${A.produk === 'Others' ? `<label class="wide">Produk / perkhidmatan lain (nyatakan) *<input data-f="produkx" value="${esc(A.produkx)}"></label>` : ''}
      <label class="wide">Alamat perniagaan<input data-f="alamat" value="${esc(A.alamat)}"></label>
      <label>Bilangan pekerja<input data-f="pekerja" type="number" min="0" value="${esc(A.pekerja)}"></label>
      <label>Lokasi perniagaan dirancang<input data-f="lokasi" value="${esc(A.lokasi)}"></label>
@@ -475,14 +478,16 @@ function showApply() {
        <label class="wide">Pautan maklumat SSM / e-Info (pilihan)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https:&#47;&#47;"></label></div>` :
        `<div class="apcond f"><label class="wide">Rancangan mendaftar SSM<input data-f="ssmPlan" value="${esc(A.ssmPlan)}" placeholder="cth. sebelum 30 Jun"></label></div>`}</div>
    ${fb ? `<div class="card apsec"><h3><span class="apn">4</span> Keselamatan makanan</h3><div class="f">
-     <label>Suntikan tifoid *<select data-f="tifoid">${opt(['Sudah (semua pengendali)', 'Sebahagian', 'Belum'], A.tifoid)}</select></label>
-     ${A.tifoid && A.tifoid !== 'Belum' ? fbox('tifoid', 'Bukti suntikan tifoid *', A.docs.tifoid) : '<span></span>'}
-     <label>Kursus pengendali makanan *<select data-f="kursus">${opt(['Sudah', 'Belum'], A.kursus)}</select></label>
-     ${A.kursus === 'Sudah' ? fbox('kursus', 'Sijil kursus pengendali makanan *', A.docs.kursus) : '<span></span>'}</div></div>` : ''}
+     <label>Do you have typhoid vaccination (for F&amp;B ONLY)? *<select data-f="tifoid">${opt(['Yes', 'No', 'In progress'], A.tifoid)}</select></label>
+     ${A.tifoid === 'Yes' || A.tifoid === 'In progress' ? fbox('tifoid', 'Please upload the receipt and proof of typhoid vaccination (for F&amp;B ONLY)' + (A.tifoid === 'Yes' ? ' *' : ''), A.docs.tifoid) : '<span></span>'}
+     <label>Do you have certificate of food handling course? (for F&amp;B ONLY) *<select data-f="kursus">${opt(['Yes', 'No'], A.kursus)}</select></label>
+     ${A.kursus === 'Yes' ? fbox('kursus', 'Please upload the certificate of food handling course (for F&amp;B ONLY). Other than F&amp;B, please state N/A *', A.docs.kursus) : '<span></span>'}</div></div>` : ''}
    <div class="card apsec"><h3><span class="apn">${fb ? 5 : 4}</span> Pembiayaan dan jangkaan jualan</h3><div class="f">
-     <label>Sumber modal<select data-f="sumber">${opt(['Simpanan sendiri', 'Pinjaman / biasiswa', 'Geran', 'Rakan kongsi'], A.sumber)}</select></label>
-     <label>Pembiaya<input data-f="pembiaya" value="${esc(A.pembiaya)}" placeholder="cth. TEKUN, UTM, keluarga"></label>
-     <label>Jumlah modal (RM)<input data-f="jumlah" inputmode="decimal" value="${esc(A.jumlah)}"></label>
+     <label class="wide">Source of Financing / Funding (if any) *<select data-f="sumber" id="ap_sumber">${opt(SUMBER, A.sumber)}</select></label>
+     ${A.sumber === 'Other:' ? `<label class="wide">Sumber lain (nyatakan) *<input data-f="sumberx" value="${esc(A.sumberx)}"></label>` : ''}
+     <label class="wide">Funding Provider (if any) *<select data-f="pembiaya" id="ap_pembiaya">${opt(PEMBIAYA, A.pembiaya)}</select></label>
+     ${A.pembiaya === 'Other:' ? `<label class="wide">Penyedia lain (nyatakan) *<input data-f="pembiayax" value="${esc(A.pembiayax)}"></label>` : ''}
+     <label class="wide">Amount of Funding Received (in RM) (if any). Please fill N/A if no funding received *<input data-f="jumlah" value="${esc(A.jumlah)}" placeholder="cth. 5000 atau N/A"></label>
      <label>Jangkaan jualan sebulan (RM)<input data-f="jualan" inputmode="decimal" value="${esc(A.jualan)}"></label></div></div>
    <div class="card apsec"><h3><span class="apn">${fb ? 6 : 5}</span> Maklumat pelajar</h3>${A.st.map(stu).join('')}
      ${A.st.length < 4 ? `<button class="btn-line" id="ap_add" type="button" style="margin-top:6px">+ Tambah pelajar</button>` : ''}</div>
@@ -500,6 +505,8 @@ function showApply() {
   document.querySelectorAll('[name=ap_mode]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { applyCollect(); A.st.splice(+b.dataset.rm, 1); showApply(); });
   const kd = $('#ap_kind'); if (kd) kd.onchange = () => { applyCollect(); showApply(); };
+  const pm = $('#ap_pembiaya'); if (pm) pm.onchange = () => { applyCollect(); showApply(); };
+  const sm = $('#ap_sumber'); if (sm) sm.onchange = () => { applyCollect(); showApply(); };
   const bt = $('#ap_bentuk'); if (bt) bt.onchange = () => { applyCollect(); showApply(); };
   document.querySelectorAll('[name=ap_ssm]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-f=tifoid],[data-f=kursus],[data-s][data-k=nat],[data-s][data-k=utm],[data-s][data-k=bid]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
@@ -524,10 +531,10 @@ function showApply() {
     ev.preventDefault(); applyCollect();
     const msg = $('#ap_msg'), b = $('#ap_go'); msg.textContent = '';
     const dd = d => d ? { name: d.name, b64: d.b64 } : null;
-    const pl = { type: A.type, lot: A.lot, biz: A.biz, kind: A.kind, bentuk: A.bentuk === 'Other:' ? ('Other: ' + (A.bentukx || '').trim()) : A.bentuk, mula: A.mula, produk: A.produk, alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
+    const pl = { type: A.type, lot: A.lot, biz: A.biz, kind: produkVal(A), bentuk: A.bentuk === 'Other:' ? ('Other: ' + (A.bentukx || '').trim()) : A.bentuk, mula: A.mula, produk: produkVal(A), alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
       ssmStatus: A.ssmStatus, ssm: A.ssmStatus === 'Berdaftar' ? A.ssm : '', ssmPlan: A.ssmPlan, ssmInfo: A.ssmStatus === 'Berdaftar' ? A.ssmInfo : '',
-      tifoid: isFB(A.kind) ? A.tifoid : '', kursus: isFB(A.kind) ? A.kursus : '', sumber: A.sumber, pembiaya: A.pembiaya, jumlah: A.jumlah, jualan: A.jualan,
-      docs: { ssm: A.ssmStatus === 'Berdaftar' ? dd(A.docs.ssm) : null, tifoid: dd(A.docs.tifoid), kursus: dd(A.docs.kursus) },
+      tifoid: isFB(A.produk) ? A.tifoid : '', kursus: isFB(A.produk) ? A.kursus : '', sumber: A.sumber === 'Other:' ? ('Other: ' + (A.sumberx || '').trim()) : A.sumber, pembiaya: A.pembiaya === 'Other:' ? ('Other: ' + (A.pembiayax || '').trim()) : A.pembiaya, jumlah: A.jumlah, jualan: A.jualan,
+      docs: { ssm: A.ssmStatus === 'Berdaftar' ? dd(A.docs.ssm) : null, tifoid: isFB(A.produk) && (A.tifoid === 'Yes' || A.tifoid === 'In progress') ? dd(A.docs.tifoid) : null, kursus: isFB(A.produk) && A.kursus === 'Yes' ? dd(A.docs.kursus) : null },
       ack: !!A.ack, website: A.website,
       st: A.st.map(s => ({ ...s, bid: s.bid === 'Other:' ? ('Other: ' + (s.bidx || '').trim()) : s.bid, cgpa: String(s.cgpa).replace(',', '.'), docM: dd(s.docM), docK: dd(s.docK) })), planUrl: A.mode === 'link' ? A.planUrl : '', file: A.mode === 'file' && A.file ? { name: A.file.name, b64: A.file.b64 } : null };
     b.disabled = true; b.textContent = 'Menghantar…';
@@ -598,7 +605,7 @@ function daftar() {
    <div class="dfg">${kv('Jenis permohonan', sel.jenis)}${kv('Pilihan ruang', sel.lot)}${kv('Jenis perniagaan', sel.kind)}${kv('Bentuk perniagaan', sel.bentuk)}${kv('Tarikh mula', sel.mula)}${kv('Produk / perkhidmatan', sel.produk)}${kv('Alamat perniagaan', sel.alamat)}${kv('Bil. pekerja', sel.pekerja)}${kv('Lokasi dirancang', sel.lokasi)}${kv('Sebab berniaga', sel.sebab)}
    ${kv('Status SSM', sel.ssmStatus)}${kv('No. SSM', sel.ssm)}<div class="dfk"><span>Sijil SSM</span><b>${lnk(sel.pautanSsm)}</b></div><div class="dfk"><span>Pautan e-Info</span><b>${lnk(sel.pautanSsmInfo)}</b></div>
    ${sel.tifoid || sel.kursusMakanan ? `${kv('Suntikan tifoid', sel.tifoid)}<div class="dfk"><span>Bukti tifoid</span><b>${lnk(sel.pautanTifoid)}</b></div>${kv('Kursus pengendali makanan', sel.kursusMakanan)}<div class="dfk"><span>Sijil kursus</span><b>${lnk(sel.pautanKursus)}</b></div>` : ''}
-   ${kv('Sumber modal', sel.sumber)}${kv('Pembiaya', sel.pembiaya)}${kv('Jumlah modal (RM)', sel.jumlah)}${kv('Jangkaan jualan sebulan (RM)', sel.jualan)}<div class="dfk"><span>Pelan perniagaan</span><b>${lnk(sel.plan)}</b></div></div>
+   ${kv('Source of Financing / Funding', sel.sumber)}${kv('Funding Provider', sel.pembiaya)}${kv('Amount of Funding Received (RM)', sel.jumlah)}${kv('Jangkaan jualan sebulan (RM)', sel.jualan)}<div class="dfk"><span>Pelan perniagaan</span><b>${lnk(sel.plan)}</b></div></div>
    <h3 style="margin-top:16px">Pelajar</h3><div class="tw"><table><thead><tr><th>Nama</th><th>Jantina</th><th>Warga</th><th>Matrik</th><th>No. KP / pasport</th><th>Fakulti</th><th>Bidang</th><th>Kursus</th><th>Thn</th><th>CGPA</th><th>Emel</th><th>Telefon</th><th>Alamat kolej / rumah</th><th>Kad matrik</th><th>Kad KP</th></tr></thead><tbody>
    ${sel.st.map(x => `<tr><td><b>${esc(x.n)}</b>${x.utm === 'Tidak' ? '<small>Bukan pelajar UTM</small>' : ''}</td><td>${esc(x.sex)}</td><td>${esc(x.nat)}</td><td>${esc(x.m)}</td><td>${esc(x.kp)}</td><td>${esc(x.fac)}</td><td>${esc(x.bid)}</td><td>${esc(x.course)}</td><td>${esc(x.yr)}</td><td>${esc(x.cgpa)}</td><td>${esc(x.email)}</td><td>${esc(x.tel)}</td><td>${esc(x.kol)}${x.kol && x.rmh ? '<br>' : ''}${esc(x.rmh)}</td><td>${lnk(x.docM)}</td><td>${lnk(x.docK)}</td></tr>`).join('')}</tbody></table></div>
    ${sel.status === 'Disahkan' ? `<p class="note" style="margin-top:10px">Disahkan oleh ${esc(sel.oleh)} pada ${esc(sel.sah)}. Rekod dalam Permohonan: <b>${esc(refNo(sel.pid))}</b>.</p>` :
