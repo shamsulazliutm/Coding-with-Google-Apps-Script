@@ -395,8 +395,9 @@ let APP = null, PUBINFO = null;   // PUBINFO.templateUrl dibaca daripada Tetapan
 const FAK = ['FKE', 'FKA', 'FKM', 'FKT', 'FC', 'FS', 'FM', 'FAB', 'FP', 'FSSH', 'FEST'];
 const newStudent = () => ({ n: '', m: '', kp: '', yr: '', fac: '', course: '', cgpa: '', email: '', tel: '', sex: '', nat: 'Malaysia', bid: '', utm: 'Ya', kol: '', rmh: '', docM: null, docK: null });
 const BIDANG = ['Engineering', 'Science', 'Education', 'Business Management and Accounting', 'Information, Technology and Communication', 'Social Science and Psychology', 'Architecture, Planning and Survey', 'N/A (Only tick if the partner is not a UTM student)', 'Other:'];
+const BENTUK = ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)', 'Free Lance', 'Other:'];
 const KINDS = ['Makanan & Minuman (F&B)', 'Runcit / Barangan', 'Perkhidmatan', 'Digital / Teknologi', 'Lain-lain'];
-const newApp = () => ({ type: 'Student Mall', lot: '', biz: '', kind: '', ssm: '', ssmStatus: 'Berdaftar', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
+const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', kind: '', ssm: '', ssmStatus: 'Berdaftar', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
   tifoid: '', kursus: '', sumber: '', pembiaya: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
 const MAXDOC = 5 * 1024 * 1024;
 const isFB = k => /^makanan/i.test(k || '');
@@ -459,6 +460,8 @@ function showApply() {
    <div class="card apsec"><h3><span class="apn">2</span> Maklumat perniagaan</h3><div class="f">
      <label class="wide">Nama perniagaan / syarikat *<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
      <label>Jenis perniagaan *<select data-f="kind" id="ap_kind">${opt(KINDS, A.kind)}</select></label>
+     <label>Bentuk perniagaan (Type of Business) *<select data-f="bentuk" id="ap_bentuk">${opt(BENTUK, A.bentuk)}</select></label>
+     ${A.bentuk === 'Other:' ? `<label>Bentuk lain (nyatakan) *<input data-f="bentukx" value="${esc(A.bentukx)}"></label>` : ''}
      <label>Tarikh mula berniaga<input data-f="mula" type="date" value="${esc(A.mula)}"></label>
      <label class="wide">Produk / perkhidmatan utama *<textarea data-f="produk" rows="2">${esc(A.produk)}</textarea></label>
      <label class="wide">Alamat perniagaan<input data-f="alamat" value="${esc(A.alamat)}"></label>
@@ -497,6 +500,7 @@ function showApply() {
   document.querySelectorAll('[name=ap_mode]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { applyCollect(); A.st.splice(+b.dataset.rm, 1); showApply(); });
   const kd = $('#ap_kind'); if (kd) kd.onchange = () => { applyCollect(); showApply(); };
+  const bt = $('#ap_bentuk'); if (bt) bt.onchange = () => { applyCollect(); showApply(); };
   document.querySelectorAll('[name=ap_ssm]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-f=tifoid],[data-f=kursus],[data-s][data-k=nat],[data-s][data-k=utm],[data-s][data-k=bid]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-doc],[data-sf]').forEach(inp => inp.onchange = () => {
@@ -520,7 +524,7 @@ function showApply() {
     ev.preventDefault(); applyCollect();
     const msg = $('#ap_msg'), b = $('#ap_go'); msg.textContent = '';
     const dd = d => d ? { name: d.name, b64: d.b64 } : null;
-    const pl = { type: A.type, lot: A.lot, biz: A.biz, kind: A.kind, mula: A.mula, produk: A.produk, alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
+    const pl = { type: A.type, lot: A.lot, biz: A.biz, kind: A.kind, bentuk: A.bentuk === 'Other:' ? ('Other: ' + (A.bentukx || '').trim()) : A.bentuk, mula: A.mula, produk: A.produk, alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
       ssmStatus: A.ssmStatus, ssm: A.ssmStatus === 'Berdaftar' ? A.ssm : '', ssmPlan: A.ssmPlan, ssmInfo: A.ssmStatus === 'Berdaftar' ? A.ssmInfo : '',
       tifoid: isFB(A.kind) ? A.tifoid : '', kursus: isFB(A.kind) ? A.kursus : '', sumber: A.sumber, pembiaya: A.pembiaya, jumlah: A.jumlah, jualan: A.jualan,
       docs: { ssm: A.ssmStatus === 'Berdaftar' ? dd(A.docs.ssm) : null, tifoid: dd(A.docs.tifoid), kursus: dd(A.docs.kursus) },
@@ -591,7 +595,7 @@ function daftar() {
   if (!sel) return;
   const kv = (k, v) => `<div class="dfk"><span>${k}</span><b>${v === '' || v == null ? '–' : esc(v)}</b></div>`;
   $('#dfd').innerHTML = `<div class="card detail"><h3>${esc(sel.ref)} · ${esc(sel.biz)} ${dfPill(sel.status)}<i>${esc(sel.tarikh)}</i></h3>
-   <div class="dfg">${kv('Jenis permohonan', sel.jenis)}${kv('Pilihan ruang', sel.lot)}${kv('Jenis perniagaan', sel.kind)}${kv('Tarikh mula', sel.mula)}${kv('Produk / perkhidmatan', sel.produk)}${kv('Alamat perniagaan', sel.alamat)}${kv('Bil. pekerja', sel.pekerja)}${kv('Lokasi dirancang', sel.lokasi)}${kv('Sebab berniaga', sel.sebab)}
+   <div class="dfg">${kv('Jenis permohonan', sel.jenis)}${kv('Pilihan ruang', sel.lot)}${kv('Jenis perniagaan', sel.kind)}${kv('Bentuk perniagaan', sel.bentuk)}${kv('Tarikh mula', sel.mula)}${kv('Produk / perkhidmatan', sel.produk)}${kv('Alamat perniagaan', sel.alamat)}${kv('Bil. pekerja', sel.pekerja)}${kv('Lokasi dirancang', sel.lokasi)}${kv('Sebab berniaga', sel.sebab)}
    ${kv('Status SSM', sel.ssmStatus)}${kv('No. SSM', sel.ssm)}<div class="dfk"><span>Sijil SSM</span><b>${lnk(sel.pautanSsm)}</b></div><div class="dfk"><span>Pautan e-Info</span><b>${lnk(sel.pautanSsmInfo)}</b></div>
    ${sel.tifoid || sel.kursusMakanan ? `${kv('Suntikan tifoid', sel.tifoid)}<div class="dfk"><span>Bukti tifoid</span><b>${lnk(sel.pautanTifoid)}</b></div>${kv('Kursus pengendali makanan', sel.kursusMakanan)}<div class="dfk"><span>Sijil kursus</span><b>${lnk(sel.pautanKursus)}</b></div>` : ''}
    ${kv('Sumber modal', sel.sumber)}${kv('Pembiaya', sel.pembiaya)}${kv('Jumlah modal (RM)', sel.jumlah)}${kv('Jangkaan jualan sebulan (RM)', sel.jualan)}<div class="dfk"><span>Pelan perniagaan</span><b>${lnk(sel.plan)}</b></div></div>

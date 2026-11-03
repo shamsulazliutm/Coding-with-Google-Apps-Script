@@ -25,7 +25,7 @@ const HEAD = {
   Daftar: ['ID', 'Tarikh', 'Status', 'PemohonID', 'Jenis', 'Lot', 'Perniagaan', 'JenisPerniagaan', 'Produk', 'StatusSSM', 'SSM', 'PautanSSM', 'PautanSSMInfo',
     'Tifoid', 'PautanTifoid', 'KursusMakanan', 'PautanKursus', 'SumberDana', 'PembiayaDana', 'JumlahDana', 'JualanBulanan',
     'AlamatPerniagaan', 'MulaPerniagaan', 'BilPekerja', 'LokasiPerniagaan', 'SebabBerniaga', 'PautanPelan',
-    'Ketua', 'Matrik', 'Emel', 'Pelajar', 'Catatan', 'DisahkanOleh', 'TarikhSah'],
+    'Ketua', 'Matrik', 'Emel', 'Pelajar', 'Catatan', 'DisahkanOleh', 'TarikhSah', 'BentukPerniagaan'],
   Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status', 'ID', 'Tempat', 'Bil'],
   Agenda: ['SesiID', 'PemohonID', 'Susunan', 'Slot', 'StatusAkhir'],
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
@@ -1013,6 +1013,9 @@ function apiSubmitApplication(p) {
   const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.kind, 160), ssm = cleanStr_(p.ssm, 80);
   if (biz.length < 2) throw new Error('Masukkan nama perniagaan.');
   if (kind.length < 3) throw new Error('Pilih jenis perniagaan.');
+  let bentuk = cleanStr_(p.bentuk, 120);
+  if (/^Other:/.test(bentuk)) { if (bentuk.replace(/^Other:\s*/, '').length < 2) throw new Error('Nyatakan bentuk perniagaan (Other).'); }
+  else bentuk = oneOf_(bentuk, ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)', 'Free Lance'], 'bentuk perniagaan (Type of Business)');
   const produk = cleanStr_(p.produk, 600);
   if (produk.length < 3) throw new Error('Nyatakan produk atau perkhidmatan utama.');
   const isFB = /^makanan/i.test(kind);
@@ -1132,7 +1135,7 @@ function apiSubmitApplication(p) {
       LokasiPerniagaan: cleanStr_(p.lokasi, 160), SebabBerniaga: cleanStr_(p.sebab, 600)
     };
     const id = nextId;
-    append_(SH.DAFTAR, Object.assign({ ID: id, Tarikh: new Date(), Status: 'Baharu', Jenis: type, Perniagaan: biz.toUpperCase(), JenisPerniagaan: kind, SSM: ssmSts === 'Berdaftar' ? ssm : '',
+    append_(SH.DAFTAR, Object.assign({ ID: id, Tarikh: new Date(), Status: 'Baharu', Jenis: type, Perniagaan: biz.toUpperCase(), JenisPerniagaan: kind, BentukPerniagaan: bentuk, SSM: ssmSts === 'Berdaftar' ? ssm : '',
       PautanPelan: planUrl, Ketua: students[0].n, Matrik: students[0].m, Emel: students[0].email, Pelajar: JSON.stringify(students.map(stuJson_)) }, extra));
     log_('Daftar baharu daripada pelajar', dref_(id) + ' · ' + biz + ' · ' + students[0].m);
     const ref = dref_(id);
@@ -1159,7 +1162,7 @@ function daftarOf_(r) {
   let st = [];
   try { st = JSON.parse(r.Pelajar || '[]'); } catch (e) { }
   return { id: Number(r.ID), ref: dref_(r.ID), tarikh: fmtDate_(r.Tarikh), status: r.Status || 'Baharu', pid: r.PemohonID === '' ? 0 : Number(r.PemohonID),
-    jenis: r.Jenis, lot: r.Lot, biz: r.Perniagaan, kind: r.JenisPerniagaan, produk: r.Produk, ssmStatus: r.StatusSSM, ssm: r.SSM, pautanSsm: r.PautanSSM, pautanSsmInfo: r.PautanSSMInfo,
+    jenis: r.Jenis, bentuk: r.BentukPerniagaan || '', lot: r.Lot, biz: r.Perniagaan, kind: r.JenisPerniagaan, produk: r.Produk, ssmStatus: r.StatusSSM, ssm: r.SSM, pautanSsm: r.PautanSSM, pautanSsmInfo: r.PautanSSMInfo,
     tifoid: r.Tifoid, pautanTifoid: r.PautanTifoid, kursusMakanan: r.KursusMakanan, pautanKursus: r.PautanKursus,
     sumber: r.SumberDana, pembiaya: r.PembiayaDana, jumlah: r.JumlahDana === '' ? '' : String(r.JumlahDana), jualan: r.JualanBulanan === '' ? '' : String(r.JualanBulanan),
     alamat: r.AlamatPerniagaan, mula: fmtDate_(r.MulaPerniagaan), pekerja: r.BilPekerja === '' ? '' : String(r.BilPekerja), lokasi: r.LokasiPerniagaan, sebab: r.SebabBerniaga,
