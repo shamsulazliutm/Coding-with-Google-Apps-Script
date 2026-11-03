@@ -48,6 +48,7 @@ const MAX_PLAN_MB = 8;
 const SUBMIT_MAX_PER_HOUR = 60;
 const TEMPLATE_CELL = 'B15';   // sel dalam sheet Tetapan yang menyimpan pautan templat pelan perniagaan
 const FOLDER_CELL = 'B16';     // sel dalam sheet Tetapan yang menyimpan pautan folder Drive bagi pelan yang dimuat naik
+const SSU_CELL = 'B18';        // pautan borang permohonan pendaftaran SSU (Sistem Syarikat Universiti) untuk pelajar yang belum mendaftar
 const SULIT_CELL = 'B17';      // folder Drive bagi dokumen sulit pelajar (kad matrik, salinan KP, dll.; tidak dikongsi)
 const FOLDER_SULIT = 'Dokumen Sulit UTMXCITE';
 const SESSION_TTL = 21600;   // sesi log masuk 6 jam (had maksimum CacheService)
@@ -1020,6 +1021,8 @@ function apiSubmitApplication(p) {
   else oneOf_(produk, ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics'], 'your main products / services');
   const isFB = /^(food|makanan)/i.test(kind);
   const docs = p.docs || {};
+  const ssuSts = oneOf_(p.ssuStatus, ['Yes', 'No'], 'whether you are registered with SSU');
+  if (ssuSts === 'No') throw new Error('SSU registration is compulsory. Please complete the SSU registration application using the link provided, then submit this form with your SSU registration number.');
   const ssu = cleanStr_(p.ssu, 40);
   if (ssu.length < 3) throw new Error('Please enter the SSU (Sistem Syarikat Universiti) registration number.');
   const ssmSts = oneOf_(p.ssmStatus, ['Registered', 'Not registered'], 'your SSM registration status');
@@ -1224,7 +1227,10 @@ function apiPublicInfo() {
   let url = '';
   try { url = String(cfgSheet_().getRange(TEMPLATE_CELL).getValue() || '').trim(); } catch (e) { }
   if (!/^https:\/\/[^\s]+$/i.test(url)) url = '';
-  return { templateUrl: url };
+  let ssu = '';
+  try { ssu = String(cfgSheet_().getRange(SSU_CELL).getValue() || '').trim(); } catch (e) { }
+  if (!/^https:\/\/[^\s]+$/i.test(ssu)) ssu = '';
+  return { templateUrl: url, ssuUrl: ssu };
 }
 
 function ref_(id) { return 'PM-' + ('0000' + Number(id)).slice(-4); }
@@ -1255,6 +1261,10 @@ function setupSheets() {
   // Tetapan!B17: folder Drive sulit bagi kad matrik / kad pengenalan pelajar (tidak dikongsi dengan sesiapa)
   if (!String(ts.getRange('A17').getValue() || '').trim()) {
     ts.getRange('A17:C17').setValues([['FolderSulit', '', '<- Pilihan: pautan folder Drive untuk kad matrik dan kad pengenalan pelajar. Fail di sini tidak dikongsi. Kosongkan untuk folder lalai.']]);
+  }
+  // Tetapan!B18: pautan borang pendaftaran SSU (dipaparkan kepada pelajar yang belum mendaftar dengan SSU)
+  if (!String(ts.getRange('A18').getValue() || '').trim()) {
+    ts.getRange('A18:C18').setValues([['PautanSSU', '', '<- Tampal pautan borang permohonan pendaftaran SSU (https). Dipaparkan kepada pelajar yang belum mendaftar dengan SSU.']]);
   }
   // KP, matrik dan SSM mesti kekal sebagai teks
   book.getSheetByName(SH.PELAJAR).getRange('C:D').setNumberFormat('@');

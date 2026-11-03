@@ -413,7 +413,7 @@ const BENTUK = ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)'
 const SUMBER = ['Own Money / Savings', 'Contribution from Parents', 'Funding from Other Agencies', 'Crowdfunding', 'None', 'Other:'];
 const PEMBIAYA = ['Government Agency', 'Private Agency / Industry', 'Bank', 'NGO', 'Use Own Saving / Contributions from Parents', 'None', 'Other:'];
 const PRODUK = ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics', 'Others'];
-const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', produkx: '', ssu: '', ssm: '', ssmStatus: '', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
+const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', produkx: '', ssuStatus: '', ssu: '', ssm: '', ssmStatus: '', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
   tifoid: '', kursus: '', sumber: '', sumberx: '', pembiaya: '', pembiayax: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
 const MAXDOC = 5 * 1024 * 1024;
 const isFB = k => /^(food|makanan)/i.test(k || '');
@@ -488,7 +488,9 @@ function showApply() {
      <label>Planned business location<input data-f="lokasi" value="${esc(A.lokasi)}"></label>
      <label class="wide">Reason for starting a business<textarea data-f="sebab" rows="2">${esc(A.sebab)}</textarea></label></div></div>
    <div class="card apsec"><h3><span class="apn">3</span> SSU and SSM registration</h3>
-     <div class="f"><label class="wide">SSU Registration No. (Sistem Syarikat Universiti) *<input data-f="ssu" value="${esc(A.ssu)}"><small class="hint">All students who wish to run a business in UTM must register with SSU.</small></label>
+     <div class="f"><label class="wide">Have you registered with SSU (Sistem Syarikat Universiti)? *<select data-f="ssuStatus" id="ap_ssusel">${opt(['Yes', 'No'], A.ssuStatus)}</select><small class="hint">All students who wish to run a business in UTM must register with SSU.</small></label>
+     ${A.ssuStatus === 'Yes' ? `<label class="wide">SSU Registration No. *<input data-f="ssu" value="${esc(A.ssu)}"></label>` : ''}
+     ${A.ssuStatus === 'No' ? `<div class="aptpl wide" style="grid-column:1/-1"><div><b>SSU registration is compulsory</b><small>Please complete the SSU registration application using the link provided. Then come back to this form and enter your SSU registration number.</small></div>${PUBINFO && PUBINFO.ssuUrl ? `<a class="btn-solid" href="${esc(PUBINFO.ssuUrl)}" target="_blank" rel="noopener">Open SSU registration form</a>` : '<small>The registration link is not available yet. Please contact the UTMXCITE secretariat.</small>'}</div>` : ''}
      <label class="wide">Is your business registered with SSM? *<select data-f="ssmStatus" id="ap_ssmsel">${opt(['Registered', 'Not registered'], A.ssmStatus)}</select></label></div>
      ${reg ? `<div class="apcond f"><label class="wide">SSM registration No. *<input data-f="ssm" value="${esc(A.ssm)}" placeholder="e.g. 202503331550"></label>
        ${fbox('ssm', 'Please attach your SSM CERTIFICATE OF REGISTRATION *', A.docs.ssm)}
@@ -524,6 +526,7 @@ function showApply() {
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { applyCollect(); A.st.splice(+b.dataset.rm, 1); showApply(); });
   const kd = $('#ap_kind'); if (kd) kd.onchange = () => { applyCollect(); showApply(); };
   const pm = $('#ap_pembiaya'); if (pm) pm.onchange = () => { applyCollect(); showApply(); };
+  const su = $('#ap_ssusel'); if (su) su.onchange = () => { applyCollect(); showApply(); };
   const sm = $('#ap_sumber'); if (sm) sm.onchange = () => { applyCollect(); showApply(); };
   const bt = $('#ap_bentuk'); if (bt) bt.onchange = () => { applyCollect(); showApply(); };
   const ss = $('#ap_ssmsel'); if (ss) ss.onchange = () => { applyCollect(); showApply(); };
@@ -549,7 +552,7 @@ function showApply() {
     ev.preventDefault(); applyCollect();
     const msg = $('#ap_msg'), b = $('#ap_go'); msg.textContent = '';
     const dd = d => d ? { name: d.name, b64: d.b64 } : null;
-    const pl = { ssu: A.ssu, type: A.type, lot: A.lot, biz: A.biz, kind: produkVal(A), bentuk: A.bentuk === 'Other:' ? ('Other: ' + (A.bentukx || '').trim()) : A.bentuk, mula: A.mula, produk: produkVal(A), alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
+    const pl = { ssuStatus: A.ssuStatus, ssu: A.ssuStatus === 'Yes' ? A.ssu : '', type: A.type, lot: A.lot, biz: A.biz, kind: produkVal(A), bentuk: A.bentuk === 'Other:' ? ('Other: ' + (A.bentukx || '').trim()) : A.bentuk, mula: A.mula, produk: produkVal(A), alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
       ssmStatus: A.ssmStatus, ssm: A.ssmStatus === 'Registered' ? A.ssm : '', ssmPlan: A.ssmPlan, ssmInfo: A.ssmStatus === 'Registered' ? A.ssmInfo : '',
       tifoid: isFB(A.produk) ? A.tifoid : '', kursus: isFB(A.produk) ? A.kursus : '', sumber: A.sumber === 'Other:' ? ('Other: ' + (A.sumberx || '').trim()) : A.sumber, pembiaya: A.pembiaya === 'Other:' ? ('Other: ' + (A.pembiayax || '').trim()) : A.pembiaya, jumlah: A.jumlah, jualan: A.jualan,
       docs: { ssm: A.ssmStatus === 'Registered' ? dd(A.docs.ssm) : null, ssmDesc: A.ssmStatus === 'Registered' ? dd(A.docs.ssmDesc) : null, tifoid: isFB(A.produk) && (A.tifoid === 'Yes' || A.tifoid === 'In progress') ? dd(A.docs.tifoid) : null, kursus: isFB(A.produk) && A.kursus === 'Yes' ? dd(A.docs.kursus) : null },
