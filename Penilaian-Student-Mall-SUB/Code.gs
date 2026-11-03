@@ -25,7 +25,7 @@ const HEAD = {
   Daftar: ['ID', 'Tarikh', 'Status', 'PemohonID', 'Jenis', 'Lot', 'Perniagaan', 'JenisPerniagaan', 'Produk', 'StatusSSM', 'SSM', 'PautanSSM', 'PautanSSMInfo',
     'Tifoid', 'PautanTifoid', 'KursusMakanan', 'PautanKursus', 'SumberDana', 'PembiayaDana', 'JumlahDana', 'JualanBulanan',
     'AlamatPerniagaan', 'MulaPerniagaan', 'BilPekerja', 'LokasiPerniagaan', 'SebabBerniaga', 'PautanPelan',
-    'Ketua', 'Matrik', 'Emel', 'Pelajar', 'Catatan', 'DisahkanOleh', 'TarikhSah', 'BentukPerniagaan'],
+    'Ketua', 'Matrik', 'Emel', 'Pelajar', 'Catatan', 'DisahkanOleh', 'TarikhSah', 'BentukPerniagaan', 'PautanSSMMaklumat'],
   Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status', 'ID', 'Tempat', 'Bil'],
   Agenda: ['SesiID', 'PemohonID', 'Susunan', 'Slot', 'StatusAkhir'],
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
@@ -1024,7 +1024,8 @@ function apiSubmitApplication(p) {
   const ssmPlan = cleanStr_(p.ssmPlan, 160);
   if (ssmSts === 'Berdaftar') {
     if (ssm.length < 5) throw new Error('Masukkan No. pendaftaran SSM.');
-    if (!hasDoc_(docs.ssm)) throw new Error('Muat naik sijil SSM.');
+    if (!hasDoc_(docs.ssm)) throw new Error('Muat naik sijil pendaftaran SSM (SSM Certificate of Registration).');
+    if (!hasDoc_(docs.ssmDesc)) throw new Error('Muat naik maklumat perniagaan SSM (SSM Business Description).');
   }
   let ssmInfo = cleanStr_(p.ssmInfo, 500);
   if (ssmInfo && !/^https:\/\/[^\s]+$/i.test(ssmInfo)) throw new Error('Pautan maklumat SSM mesti bermula dengan https://');
@@ -1111,9 +1112,10 @@ function apiSubmitApplication(p) {
       if (!t) throw new Error('Fail ' + label + ' mesti ' + (pdfOnly ? 'PDF.' : 'PDF, JPG atau PNG.'));
       jobs.push({ bytes: bytes, t: t, name: stem + '_' + label.replace(/[^A-Za-z0-9]+/g, '_') + '.' + t.ext, kind: kind, put: put });
     }
-    const out = { ssm: '', tifoid: '', kursus: '', plan: '' };
+    const out = { ssmDesc: '', ssm: '', tifoid: '', kursus: '', plan: '' };
     queue(p.file, 'pelan perniagaan', true, 'pub', function (u) { out.plan = u; });
     queue(docs.ssm, 'sijil SSM', false, 'pub', function (u) { out.ssm = u; });
+    queue(docs.ssmDesc, 'maklumat perniagaan SSM', false, 'pub', function (u) { out.ssmDesc = u; });
     if (isFB) { queue(docs.tifoid, 'bukti tifoid', false, 'pub', function (u) { out.tifoid = u; }); queue(docs.kursus, 'sijil makanan', false, 'pub', function (u) { out.kursus = u; }); }
     students.forEach(function (x, i) {
       queue(x.docM, 'kad matrik pelajar ' + (i + 1), false, 'prv', function (u) { x.extra.PautanMatrik = u; });
@@ -1136,7 +1138,7 @@ function apiSubmitApplication(p) {
     ACTOR_ = students[0].email;
     const extra = {
       StatusSSM: ssmSts === 'Berdaftar' ? 'Berdaftar' : ('Belum berdaftar' + (ssmPlan ? ': ' + ssmPlan : '')),
-      Bentuk: cleanStr_(p.lot, 80), Produk: produk, PautanSSM: out.ssm, PautanSSMInfo: ssmInfo,
+      Bentuk: cleanStr_(p.lot, 80), Produk: produk, PautanSSM: out.ssm, PautanSSMMaklumat: out.ssmDesc, PautanSSMInfo: ssmInfo,
       Tifoid: tifoid, PautanTifoid: out.tifoid, KursusMakanan: kursus, PautanKursus: out.kursus,
       SumberDana: sumber, PembiayaDana: pembiaya, JumlahDana: jumlah, JualanBulanan: jualan,
       AlamatPerniagaan: cleanStr_(p.alamat, 300), MulaPerniagaan: mula, BilPekerja: pekerja,
@@ -1170,7 +1172,7 @@ function daftarOf_(r) {
   let st = [];
   try { st = JSON.parse(r.Pelajar || '[]'); } catch (e) { }
   return { id: Number(r.ID), ref: dref_(r.ID), tarikh: fmtDate_(r.Tarikh), status: r.Status || 'Baharu', pid: r.PemohonID === '' ? 0 : Number(r.PemohonID),
-    jenis: r.Jenis, bentuk: r.BentukPerniagaan || '', lot: r.Lot, biz: r.Perniagaan, kind: r.JenisPerniagaan, produk: r.Produk, ssmStatus: r.StatusSSM, ssm: r.SSM, pautanSsm: r.PautanSSM, pautanSsmInfo: r.PautanSSMInfo,
+    jenis: r.Jenis, bentuk: r.BentukPerniagaan || '', lot: r.Lot, biz: r.Perniagaan, kind: r.JenisPerniagaan, produk: r.Produk, ssmStatus: r.StatusSSM, ssm: r.SSM, pautanSsm: r.PautanSSM, pautanSsmDesc: r.PautanSSMMaklumat || '', pautanSsmInfo: r.PautanSSMInfo,
     tifoid: r.Tifoid, pautanTifoid: r.PautanTifoid, kursusMakanan: r.KursusMakanan, pautanKursus: r.PautanKursus,
     sumber: r.SumberDana, pembiaya: r.PembiayaDana, jumlah: r.JumlahDana === '' ? '' : String(r.JumlahDana), jualan: r.JualanBulanan === '' ? '' : String(r.JualanBulanan),
     alamat: r.AlamatPerniagaan, mula: fmtDate_(r.MulaPerniagaan), pekerja: r.BilPekerja === '' ? '' : String(r.BilPekerja), lokasi: r.LokasiPerniagaan, sebab: r.SebabBerniaga,
