@@ -247,7 +247,20 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .paper .tot td{background:#f6eeee;font-weight:700}
 .paper .sign{display:flex;gap:40px;margin-top:22px}.paper .sign div{flex:1;border-top:1px solid #999;padding-top:4px;color:#555;font-size:11.5px;margin-top:34px}
 @media (max-width:860px){.rp{grid-template-columns:1fr}}
-.apply{max-width:820px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px))}
+.apply{max-width:980px;font-size:16px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px))}
+/* borang pelajar: paparan lebih besar */
+.apply .f{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 18px}
+.apply .f label,.apply .fld{font-size:14px;gap:6px}
+.apply .f input,.apply .f select,.apply .f textarea{font-size:16px;padding:12px 13px;border-radius:9px}
+.apply .apsec{padding:24px 26px;margin-bottom:18px}
+.apply .apsec h3{font-size:19px;margin-bottom:16px}
+.apply .apinst{font-size:15.5px;line-height:1.6}
+.apply .apst{padding:18px}
+.apply .aptype label.opt{padding:14px 16px}
+.apply .btn-line,.apply .btn-ghost{font-size:15px;padding:10px 16px}
+.apply .note,.apply .apdrop .note{font-size:13.5px}
+.apply .apack{font-size:15px}
+@media (max-width:560px){.apply .apsec{padding:18px 16px}.apply .f{grid-template-columns:1fr}}
 .apply .head h2{font-size:24px;color:var(--maroon)}
 .apsec{margin-bottom:14px;padding:18px 20px}
 .apsec h3{display:flex;align-items:center;gap:10px;font-size:17px;margin:0 0 12px}
