@@ -25,7 +25,7 @@ const HEAD = {
   Daftar: ['ID', 'Tarikh', 'Status', 'PemohonID', 'Jenis', 'Lot', 'Perniagaan', 'JenisPerniagaan', 'Produk', 'StatusSSM', 'SSM', 'PautanSSM', 'PautanSSMInfo',
     'Tifoid', 'PautanTifoid', 'KursusMakanan', 'PautanKursus', 'SumberDana', 'PembiayaDana', 'JumlahDana', 'JualanBulanan',
     'AlamatPerniagaan', 'MulaPerniagaan', 'BilPekerja', 'LokasiPerniagaan', 'SebabBerniaga', 'PautanPelan',
-    'Ketua', 'Matrik', 'Emel', 'Pelajar', 'Catatan', 'DisahkanOleh', 'TarikhSah', 'BentukPerniagaan', 'PautanSSMMaklumat'],
+    'Ketua', 'Matrik', 'Emel', 'Pelajar', 'Catatan', 'DisahkanOleh', 'TarikhSah', 'BentukPerniagaan', 'PautanSSMMaklumat', 'NoSSU'],
   Sesi: ['Nama', 'Tarikh', 'Masa', 'RubrikVersi', 'Status', 'ID', 'Tempat', 'Bil'],
   Agenda: ['SesiID', 'PemohonID', 'Susunan', 'Slot', 'StatusAkhir'],
   Rubrik: ['Versi', 'No', 'BM', 'EN', 'Maks', 'Sub', 'Tahap5', 'Tahap3', 'Tahap1', 'Elemen'],
@@ -1020,6 +1020,8 @@ function apiSubmitApplication(p) {
   else oneOf_(produk, ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics'], 'your main products / services');
   const isFB = /^(food|makanan)/i.test(kind);
   const docs = p.docs || {};
+  const ssu = cleanStr_(p.ssu, 40);
+  if (ssu.length < 3) throw new Error('Please enter the SSU (Sistem Syarikat Universiti) registration number.');
   const ssmSts = oneOf_(p.ssmStatus, ['Registered', 'Not registered'], 'your SSM registration status');
   const ssmPlan = cleanStr_(p.ssmPlan, 160);
   if (ssmSts === 'Registered') {
@@ -1145,7 +1147,7 @@ function apiSubmitApplication(p) {
       LokasiPerniagaan: cleanStr_(p.lokasi, 160), SebabBerniaga: cleanStr_(p.sebab, 600)
     };
     const id = nextId;
-    append_(SH.DAFTAR, Object.assign({ ID: id, Tarikh: new Date(), Status: 'Baharu', Jenis: type, Perniagaan: biz.toUpperCase(), JenisPerniagaan: kind, BentukPerniagaan: bentuk, SSM: ssmSts === 'Registered' ? ssm : '',
+    append_(SH.DAFTAR, Object.assign({ ID: id, Tarikh: new Date(), Status: 'Baharu', Jenis: type, Perniagaan: biz.toUpperCase(), JenisPerniagaan: kind, BentukPerniagaan: bentuk, NoSSU: ssu, SSM: ssmSts === 'Registered' ? ssm : '',
       PautanPelan: planUrl, Ketua: students[0].n, Matrik: students[0].m, Emel: students[0].email, Pelajar: JSON.stringify(students.map(stuJson_)) }, extra));
     log_('Daftar baharu daripada pelajar', dref_(id) + ' · ' + biz + ' · ' + students[0].m);
     const ref = dref_(id);
@@ -1172,7 +1174,7 @@ function daftarOf_(r) {
   let st = [];
   try { st = JSON.parse(r.Pelajar || '[]'); } catch (e) { }
   return { id: Number(r.ID), ref: dref_(r.ID), tarikh: fmtDate_(r.Tarikh), status: r.Status || 'Baharu', pid: r.PemohonID === '' ? 0 : Number(r.PemohonID),
-    jenis: r.Jenis, bentuk: r.BentukPerniagaan || '', lot: r.Lot, biz: r.Perniagaan, kind: r.JenisPerniagaan, produk: r.Produk, ssmStatus: r.StatusSSM, ssm: r.SSM, pautanSsm: r.PautanSSM, pautanSsmDesc: r.PautanSSMMaklumat || '', pautanSsmInfo: r.PautanSSMInfo,
+    jenis: r.Jenis, bentuk: r.BentukPerniagaan || '', ssu: r.NoSSU || '', lot: r.Lot, biz: r.Perniagaan, kind: r.JenisPerniagaan, produk: r.Produk, ssmStatus: r.StatusSSM, ssm: r.SSM, pautanSsm: r.PautanSSM, pautanSsmDesc: r.PautanSSMMaklumat || '', pautanSsmInfo: r.PautanSSMInfo,
     tifoid: r.Tifoid, pautanTifoid: r.PautanTifoid, kursusMakanan: r.KursusMakanan, pautanKursus: r.PautanKursus,
     sumber: r.SumberDana, pembiaya: r.PembiayaDana, jumlah: r.JumlahDana === '' ? '' : String(r.JumlahDana), jualan: r.JualanBulanan === '' ? '' : String(r.JualanBulanan),
     alamat: r.AlamatPerniagaan, mula: fmtDate_(r.MulaPerniagaan), pekerja: r.BilPekerja === '' ? '' : String(r.BilPekerja), lokasi: r.LokasiPerniagaan, sebab: r.SebabBerniaga,

@@ -261,6 +261,7 @@ button.chip:hover{border-color:var(--maroon);color:var(--maroon)}
 .apply .note,.apply .apdrop .note{font-size:13.5px}
 .apply .apack{font-size:15px}
 @media (max-width:560px){.apply .apsec{padding:18px 16px}.apply .f{grid-template-columns:1fr}}
+.apply .hint{font-size:12.5px;font-weight:400;color:var(--muted)}
 .apply .head h2{font-size:24px;color:var(--maroon)}
 .apsec{margin-bottom:14px;padding:18px 20px}
 .apsec h3{display:flex;align-items:center;gap:10px;font-size:17px;margin:0 0 12px}
@@ -412,7 +413,7 @@ const BENTUK = ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)'
 const SUMBER = ['Own Money / Savings', 'Contribution from Parents', 'Funding from Other Agencies', 'Crowdfunding', 'None', 'Other:'];
 const PEMBIAYA = ['Government Agency', 'Private Agency / Industry', 'Bank', 'NGO', 'Use Own Saving / Contributions from Parents', 'None', 'Other:'];
 const PRODUK = ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics', 'Others'];
-const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', produkx: '', ssm: '', ssmStatus: '', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
+const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', produkx: '', ssu: '', ssm: '', ssmStatus: '', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
   tifoid: '', kursus: '', sumber: '', sumberx: '', pembiaya: '', pembiayax: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
 const MAXDOC = 5 * 1024 * 1024;
 const isFB = k => /^(food|makanan)/i.test(k || '');
@@ -486,10 +487,10 @@ function showApply() {
      <label>Number of workers<input data-f="pekerja" type="number" min="0" value="${esc(A.pekerja)}"></label>
      <label>Planned business location<input data-f="lokasi" value="${esc(A.lokasi)}"></label>
      <label class="wide">Reason for starting a business<textarea data-f="sebab" rows="2">${esc(A.sebab)}</textarea></label></div></div>
-   <div class="card apsec"><h3><span class="apn">3</span> SSM registration</h3>
-     <div class="f"><label class="wide">SSM registration No. (if registered)<input data-f="ssm" value="${esc(A.ssm)}" placeholder="e.g. 202503331550"></label>
+   <div class="card apsec"><h3><span class="apn">3</span> SSU and SSM registration</h3>
+     <div class="f"><label class="wide">SSU Registration No. (Sistem Syarikat Universiti) *<input data-f="ssu" value="${esc(A.ssu)}"><small class="hint">All students who wish to run a business in UTM must register with SSU.</small></label>
      <label class="wide">Is your business registered with SSM? *<select data-f="ssmStatus" id="ap_ssmsel">${opt(['Registered', 'Not registered'], A.ssmStatus)}</select></label></div>
-     ${reg ? `<div class="apcond f">
+     ${reg ? `<div class="apcond f"><label class="wide">SSM registration No. *<input data-f="ssm" value="${esc(A.ssm)}" placeholder="e.g. 202503331550"></label>
        ${fbox('ssm', 'Please attach your SSM CERTIFICATE OF REGISTRATION *', A.docs.ssm)}
        ${fbox('ssmDesc', 'Please attach your SSM Business Description *', A.docs.ssmDesc)}
        <label class="wide">Link to SSM information / e-Info (optional)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https:&#47;&#47;"></label></div>` : notReg ?
@@ -548,7 +549,7 @@ function showApply() {
     ev.preventDefault(); applyCollect();
     const msg = $('#ap_msg'), b = $('#ap_go'); msg.textContent = '';
     const dd = d => d ? { name: d.name, b64: d.b64 } : null;
-    const pl = { type: A.type, lot: A.lot, biz: A.biz, kind: produkVal(A), bentuk: A.bentuk === 'Other:' ? ('Other: ' + (A.bentukx || '').trim()) : A.bentuk, mula: A.mula, produk: produkVal(A), alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
+    const pl = { ssu: A.ssu, type: A.type, lot: A.lot, biz: A.biz, kind: produkVal(A), bentuk: A.bentuk === 'Other:' ? ('Other: ' + (A.bentukx || '').trim()) : A.bentuk, mula: A.mula, produk: produkVal(A), alamat: A.alamat, pekerja: A.pekerja, lokasi: A.lokasi, sebab: A.sebab,
       ssmStatus: A.ssmStatus, ssm: A.ssmStatus === 'Registered' ? A.ssm : '', ssmPlan: A.ssmPlan, ssmInfo: A.ssmStatus === 'Registered' ? A.ssmInfo : '',
       tifoid: isFB(A.produk) ? A.tifoid : '', kursus: isFB(A.produk) ? A.kursus : '', sumber: A.sumber === 'Other:' ? ('Other: ' + (A.sumberx || '').trim()) : A.sumber, pembiaya: A.pembiaya === 'Other:' ? ('Other: ' + (A.pembiayax || '').trim()) : A.pembiaya, jumlah: A.jumlah, jualan: A.jualan,
       docs: { ssm: A.ssmStatus === 'Registered' ? dd(A.docs.ssm) : null, ssmDesc: A.ssmStatus === 'Registered' ? dd(A.docs.ssmDesc) : null, tifoid: isFB(A.produk) && (A.tifoid === 'Yes' || A.tifoid === 'In progress') ? dd(A.docs.tifoid) : null, kursus: isFB(A.produk) && A.kursus === 'Yes' ? dd(A.docs.kursus) : null },
@@ -623,7 +624,7 @@ function daftar() {
   const kv = (k, v) => `<div class="dfk"><span>${k}</span><b>${v === '' || v == null ? '–' : esc(v)}</b></div>`;
   $('#dfd').innerHTML = `<div class="card detail"><h3>${esc(sel.ref)} · ${esc(sel.biz)} ${dfPill(sel.status)}<i>${esc(sel.tarikh)}</i></h3>
    <div class="dfg">${kv('Jenis permohonan', sel.jenis)}${kv('Pilihan ruang', sel.lot)}${kv('Jenis perniagaan', sel.kind)}${kv('Bentuk perniagaan', sel.bentuk)}${kv('Tarikh mula', sel.mula)}${kv('Produk / perkhidmatan', sel.produk)}${kv('Alamat perniagaan', sel.alamat)}${kv('Bil. pekerja', sel.pekerja)}${kv('Lokasi dirancang', sel.lokasi)}${kv('Sebab berniaga', sel.sebab)}
-   ${kv('Status SSM', sel.ssmStatus)}${kv('No. SSM', sel.ssm)}<div class="dfk"><span>SSM Certificate of Registration</span><b>${lnk(sel.pautanSsm)}</b></div><div class="dfk"><span>SSM Business Description</span><b>${lnk(sel.pautanSsmDesc)}</b></div><div class="dfk"><span>Pautan e-Info</span><b>${lnk(sel.pautanSsmInfo)}</b></div>
+   ${kv('SSU Registration No.', sel.ssu)}${kv('Status SSM', sel.ssmStatus)}${kv('No. SSM', sel.ssm)}<div class="dfk"><span>SSM Certificate of Registration</span><b>${lnk(sel.pautanSsm)}</b></div><div class="dfk"><span>SSM Business Description</span><b>${lnk(sel.pautanSsmDesc)}</b></div><div class="dfk"><span>Pautan e-Info</span><b>${lnk(sel.pautanSsmInfo)}</b></div>
    ${sel.tifoid || sel.kursusMakanan ? `${kv('Suntikan tifoid', sel.tifoid)}<div class="dfk"><span>Bukti tifoid</span><b>${lnk(sel.pautanTifoid)}</b></div>${kv('Kursus pengendali makanan', sel.kursusMakanan)}<div class="dfk"><span>Sijil kursus</span><b>${lnk(sel.pautanKursus)}</b></div>` : ''}
    ${kv('Source of Financing / Funding', sel.sumber)}${kv('Funding Provider', sel.pembiaya)}${kv('Amount of Funding Received (RM)', sel.jumlah)}${kv('Jangkaan jualan sebulan (RM)', sel.jualan)}<div class="dfk"><span>Pelan perniagaan</span><b>${lnk(sel.plan)}</b></div></div>
    <h3 style="margin-top:16px">Pelajar</h3><div class="tw"><table><thead><tr><th>Nama</th><th>Jantina</th><th>Warga</th><th>Matrik</th><th>No. KP / pasport</th><th>Fakulti</th><th>Bidang</th><th>Kursus</th><th>Thn</th><th>CGPA</th><th>Emel</th><th>Telefon</th><th>Alamat kolej / rumah</th><th>Kad matrik</th><th>Kad KP</th></tr></thead><tbody>
