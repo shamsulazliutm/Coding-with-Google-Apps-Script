@@ -406,7 +406,6 @@ function applyCollect() {
   const A = APP;
   document.querySelectorAll('[data-f]').forEach(i => A[i.dataset.f] = i.type === 'checkbox' ? i.checked : i.value);
   document.querySelectorAll('[data-s]').forEach(i => A.st[+i.dataset.s][i.dataset.k] = i.value);
-  const t = document.querySelector('[name=ap_type]:checked'); if (t) A.type = t.value;
   const m = document.querySelector('[name=ap_mode]:checked'); if (m) A.mode = m.value;
   const q = document.querySelector('[name=ap_ssm]:checked'); if (q) A.ssmStatus = q.value;
 }
@@ -414,7 +413,7 @@ function showApply() {
   if (PUBINFO === null) { PUBINFO = { templateUrl: '' }; rpc('apiPublicInfo').then(r => { PUBINFO = r || { templateUrl: '' }; if (APP && document.getElementById('apf')) { applyCollect(); showApply(); } }).catch(() => { }); }
   clearInterval(cdTimer); $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Student entrepreneurship and innovation system';
   if (!APP) APP = newApp();
-  const A = APP, sub = A.type === 'SUB';
+  const A = APP;
   const LOGO_SRC = ((document.querySelector('#logo img') || {}).src) || '';
   const opt = (list, cur, ph) => `<option value="">${ph || 'Pilih'}</option>` + list.map(v => `<option ${cur === v ? 'selected' : ''}>${esc(v)}</option>`).join('');
   const fbox = (key, label, cur, onInfo) => `<div class="fld">${label}<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_d_${key}" style="display:inline-block;cursor:pointer;margin:0">Pilih fail</label><input type="file" id="ap_d_${key}" data-doc="${key}" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_${key}">${cur ? esc(cur.name) + ' (' + (cur.size / 1048576).toFixed(1) + ' MB)' : 'Belum dipilih (PDF/JPG/PNG, maks 5 MB)'}</span></div></div>`;
@@ -454,10 +453,9 @@ function showApply() {
     <p class="apreq">* Indicates required question</p>
 </div>
    <form id="apf" novalidate>
-   <div class="card apsec"><h3><span class="apn">1</span> Jenis permohonan</h3><div class="aptype">
-     <label class="opt"><input type="radio" name="ap_type" value="Student Mall" ${!sub ? 'checked' : ''}><span><b>Student Mall</b><small>Permohonan sewaan lot di Student Mall.</small></span></label>
-     <label class="opt"><input type="radio" name="ap_type" value="SUB" ${sub ? 'checked' : ''}><span><b>SUB</b><small>Permohonan lot di SUB. Boleh dikemukakan secara berpasukan (sehingga 4 pelajar).</small></span></label></div>
-     <div class="f"><label>Pilihan ruang (Kiosk atau Lot)<select data-f="lot">${opt(['Kiosk', 'Lot'], A.lot)}</select></label></div></div>
+   <div class="card apsec"><h3><span class="apn">1</span> Jenis permohonan</h3>
+     <div class="f"><label>Jenis permohonan *<select data-f="type">${['Student Mall', 'SUB'].map(v => `<option ${A.type === v ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+     <label>Pilihan ruang (Kiosk atau Lot)<select data-f="lot">${opt(['Kiosk', 'Lot'], A.lot)}</select></label></div></div>
    <div class="card apsec"><h3><span class="apn">2</span> Maklumat perniagaan</h3><div class="f">
      <label class="wide">Nama perniagaan / syarikat *<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
      <label>Jenis perniagaan *<select data-f="kind" id="ap_kind">${opt(KINDS, A.kind)}</select></label>
@@ -496,7 +494,6 @@ function showApply() {
      <div class="foot"><button class="btn-solid" id="ap_go" type="submit" style="padding:14px 26px;font-size:16px">Hantar permohonan</button></div>
      <p class="apmsg" id="ap_msg" role="alert"></p></div></form></div>`;
   $('#ap_back').onclick = () => { applyCollect(); showLogin(); };
-  document.querySelectorAll('[name=ap_type]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[name=ap_mode]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { applyCollect(); A.st.splice(+b.dataset.rm, 1); showApply(); });
   const kd = $('#ap_kind'); if (kd) kd.onchange = () => { applyCollect(); showApply(); };
