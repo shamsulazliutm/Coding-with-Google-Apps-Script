@@ -455,7 +455,7 @@ function showApply() {
    <div class="card apsec"><h3><span class="apn">1</span> Jenis permohonan</h3><div class="aptype">
      <label class="opt"><input type="radio" name="ap_type" value="Student Mall" ${!sub ? 'checked' : ''}><span><b>Student Mall</b><small>Permohonan sewaan lot di Student Mall.</small></span></label>
      <label class="opt"><input type="radio" name="ap_type" value="SUB" ${sub ? 'checked' : ''}><span><b>SUB</b><small>Permohonan lot di SUB. Boleh dikemukakan secara berpasukan (sehingga 4 pelajar).</small></span></label></div>
-     <div class="f"><label>Lot / lokasi dipohon<select data-f="lot">${opt(sub ? ['SUB – Lot'] : ['Student Mall – Kiosk', 'Student Mall – Lot dalam'], A.lot)}</select></label></div></div>
+     <div class="f"><label>Pilihan ruang (Kiosk atau Lot)<select data-f="lot">${opt(['Kiosk', 'Lot'], A.lot)}</select></label></div></div>
    <div class="card apsec"><h3><span class="apn">2</span> Maklumat perniagaan</h3><div class="f">
      <label class="wide">Nama perniagaan / syarikat *<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
      <label>Jenis perniagaan *<select data-f="kind" id="ap_kind">${opt(KINDS, A.kind)}</select></label>
@@ -592,7 +592,7 @@ function daftar() {
   if (!sel) return;
   const kv = (k, v) => `<div class="dfk"><span>${k}</span><b>${v === '' || v == null ? '–' : esc(v)}</b></div>`;
   $('#dfd').innerHTML = `<div class="card detail"><h3>${esc(sel.ref)} · ${esc(sel.biz)} ${dfPill(sel.status)}<i>${esc(sel.tarikh)}</i></h3>
-   <div class="dfg">${kv('Jenis permohonan', sel.jenis)}${kv('Lot dipohon', sel.lot)}${kv('Jenis perniagaan', sel.kind)}${kv('Tarikh mula', sel.mula)}${kv('Produk / perkhidmatan', sel.produk)}${kv('Alamat perniagaan', sel.alamat)}${kv('Bil. pekerja', sel.pekerja)}${kv('Lokasi dirancang', sel.lokasi)}${kv('Sebab berniaga', sel.sebab)}
+   <div class="dfg">${kv('Jenis permohonan', sel.jenis)}${kv('Pilihan ruang', sel.lot)}${kv('Jenis perniagaan', sel.kind)}${kv('Tarikh mula', sel.mula)}${kv('Produk / perkhidmatan', sel.produk)}${kv('Alamat perniagaan', sel.alamat)}${kv('Bil. pekerja', sel.pekerja)}${kv('Lokasi dirancang', sel.lokasi)}${kv('Sebab berniaga', sel.sebab)}
    ${kv('Status SSM', sel.ssmStatus)}${kv('No. SSM', sel.ssm)}<div class="dfk"><span>Sijil SSM</span><b>${lnk(sel.pautanSsm)}</b></div><div class="dfk"><span>Pautan e-Info</span><b>${lnk(sel.pautanSsmInfo)}</b></div>
    ${sel.tifoid || sel.kursusMakanan ? `${kv('Suntikan tifoid', sel.tifoid)}<div class="dfk"><span>Bukti tifoid</span><b>${lnk(sel.pautanTifoid)}</b></div>${kv('Kursus pengendali makanan', sel.kursusMakanan)}<div class="dfk"><span>Sijil kursus</span><b>${lnk(sel.pautanKursus)}</b></div>` : ''}
    ${kv('Sumber modal', sel.sumber)}${kv('Pembiaya', sel.pembiaya)}${kv('Jumlah modal (RM)', sel.jumlah)}${kv('Jangkaan jualan sebulan (RM)', sel.jualan)}<div class="dfk"><span>Pelan perniagaan</span><b>${lnk(sel.plan)}</b></div></div>
