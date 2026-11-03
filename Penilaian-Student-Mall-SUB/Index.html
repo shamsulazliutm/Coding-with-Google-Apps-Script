@@ -399,7 +399,7 @@ const BENTUK = ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)'
 const SUMBER = ['Own Money / Savings', 'Contribution from Parents', 'Funding from Other Agencies', 'Crowdfunding', 'None', 'Other:'];
 const PEMBIAYA = ['Government Agency', 'Private Agency / Industry', 'Bank', 'NGO', 'Use Own Saving / Contributions from Parents', 'None', 'Other:'];
 const PRODUK = ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics', 'Others'];
-const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', produkx: '', ssm: '', ssmStatus: 'Registered', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
+const newApp = () => ({ type: 'Student Mall', lot: '', bentuk: '', bentukx: '', biz: '', produkx: '', ssm: '', ssmStatus: '', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
   tifoid: '', kursus: '', sumber: '', sumberx: '', pembiaya: '', pembiayax: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
 const MAXDOC = 5 * 1024 * 1024;
 const isFB = k => /^(food|makanan)/i.test(k || '');
@@ -411,7 +411,6 @@ function applyCollect() {
   document.querySelectorAll('[data-f]').forEach(i => A[i.dataset.f] = i.type === 'checkbox' ? i.checked : i.value);
   document.querySelectorAll('[data-s]').forEach(i => A.st[+i.dataset.s][i.dataset.k] = i.value);
   const m = document.querySelector('[name=ap_mode]:checked'); if (m) A.mode = m.value;
-  const q = document.querySelector('[name=ap_ssm]:checked'); if (q) A.ssmStatus = q.value;
 }
 function showApply() {
   if (PUBINFO === null) { PUBINFO = { templateUrl: '' }; rpc('apiPublicInfo').then(r => { PUBINFO = r || { templateUrl: '' }; if (APP && document.getElementById('apf')) { applyCollect(); showApply(); } }).catch(() => { }); }
@@ -442,7 +441,7 @@ function showApply() {
      <div class="fld">Copy of matric card<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_s${i}_docM" style="display:inline-block;cursor:pointer;margin:0">Choose file</label><input type="file" id="ap_s${i}_docM" data-sf="${i}" data-k="docM" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_s${i}_docM">${s.docM ? esc(s.docM.name) : 'No file chosen (max 5 MB)'}</span></div></div>
      <div class="fld">Copy of IC / passport<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_s${i}_docK" style="display:inline-block;cursor:pointer;margin:0">Choose file</label><input type="file" id="ap_s${i}_docK" data-sf="${i}" data-k="docK" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_s${i}_docK">${s.docK ? esc(s.docK.name) : 'No file chosen (max 5 MB)'}</span></div></div>
     </div><p class="note" style="margin:8px 0 0">Matric card and IC copies are stored in a confidential folder and are not shown to evaluation panels.</p></div>`; };
-  const fb = isFB(A.produk), reg = A.ssmStatus !== 'Not registered';
+  const fb = isFB(A.produk), reg = A.ssmStatus === 'Registered', notReg = A.ssmStatus === 'Not registered';
   app.innerHTML = `<div class="apply"><datalist id="apfak">${FAK.map(f => `<option value="${f}">`).join('')}</datalist>
    <div class="aptop"><button class="btn-line" id="ap_back" type="button">Admin / Panel login</button></div>
    <div class="apban"><img src="${LOGO_SRC}" alt="UTM dan UTMXCITE"><div class="org">UTM Center for Student Innovation &amp; Technology Entrepreneurship</div><span class="ttl">START-UP REGISTRATION FORM</span></div>
@@ -472,12 +471,12 @@ function showApply() {
      <label>Planned business location<input data-f="lokasi" value="${esc(A.lokasi)}"></label>
      <label class="wide">Reason for starting a business<textarea data-f="sebab" rows="2">${esc(A.sebab)}</textarea></label></div></div>
    <div class="card apsec"><h3><span class="apn">3</span> SSM registration status</h3>
-     <div class="aptype"><label class="opt"><input type="radio" name="ap_ssm" value="Registered" ${reg ? 'checked' : ''}><span><b>Registered</b></span></label><label class="opt"><input type="radio" name="ap_ssm" value="Not registered" ${!reg ? 'checked' : ''}><span><b>Not registered</b><small>This does not prevent your application.</small></span></label></div>
+     <div class="f"><label class="wide">Is your business registered with SSM? *<select data-f="ssmStatus" id="ap_ssmsel">${opt(['Registered', 'Not registered'], A.ssmStatus)}</select></label></div>
      ${reg ? `<div class="apcond f"><label>SSM registration No. *<input data-f="ssm" value="${esc(A.ssm)}" placeholder="e.g. 202503331550"></label>
        ${fbox('ssm', 'Please attach your SSM CERTIFICATE OF REGISTRATION *', A.docs.ssm)}
        ${fbox('ssmDesc', 'Please attach your SSM Business Description *', A.docs.ssmDesc)}
-       <label class="wide">Link to SSM information / e-Info (optional)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https:&#47;&#47;"></label></div>` :
-       `<div class="apcond f"><label class="wide">Plan to register with SSM<input data-f="ssmPlan" value="${esc(A.ssmPlan)}" placeholder="e.g. before 30 June"></label></div>`}</div>
+       <label class="wide">Link to SSM information / e-Info (optional)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https:&#47;&#47;"></label></div>` : notReg ?
+       `<div class="apcond f"><label class="wide">Plan to register with SSM<input data-f="ssmPlan" value="${esc(A.ssmPlan)}" placeholder="e.g. before 30 June"></label></div>` : ''}</div>
    ${fb ? `<div class="card apsec"><h3><span class="apn">4</span> Food safety</h3><div class="f">
      <label>Do you have typhoid vaccination (for F&amp;B ONLY)? *<select data-f="tifoid">${opt(['Yes', 'No', 'In progress'], A.tifoid)}</select></label>
      ${A.tifoid === 'Yes' || A.tifoid === 'In progress' ? fbox('tifoid', 'Please upload the receipt and proof of typhoid vaccination (for F&amp;B ONLY)' + (A.tifoid === 'Yes' ? ' *' : ''), A.docs.tifoid) : '<span></span>'}
@@ -509,7 +508,7 @@ function showApply() {
   const pm = $('#ap_pembiaya'); if (pm) pm.onchange = () => { applyCollect(); showApply(); };
   const sm = $('#ap_sumber'); if (sm) sm.onchange = () => { applyCollect(); showApply(); };
   const bt = $('#ap_bentuk'); if (bt) bt.onchange = () => { applyCollect(); showApply(); };
-  document.querySelectorAll('[name=ap_ssm]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
+  const ss = $('#ap_ssmsel'); if (ss) ss.onchange = () => { applyCollect(); showApply(); };
   document.querySelectorAll('[data-f=tifoid],[data-f=kursus],[data-s][data-k=nat],[data-s][data-k=utm],[data-s][data-k=bid]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-doc],[data-sf]').forEach(inp => inp.onchange = () => {
     const f = inp.files[0], isS = inp.dataset.sf !== undefined, nid = isS ? 'ap_n_s' + inp.dataset.sf + '_' + inp.dataset.k : 'ap_n_' + inp.dataset.doc, nEl = document.getElementById(nid);
