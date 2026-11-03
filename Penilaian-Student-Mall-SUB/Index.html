@@ -417,6 +417,9 @@ function showApply() {
   clearInterval(cdTimer); $('#whoN').textContent = ''; $('#whoR').textContent = ''; $('#out').hidden = true; $('#sub').textContent = 'Student entrepreneurship and innovation system';
   if (!APP) APP = newApp();
   const A = APP;
+  // render ulang (cth. selepas memilih dropdown): kekalkan kedudukan skrol dan fokus
+  const again = !!document.getElementById('apf'), keepY = window.scrollY, ae = document.activeElement;
+  const focusSel = ae && ae.closest && ae.closest('#apf') ? (ae.id ? '#' + ae.id : ae.dataset && ae.dataset.f ? '[data-f="' + ae.dataset.f + '"]' : ae.dataset && ae.dataset.s !== undefined ? '[data-s="' + ae.dataset.s + '"][data-k="' + ae.dataset.k + '"]' : '') : '';
   const LOGO_SRC = ((document.querySelector('#logo img') || {}).src) || '';
   const opt = (list, cur, ph) => `<option value="">${ph || 'Select'}</option>` + list.map(v => `<option ${cur === v ? 'selected' : ''}>${esc(v)}</option>`).join('');
   const fbox = (key, label, cur, onInfo) => `<div class="fld">${label}<div class="apdrop" style="padding:10px"><label class="btn-line" for="ap_d_${key}" style="display:inline-block;cursor:pointer;margin:0">Choose file</label><input type="file" id="ap_d_${key}" data-doc="${key}" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" style="position:absolute;left:-9999px"><span class="note" id="ap_n_${key}">${cur ? esc(cur.name) + ' (' + (cur.size / 1048576).toFixed(1) + ' MB)' : 'No file chosen (PDF/JPG/PNG, max 5 MB)'}</span></div></div>`;
@@ -541,7 +544,10 @@ function showApply() {
     try { const r = await rpc('apiSubmitApplication', pl); const em = A.st[0].email; APP = null; showApplyDone(r, em); }
     catch (e) { msg.textContent = e.message; b.disabled = false; b.textContent = 'Submit application'; msg.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   };
-  window.scrollTo(0, 0);
+  if (again) {
+    window.scrollTo(0, keepY);
+    if (focusSel) { try { const el = document.querySelector(focusSel); if (el) el.focus({ preventScroll: true }); } catch (e) { } }
+  } else window.scrollTo(0, 0);
 }
 function showApplyDone(r, email) {
   app.innerHTML = `<div class="apply"><div class="card apdone"><div class="apok" aria-hidden="true">✓</div><h2>Application received</h2>
