@@ -394,6 +394,7 @@ async function start() {
 let APP = null, PUBINFO = null;   // PUBINFO.templateUrl dibaca daripada Tetapan!B15
 const FAK = ['FKE', 'FKA', 'FKM', 'FKT', 'FC', 'FS', 'FM', 'FAB', 'FP', 'FSSH', 'FEST'];
 const newStudent = () => ({ n: '', m: '', kp: '', yr: '', fac: '', course: '', cgpa: '', email: '', tel: '', sex: '', nat: 'Malaysia', bid: '', utm: 'Ya', kol: '', rmh: '', docM: null, docK: null });
+const BIDANG = ['Engineering', 'Science', 'Education', 'Business Management and Accounting', 'Information, Technology and Communication', 'Social Science and Psychology', 'Architecture, Planning and Survey', 'N/A (Only tick if the partner is not a UTM student)', 'Other:'];
 const KINDS = ['Makanan & Minuman (F&B)', 'Runcit / Barangan', 'Perkhidmatan', 'Digital / Teknologi', 'Lain-lain'];
 const newApp = () => ({ type: 'Student Mall', lot: '', biz: '', kind: '', ssm: '', ssmStatus: 'Berdaftar', ssmPlan: '', ssmInfo: '', mula: '', produk: '', alamat: '', pekerja: '', lokasi: '', sebab: '',
   tifoid: '', kursus: '', sumber: '', pembiaya: '', jumlah: '', jualan: '', docs: {}, st: [newStudent()], mode: 'file', planUrl: '', file: null, ack: false, website: '' });
@@ -427,7 +428,8 @@ function showApply() {
      <label>No. Matrik ${utm ? '*' : '(jika ada)'}<input data-s="${i}" data-k="m" value="${esc(s.m)}" placeholder="cth. A24KE0000" autocapitalize="characters"></label>
      <label>Tahun pengajian ${utm ? '*' : ''}<select data-s="${i}" data-k="yr"><option value="">Pilih</option>${[1, 2, 3, 4, 5, 6].map(y => `<option ${String(s.yr) === String(y) ? 'selected' : ''}>${y}</option>`).join('')}</select></label>
      <label>Fakulti ${utm ? '*' : ''}<input data-s="${i}" data-k="fac" value="${esc(s.fac)}" list="apfak" placeholder="cth. FKE"></label>
-     <label>Bidang pengajian<input data-s="${i}" data-k="bid" value="${esc(s.bid)}" placeholder="cth. Kejuruteraan Elektrik"></label>
+     <label>Bidang pengajian<select data-s="${i}" data-k="bid">${opt(BIDANG, s.bid)}</select></label>
+     ${s.bid === 'Other:' ? `<label>Bidang lain (nyatakan)<input data-s="${i}" data-k="bidx" value="${esc(s.bidx || '')}"></label>` : ''}
      <label class="wide">Program / kursus ${utm ? '*' : ''}<input data-s="${i}" data-k="course" value="${esc(s.course)}" placeholder="cth. Sarjana Muda Kejuruteraan Elektrik"></label>
      <label>CGPA terkini ${utm ? '*' : ''}<input data-s="${i}" data-k="cgpa" value="${esc(s.cgpa)}" inputmode="decimal" placeholder="cth. 3.25"></label>
      <label>No. telefon *<input data-s="${i}" data-k="tel" value="${esc(s.tel)}" inputmode="tel" placeholder="cth. 0123456789" autocomplete="tel"></label>
@@ -499,7 +501,7 @@ function showApply() {
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { applyCollect(); A.st.splice(+b.dataset.rm, 1); showApply(); });
   const kd = $('#ap_kind'); if (kd) kd.onchange = () => { applyCollect(); showApply(); };
   document.querySelectorAll('[name=ap_ssm]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
-  document.querySelectorAll('[data-f=tifoid],[data-f=kursus],[data-s][data-k=nat],[data-s][data-k=utm]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
+  document.querySelectorAll('[data-f=tifoid],[data-f=kursus],[data-s][data-k=nat],[data-s][data-k=utm],[data-s][data-k=bid]').forEach(r => r.onchange = () => { applyCollect(); showApply(); });
   document.querySelectorAll('[data-doc],[data-sf]').forEach(inp => inp.onchange = () => {
     const f = inp.files[0], isS = inp.dataset.sf !== undefined, nid = isS ? 'ap_n_s' + inp.dataset.sf + '_' + inp.dataset.k : 'ap_n_' + inp.dataset.doc, nEl = document.getElementById(nid);
     const set = v => { if (isS) A.st[+inp.dataset.sf][inp.dataset.k] = v; else A.docs[inp.dataset.doc] = v; };
@@ -526,7 +528,7 @@ function showApply() {
       tifoid: isFB(A.kind) ? A.tifoid : '', kursus: isFB(A.kind) ? A.kursus : '', sumber: A.sumber, pembiaya: A.pembiaya, jumlah: A.jumlah, jualan: A.jualan,
       docs: { ssm: A.ssmStatus === 'Berdaftar' ? dd(A.docs.ssm) : null, tifoid: dd(A.docs.tifoid), kursus: dd(A.docs.kursus) },
       ack: !!A.ack, website: A.website,
-      st: A.st.map(s => ({ ...s, cgpa: String(s.cgpa).replace(',', '.'), docM: dd(s.docM), docK: dd(s.docK) })), planUrl: A.mode === 'link' ? A.planUrl : '', file: A.mode === 'file' && A.file ? { name: A.file.name, b64: A.file.b64 } : null };
+      st: A.st.map(s => ({ ...s, bid: s.bid === 'Other:' ? ('Other: ' + (s.bidx || '').trim()) : s.bid, cgpa: String(s.cgpa).replace(',', '.'), docM: dd(s.docM), docK: dd(s.docK) })), planUrl: A.mode === 'link' ? A.planUrl : '', file: A.mode === 'file' && A.file ? { name: A.file.name, b64: A.file.b64 } : null };
     b.disabled = true; b.textContent = 'Menghantar…';
     try { const r = await rpc('apiSubmitApplication', pl); const em = A.st[0].email; APP = null; showApplyDone(r, em); }
     catch (e) { msg.textContent = e.message; b.disabled = false; b.textContent = 'Hantar permohonan'; msg.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
