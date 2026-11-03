@@ -486,9 +486,10 @@ function showApply() {
      <label>Number of workers<input data-f="pekerja" type="number" min="0" value="${esc(A.pekerja)}"></label>
      <label>Planned business location<input data-f="lokasi" value="${esc(A.lokasi)}"></label>
      <label class="wide">Reason for starting a business<textarea data-f="sebab" rows="2">${esc(A.sebab)}</textarea></label></div></div>
-   <div class="card apsec"><h3><span class="apn">3</span> SSM registration status</h3>
-     <div class="f"><label class="wide">Is your business registered with SSM? *<select data-f="ssmStatus" id="ap_ssmsel">${opt(['Registered', 'Not registered'], A.ssmStatus)}</select></label></div>
-     ${reg ? `<div class="apcond f"><label>SSM registration No. *<input data-f="ssm" value="${esc(A.ssm)}" placeholder="e.g. 202503331550"></label>
+   <div class="card apsec"><h3><span class="apn">3</span> SSM registration</h3>
+     <div class="f"><label class="wide">SSM registration No. (if registered)<input data-f="ssm" value="${esc(A.ssm)}" placeholder="e.g. 202503331550"></label>
+     <label class="wide">Is your business registered with SSM? *<select data-f="ssmStatus" id="ap_ssmsel">${opt(['Registered', 'Not registered'], A.ssmStatus)}</select></label></div>
+     ${reg ? `<div class="apcond f">
        ${fbox('ssm', 'Please attach your SSM CERTIFICATE OF REGISTRATION *', A.docs.ssm)}
        ${fbox('ssmDesc', 'Please attach your SSM Business Description *', A.docs.ssmDesc)}
        <label class="wide">Link to SSM information / e-Info (optional)<input data-f="ssmInfo" type="url" value="${esc(A.ssmInfo)}" placeholder="https:&#47;&#47;"></label></div>` : notReg ?
