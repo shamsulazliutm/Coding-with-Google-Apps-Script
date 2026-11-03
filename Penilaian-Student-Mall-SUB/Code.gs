@@ -672,7 +672,7 @@ function saveApplication_(a, sumber) {
   } else {
     id = t.rows.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
   }
-  if (!a.biz || (a.type !== 'Student Mall' && a.type !== 'SUB')) throw new Error('Nama perniagaan dan jenis diperlukan.');
+  if (!a.biz || (a.type !== 'Student Mall' && a.type !== 'SUB' && a.type !== 'UTM KL')) throw new Error('Nama perniagaan dan jenis diperlukan.');
   const row = Object.assign({}, old || {}, {
     ID: id, Perniagaan: a.biz, Jenis: a.type, SSM: a.ssm || '', JenisPerniagaan: a.kind || '', PautanPelan: a.plan || ''
   });
@@ -1009,7 +1009,7 @@ function apiSubmitApplication(p) {
   p = p || {};
   if (cleanStr_(p.website, 50)) throw new Error('Invalid submission.');                 // honeypot untuk bot
   const type = p.type;
-  if (type !== 'Student Mall' && type !== 'SUB') throw new Error('Please select the application type: Student Mall or SUB.');
+  if (type !== 'Student Mall' && type !== 'SUB' && type !== 'UTM KL') throw new Error('Please select the application type: Student Mall, SUB or UTM KL.');
   const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.produk, 160), ssm = cleanStr_(p.ssm, 80);   // jenis perniagaan = kategori produk / perkhidmatan utama
   if (biz.length < 2) throw new Error('Please enter the business name.');
   let bentuk = cleanStr_(p.bentuk, 120);

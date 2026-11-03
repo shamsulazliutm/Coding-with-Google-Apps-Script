@@ -326,7 +326,7 @@ function toast(t, bad) {
   if (bad) e.style.background = 'var(--bad)', e.style.color = '#fff';
   document.body.append(e); setTimeout(() => e.remove(), bad ? 3600 : 1800);
 }
-const typePill = t => `<span class="pill ${t === 'SUB' ? 'p-info' : 'p-mute'}">${esc(t)}</span>`;
+const typePill = t => `<span class="pill ${t === 'SUB' ? 'p-info' : t === 'UTM KL' ? 'p-ok' : 'p-mute'}">${esc(t)}</span>`;
 const short = n => String(n).replace(/^(Dr\.|En\.|Pn\.|PM\. Dr\.|PM\.) /, '').split(' ').slice(0, 2).join(' ');
 
 /* ---------- log masuk OTP ---------- */
@@ -473,7 +473,7 @@ function showApply() {
 </div>
    <form id="apf" novalidate>
    <div class="card apsec"><h3><span class="apn">1</span> Application type</h3>
-     <div class="f"><label>Application type *<select data-f="type">${['Student Mall', 'SUB'].map(v => `<option ${A.type === v ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+     <div class="f"><label>Application type *<select data-f="type">${['Student Mall', 'SUB', 'UTM KL'].map(v => `<option ${A.type === v ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
      <label>Space (Kiosk or Lot)<select data-f="lot">${opt(['Kiosk', 'Lot'], A.lot)}</select></label></div></div>
    <div class="card apsec"><h3><span class="apn">2</span> Business information</h3><div class="f">
      <label class="wide">Business / company name *<input data-f="biz" value="${esc(A.biz)}" autocomplete="organization"></label>
@@ -643,11 +643,11 @@ function dashboard() {
   const per = P.map(p => ({ p, n: p.sent, d: p.draf }));
   const done = per.reduce((a, x) => a + x.n, 0);
   const pend = D.keputusan.rows.filter(r => r.n < P.length).map(r => `<tr><td><b>${esc(r.biz)}</b><small>${P.length - r.n} panel belum hantar</small></td><td class="num"><span class="pill ${r.n < P.length / 2 ? 'p-bad' : 'p-warn'}">${r.n}/${P.length}</span></td></tr>`).join('');
-  const sm = D.apps.filter(a => a.type === 'Student Mall').length;
+  const sm = D.apps.filter(a => a.type === 'Student Mall').length, sb = D.apps.filter(a => a.type === 'SUB').length, kl = D.apps.filter(a => a.type === 'UTM KL').length;
   $('#main').innerHTML = head('Ringkasan', 'Overview · ' + esc(D.sesi.nama) + ' · ' + esc(D.sesi.tarikh), sesiHead()) + `
   ${D.belum ? `<div class="lock" style="background:var(--warn-soft);color:var(--warn);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span><b>${D.belum}</b> permohonan baharu belum dijadualkan ke mana-mana mesyuarat.</span><button class="btn-line" id="gobelum" style="padding:6px 12px">Tetapkan mesyuarat</button></div>` : ''}
   <div class="cards">
-   <div class="card stat"><div class="l">Permohonan dalam mesyuarat</div><div class="v">${D.apps.length}</div><div class="s">Student Mall ${sm} · SUB ${D.apps.length - sm}</div></div>
+   <div class="card stat"><div class="l">Permohonan dalam mesyuarat</div><div class="v">${D.apps.length}</div><div class="s">Student Mall ${sm} · SUB ${sb}${kl ? ' · UTM KL ' + kl : ''}</div></div>
    <div class="card stat"><div class="l">Panel aktif</div><div class="v">${P.length}</div><div class="s">Active evaluators</div></div>
    <div class="card stat"><div class="l">Penilaian dihantar</div><div class="v">${done} / ${total}</div><div class="s">Submitted · ${total ? Math.round(done / total * 100) : 0}%</div></div>
    <div class="card stat"><div class="l">Status mesyuarat</div><div class="v" style="font-size:24px;padding:6px 0">${sPill(D.sesi.status)}</div><div class="s">${esc(D.sesi.tarikh)} · ${esc(D.sesi.masa)}</div></div></div>
@@ -669,7 +669,7 @@ function permohonan() {
   const open = D.sesiList.filter(s => s.status !== 'Ditutup');
   $('#main').innerHTML = head('Permohonan', 'Applications · semua rekod disimpan; urusetia menentukan mesyuarat', '<button class="btn-solid" id="add">+ Tambah</button>') + `
   <div class="toolbar"><select id="fm" aria-label="Penapis mesyuarat"><option value="">Semua permohonan (${D.allApps.length})</option><option value="belum" ${filt.m === 'belum' ? 'selected' : ''}>Belum dijadualkan (${D.belum})</option><option value="dalam" ${filt.m === 'dalam' ? 'selected' : ''}>Dalam ${esc(sLbl(D.sesi))}</option><option value="luar" ${filt.m === 'luar' ? 'selected' : ''}>Bukan dalam ${esc(sLbl(D.sesi))}</option></select>
-   <select id="ft" aria-label="Jenis"><option value="">Semua jenis</option><option ${filt.t === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${filt.t === 'SUB' ? 'selected' : ''}>SUB</option></select><input id="fq" placeholder="Cari nama / matrik / perniagaan / rujukan" value="${esc(filt.q)}" style="flex:1;min-width:200px"></div>
+   <select id="ft" aria-label="Jenis"><option value="">Semua jenis</option><option ${filt.t === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${filt.t === 'SUB' ? 'selected' : ''}>SUB</option><option ${filt.t === 'UTM KL' ? 'selected' : ''}>UTM KL</option></select><input id="fq" placeholder="Cari nama / matrik / perniagaan / rujukan" value="${esc(filt.q)}" style="flex:1;min-width:200px"></div>
   <div class="card asgn" id="asgn" ${SELP.size ? '' : 'hidden'} style="margin-bottom:12px;border-color:var(--gold)"><div class="foot" style="margin:0"><b><span id="nsel">${SELP.size}</span> dipilih</b><span>Masukkan ke:</span>
    <select id="tosesi" aria-label="Mesyuarat sasaran">${open.map(s => `<option value="${s.id}" ${s.id === sid ? 'selected' : ''}>${esc(sLbl(s))} · ${esc(s.status)}</option>`).join('')}</select>
    <button class="btn-solid" id="doasgn" ${open.length ? '' : 'disabled'}>Masukkan ke mesyuarat</button><button class="btn-ghost" id="clrsel">Kosongkan</button></div></div>
@@ -696,7 +696,7 @@ function detail() {
   const byId = Object.fromEntries(D.sesiList.map(s => [s.id, s]));
   $('#det').innerHTML = `<div class="card detail"><h3>${a.id ? esc(refNo(a.id)) + ' · ' + esc(a.biz) : 'Permohonan baharu'} ${a.id ? `<i>${a.sumber === 'Pelajar' ? 'dikemukakan oleh pelajar' : 'dimasukkan oleh admin'}${a.mohon ? ', ' + esc(a.mohon) : ''}</i>` : ''}</h3><div class="f">
   <label>Nama perniagaan<input id="e_biz" value="${esc(a.biz)}"></label>
-  <label>Jenis permohonan<select id="e_type"><option ${a.type === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${a.type === 'SUB' ? 'selected' : ''}>SUB</option></select></label>
+  <label>Jenis permohonan<select id="e_type"><option ${a.type === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${a.type === 'SUB' ? 'selected' : ''}>SUB</option><option ${a.type === 'UTM KL' ? 'selected' : ''}>UTM KL</option></select></label>
   <label>No. SSM<input id="e_ssm" value="${esc(a.ssm)}"></label>
   <label>Jenis perniagaan<input id="e_kind" value="${esc(a.kind)}"></label>
   <label class="wide">Pautan pelan perniagaan ${a.plan ? `<a href="${esc(a.plan)}" target="_blank" rel="noopener" style="font-weight:400">buka ↗</a>` : ''}<input id="e_plan" value="${esc(a.plan)}"></label></div>
@@ -913,7 +913,7 @@ function summaryPages(doc, rows, P) {
   const done = rows.filter(r => r.avg != null).length;
   doc.autoTable({ ...TBL, startY: y, theme: 'plain', styles: { fontSize: 9, cellPadding: 1 }, body: [
     ['Mesyuarat', S.nama, 'Tarikh / Masa', S.tarikh + ' / ' + S.masa],
-    ['Bilangan permohonan', rows.length + (RP.jenis ? ' (' + RP.jenis + ')' : ' (Student Mall ' + rows.filter(r => r.a.type !== 'SUB').length + ', SUB ' + rows.filter(r => r.a.type === 'SUB').length + ')'), 'Bilangan panel', String(P.length)],
+    ['Bilangan permohonan', rows.length + (RP.jenis ? ' (' + RP.jenis + ')' : ' (Student Mall ' + rows.filter(r => r.a.type === 'Student Mall').length + ', SUB ' + rows.filter(r => r.a.type === 'SUB').length + (rows.some(r => r.a.type === 'UTM KL') ? ', UTM KL ' + rows.filter(r => r.a.type === 'UTM KL').length : '') + ')'), 'Bilangan panel', String(P.length)],
     ['Telah dinilai (min. seorang panel)', done + ' / ' + rows.length, 'Rubrik', 'Versi ' + S.versi + ' (markah penuh 100)']],
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 72 }, 1: { cellWidth: 78 }, 2: { fontStyle: 'bold', cellWidth: 32 } } });
   y = doc.lastAutoTable.finalY + 5;
@@ -1006,7 +1006,7 @@ const join = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' dan ' + a[a.lengt
 function jkBlocks() {
   const C = jkCfg(), S = D.sesi, { rows, P, ranked } = rpData(''), B = [];
   let jw = {}; try { jw = JSON.parse(C.jawatan || '{}') || {}; } catch (e) { }
-  const nApps = rows.length, nStud = rows.reduce((s, r) => s + r.a.st.length, 0), nSM = rows.filter(r => r.a.type !== 'SUB').length, nSUB = nApps - nSM;
+  const nApps = rows.length, nStud = rows.reduce((s, r) => s + r.a.st.length, 0), nSM = rows.filter(r => r.a.type === 'Student Mall').length, nSUB = rows.filter(r => r.a.type === 'SUB').length, nKL = rows.filter(r => r.a.type === 'UTM KL').length;
   const min = parseFloat(C.cgpaMin) || 0;
   const BIL = S.bil || ('xx/' + new Date().getFullYear());
   B.push({ t: 'title', text: 'LAPORAN JAWATANKUASA PENILAIAN PELAN PERNIAGAAN DAN DANA KEUSAHAWANAN PELAJAR (JPPPDKP) UTM BIL ' + BIL });
@@ -1024,7 +1024,7 @@ function jkBlocks() {
 
   B.push({ t: 'h', num: '3', text: 'Pemerhatian Jawatankuasa' });
   B.push({ t: 'p', num: '3.1', text: 'JPPPDKP telah bersidang pada ' + (S.tarikh || DOTS) + ' jam ' + (S.masa || DOTS) + ' bertempat di ' + (S.tempat || DOTS) + '.' });
-  B.push({ t: 'p', num: '3.2', text: 'Sebanyak ' + nApps + ' permohonan (' + nStud + ' pelajar) telah dikemukakan, terdiri daripada ' + nSM + ' permohonan untuk lot di Student Mall dan ' + nSUB + ' untuk lot di SUB. Penilaian telah dibuat oleh ' + P.length + ' panel dengan jadual markah seperti di Jadual 1:' });
+  B.push({ t: 'p', num: '3.2', text: 'Sebanyak ' + nApps + ' permohonan (' + nStud + ' pelajar) telah dikemukakan, terdiri daripada ' + nSM + ' permohonan untuk lot di Student Mall' + (nKL ? ', ' : ' dan ') + nSUB + ' untuk lot di SUB' + (nKL ? ' dan ' + nKL + ' untuk lot di UTM KL' : '') + '. Penilaian telah dibuat oleh ' + P.length + ' panel dengan jadual markah seperti di Jadual 1:' });
   const w1 = P.length > 6 ? 9 : 11;
   B.push({ t: 'table', cap: 'Jadual 1: Jadual markah dan kedudukan pemohon (markah /100)', head: ['Rank', 'Perniagaan', 'Jenis', ...P.map((p, i) => 'P' + (i + 1)), 'Dinilai', 'Purata'],
     body: rows.map(r => [r.rank || '-', r.a.biz, r.a.type, ...r.sc.map(s => s == null ? '-' : s), r.n + '/' + P.length, fmt(r.avg)]),
@@ -1183,7 +1183,7 @@ function laporan() {
   $('#main').innerHTML = head('Laporan', 'Reports · ' + esc(D.sesi.nama) + ' · muat turun PDF dengan kepala UTMXCITE', sesiHead() + ' <button class="btn-ghost" id="rl">↻ Data terkini</button>') + `
   <div class="rp"><div class="ctl card"><h3>Format laporan</h3>
    ${T.map(t => `<label class="opt"><input type="radio" name="rt" value="${t[0]}" ${RP.type === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><small>${t[2]}</small></span></label>`).join('')}
-   <div class="f">${jk ? '' : `<label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option></select></label>`}
+   <div class="f">${jk ? '' : `<label>Jenis permohonan<select id="rj"><option value="">Semua jenis</option><option ${RP.jenis === 'Student Mall' ? 'selected' : ''}>Student Mall</option><option ${RP.jenis === 'SUB' ? 'selected' : ''}>SUB</option><option ${RP.jenis === 'UTM KL' ? 'selected' : ''}>UTM KL</option></select></label>`}
    ${RP.type === 'terperinci' ? `<label>Pemohon (laporan terperinci)<select id="rp"><option value="0">Semua pemohon (${rows.length})</option>${rows.map(r => `<option value="${r.a.id}" ${RP.pid === r.a.id ? 'selected' : ''}>${esc(r.a.biz)}</option>`).join('')}</select></label>` : ''}
    ${RP.type !== 'ringkasan' && !jk ? `<label class="chip" style="border-radius:8px"><input type="checkbox" id="rn" ${RP.notes ? 'checked' : ''}> Sertakan catatan panel</label>` : ''}</div>
    <div class="foot" style="margin-top:6px"><button class="btn-solid" id="dl" style="flex:1">⬇ Muat turun PDF</button></div>
