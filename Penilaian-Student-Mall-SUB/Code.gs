@@ -994,107 +994,107 @@ function sniffDoc_(bytes, pdfOnly) {
 function hasDoc_(d) { return !!(d && d.b64); }
 function oneOf_(v, list, label) {
   v = cleanStr_(v, 60);
-  if (list.indexOf(v) < 0) throw new Error('Pilih ' + label + '.');
+  if (list.indexOf(v) < 0) throw new Error('Please select ' + label + '.');
   return v;
 }
 function numOpt_(v, label) {
   if (v === '' || v == null) return '';
   const n = Number(String(v).replace(/,/g, ''));
-  if (!(n >= 0 && n < 1e9)) throw new Error(label + ' tidak sah.');
+  if (!(n >= 0 && n < 1e9)) throw new Error(label + ' is not valid.');
   return Math.round(n * 100) / 100;
 }
 
 function apiSubmitApplication(p) {
   migrate_();
   p = p || {};
-  if (cleanStr_(p.website, 50)) throw new Error('Permohonan tidak sah.');                 // honeypot untuk bot
+  if (cleanStr_(p.website, 50)) throw new Error('Invalid submission.');                 // honeypot untuk bot
   const type = p.type;
-  if (type !== 'Student Mall' && type !== 'SUB') throw new Error('Pilih jenis permohonan: Student Mall atau SUB.');
+  if (type !== 'Student Mall' && type !== 'SUB') throw new Error('Please select the application type: Student Mall or SUB.');
   const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.produk, 160), ssm = cleanStr_(p.ssm, 80);   // jenis perniagaan = kategori produk / perkhidmatan utama
-  if (biz.length < 2) throw new Error('Masukkan nama perniagaan.');
+  if (biz.length < 2) throw new Error('Please enter the business name.');
   let bentuk = cleanStr_(p.bentuk, 120);
-  if (/^Other:/.test(bentuk)) { if (bentuk.replace(/^Other:\s*/, '').length < 2) throw new Error('Nyatakan bentuk perniagaan (Other).'); }
-  else bentuk = oneOf_(bentuk, ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)', 'Free Lance'], 'bentuk perniagaan (Type of Business)');
+  if (/^Other:/.test(bentuk)) { if (bentuk.replace(/^Other:\s*/, '').length < 2) throw new Error('Please specify the type of business (Other).'); }
+  else bentuk = oneOf_(bentuk, ['Enterprise', 'Sdn. Bhd.', 'Partnership Limited Liability (PLL)', 'Free Lance'], 'the type of business');
   const produk = kind;
-  if (/^Others/.test(produk)) { if (produk.replace(/^Others:?\s*/, '').length < 2) throw new Error('Nyatakan produk atau perkhidmatan utama (Others).'); }
-  else oneOf_(produk, ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics'], 'produk / perkhidmatan utama');
+  if (/^Others/.test(produk)) { if (produk.replace(/^Others:?\s*/, '').length < 2) throw new Error('Please specify your main products / services (Others).'); }
+  else oneOf_(produk, ['Retail', 'Food & Beverage', 'Fashion, Clothes & Accessories', 'Mobiles & Gadgets', 'Computer & Accessories', 'Health & Beauty', 'Games, Books and Hobbies', 'Proofreading, Translation and Editing Services', 'Graphic Design, Website and Digital Services', 'Transportation', 'Agriculture', 'Construction', 'Sports & Outdoor', '3D Printing and Robotics'], 'your main products / services');
   const isFB = /^(food|makanan)/i.test(kind);
   const docs = p.docs || {};
-  const ssmSts = oneOf_(p.ssmStatus, ['Berdaftar', 'Belum berdaftar'], 'status pendaftaran SSM');
+  const ssmSts = oneOf_(p.ssmStatus, ['Registered', 'Not registered'], 'your SSM registration status');
   const ssmPlan = cleanStr_(p.ssmPlan, 160);
-  if (ssmSts === 'Berdaftar') {
-    if (ssm.length < 5) throw new Error('Masukkan No. pendaftaran SSM.');
-    if (!hasDoc_(docs.ssm)) throw new Error('Muat naik sijil pendaftaran SSM (SSM Certificate of Registration).');
-    if (!hasDoc_(docs.ssmDesc)) throw new Error('Muat naik maklumat perniagaan SSM (SSM Business Description).');
+  if (ssmSts === 'Registered') {
+    if (ssm.length < 5) throw new Error('Please enter the SSM registration number.');
+    if (!hasDoc_(docs.ssm)) throw new Error('Please attach your SSM Certificate of Registration.');
+    if (!hasDoc_(docs.ssmDesc)) throw new Error('Please attach your SSM Business Description.');
   }
   let ssmInfo = cleanStr_(p.ssmInfo, 500);
-  if (ssmInfo && !/^https:\/\/[^\s]+$/i.test(ssmInfo)) throw new Error('Pautan maklumat SSM mesti bermula dengan https://');
+  if (ssmInfo && !/^https:\/\/[^\s]+$/i.test(ssmInfo)) throw new Error('The SSM information link must start with https://');
   let tifoid = '', kursus = '';
   if (isFB) {
-    tifoid = oneOf_(p.tifoid, ['Yes', 'No', 'In progress'], 'status suntikan tifoid');
-    kursus = oneOf_(p.kursus, ['Yes', 'No'], 'status sijil kursus pengendali makanan');
-    if (tifoid === 'Yes' && !hasDoc_(docs.tifoid)) throw new Error('Muat naik bukti suntikan tifoid.');
-    if (kursus === 'Yes' && !hasDoc_(docs.kursus)) throw new Error('Muat naik sijil kursus pengendali makanan.');
+    tifoid = oneOf_(p.tifoid, ['Yes', 'No', 'In progress'], 'your typhoid vaccination status');
+    kursus = oneOf_(p.kursus, ['Yes', 'No'], 'whether you have a food handling course certificate');
+    if (tifoid === 'Yes' && !hasDoc_(docs.tifoid)) throw new Error('Please upload the receipt and proof of typhoid vaccination.');
+    if (kursus === 'Yes' && !hasDoc_(docs.kursus)) throw new Error('Please upload the certificate of food handling course.');
   }
   let sumber = cleanStr_(p.sumber, 120);
-  if (/^Other:/.test(sumber)) { if (sumber.replace(/^Other:\s*/, '').length < 2) throw new Error('Nyatakan sumber pembiayaan (Other).'); }
-  else sumber = oneOf_(sumber, ['Own Money / Savings', 'Contribution from Parents', 'Funding from Other Agencies', 'Crowdfunding', 'None'], 'sumber pembiayaan (Source of Financing / Funding)');
+  if (/^Other:/.test(sumber)) { if (sumber.replace(/^Other:\s*/, '').length < 2) throw new Error('Please specify the source of financing (Other).'); }
+  else sumber = oneOf_(sumber, ['Own Money / Savings', 'Contribution from Parents', 'Funding from Other Agencies', 'Crowdfunding', 'None'], 'the source of financing / funding');
   let pembiaya = cleanStr_(p.pembiaya, 120);
-  if (/^Other:/.test(pembiaya)) { if (pembiaya.replace(/^Other:\s*/, '').length < 2) throw new Error('Nyatakan penyedia pembiayaan (Other).'); }
-  else pembiaya = oneOf_(pembiaya, ['Government Agency', 'Private Agency / Industry', 'Bank', 'NGO', 'Use Own Saving / Contributions from Parents', 'None'], 'penyedia pembiayaan (Funding Provider)');
+  if (/^Other:/.test(pembiaya)) { if (pembiaya.replace(/^Other:\s*/, '').length < 2) throw new Error('Please specify the funding provider (Other).'); }
+  else pembiaya = oneOf_(pembiaya, ['Government Agency', 'Private Agency / Industry', 'Bank', 'NGO', 'Use Own Saving / Contributions from Parents', 'None'], 'the funding provider');
   const jumlahIn = cleanStr_(p.jumlah, 40);
-  if (!jumlahIn) throw new Error('Masukkan jumlah pembiayaan diterima (RM), atau N/A jika tiada.');
-  const jumlah = /^n\/?a$/i.test(jumlahIn) ? 'N/A' : numOpt_(jumlahIn, 'Jumlah pembiayaan');
-  const jualan = numOpt_(p.jualan, 'Jangkaan jualan');
+  if (!jumlahIn) throw new Error('Please enter the amount of funding received (RM), or N/A if none.');
+  const jumlah = /^n\/?a$/i.test(jumlahIn) ? 'N/A' : numOpt_(jumlahIn, 'Amount of funding');
+  const jualan = numOpt_(p.jualan, 'Expected sales');
   const pekerja = p.pekerja === '' || p.pekerja == null ? '' : Math.round(Number(p.pekerja));
-  if (pekerja !== '' && !(pekerja >= 0 && pekerja < 1000)) throw new Error('Bilangan pekerja tidak sah.');
+  if (pekerja !== '' && !(pekerja >= 0 && pekerja < 1000)) throw new Error('Number of workers is not valid.');
   let mula = '';
-  if (cleanStr_(p.mula, 20)) { const d = new Date(String(p.mula).slice(0, 10) + 'T00:00:00+08:00'); if (isNaN(d.getTime())) throw new Error('Tarikh mula berniaga tidak sah.'); mula = d; }
+  if (cleanStr_(p.mula, 20)) { const d = new Date(String(p.mula).slice(0, 10) + 'T00:00:00+08:00'); if (isNaN(d.getTime())) throw new Error('Business start date is not valid.'); mula = d; }
 
   const sts = (p.st || []).slice(0, 4);
-  if (!sts.length) throw new Error('Masukkan sekurang-kurangnya seorang pelajar.');
+  if (!sts.length) throw new Error('Please enter at least one student.');
   const students = sts.map(function (x, i) {
     const k = 'Pelajar ' + (i + 1) + ': ';
-    const utm = x.utm === 'Tidak' ? 'Tidak' : 'Ya';
-    if (utm === 'Tidak' && i === 0) throw new Error(k + 'ketua mesti pelajar UTM.');
-    const need = utm === 'Ya';
+    const utm = x.utm === 'No' ? 'No' : 'Yes';
+    if (utm === 'No' && i === 0) throw new Error(k + 'the leader must be a UTM student.');
+    const need = utm === 'Yes';
     const n = cleanStr_(x.n, 120).toUpperCase(), m = cleanStr_(x.m, 20).toUpperCase().replace(/\s+/g, '');
     const kpd = String(x.kp || '').replace(/[^0-9A-Za-z]/g, '');
     const yr = x.yr === '' || x.yr == null ? '' : Math.round(Number(x.yr)), cg = x.cgpa === '' || x.cgpa == null ? '' : Number(x.cgpa);
     const email = cleanStr_(x.email, 120).toLowerCase(), tel = String(x.tel || '').replace(/[^\d+]/g, '');
-    const sex = oneOf_(x.sex, ['Lelaki', 'Perempuan'], 'jantina (' + k.trim() + ')');
-    const nat = oneOf_(x.nat, ['Malaysia', 'Antarabangsa'], 'warganegara (' + k.trim() + ')');
-    if (n.length < 3) throw new Error(k + 'masukkan nama penuh.');
-    if (need && !/^[A-Z0-9]{7,12}$/.test(m)) throw new Error(k + 'No. Matrik tidak sah.');
-    if (nat === 'Malaysia' ? kpd.length !== 12 || /\D/.test(kpd) : kpd.length < 5) throw new Error(k + (nat === 'Malaysia' ? 'No. Kad Pengenalan mesti 12 digit.' : 'No. pasport tidak sah.'));
-    if (need && !(yr >= 1 && yr <= 6)) throw new Error(k + 'tahun pengajian mesti 1 hingga 6.');
-    if (need && cleanStr_(x.fac, 40).length < 2) throw new Error(k + 'masukkan fakulti.');
-    if (need && cleanStr_(x.course, 200).length < 3) throw new Error(k + 'masukkan program / kursus.');
-    if (need && !(cg >= 0 && cg <= 4)) throw new Error(k + 'CGPA mesti antara 0.00 dan 4.00.');
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error(k + 'e-mel tidak sah.');
-    if (tel.length < 9 || tel.length > 14) throw new Error(k + 'no. telefon tidak sah.');
-    return { n: n, m: m, kp: nat === 'Malaysia' ? kpd.slice(0, 6) + '-' + kpd.slice(6, 8) + '-' + kpd.slice(8) : kpd.toUpperCase(),
+    const sex = oneOf_(x.sex, ['Male', 'Female'], 'gender (' + k.trim() + ')');
+    const nat = oneOf_(x.nat, ['Malaysian', 'International'], 'nationality (' + k.trim() + ')');
+    if (n.length < 3) throw new Error(k + 'please enter the full name.');
+    if (need && !/^[A-Z0-9]{7,12}$/.test(m)) throw new Error(k + 'matric number is not valid.');
+    if (nat === 'Malaysian' ? kpd.length !== 12 || /\D/.test(kpd) : kpd.length < 5) throw new Error(k + (nat === 'Malaysian' ? 'IC number must be 12 digits.' : 'passport number is not valid.'));
+    if (need && !(yr >= 1 && yr <= 6)) throw new Error(k + 'year of study must be 1 to 6.');
+    if (need && cleanStr_(x.fac, 40).length < 2) throw new Error(k + 'please enter the faculty.');
+    if (need && cleanStr_(x.course, 200).length < 3) throw new Error(k + 'please enter the programme / course.');
+    if (need && !(cg >= 0 && cg <= 4)) throw new Error(k + 'CGPA must be between 0.00 and 4.00.');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error(k + 'email is not valid.');
+    if (tel.length < 9 || tel.length > 14) throw new Error(k + 'phone number is not valid.');
+    return { n: n, m: m, kp: nat === 'Malaysian' ? kpd.slice(0, 6) + '-' + kpd.slice(6, 8) + '-' + kpd.slice(8) : kpd.toUpperCase(),
       yr: yr, fac: cleanStr_(x.fac, 40).toUpperCase(), course: cleanStr_(x.course, 200).toUpperCase(),
       cgpa: cg === '' ? '' : Math.round(cg * 100) / 100, email: email, tel: tel,
       extra: { Jantina: sex, Warganegara: nat, Bidang: cleanStr_(x.bid, 120), PelajarUTM: utm, AlamatKolej: cleanStr_(x.kol, 200), AlamatRumah: cleanStr_(x.rmh, 300) },
       docM: x.docM, docK: x.docK };
   });
   let planUrl = cleanStr_(p.planUrl, 500);
-  if (planUrl && !/^https:\/\/[^\s]+$/i.test(planUrl)) throw new Error('Pautan pelan perniagaan mesti bermula dengan https://');
+  if (planUrl && !/^https:\/\/[^\s]+$/i.test(planUrl)) throw new Error('The business plan link must start with https://');
   const hasFile = !!(p.file && p.file.b64);
-  if (!planUrl && !hasFile) throw new Error('Muat naik pelan perniagaan (PDF) atau berikan pautan.');
-  if (p.ack !== true) throw new Error('Sila tandakan pengakuan sebelum menghantar.');
+  if (!planUrl && !hasFile) throw new Error('Please upload your business plan (PDF) or provide a link.');
+  if (p.ack !== true) throw new Error('Please tick the declaration before submitting.');
 
   return withLock_(function () {
     const cache = CacheService.getScriptCache();
     const cnt = Number(cache.get('subm') || 0);
-    if (cnt >= SUBMIT_MAX_PER_HOUR) throw new Error('Terlalu banyak permohonan dihantar buat masa ini. Cuba lagi sebentar lagi.');
+    if (cnt >= SUBMIT_MAX_PER_HOUR) throw new Error('Too many applications were submitted just now. Please try again shortly.');
     cache.put('subm', String(cnt + 1), 3600);
 
     // elak permohonan berganda: matrik pelajar pertama + nama perniagaan yang sama
     const dafs = table_(SH.DAFTAR).rows;
     const dup = dafs.filter(function (r) { return r.Status !== 'Ditolak' && em_(r.Perniagaan) === em_(biz) && String(r.Matrik).trim().toUpperCase() === students[0].m; })[0];
-    if (dup) throw new Error('Permohonan ini telah direkodkan (rujukan ' + dref_(dup.ID) + '). Tiada keperluan menghantar semula.');
+    if (dup) throw new Error('This application has already been recorded (reference ' + dref_(dup.ID) + '). There is no need to submit again.');
 
     // semua fail disahkan dahulu sebelum apa-apa ditulis ke Drive
     const nextId = dafs.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
@@ -1104,12 +1104,12 @@ function apiSubmitApplication(p) {
     function queue(d, label, pdfOnly, kind, put) {
       if (!hasDoc_(d)) return;
       let bytes;
-      try { bytes = Utilities.base64Decode(String(d.b64)); } catch (e) { throw new Error('Fail ' + label + ' tidak dapat dibaca. Cuba lagi.'); }
+      try { bytes = Utilities.base64Decode(String(d.b64)); } catch (e) { throw new Error('The file ' + label + ' could not be read. Please try again.'); }
       const lim = (pdfOnly ? MAX_PLAN_MB : DOC_MAX_MB) * 1024 * 1024;
-      if (bytes.length > lim) throw new Error('Fail ' + label + ' melebihi ' + (pdfOnly ? MAX_PLAN_MB : DOC_MAX_MB) + ' MB.');
+      if (bytes.length > lim) throw new Error('The file ' + label + ' exceeds ' + (pdfOnly ? MAX_PLAN_MB : DOC_MAX_MB) + ' MB.');
       total += bytes.length;
       const t = sniffDoc_(bytes, pdfOnly);
-      if (!t) throw new Error('Fail ' + label + ' mesti ' + (pdfOnly ? 'PDF.' : 'PDF, JPG atau PNG.'));
+      if (!t) throw new Error('The file ' + label + ' must be ' + (pdfOnly ? 'a PDF.' : 'a PDF, JPG or PNG.'));
       jobs.push({ bytes: bytes, t: t, name: stem + '_' + label.replace(/[^A-Za-z0-9]+/g, '_') + '.' + t.ext, kind: kind, put: put });
     }
     const out = { ssmDesc: '', ssm: '', tifoid: '', kursus: '', plan: '' };
@@ -1121,7 +1121,7 @@ function apiSubmitApplication(p) {
       queue(x.docM, 'kad matrik pelajar ' + (i + 1), false, 'prv', function (u) { x.extra.PautanMatrik = u; });
       queue(x.docK, 'kad pengenalan pelajar ' + (i + 1), false, 'prv', function (u) { x.extra.PautanKP = u; });
     });
-    if (total > SUBMIT_MAX_TOTAL_MB * 1024 * 1024) throw new Error('Jumlah saiz fail melebihi ' + SUBMIT_MAX_TOTAL_MB + ' MB. Kecilkan fail atau gunakan pautan.');
+    if (total > SUBMIT_MAX_TOTAL_MB * 1024 * 1024) throw new Error('Total file size exceeds ' + SUBMIT_MAX_TOTAL_MB + ' MB. Please reduce the file sizes or use a link.');
     let pubF = null, prvF = null;
     jobs.forEach(function (j) {
       let f;
@@ -1137,7 +1137,7 @@ function apiSubmitApplication(p) {
 
     ACTOR_ = students[0].email;
     const extra = {
-      StatusSSM: ssmSts === 'Berdaftar' ? 'Berdaftar' : ('Belum berdaftar' + (ssmPlan ? ': ' + ssmPlan : '')),
+      StatusSSM: ssmSts === 'Registered' ? 'Registered' : ('Not registered' + (ssmPlan ? ': ' + ssmPlan : '')),
       Bentuk: cleanStr_(p.lot, 80), Produk: produk, PautanSSM: out.ssm, PautanSSMMaklumat: out.ssmDesc, PautanSSMInfo: ssmInfo,
       Tifoid: tifoid, PautanTifoid: out.tifoid, KursusMakanan: kursus, PautanKursus: out.kursus,
       SumberDana: sumber, PembiayaDana: pembiaya, JumlahDana: jumlah, JualanBulanan: jualan,
@@ -1145,18 +1145,18 @@ function apiSubmitApplication(p) {
       LokasiPerniagaan: cleanStr_(p.lokasi, 160), SebabBerniaga: cleanStr_(p.sebab, 600)
     };
     const id = nextId;
-    append_(SH.DAFTAR, Object.assign({ ID: id, Tarikh: new Date(), Status: 'Baharu', Jenis: type, Perniagaan: biz.toUpperCase(), JenisPerniagaan: kind, BentukPerniagaan: bentuk, SSM: ssmSts === 'Berdaftar' ? ssm : '',
+    append_(SH.DAFTAR, Object.assign({ ID: id, Tarikh: new Date(), Status: 'Baharu', Jenis: type, Perniagaan: biz.toUpperCase(), JenisPerniagaan: kind, BentukPerniagaan: bentuk, SSM: ssmSts === 'Registered' ? ssm : '',
       PautanPelan: planUrl, Ketua: students[0].n, Matrik: students[0].m, Emel: students[0].email, Pelajar: JSON.stringify(students.map(stuJson_)) }, extra));
     log_('Daftar baharu daripada pelajar', dref_(id) + ' · ' + biz + ' · ' + students[0].m);
     const ref = dref_(id);
     try {
-      MailApp.sendEmail({ to: students[0].email, name: 'UTMXCITE', subject: 'Permohonan ' + type + ' diterima (rujukan ' + ref + ')',
-        body: 'Salam ' + students[0].n + ',\n\nPermohonan ' + type + ' bagi ' + biz + ' telah diterima dan direkodkan.\n\nNo. rujukan: ' + ref +
-          '\n\nUrusetia UTMXCITE akan menyemak dan mengesahkan pendaftaran anda, kemudian menentukan mesyuarat penilaian. Simpan no. rujukan ini untuk semakan.' });
+      MailApp.sendEmail({ to: students[0].email, name: 'UTMXCITE', subject: 'Your ' + type + ' application has been received (reference ' + ref + ')',
+        body: 'Dear ' + students[0].n + ',\n\nYour ' + type + ' application for ' + biz + ' has been received and recorded.\n\nReference no.: ' + ref +
+          '\n\nThe UTMXCITE secretariat will review and verify your registration, then assign it to an evaluation meeting. Please keep this reference number.' });
     } catch (e) { }
     try {
       MailApp.sendEmail({ to: ADMIN_EMAIL, name: 'UTMPreneur', subject: 'Pendaftaran baharu: ' + biz + ' (' + ref + ')',
-        body: 'Permohonan ' + type + ' baharu telah diterima.\n\n' + biz + '\nPelajar: ' + students.map(function (x) { return x.n + ' (' + (x.m || 'bukan pelajar UTM') + ')'; }).join(', ') +
+        body: 'Permohonan ' + type + ' baharu telah diterima.\n\n' + biz + '\nPelajar: ' + students.map(function (x) { return x.n + ' (' + (x.m || 'non-UTM student') + ')'; }).join(', ') +
           '\nRujukan: ' + ref + '\n\nSemak dan sahkan dalam tab Daftar di sistem penilaian. Selepas disahkan, rekod masuk ke Permohonan.' });
     } catch (e) { }
     return { ok: true, ref: ref, id: id };
@@ -1196,8 +1196,8 @@ function apiSahkanDaftar(token, id) {
     writeRow_(SH.DAFTAR, r._row, r);
     log_('Sahkan pendaftaran', d.ref + ' -> ' + ref_(pid) + ' · ' + d.biz);
     try {
-      MailApp.sendEmail({ to: d.emel, name: 'UTMXCITE', subject: 'Permohonan ' + d.jenis + ' disahkan (' + d.ref + ')',
-        body: 'Salam ' + d.ketua + ',\n\nPermohonan ' + d.jenis + ' bagi ' + d.biz + ' telah disahkan oleh urusetia dan akan diproses untuk penilaian.\n\nRujukan pendaftaran: ' + d.ref + '\nRujukan permohonan: ' + ref_(pid) + '\n\nUrusetia akan memaklumkan mesyuarat penilaian anda.' });
+      MailApp.sendEmail({ to: d.emel, name: 'UTMXCITE', subject: 'Your ' + d.jenis + ' application has been verified (' + d.ref + ')',
+        body: 'Dear ' + d.ketua + ',\n\nYour ' + d.jenis + ' application for ' + d.biz + ' has been verified by the secretariat and will be processed for evaluation.\n\nRegistration reference: ' + d.ref + '\nApplication reference: ' + ref_(pid) + '\n\nThe secretariat will inform you of your evaluation meeting.' });
     } catch (e) { }
     return { pid: pid };
   });
