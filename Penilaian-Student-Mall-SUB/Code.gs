@@ -48,6 +48,7 @@ const MAX_PLAN_MB = 8;
 const SUBMIT_MAX_PER_HOUR = 60;
 const TEMPLATE_CELL = 'B15';   // sel dalam sheet Tetapan yang menyimpan pautan templat pelan perniagaan
 const FOLDER_CELL = 'B16';     // sel dalam sheet Tetapan yang menyimpan pautan folder Drive bagi pelan yang dimuat naik
+const JENIS_LIST = ['Student Mall', 'SUB', 'UTM KL', 'Kolej', 'Fakulti'];   // jenis permohonan
 const SSU_CELL = 'B18';        // pautan borang permohonan pendaftaran SSU (Sistem Syarikat Universiti) untuk pelajar yang belum mendaftar
 const SULIT_CELL = 'B17';      // folder Drive bagi dokumen sulit pelajar (kad matrik, salinan KP, dll.; tidak dikongsi)
 const FOLDER_SULIT = 'Dokumen Sulit UTMXCITE';
@@ -673,7 +674,7 @@ function saveApplication_(a, sumber) {
   } else {
     id = t.rows.reduce(function (m, r) { return Math.max(m, Number(r.ID)); }, 0) + 1;
   }
-  if (!a.biz || (a.type !== 'Student Mall' && a.type !== 'SUB' && a.type !== 'UTM KL')) throw new Error('Nama perniagaan dan jenis diperlukan.');
+  if (!a.biz || JENIS_LIST.indexOf(a.type) < 0) throw new Error('Nama perniagaan dan jenis diperlukan.');
   const row = Object.assign({}, old || {}, {
     ID: id, Perniagaan: a.biz, Jenis: a.type, SSM: a.ssm || '', JenisPerniagaan: a.kind || '', PautanPelan: a.plan || ''
   });
@@ -1010,7 +1011,7 @@ function apiSubmitApplication(p) {
   p = p || {};
   if (cleanStr_(p.website, 50)) throw new Error('Invalid submission.');                 // honeypot untuk bot
   const type = p.type;
-  if (type !== 'Student Mall' && type !== 'SUB' && type !== 'UTM KL') throw new Error('Please select the application type: Student Mall, SUB or UTM KL.');
+  if (JENIS_LIST.indexOf(type) < 0) throw new Error('Please select the application type: ' + JENIS_LIST.join(', ') + '.');
   const biz = cleanStr_(p.biz, 120), kind = cleanStr_(p.produk, 160), ssm = cleanStr_(p.ssm, 80);   // jenis perniagaan = kategori produk / perkhidmatan utama
   if (biz.length < 2) throw new Error('Please enter the business name.');
   let bentuk = cleanStr_(p.bentuk, 120);
