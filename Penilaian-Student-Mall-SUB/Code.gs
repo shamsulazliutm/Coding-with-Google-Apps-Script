@@ -49,6 +49,7 @@ const SUBMIT_MAX_PER_HOUR = 60;
 const TEMPLATE_CELL = 'B15';   // sel dalam sheet Tetapan yang menyimpan pautan templat pelan perniagaan
 const FOLDER_CELL = 'B16';     // sel dalam sheet Tetapan yang menyimpan pautan folder Drive bagi pelan yang dimuat naik
 const JENIS_LIST = ['Student Mall', 'SUB', 'UTM KL', 'Kolej', 'Fakulti'];   // jenis permohonan
+const SSU_URL_DEFAULT = 'https://tinyurl.com/ssuxcite';   // pautan lalai pendaftaran SSU jika Tetapan!B18 kosong
 const SSU_CELL = 'B18';        // pautan borang permohonan pendaftaran SSU (Sistem Syarikat Universiti) untuk pelajar yang belum mendaftar
 const SULIT_CELL = 'B17';      // folder Drive bagi dokumen sulit pelajar (kad matrik, salinan KP, dll.; tidak dikongsi)
 const FOLDER_SULIT = 'Dokumen Sulit UTMXCITE';
@@ -1230,7 +1231,7 @@ function apiPublicInfo() {
   if (!/^https:\/\/[^\s]+$/i.test(url)) url = '';
   let ssu = '';
   try { ssu = String(cfgSheet_().getRange(SSU_CELL).getValue() || '').trim(); } catch (e) { }
-  if (!/^https:\/\/[^\s]+$/i.test(ssu)) ssu = '';
+  if (!/^https:\/\/[^\s]+$/i.test(ssu)) ssu = SSU_URL_DEFAULT;
   return { templateUrl: url, ssuUrl: ssu };
 }
 
@@ -1265,7 +1266,7 @@ function setupSheets() {
   }
   // Tetapan!B18: pautan borang pendaftaran SSU (dipaparkan kepada pelajar yang belum mendaftar dengan SSU)
   if (!String(ts.getRange('A18').getValue() || '').trim()) {
-    ts.getRange('A18:C18').setValues([['PautanSSU', '', '<- Tampal pautan borang permohonan pendaftaran SSU (https). Dipaparkan kepada pelajar yang belum mendaftar dengan SSU.']]);
+    ts.getRange('A18:C18').setValues([['PautanSSU', '', '<- Pilihan: pautan borang pendaftaran SSU (https). Jika kosong, pautan lalai https://tinyurl.com/ssuxcite digunakan.']]);
   }
   // KP, matrik dan SSM mesti kekal sebagai teks
   book.getSheetByName(SH.PELAJAR).getRange('C:D').setNumberFormat('@');
