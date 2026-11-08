@@ -54,8 +54,9 @@ var SCHEMA = {
     nama: 'UTMPreneur - SSU',
     modul: 'SSU',
     tabs: {
-      Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Berasaskan_Inovasi', 'TRL', 'Bil_Pekerja', 'Tarikh_SSM', 'Jenis_Perniagaan_KPI', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat'],
-      Ahli_Pasukan: ['ID_Permohonan', 'No_Matrik', 'Nama', 'Fakulti', 'Jantina', 'Etnik', 'Tahun', 'Peranan_Ahli']
+      Permohonan_SSU: ['ID_Permohonan', 'Jenis_SSU', 'Jenis_Permohonan', 'ID_Perniagaan', 'No_Matrik_Pemilik', 'Nama_Perniagaan', 'Produk', 'Syarat_Subjek', 'Pensyarah', 'Seksyen', 'Kumpulan', 'Status_SSM', 'No_SSM', 'Fail_SSM', 'Fail_Maklumat_SSM', 'Jenis_Perniagaan', 'Kluster', 'Sumber_Pembiayaan', 'Modal_RM', 'Pendapatan_Bulanan_RM', 'Alamat_Perniagaan', 'Tarikh_Mula_Perniagaan', 'Laman_Media_Sosial', 'Berasaskan_Inovasi', 'TRL', 'Bil_Pekerja', 'Tarikh_SSM', 'Jenis_Perniagaan_KPI', 'Bil_Ahli', 'Status', 'Tarikh_Hantar', 'Tarikh_Keputusan', 'Diluluskan_Oleh', 'Catatan_Admin', 'No_Pendaftaran', 'Bil_Sijil', 'Pautan_Sijil', 'Tarikh_Pendaftaran', 'Tarikh_Tamat', 'Tujuan', 'Pensyarah_No', 'Pensyarah_Emel', 'Pensyarah_Disahkan'],
+      Ahli_Pasukan: ['ID_Permohonan', 'No_Matrik', 'Nama', 'Fakulti', 'Jantina', 'Etnik', 'Tahun', 'Peranan_Ahli', 'Token_Pengesahan', 'Tarikh_Sah', 'Disahkan_Oleh'],
+      Pensyarah: ['No_Pekerja', 'Nama', 'Fakulti', 'Jawatan', 'Emel', 'Telefon']
     }
   },
   SS_RUANG_NIAGA: {
@@ -110,7 +111,8 @@ var TEXT_COLS = {
   Perniagaan: ['No_Matrik_Pemilik', 'No_SSM', 'No_Pendaftaran'],
   Profil: ['No_Matrik', 'No_Telefon'],
   Ahli_Pasukan: ['No_Matrik'],
-  Permohonan_SSU: ['No_Matrik_Pemilik', 'No_Pendaftaran'],
+  Permohonan_SSU: ['No_Matrik_Pemilik', 'No_Pendaftaran', 'Pensyarah_No'],
+  Pensyarah: ['No_Pekerja', 'Telefon'],
   Permohonan_Lot: ['No_Matrik'],
   Tempahan: ['No_Matrik', 'Telefon', 'Masa_Mula', 'Masa_Tamat', 'Token_Hash'],
   PERALATAN: ['Kod_Mesin', 'No_Mesin'],

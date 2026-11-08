@@ -118,6 +118,12 @@ var Seed = (function () {
       ['TIADA', 'Tidak didaftarkan di bawah mana-mana subjek', 'Not registered under any subject requirement'],
       ['LAIN', 'Lain-lain', 'Other']
     ]));
+    out = out.concat(ruj('TUJUAN_SSU', [
+      ['PREMIS', 'Memohon inkubator atau premis perniagaan', 'Apply for incubator or business premises'],
+      ['SUBJEK', 'Memenuhi keperluan subjek perniagaan', 'Apply for business subject requirement'],
+      ['ACARA', 'Memohon penyertaan acara perniagaan', 'Apply for business event'],
+      ['LAIN', 'Lain-lain', 'Other']
+    ]));
     out = out.concat(ruj('STATUS_SSM', [
       ['YA', 'Ya', 'Yes'], ['TIDAK', 'Tidak', 'No'], ['PROSES', 'Dalam proses', 'In progress']
     ]));
