@@ -347,8 +347,10 @@ body:not(.auth) .hero{display:none}
     <button class="back" data-back type="button">&larr; Kembali <span class="e">Back</span></button>
     <div class="card">
       <div class="row"><div><div class="h1">Permohonan SSU</div><div class="e">SSU applications</div></div><span class="sp"></span>
+        <button id="btn-sa-dash" class="btn alt sm" type="button">Dashboard dan pensyarah <span class="e">Dashboard and lecturers</span></button>
         <button id="btn-sa-sedia" class="btn alt sm" type="button" hidden>Daftar SSU sedia ada <span class="e">Register existing SSU</span></button></div>
       <div class="chips" id="sa-chips"></div>
+      <select id="sa-tujuan" aria-label="Tujuan" style="margin-bottom:8px"></select>
       <input id="sa-q" placeholder="Cari nama, ID, No. Matrik, No. Pendaftaran / Search" aria-label="Cari">
       <div class="scroll" style="margin-top:10px"><table><thead><tr><th>ID</th><th>Perniagaan</th><th>Pemilik</th><th>Jenis</th><th>Status</th><th>Dihantar</th></tr></thead><tbody id="sa-body"></tbody></table></div>
       <div id="sa-kosong" class="muted" style="margin-top:10px" hidden>Tiada permohonan. <span class="e">No applications.</span></div>
@@ -356,6 +358,24 @@ body:not(.auth) .hero{display:none}
     <div class="card" id="sa-tamat-wrap" hidden>
       <div class="h2">SSU hampir tamat atau telah tamat <span class="e">Expiring or expired</span></div>
       <div class="scroll" style="margin-top:8px"><table><thead><tr><th>No. Pendaftaran</th><th>Perniagaan</th><th>Tarikh tamat</th><th>Baki hari</th><th>Status</th></tr></thead><tbody id="sa-tamat"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- Admin: dashboard SSU, CSV dan senarai pensyarah -->
+  <section id="v-sa-dash" class="view" data-wide hidden>
+    <button class="back" id="btn-dash-balik" type="button">&larr; Senarai <span class="e">List</span></button>
+    <div class="card">
+      <div class="row"><div><div class="h1">Dashboard SSU</div><div class="e">SSU dashboard</div></div><span class="sp"></span>
+        <button id="btn-dash-csv" class="btn alt sm" type="button">Eksport Daftar SSU (CSV) <span class="e">Export register</span></button></div>
+      <div id="msg-dash" class="msg" hidden></div>
+    </div>
+    <div id="dash-body"></div>
+    <div class="card" id="dash-urus" hidden>
+      <div class="h2">Senarai pensyarah <span class="e">Lecturer list</span></div>
+      <p class="muted">Tampal satu baris bagi setiap pensyarah: No. pekerja, Nama, Fakulti, Jawatan, Emel, Telefon (dipisah tab, koma atau koma bertitik). Pensyarah sedia ada dilangkau. <span class="e">Existing lecturers are skipped. You can also edit the Pensyarah tab in the SSU sheet directly.</span></p>
+      <textarea id="in-pensyarah" style="min-height:110px;font-family:inherit;font-size:14px" aria-label="Senarai pensyarah"></textarea>
+      <div id="msg-import" class="msg" hidden></div>
+      <button id="btn-import-pensyarah" class="btn sm" type="button" style="margin-top:8px">Import pensyarah <span class="e">Import lecturers</span></button>
     </div>
   </section>
 
@@ -1111,8 +1131,8 @@ body:not(.auth) .hero{display:none}
   var $ = function (id) { return document.getElementById(id); };
   var node = UP.node, msg = UP.msg, msgErr = UP.msgErr, clearMsg = UP.clearMsg, busy = UP.busy;
   var ruj = null;
-  var SSU = { form: null, edit: null, perniagaanId: '', maks: 12 };
-  var SA = { status: 'SEMUA', q: '', timer: null, id: '', confirm: '' };
+  var SSU = { form: null, edit: null, perniagaanId: '', maks: 12, lec: [] };
+  var SA = { status: 'SEMUA', q: '', tujuan: '', timer: null, id: '', confirm: '' };
   var BAGI = null; // {m, nama} apabila admin bertindak bagi pihak pelajar
   var BAGI_MAP = { 'profil.dapat': 'profil.admin.dapat', 'profil.simpan': 'profil.admin.simpan', 'ssu.saya': 'ssu.admin.pelajar', 'ssu.dapat': 'ssu.admin.dapat', 'ssu.hantar': 'ssu.admin.hantar' };
   function call(m, p) {
@@ -1332,9 +1352,15 @@ body:not(.auth) .hero{display:none}
     ];
   }
 
-  function ssuSpec(maksAhli) {
-    var subj = function (v) { return ['UBSS1032', 'ULRS3032', 'MFMS1143', 'SBSF1023'].indexOf(v.syaratSubjek) >= 0; };
+  function ssuSpec(maksAhli, lec) {
+    lec = lec || [];
+    var subj = function (v) { return v.tujuan === 'SUBJEK'; };
+    var manual = function (v) { return subj(v) && (!lec.length || v.pensyarahPilih === '__LAIN'); };
+    var lecOpts = lec.map(function (x) { return { kod: x.no, bm: x.nama + (x.fakulti ? ' · ' + x.fakulti : ''), en: '' }; })
+      .concat([{ kod: '__LAIN', bm: 'Tiada dalam senarai', en: 'Not in the list' }]);
     return [
+      { t: 'sect', k: '_t', bm: 'Tujuan permohonan', en: 'Purpose of application' },
+      { k: 'tujuan', t: 'radio', g: 'TUJUAN_SSU', bm: 'Tujuan memohon SSU', en: 'Why are you applying?', req: 1 },
       { t: 'sect', k: '_a', bm: 'Maklumat perniagaan', en: 'Business details' },
       { k: 'jenisSsu', t: 'radio', o: JENIS_SSU, bm: 'Jenis pendaftaran', en: 'Registration type', req: 1 },
       { k: 'nama', t: 'text', bm: 'Nama perniagaan', en: 'Business name', req: 1, max: 120, hint: 'Akan ditukar kepada HURUF BESAR dan tidak boleh mengandungi UTM. / Converted to UPPERCASE and cannot contain UTM.' },
@@ -1348,11 +1374,14 @@ body:not(.auth) .hero{display:none}
       { k: 'alamat', t: 'textarea', bm: 'Alamat perniagaan', en: 'Business address', req: 1, max: 300, hint: 'Alamat perniagaan sebenar, bukan alamat kolej, fakulti atau UTM. / The actual business address, not a college, faculty or UTM address.' },
       { k: 'tarikhMula', t: 'date', bm: 'Tarikh mula berniaga', en: 'Business start date', req: 1 },
       { k: 'laman', t: 'text', bm: 'Laman web / media sosial', en: 'Website / social media', max: 300 },
-      { t: 'sect', k: '_b', bm: 'Syarat subjek', en: 'Subject requirement' },
-      { k: 'syaratSubjek', t: 'select', g: 'SYARAT_SUBJEK', bm: 'Subjek yang didaftarkan', en: 'Registered subject', req: 1 },
-      { k: 'pensyarah', t: 'text', bm: 'Nama pensyarah', en: 'Lecturer', max: 120, show: subj },
-      { k: 'seksyen', t: 'text', bm: 'Seksyen', en: 'Section', max: 20, show: subj },
-      { k: 'kumpulan', t: 'text', bm: 'Kumpulan', en: 'Group', max: 40, show: subj },
+      { t: 'sect', k: '_b', bm: 'Syarat subjek', en: 'Subject requirement', show: subj },
+      { k: 'syaratSubjek', t: 'select', g: 'SYARAT_SUBJEK', bm: 'Subjek yang didaftarkan', en: 'Registered subject', req: 1, show: subj },
+      lec.length ? { k: 'pensyarahPilih', t: 'select', o: lecOpts, bm: 'Pensyarah', en: 'Lecturer', req: 1, show: subj } : { t: 'sect', k: '_nolec', bm: '', en: '', show: function () { return false; } },
+      { k: 'pensyarah', t: 'text', bm: 'Nama pensyarah', en: 'Lecturer name', max: 120, req: 1, show: manual },
+      { k: 'pensyarahNo', t: 'text', bm: 'No. pekerja pensyarah', en: 'Lecturer staff no.', max: 30, req: 1, show: manual },
+      { k: 'pensyarahEmel', t: 'text', bm: 'E-mel pensyarah', en: 'Lecturer email', max: 120, req: 1, show: manual, hint: 'Pensyarah yang ditaip akan disahkan oleh UTMXCITE. / A typed lecturer is verified by UTMXCITE.' },
+      { k: 'seksyen', t: 'text', bm: 'Seksyen', en: 'Section', max: 20, req: 1, show: subj },
+      { k: 'kumpulan', t: 'text', bm: 'Kumpulan', en: 'Group', max: 40, req: 1, show: subj },
       { t: 'sect', k: '_c', bm: 'Pendaftaran SSM', en: 'SSM registration' },
       { k: 'statusSsm', t: 'radio', g: 'STATUS_SSM', bm: 'Adakah perniagaan didaftarkan dengan SSM?', en: 'Registered with SSM?', req: 1 },
       { k: 'noSsm', t: 'text', bm: 'No. pendaftaran SSM', en: 'SSM registration no.', max: 30, show: function (v) { return v.statusSsm === 'YA'; } },
@@ -1364,7 +1393,7 @@ body:not(.auth) .hero{display:none}
       { k: 'modal', t: 'text', bm: 'Modal permulaan (RM, nilai tepat)', en: 'Starting capital (RM, exact)', req: 1, ph: '1500.00' },
       { k: 'pendapatan', t: 'text', bm: 'Pendapatan kasar bulanan (RM, nilai tepat)', en: 'Gross monthly income (RM, exact)', req: 1, ph: '0.00' },
       { t: 'sect', k: '_e', bm: 'Rakan kongsi', en: 'Partners' },
-      { k: 'ahli', t: 'list', max: maksAhli - 1, ph: 'No. Matrik rakan kongsi', bm: 'Rakan kongsi (pelajar UTM sahaja)', en: 'Partners (UTM students only)', hint: 'Maksimum ' + maksAhli + ' ahli termasuk anda. / Maximum ' + maksAhli + ' members including you.' },
+      { k: 'ahli', t: 'list', max: maksAhli - 1, ph: 'No. Matrik rakan kongsi', bm: 'Rakan kongsi (pelajar UTM sahaja)', en: 'Partners (UTM students only)', hint: 'Maksimum ' + maksAhli + ' ahli termasuk anda. Setiap rakan kongsi akan diminta mengesahkan penyertaan dalam UTMPreneur. / Maximum ' + maksAhli + ' members including you. Each partner is asked to confirm in UTMPreneur.' },
       { t: 'sect', k: '_f', bm: 'Perakuan', en: 'Declaration' },
       BAGI
         ? { k: 'perakuan', t: 'check', bm: 'Saya mengesahkan pelajar telah memberi persetujuan dan maklumat ini benar mengikut dokumen yang diserahkan.', en: 'I confirm the student has given consent and the information is correct according to the documents submitted.' }
@@ -1375,6 +1404,7 @@ body:not(.auth) .hero{display:none}
   function sediaSpec() {
     return [
       { k: 'noMatrik', t: 'text', bm: 'No. Matrik pemilik', en: 'Owner matric no.', req: 1 },
+      { k: 'tujuan', t: 'select', g: 'TUJUAN_SSU', bm: 'Tujuan permohonan (jika diketahui)', en: 'Purpose (if known)' },
       { k: 'jenisSsu', t: 'radio', o: JENIS_SSU, bm: 'Jenis pendaftaran', en: 'Registration type' },
       { k: 'nama', t: 'text', bm: 'Nama perniagaan', en: 'Business name', req: 1, max: 120 },
       { k: 'jenisPerniagaan', t: 'select', g: 'JENIS_PERNIAGAAN', bm: 'Jenis perniagaan', en: 'Type of business', req: 1 },
@@ -1520,6 +1550,23 @@ body:not(.auth) .hero{display:none}
         });
         body.appendChild(c2);
       }
+      var tunggu = d.sertaan.filter(function (p) { return p.perluSah; });
+      if (tunggu.length) {
+        var cs = node('div', null, 'card'); cs.id = 'ssu-sah';
+        cs.appendChild(node('div', 'Pengesahan penyertaan', 'h2')); cs.lastChild.appendChild(document.createTextNode(' ')); cs.lastChild.appendChild(node('span', 'Confirm participation', 'e'));
+        tunggu.forEach(function (p) {
+          var row = node('div', null, 'sec');
+          row.appendChild(node('div', 'Anda ditambah sebagai ahli SSU ' + p.nama + ' oleh ' + p.pemilik + ' (' + p.id + '). Sahkan jika anda bersetuju menyertai.', 'e'));
+          var sb = node('button', 'Sahkan penyertaan ', 'btn sm'); sb.appendChild(node('span', 'Confirm participation', 'e')); sb.type = 'button'; sb.setAttribute('data-sah', p.id); sb.style.marginTop = '8px';
+          sb.addEventListener('click', function () {
+            sb.disabled = true;
+            UP.api('ssu.sahkanAhli', { id: p.id }).then(function (rr) { if (!rr.ok) { sb.disabled = false; msgErr(cs.lastChild, rr); return; } openSsu('Penyertaan disahkan: ' + p.id); });
+          });
+          row.appendChild(sb); cs.appendChild(row);
+        });
+        var em = node('div', null, 'msg err'); em.hidden = true; cs.appendChild(em);
+        body.appendChild(cs);
+      }
       if (d.sertaan.length) {
         var c3 = node('div', null, 'card'); c3.appendChild(node('div', 'SSU yang saya sertai (baca sahaja)', 'h2'));
         d.sertaan.forEach(function (p) {
@@ -1548,17 +1595,18 @@ body:not(.auth) .hero{display:none}
     SSU.edit = target.id || ''; SSU.perniagaanId = target.perniagaanId || '';
     $('sf-tajuk').textContent = SSU.perniagaanId ? 'Pembaharuan SSU' : (SSU.edit ? 'Edit permohonan SSU' : 'Permohonan SSU baharu');
     var calls = [loadRuj()];
+    calls.push(UP.api('ssu.pensyarah').then(function (r) { SSU.lec = r.ok ? r.data.senarai : []; }));
     if (target.id || target.perniagaanId) calls.push(call('ssu.dapat', target.id ? { id: target.id } : { perniagaanId: target.perniagaanId }));
     else calls.push(call('profil.dapat'));
     Promise.all(calls).then(function (res) {
-      var r = res[1];
+      var r = res[2];
       body.textContent = '';
       if (!r.ok) { msgErr($('msg-sf'), r); return; }
       var pem = r.data.pemilik || (r.data.pelajar ? { nama: r.data.pelajar.nama, noMatrik: r.data.pelajar.noMatrik, fakulti: r.data.pelajar.fakulti, program: r.data.pelajar.program } : null);
       var pc = $('sf-pemilik'); pc.textContent = '';
       if (pem) pc.appendChild(kv([['Pemilik', pem.nama], ['No. Matrik', pem.noMatrik], ['Fakulti', pem.fakulti], ['Program', pem.program]]));
       if (r.data.catatan && r.data.status === 'Perlu Pembetulan') { var cn = $('sf-catatan'); msg(cn, 'err', 'Catatan admin: ' + r.data.catatan, 'Admin note'); }
-      SSU.form = Form(ssuSpec(SSU.maks));
+      SSU.form = Form(ssuSpec(SSU.maks, SSU.lec));
       body.appendChild(SSU.form.el);
       var b = r.data.borang || { jenisSsu: 'Perniagaan' };
       SSU.form.set(b);
@@ -1584,11 +1632,19 @@ body:not(.auth) .hero{display:none}
   var STATUSES = ['SEMUA', 'Baharu', 'Disemak', 'Perlu Pembetulan', 'Diluluskan', 'Ditolak'];
   function openSaList(keep) {
     UP.show('v-sa-list');
-    if (!keep) { SA.status = 'SEMUA'; SA.q = ''; $('sa-q').value = ''; }
+    if (!keep) { SA.status = 'SEMUA'; SA.q = ''; SA.tujuan = ''; $('sa-q').value = ''; }
+    loadRuj().then(paintTujuan);
     loadSaList();
   }
+  function paintTujuan() {
+    var sel = $('sa-tujuan'); if (!sel) return;
+    sel.textContent = '';
+    var o0 = node('option', 'Semua tujuan / All purposes'); o0.value = ''; sel.appendChild(o0);
+    opts('TUJUAN_SSU').forEach(function (o) { var op = node('option', o.bm); op.value = o.kod; sel.appendChild(op); });
+    sel.value = SA.tujuan;
+  }
   function loadSaList() {
-    UP.api('ssu.admin.senarai', { status: SA.status, q: SA.q }).then(function (r) {
+    UP.api('ssu.admin.senarai', { status: SA.status, q: SA.q, tujuan: SA.tujuan }).then(function (r) {
       var tb = $('sa-body'); tb.textContent = '';
       if (!r.ok) { $('sa-kosong').hidden = false; $('sa-kosong').textContent = (r.error && r.error.bm) || 'Ralat'; return; }
       var d = r.data;
@@ -1603,7 +1659,7 @@ body:not(.auth) .hero{display:none}
       $('sa-kosong').hidden = d.senarai.length > 0;
       d.senarai.forEach(function (p) {
         var tr = node('tr', null, 'click'); tr.setAttribute('data-id', p.id);
-        [p.id, p.nama, p.pemilik + ' (' + p.noMatrik + ')', p.jenisPermohonan + ' / ' + p.jenisSsu].forEach(function (t) { tr.appendChild(node('td', t)); });
+        [p.id, p.nama, p.pemilik + ' (' + p.noMatrik + ')', p.jenisPermohonan + ' / ' + p.jenisSsu + (p.tujuan ? ' · ' + (opts('TUJUAN_SSU').filter(function (o) { return o.kod === p.tujuan; })[0] || { bm: p.tujuan }).bm : '')].forEach(function (t) { tr.appendChild(node('td', t)); });
         var st = node('td'); st.appendChild(pill(p.status, PILL[p.status])); tr.appendChild(st);
         tr.appendChild(node('td', p.tarikhHantar));
         tr.addEventListener('click', function () { openSaDetail(p.id); });
@@ -1645,7 +1701,8 @@ body:not(.auth) .hero{display:none}
     var c2 = node('div', null, 'card'); c2.appendChild(node('div', 'Perniagaan', 'h2'));
     c2.appendChild(kv([
       ['Produk', l.produk.join(', ')], ['Jenis perniagaan', l.jenisPerniagaan], ['Kluster', l.kluster], ['Alamat', b.alamat], ['Tarikh mula', b.tarikhMula],
-      ['Laman / media sosial', b.laman], ['Subjek', l.syarat + (b.pensyarah ? ' · ' + b.pensyarah + ' · Seksyen ' + b.seksyen + ' · Kump. ' + b.kumpulan : '')],
+      ['Laman / media sosial', b.laman], ['Tujuan permohonan', l.tujuan], ['Subjek', l.syarat + (b.pensyarah ? ' · ' + b.pensyarah + ' · Seksyen ' + b.seksyen + ' · Kump. ' + b.kumpulan : '')],
+      ['Pensyarah', d.pensyarah.ada ? d.pensyarah.nama + ' (' + (d.pensyarah.no || '-') + ', ' + (d.pensyarah.emel || '-') + ') · ' + (d.pensyarah.disahkan ? 'Disahkan / Verified' : 'Belum disahkan / Not verified') : ''],
       ['Status SSM', l.statusSsm + (b.noSsm ? ' (' + b.noSsm + ')' : '')], ['Sumber pembiayaan', l.sumber.join(', ')],
       ['Klasifikasi KPI', l.jenisKpi], ['Berasaskan inovasi', b.berasaskanInovasi + (b.trl ? ' · ' + b.trl.replace('TRL', 'TRL ') : '')], ['Bil. pekerja', b.bilPekerja], ['Tarikh SSM', b.tarikhSsm],
       ['Modal (RM)', b.modal], ['Pendapatan bulanan (RM)', b.pendapatan], ['No. pendaftaran', d.ringkas.noPendaftaran], ['Sah sehingga', d.tarikhTamat], ['Diluluskan oleh', d.diluluskanOleh]
@@ -1653,12 +1710,37 @@ body:not(.auth) .hero{display:none}
     if (d.fail.ssm) c2.appendChild(dlBtn('Sijil SSM', 'SSM certificate', b.id, 'ssm', out));
     if (d.fail.maklumat) c2.appendChild(dlBtn('Maklumat SSM', 'SSM info', b.id, 'maklumat', out));
     if (d.fail.sijil) c2.appendChild(dlBtn('Sijil SSU (PDF)', 'SSU certificate', b.id, 'sijil', out));
+    if (d.pensyarah.ada && !d.pensyarah.disahkan && d.bolehPutus) {
+      var pb = node('button', 'Tambah pensyarah ke senarai ', 'btn alt sm'); pb.appendChild(node('span', 'Add lecturer to the list', 'e')); pb.type = 'button'; pb.id = 'btn-tambah-pensyarah'; pb.style.marginRight = '6px'; pb.style.marginTop = '6px';
+      pb.addEventListener('click', function () {
+        pb.disabled = true;
+        UP.api('ssu.admin.pensyarahTambah', { id: b.id }).then(function (res) { if (!res.ok) { pb.disabled = false; msgErr(out, res); return; } renderSaDetail(res); });
+      });
+      c2.appendChild(pb);
+    }
     c2.appendChild(out);
     body.appendChild(c2);
 
     var c3 = node('div', null, 'card'); c3.appendChild(node('div', 'Ahli pasukan (' + d.ahli.length + ')', 'h2'));
-    var tb = node('table'); var th = node('thead'); var trh = node('tr'); ['Peranan', 'Nama', 'No. Matrik', 'Fakulti', 'Jantina', 'Etnik', 'Tahun'].forEach(function (t) { trh.appendChild(node('th', t)); }); th.appendChild(trh); tb.appendChild(th);
-    var tbd = node('tbody'); d.ahli.forEach(function (a) { var tr = node('tr'); [a.peranan, a.nama, a.noMatrik, a.fakulti, a.jantina, a.etnik, a.tahun].forEach(function (t) { tr.appendChild(node('td', t)); }); tbd.appendChild(tr); }); tb.appendChild(tbd);
+    var tb = node('table'); var th = node('thead'); var trh = node('tr'); ['Peranan', 'Nama', 'No. Matrik', 'Fakulti', 'Jantina', 'Etnik', 'Tahun', 'Pengesahan'].forEach(function (t) { trh.appendChild(node('th', t)); }); th.appendChild(trh); tb.appendChild(th);
+    var tbd = node('tbody'); d.ahli.forEach(function (a) { var tr = node('tr'); [a.peranan, a.nama, a.noMatrik, a.fakulti, a.jantina, a.etnik, a.tahun].forEach(function (t) { tr.appendChild(node('td', t)); });
+      var tdS = node('td');
+      if (a.peranan === 'Pemilik') tdS.textContent = '-';
+      else if (a.disahkan) tdS.textContent = 'Disahkan ' + a.disahkan + (a.disahkanOleh ? ' (' + a.disahkanOleh + ')' : '');
+      else {
+        tdS.appendChild(pill('Belum disahkan', 'warn'));
+        if (d.bolehPutus) {
+          [['Sahkan', 'ssu.admin.ahliSah', 'sah'], ['Hantar semula', 'ssu.admin.ahliHantar', 'hantar']].forEach(function (x) {
+            var bt = node('button', x[0], 'btn alt sm'); bt.type = 'button'; bt.setAttribute('data-ahli', x[2] + ':' + a.noMatrik); bt.style.marginLeft = '6px';
+            bt.addEventListener('click', function () {
+              bt.disabled = true;
+              UP.api(x[1], { id: b.id, noMatrik: a.noMatrik }).then(function (res) { if (!res.ok) { bt.disabled = false; msgErr(out, res); return; } renderSaDetail(res); });
+            });
+            tdS.appendChild(bt);
+          });
+        }
+      }
+      tr.appendChild(tdS); tbd.appendChild(tr); }); tb.appendChild(tbd);
     var sc = node('div', null, 'scroll'); sc.appendChild(tb); c3.appendChild(sc); body.appendChild(c3);
 
     var c4 = node('div', null, 'card'); c4.appendChild(node('div', 'Tindakan', 'h2'));
@@ -1700,6 +1782,51 @@ body:not(.auth) .hero{display:none}
       c4.appendChild(msgA);
     }
     body.appendChild(c4);
+  }
+
+  // ---------- Admin: dashboard SSU, senarai pensyarah, CSV ----------
+  function openSaDash() {
+    UP.show('v-sa-dash'); clearMsg($('msg-dash'));
+    var body = $('dash-body'); body.textContent = ''; body.appendChild(node('div', null, 'spinner'));
+    $('dash-urus').hidden = true;
+    loadRuj().then(function () { return UP.api('ssu.admin.dashboard'); }).then(function (r) {
+      body.textContent = '';
+      if (!r.ok) { var m = node('div', null, 'msg err'); body.appendChild(m); msgErr(m, r); return; }
+      var d = r.data;
+      var top = node('div', null, 'card');
+      top.appendChild(kv([['Jumlah permohonan', d.jumlah], ['Diluluskan', d.diluluskan], ['Dalam proses', d.dalamProses],
+        ['Ahli belum mengesahkan', d.ahliBelumSah], ['Pensyarah belum disahkan', d.pensyarahBelumSah]]));
+      body.appendChild(top);
+      [['Mengikut status', 'By status', d.status], ['Mengikut tujuan', 'By purpose', d.tujuan], ['Kluster (diluluskan)', 'Cluster (approved)', d.kluster],
+       ['Produk / perkhidmatan (diluluskan)', 'Products (approved)', d.produk], ['Status SSM (diluluskan)', 'SSM status (approved)', d.statusSsm]].forEach(function (g) {
+        var c = node('div', null, 'card'); c.setAttribute('data-dash', g[1]);
+        c.appendChild(node('div', g[0], 'h2')); c.lastChild.appendChild(document.createTextNode(' ')); c.lastChild.appendChild(node('span', g[1], 'e'));
+        if (!g[2].length) c.appendChild(node('p', 'Tiada data.', 'muted'));
+        g[2].forEach(function (x) { var rw = node('div', null, 'row'); rw.appendChild(node('span', x.label)); rw.appendChild(node('span', null, 'sp')); rw.appendChild(node('b', String(x.bil))); c.appendChild(rw); });
+        body.appendChild(c);
+      });
+      $('dash-urus').hidden = !d.bolehUrus;
+    });
+  }
+  function csvSsu() {
+    var m = $('msg-dash'); clearMsg(m);
+    var b = $('btn-dash-csv'); busy(b, true);
+    UP.api('ssu.admin.csv').then(function (r) {
+      busy(b, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      download(r.data.nama, r.data.mime, btoa(unescape(encodeURIComponent(r.data.teks))));
+      msg(m, 'ok', 'CSV dieksport (' + r.data.bil + ' baris).', 'CSV exported');
+    });
+  }
+  function importPensyarah() {
+    var m = $('msg-import'); clearMsg(m);
+    var b = $('btn-import-pensyarah'); busy(b, true);
+    UP.api('ssu.admin.pensyarahImport', { teks: $('in-pensyarah').value }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { msgErr(m, r); return; }
+      $('in-pensyarah').value = '';
+      msg(m, 'ok', r.data.tambah + ' ditambah, ' + r.data.langkau + ' dilangkau (sudah ada)' + (r.data.ralat.length ? ', baris tidak sah: ' + r.data.ralat.join(', ') : '') + '.', 'Lecturers imported.');
+    });
   }
 
   // ---------- Admin: daftar sedia ada ----------
@@ -1819,6 +1946,11 @@ body:not(.auth) .hero{display:none}
     $('btn-ssu-balik').addEventListener('click', function () { openSsu(); });
     $('btn-sa-balik').addEventListener('click', function () { openSaList(true); });
     $('btn-sa-sedia').addEventListener('click', openSedia);
+    $('btn-sa-dash').addEventListener('click', openSaDash);
+    $('btn-dash-balik').addEventListener('click', function () { openSaList(true); });
+    $('btn-dash-csv').addEventListener('click', csvSsu);
+    $('btn-import-pensyarah').addEventListener('click', importPensyarah);
+    $('sa-tujuan').addEventListener('change', function () { SA.tujuan = $('sa-tujuan').value; loadSaList(); });
     $('btn-sedia-balik').addEventListener('click', function () { openSaList(true); });
     $('btn-sedia').addEventListener('click', submitSedia);
     $('sa-q').addEventListener('input', function () { clearTimeout(SA.timer); SA.timer = setTimeout(function () { SA.q = $('sa-q').value.trim(); loadSaList(); }, 300); });
@@ -4875,6 +5007,7 @@ body:not(.auth) .hero{display:none}
       add({ key: 'ssu', bm: 'SSU', ids: ['go-ssu-admin'], pill: 'pill-ssu-admin', go: open('go-ssu-admin'), subs: [
         sub('Permohonan', open('go-ssu-admin')),
         sub('Hampir tamat dan tamat', open('go-ssu-admin', function () { scrollText(/hampir tamat/i); })),
+        sub('Dashboard SSU', open('go-ssu-admin', function () { when(function () { return $('btn-sa-dash'); }, function (b) { b.click(); }); })),
         sub('Daftar SSU sedia ada', open('go-ssu-admin', function () { when(function () { var b = $('btn-sa-sedia'); return b && !b.hidden && b; }, function (b) { b.click(); }); }))] }, 'go-ssu-admin');
       add({ key: 'lot', bm: 'Sewaan Lot', ids: ['go-rn-admin'], pill: 'pill-rn-admin', go: open('go-rn-admin'), subs: s.role === 'Penilai' ? [] : [
         sub('Ringkasan', open('go-rn-admin', function () { tab('#rn-a-tabs', 'ringkasan'); })),

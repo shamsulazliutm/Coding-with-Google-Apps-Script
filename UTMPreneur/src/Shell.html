@@ -50,6 +50,7 @@
       add({ key: 'ssu', bm: 'SSU', ids: ['go-ssu-admin'], pill: 'pill-ssu-admin', go: open('go-ssu-admin'), subs: [
         sub('Permohonan', open('go-ssu-admin')),
         sub('Hampir tamat dan tamat', open('go-ssu-admin', function () { scrollText(/hampir tamat/i); })),
+        sub('Dashboard SSU', open('go-ssu-admin', function () { when(function () { return $('btn-sa-dash'); }, function (b) { b.click(); }); })),
         sub('Daftar SSU sedia ada', open('go-ssu-admin', function () { when(function () { var b = $('btn-sa-sedia'); return b && !b.hidden && b; }, function (b) { b.click(); }); }))] }, 'go-ssu-admin');
       add({ key: 'lot', bm: 'Sewaan Lot', ids: ['go-rn-admin'], pill: 'pill-rn-admin', go: open('go-rn-admin'), subs: s.role === 'Penilai' ? [] : [
         sub('Ringkasan', open('go-rn-admin', function () { tab('#rn-a-tabs', 'ringkasan'); })),

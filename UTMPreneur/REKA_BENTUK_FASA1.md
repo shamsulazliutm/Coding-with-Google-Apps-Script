@@ -371,3 +371,16 @@ Sumber: fail `Code_3.gs` dan `Index_3.html` yang dibekalkan pengguna (24 KPI: KP
 - Medan tambahan dalam UTMPreneur: SSU (berasaskan inovasi Ya/Tidak, TRL 1-9, bilangan pekerja, tarikh SSM), Profiling (tahap minat 4 peringkat, tahap kesediaan), Laporan Kewangan (bilangan pekerja bulan itu). Senarai pilihan diselaraskan dengan sistem KPI (jenis milikan, punca modal, bidang pengajian, bangsa, bilangan pekerja).
 - Menu KPI: halaman KPI dibuka dalam menu utama (infografik, dashboard, KPT/KAI/DKAI/CKAI, sasaran dan input manual). Sistem KPI sedia ada menetapkan `XFrameOptionsMode.ALLOWALL`, jadi boleh dibenamkan. **[TERBUKA]** pendekatan sinkron (menulis ke tab KPI atau KPI membaca terus), ID spreadsheet KPI dan kebenaran akaun pelaksana, pengurusan pengguna KPI (berasingan atau disatukan).
 Ilustrasi: `mockup/25-penyelarasan-kpi.html`.
+
+## 17. Proses SSU lama diserap ke dalam SSU bersepadu
+
+Aplikasi "Startup Registration" yang berasingan (Code.gs + index.html) dibandingkan dengan modul SSU UTMPreneur. Kebanyakan fungsi sudah ada (permohonan, rakan kongsi, SSM, kelulusan, sijil, pembaharuan). Jurang yang diserap:
+
+| Ciri lama | Dalam UTMPreneur |
+|---|---|
+| ApplicationType (4 jenis) | Rujukan `TUJUAN_SSU`, lajur `Tujuan` pada `Permohonan_SSU`; medan subjek hanya wajib bila tujuan = SUBJEK (pelajar); admin bagi pihak/sedia ada longgar |
+| Senarai Pensyarah + `LecturerVerified` | Tab `Pensyarah`; lajur `Pensyarah_No`, `Pensyarah_Emel`, `Pensyarah_Disahkan`; laluan `ssu.pensyarah` (tanpa emel/telefon), `ssu.admin.pensyarahTambah`, `ssu.admin.pensyarahImport` (Admin Penuh) |
+| `Members.ConfirmToken` / `ConfirmedAt` / `ConfirmedBy` | Lajur `Token_Pengesahan`, `Tarikh_Sah`, `Disahkan_Oleh` pada `Ahli_Pasukan`; `ssu.sahkanAhli` (pelajar), `ssu.admin.ahliSah`, `ssu.admin.ahliHantar`. Pengesahan terikat pada akaun yang log masuk dan No. Matrik ahli (aplikasi ini satu URL, tiada pautan dalam) |
+| Dashboard dan eksport daftar | `ssu.admin.dashboard`, `ssu.admin.csv` (No. KP Admin Penuh sahaja, diaudit) |
+
+Sengaja tidak diserap: log masuk kata laluan/OTP lama (diganti OTP UTMPreneur), sijil HTML (`bg.html`; diganti sijil Slides→PDF), ahli bukan dalam pangkalan pelajar yang ditaip manual (UTMPreneur hanya menerima ahli dalam PELAJAR untuk memadankan No. KP dan No. Matrik), mod pautan untuk dokumen SSM (muat naik fail sahaja), julat modal/pendapatan (UTMPreneur simpan nilai RM tepat), `StudentProfiles` untuk pelajar luar pangkalan, serta pemicu hasil suntingan Sheet untuk emel status (emel dihantar terus oleh sistem). Nombor sijil `XCITE-2026S00001-01` dan sah laku mengikut persetujuan terdahulu dikekalkan.

@@ -80,6 +80,13 @@ Pelajar menerima emel pengesahan. Modul Ruang Niaga, Kewangan dan Makerspace aka
 1. Ubah `Tarikh_Tamat` Perniagaan kepada 20 hari lagi; pelajar nampak butang Perbaharui; hantar; admin lulus; nombor berakhir `-02`.
 2. Jalankan `jobHarian()` secara manual; peringatan masuk `Peringatan` sekali sahaja.
 
+**E. Ciri diserap daripada proses SSU lama (Startup Registration)**
+1. Pelajar: borang SSU kini bermula dengan **Tujuan permohonan** (premis/inkubator, keperluan subjek, acara perniagaan, lain-lain). Bahagian Syarat subjek (subjek, pensyarah, seksyen, kumpulan) hanya muncul dan wajib bila tujuan = keperluan subjek.
+2. Pensyarah: pilih daripada **senarai pensyarah** atau pilih "Tiada dalam senarai" dan taip nama, No. pekerja dan emel. Pilihan dalam senarai ditanda *Disahkan*; taipan manual ditanda *Belum disahkan* dan admin nampak amaran.
+3. Admin: dalam butiran SSU tekan **Tambah pensyarah ke senarai** (rekod diaudit; No. pekerja atau emel yang sama ditolak). Admin Penuh boleh menampal senarai (Dashboard SSU, bahagian Senarai pensyarah: satu baris satu pensyarah, No. pekerja, Nama, Fakulti, Jawatan, Emel, Telefon, dipisah tab, koma atau koma bertitik) atau menyunting tab `Pensyarah` dalam spreadsheet SSU terus.
+4. Pengesahan ahli: setiap rakan kongsi menerima emel dan, selepas log masuk, nampak kad **Pengesahan penyertaan** dalam halaman SSU dengan butang *Sahkan penyertaan*. Pengesahan terikat pada log masuk ahli itu (bukan pautan). Admin nampak lajur Pengesahan dalam jadual ahli, boleh **Sahkan** bagi pihak ahli atau **Hantar semula** emel (token baharu); amaran dipaparkan sebelum meluluskan jika ada ahli belum mengesahkan (amaran sahaja, tidak menyekat). SSU sedia ada yang didaftar admin terus dianggap disahkan. Hantar semula permohonan mengekalkan status pengesahan ahli yang sedia ada.
+5. Dashboard SSU (Admin, Pegawai, Pemerhati): kiraan mengikut status, tujuan, kluster, produk dan status SSM (yang diluluskan), ahli belum mengesahkan dan pensyarah belum disahkan. **Eksport Daftar SSU (CSV)** mengandungi permohonan diluluskan; lajur No. KP kosong kecuali untuk Admin Penuh; setiap eksport diaudit.
+
 ## 5. Versi dua fail (Code.gs + Index.html)
 
 `npm run bundle` menjana folder `dist/`: **`Code.gs`** (semua fail .gs), **`Index.html`** (semua antara muka, termasuk gaya dan logo) dan

@@ -149,9 +149,14 @@ test('UI Peringkat 2: profiling, permohonan SSU, semakan admin, kelulusan dan mu
     await page.check('#sf-form [data-k=berasaskanInovasi] input[value=Ya]');
     assert.equal(await visible('#sf-form [data-k=trl]'), true, 'TRL muncul jika berasaskan inovasi');
     await page.check('#sf-form [data-k=trl] input[value=TRL5]');
+    assert.equal(await visible('#sf-form [data-k=syaratSubjek]'), false, 'subjek tersembunyi sebelum tujuan dipilih');
+    await page.check('#sf-form [data-k=tujuan] input[value=SUBJEK]');
+    assert.equal(await visible('#sf-form [data-k=syaratSubjek]'), true);
     await page.selectOption('#sf-form [data-k=syaratSubjek] select', 'UBSS1032');
     assert.equal(await visible('#sf-form [data-k=pensyarah]'), true);
     await page.fill('#sf-form [data-k=pensyarah] input', 'Dr. Contoh');
+    await page.fill('#sf-form [data-k=pensyarahNo] input', '12345');
+    await page.fill('#sf-form [data-k=pensyarahEmel] input', 'dr.contoh@utm.my');
     await page.fill('#sf-form [data-k=seksyen] input', '01');
     await page.fill('#sf-form [data-k=kumpulan] input', 'A');
     assert.equal(await visible('#sf-form [data-k=failSsm]'), false);

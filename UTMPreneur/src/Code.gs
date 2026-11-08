@@ -65,7 +65,15 @@ function rpcTable_() {
     'ssu.admin.pelajar':  { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.saya(Bantu.ctx(c, p.noMatrik)); } },
     'ssu.admin.dapat':    { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.dapat(Bantu.ctx(c, p.noMatrik), p); } },
     'ssu.admin.hantar':   { auth: true, roles: [ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c, p) { return Ssu.hantarBagiPihak(c, p); } },
-    'ssu.admin.sedia':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminDaftarSedia(c, p); } }
+    'ssu.admin.sedia':    { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminDaftarSedia(c, p); } },
+    'ssu.pensyarah':      { auth: true, roles: [ROLE.PELAJAR, ROLE.ADMIN_PENUH, ROLE.PEGAWAI_MODUL], fn: function (c) { return Ssu.pensyarah(c); } },
+    'ssu.sahkanAhli':     { auth: true, roles: [ROLE.PELAJAR], matrik: true, fn: function (c, p) { return Ssu.sahkanAhli(c, p); } },
+    'ssu.admin.ahliSah':  { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminAhliSah(c, p); } },
+    'ssu.admin.ahliHantar': { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminAhliHantarSemula(c, p); } },
+    'ssu.admin.pensyarahTambah': { auth: true, roles: ADMIN_ROLES, fn: function (c, p) { return Ssu.adminTambahPensyarah(c, p); } },
+    'ssu.admin.pensyarahImport': { auth: true, roles: [ROLE.ADMIN_PENUH], fn: function (c, p) { return Ssu.adminImportPensyarah(c, p); } },
+    'ssu.admin.dashboard': { auth: true, roles: ADMIN_ROLES, fn: function (c) { return Ssu.adminDashboard(c); } },
+    'ssu.admin.csv':      { auth: true, roles: ADMIN_ROLES, fn: function (c) { return Ssu.adminCsv(c); } }
   };
   // Laluan modul lain: setiap modul menyediakan routes() yang memulangkan {nama: {auth, roles, matrik, fn}}
   [typeof RuangNiaga !== 'undefined' ? RuangNiaga : null, typeof Kewangan !== 'undefined' ? Kewangan : null,

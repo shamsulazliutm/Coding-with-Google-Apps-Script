@@ -53,7 +53,7 @@ const b64 = (txt) => Buffer.from(txt, 'utf8').toString('base64');
 const PDF = (name) => ({ nama: name || 'ssm.pdf', data: b64('%PDF-1.4\n1 0 obj\n<<>>\nendobj\n') });
 
 const SSU = () => ({
-  jenisSsu: 'Perniagaan', nama: 'seni kek aina', produk: ['FNB'], syaratSubjek: 'UBSS1032', pensyarah: 'Dr. Contoh', seksyen: '01', kumpulan: 'A',
+  jenisSsu: 'Perniagaan', nama: 'seni kek aina', produk: ['FNB'], tujuan: 'SUBJEK', syaratSubjek: 'UBSS1032', pensyarah: 'Dr. Contoh', pensyarahNo: '12345', pensyarahEmel: 'dr.contoh@utm.my', seksyen: '01', kumpulan: 'A',
   statusSsm: 'YA', noSsm: '202603001234', failSsm: PDF(), jenisPerniagaan: 'SOLE', kluster: 'MANUF', sumber: ['SENDIRI'],
   modal: '1500', pendapatan: '2000.50', alamat: 'No 12, Jalan Mawar, Taman Universiti, 81300 Skudai, Johor', tarikhMula: '2026-09-01',
   laman: 'instagram.com/senikek', berasaskanInovasi: 'Ya', trl: 'TRL5', bilPekerja: '2', tarikhSsm: '2026-03-01', jenisPerniagaanKpi: 'K05', ahli: ['A23UJ0002'], perakuan: true

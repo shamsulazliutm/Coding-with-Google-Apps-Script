@@ -88,7 +88,7 @@ test('UI: admin bantu pelajar mengisi profiling, memohon SSU dan meluluskan teru
     await page.selectOption('#sf-form [data-k=jenisPerniagaanKpi] select', 'K05');
     await page.fill('#sf-form [data-k=bilPekerja] input', '1');
     await page.check('#sf-form [data-k=berasaskanInovasi] input[value=Tidak]');
-    await page.selectOption('#sf-form [data-k=syaratSubjek] select', 'TIADA');
+    await page.check('#sf-form [data-k=tujuan] input[value=PREMIS]');
     await page.check('#sf-form [data-k=statusSsm] input[value=PROSES]');
     await page.check('#sf-form [data-k=sumber] input[value=SENDIRI]');
     await page.fill('#sf-form [data-k=modal] input', '1500');

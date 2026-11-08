@@ -124,7 +124,7 @@ var Ssu = (function () {
         v.pensyarahEmel = Util.normEmail(d.pensyarahEmel);
         v.pensyarahSah = v.pensyarah ? 'Tidak' : '';
         if (subjek) {
-          if (!v.pensyarah) bad('pensyarah');
+          if (!v.pensyarah) { bad('pensyarah'); if (!pilih) bad('pensyarahPilih'); }
           if (!v.pensyarahNo) bad('pensyarahNo');
           if (!Util.isEmail(v.pensyarahEmel)) bad('pensyarahEmel', 'E-mel tidak sah / Invalid email');
         } else if (v.pensyarahEmel && !Util.isEmail(v.pensyarahEmel)) bad('pensyarahEmel', 'E-mel tidak sah / Invalid email');
@@ -249,7 +249,7 @@ var Ssu = (function () {
     var st = Util.str(r.Status);
     return {
       id: Util.str(r.ID_Permohonan), jenisSsu: Util.str(r.Jenis_SSU), jenisPermohonan: Util.str(r.Jenis_Permohonan),
-      nama: Util.str(r.Nama_Perniagaan), status: st, tarikhHantar: Util.dateKey(r.Tarikh_Hantar),
+      nama: Util.str(r.Nama_Perniagaan), tujuan: Util.str(r.Tujuan), status: st, tarikhHantar: Util.dateKey(r.Tarikh_Hantar),
       tarikhKeputusan: Util.dateKey(r.Tarikh_Keputusan),
       catatan: (st === 'Perlu Pembetulan' || st === 'Ditolak') ? Util.str(r.Catatan_Admin) : '',
       noPendaftaran: Util.str(r.No_Pendaftaran), adaSijil: !!Util.str(r.Pautan_Sijil), bilAhli: Number(r.Bil_Ahli) || 0,
@@ -289,6 +289,9 @@ var Ssu = (function () {
       var pel = pelajarRow_(Util.normMatric(r.No_Matrik_Pemilik));
       o.pemilik = pel ? Util.str(pel.Nama_Penuh) : '';
       o.bolehUbah = false; o.catatan = '';
+      var ar = ahliOf_(Util.str(r.ID_Permohonan)).filter(function (a) { return Util.normMatric(a.No_Matrik) === m; })[0] || {};
+      o.disahkan = Util.dateKey(ar.Tarikh_Sah);
+      o.perluSah = !!Util.str(ar.Token_Pengesahan) && !Util.str(ar.Tarikh_Sah) && AKTIF.indexOf(Util.str(r.Status)) >= 0;
       return o;
     });
     var per = perniagaanOwner_(m);
@@ -502,11 +505,13 @@ var Ssu = (function () {
     p = p || {};
     var status = Util.str(p.status);
     var q = Util.str(p.q).toLowerCase();
+    var tuj = Util.str(p.tujuan);
     var all = Db.rows('Permohonan_SSU');
     var kiraan = { Baharu: 0, Disemak: 0, 'Perlu Pembetulan': 0, Diluluskan: 0, Ditolak: 0 };
     all.forEach(function (r) { var s = Util.str(r.Status); if (kiraan[s] !== undefined) kiraan[s]++; });
     var rows = all.filter(function (r) {
       if (status && status !== 'SEMUA' && Util.str(r.Status) !== status) return false;
+      if (tuj && Util.str(r.Tujuan) !== tuj) return false;
       if (q) {
         var h = (Util.str(r.ID_Permohonan) + ' ' + Util.str(r.Nama_Perniagaan) + ' ' + Util.str(r.No_Matrik_Pemilik) + ' ' + Util.str(r.No_Pendaftaran)).toLowerCase();
         if (h.indexOf(q) < 0) return false;
@@ -559,19 +564,30 @@ var Ssu = (function () {
       });
       if (lain.length) amaran.push(Util.str(a.Nama) + ' (' + am + ') juga ahli dalam SSU lain: ' + lain.map(function (x) { return Util.str(x.ID_Permohonan); }).join(', ') + '.');
     });
+    if (AKTIF.indexOf(Util.str(r.Status)) >= 0) {
+      var belum = ahli.filter(function (a) { return Util.str(a.Peranan_Ahli) !== 'Pemilik' && !Util.str(a.Tarikh_Sah) && Util.str(a.Token_Pengesahan); });
+      if (belum.length) amaran.push('Ahli belum mengesahkan penyertaan: ' + belum.map(function (a) { return Util.str(a.Nama) + ' (' + Util.normMatric(a.No_Matrik) + ')'; }).join(', ') + '.');
+    }
+    if (f.pensyarah && f.pensyarahSah !== 'Ya' && Util.str(r.Status) !== 'Ditolak') amaran.push('Pensyarah (' + f.pensyarah + ') belum disahkan dalam senarai pensyarah.');
     var out = {
       borang: f,
       label: {
         produk: f.produk.map(function (k) { return Ref.bm('PRODUK', k); }),
         kluster: Ref.bm('KLUSTER', f.kluster), jenisPerniagaan: Ref.bm('JENIS_PERNIAGAAN', f.jenisPerniagaan),
         sumber: f.sumber.map(function (k) { return Ref.bm('SUMBER_PEMBIAYAAN', k); }),
-        statusSsm: Ref.bm('STATUS_SSM', f.statusSsm), syarat: Ref.bm('SYARAT_SUBJEK', f.syaratSubjek),
+        statusSsm: Ref.bm('STATUS_SSM', f.statusSsm), syarat: Ref.bm('SYARAT_SUBJEK', f.syaratSubjek), tujuan: f.tujuan ? Ref.bm('TUJUAN_SSU', f.tujuan) : '',
         jenisKpi: f.jenisPerniagaanKpi ? Ref.bm('JENIS_PERNIAGAAN_KPI', f.jenisPerniagaanKpi) : ''
       },
       pemilik: pil,
       ahli: ahli.map(function (a) {
-        return { noMatrik: Util.normMatric(a.No_Matrik), nama: Util.str(a.Nama), fakulti: Util.str(a.Fakulti), jantina: Util.str(a.Jantina), etnik: Util.str(a.Etnik), tahun: Util.str(a.Tahun), peranan: Util.str(a.Peranan_Ahli) };
+        var ahliPer = Util.str(a.Peranan_Ahli);
+        return {
+          noMatrik: Util.normMatric(a.No_Matrik), nama: Util.str(a.Nama), fakulti: Util.str(a.Fakulti), jantina: Util.str(a.Jantina), etnik: Util.str(a.Etnik), tahun: Util.str(a.Tahun), peranan: ahliPer,
+          disahkan: Util.dateKey(a.Tarikh_Sah), disahkanOleh: Util.str(a.Disahkan_Oleh),
+          perluSah: ahliPer !== 'Pemilik' && !Util.str(a.Tarikh_Sah) && !!Util.str(a.Token_Pengesahan)
+        };
       }),
+      pensyarah: { nama: f.pensyarah, no: f.pensyarahNo, emel: f.pensyarahEmel, disahkan: f.pensyarahSah === 'Ya', ada: !!f.pensyarah },
       status: Util.str(r.Status), ringkas: ringkas_(r), catatanAdmin: Util.str(r.Catatan_Admin),
       diluluskanOleh: Util.str(r.Diluluskan_Oleh), tarikhTamat: Util.dateKey(r.Tarikh_Tamat),
       fail: { ssm: !!Util.str(r.Fail_SSM), maklumat: !!Util.str(r.Fail_Maklumat_SSM), sijil: !!Util.str(r.Pautan_Sijil) },
@@ -775,6 +791,189 @@ var Ssu = (function () {
     return out;
   }
 
+
+  // ---------- Pensyarah, pengesahan ahli, dashboard (diserap daripada proses SSU lama) ----------
+  /** Senarai pensyarah untuk pilihan pelajar (tanpa emel dan telefon). */
+  function pensyarahSenarai_(ctx) {
+    var l = Db.rows('Pensyarah').map(function (r) {
+      return { no: Util.str(r.No_Pekerja), nama: Util.str(r.Nama), fakulti: Util.str(r.Fakulti), jawatan: Util.str(r.Jawatan) };
+    }).filter(function (x) { return x.no && x.nama; });
+    l.sort(function (a, b) { return a.nama < b.nama ? -1 : (a.nama > b.nama ? 1 : 0); });
+    return { senarai: l };
+  }
+
+  /** Pelajar mengesahkan penyertaannya sebagai ahli (terikat pada log masuk, bukan pautan). */
+  function sahkanAhli_(ctx, p) {
+    requireStudent_(ctx);
+    var id = Util.str(p.id), m = ctx.noMatrik;
+    Db.withLock(function () {
+      var r = appRow_(id);
+      var a = r && AKTIF.indexOf(Util.str(r.Status)) >= 0 ? Db.find('Ahli_Pasukan', function (x) {
+        return Util.str(x.ID_Permohonan) === id && Util.normMatric(x.No_Matrik) === m && Util.str(x.Peranan_Ahli) !== 'Pemilik';
+      })[0] : null;
+      if (!a) throw appError_('SSU_AHLI_TIDAK_DITEMUI');
+      if (Util.str(a.Tarikh_Sah)) return;
+      Db.update('Ahli_Pasukan', a._row, { Tarikh_Sah: new Date(), Disahkan_Oleh: 'Ahli', Token_Pengesahan: '' });
+      Audit.log(ctx, 'SSU_AHLI_SAH', 'SSU', id, '', m, 'Ahli mengesahkan penyertaan');
+    });
+    return saya_(ctx);
+  }
+
+  function ahliRow_(id, m) {
+    var l = Db.find('Ahli_Pasukan', function (x) {
+      return Util.str(x.ID_Permohonan) === id && Util.normMatric(x.No_Matrik) === Util.normMatric(m) && Util.str(x.Peranan_Ahli) !== 'Pemilik';
+    });
+    return l.length ? l[0] : null;
+  }
+
+  function adminAhliSah_(ctx, p) {
+    requireDecider_(ctx);
+    var id = Util.str(p.id), m = Util.normMatric(p.noMatrik);
+    Db.withLock(function () {
+      var a = ahliRow_(id, m);
+      if (!a || Util.str(a.Tarikh_Sah)) throw appError_('SSU_AHLI_TIDAK_DITEMUI');
+      Db.update('Ahli_Pasukan', a._row, { Tarikh_Sah: new Date(), Disahkan_Oleh: 'Admin: ' + ctx.email, Token_Pengesahan: '' });
+      Audit.log(ctx, 'SSU_AHLI_SAH_ADMIN', 'SSU', id, '', m, 'Disahkan oleh admin bagi pihak ahli');
+    });
+    return adminButiran_(ctx, { id: id });
+  }
+
+  function adminAhliHantarSemula_(ctx, p) {
+    requireDecider_(ctx);
+    var id = Util.str(p.id), m = Util.normMatric(p.noMatrik);
+    var r = appRow_(id);
+    if (!r) throw appError_('SSU_TIDAK_DITEMUI');
+    Db.withLock(function () {
+      var a = ahliRow_(id, m);
+      if (!a || Util.str(a.Tarikh_Sah)) throw appError_('SSU_AHLI_TIDAK_DITEMUI');
+      Db.update('Ahli_Pasukan', a._row, { Token_Pengesahan: Utilities.getUuid() });
+      Audit.log(ctx, 'SSU_AHLI_HANTAR_SEMULA', 'SSU', id, '', m, 'Emel pengesahan dihantar semula');
+    });
+    mailAhli_(m, id, Util.str(r.Nama_Perniagaan), Util.normMatric(r.No_Matrik_Pemilik));
+    return adminButiran_(ctx, { id: id });
+  }
+
+  /** Tambah pensyarah (yang ditaip pelajar) ke senarai rasmi dan tanda permohonan sebagai disahkan. */
+  function adminTambahPensyarah_(ctx, p) {
+    requireDecider_(ctx);
+    var id = Util.str(p.id);
+    var r = appRow_(id);
+    if (!r) throw appError_('SSU_TIDAK_DITEMUI');
+    if (Util.str(r.Pensyarah_Disahkan) === 'Ya') throw appError_('SSU_PENSYARAH_SUDAH_DISAHKAN');
+    var rec = {
+      No_Pekerja: Util.str(r.Pensyarah_No), Nama: Util.str(r.Pensyarah).toUpperCase(), Fakulti: Util.str(p.fakulti).substr(0, 120),
+      Jawatan: Util.str(p.jawatan).substr(0, 80), Emel: Util.normEmail(r.Pensyarah_Emel), Telefon: Util.str(p.telefon).substr(0, 20)
+    };
+    var e = {};
+    if (!rec.Nama) e.pensyarah = 'Wajib diisi / Required';
+    if (!rec.No_Pekerja) e.pensyarahNo = 'Wajib diisi / Required';
+    if (!Util.isEmail(rec.Emel)) e.pensyarahEmel = 'E-mel tidak sah / Invalid email';
+    if (Object.keys(e).length) throw appError_('SSU_PENSYARAH_TIDAK_SAH', { medan: e });
+    Db.withLock(function () {
+      var dup = Db.find('Pensyarah', function (x) { return Util.str(x.No_Pekerja).toLowerCase() === rec.No_Pekerja.toLowerCase() || Util.normEmail(x.Emel) === rec.Emel; });
+      if (dup.length) throw appError_('SSU_PENSYARAH_ADA');
+      Db.append('Pensyarah', rec);
+      var fresh = appRow_(id);
+      Db.update('Permohonan_SSU', fresh._row, { Pensyarah_Disahkan: 'Ya' });
+      Audit.log(ctx, 'SSU_PENSYARAH_TAMBAH', 'SSU', id, '', rec.No_Pekerja, rec.Nama);
+    });
+    return adminButiran_(ctx, { id: id });
+  }
+
+  /** Admin Penuh menampal senarai pensyarah (satu baris satu pensyarah: No pekerja, Nama, Fakulti, Jawatan, Emel, Telefon). */
+  function adminImportPensyarah_(ctx, p) {
+    if (ctx.role !== ROLE.ADMIN_PENUH) throw appError_('TIADA_KEBENARIAN');
+    var baris = Util.str(p.teks).split(/\r?\n/).filter(function (x) { return x.trim(); });
+    if (baris.length > 2000) throw appError_('SSU_PENSYARAH_TIDAK_SAH', { medan: { teks: 'Maksimum 2000 baris / Maximum 2000 lines' } });
+    var hasil = { tambah: 0, langkau: 0, ralat: [] };
+    Db.withLock(function () {
+      var ada = Db.rows('Pensyarah');
+      var no = {}, em = {};
+      ada.forEach(function (x) { no[Util.str(x.No_Pekerja).toLowerCase()] = 1; em[Util.normEmail(x.Emel)] = 1; });
+      baris.forEach(function (ln, i) {
+        var c = ln.split(/\t|;|,/).map(function (x) { return x.trim(); });
+        if (i === 0 && /^no/i.test(c[0]) && /^nama/i.test(c[1] || '')) return;
+        var rec = { No_Pekerja: c[0] || '', Nama: (c[1] || '').toUpperCase(), Fakulti: c[2] || '', Jawatan: c[3] || '', Emel: Util.normEmail(c[4] || ''), Telefon: c[5] || '' };
+        if (!rec.No_Pekerja || !rec.Nama || !Util.isEmail(rec.Emel)) { hasil.ralat.push(i + 1); return; }
+        if (no[rec.No_Pekerja.toLowerCase()] || em[rec.Emel]) { hasil.langkau++; return; }
+        no[rec.No_Pekerja.toLowerCase()] = 1; em[rec.Emel] = 1;
+        Db.append('Pensyarah', rec);
+        hasil.tambah++;
+      });
+      Audit.log(ctx, 'SSU_PENSYARAH_IMPORT', 'SSU', '', '', String(hasil.tambah), 'Langkau ' + hasil.langkau + ', ralat ' + hasil.ralat.length);
+    });
+    return hasil;
+  }
+
+  function kira_(rows, fn, group) {
+    var m = {}, order = [];
+    rows.forEach(function (r) {
+      var v = fn(r);
+      (Array.isArray(v) ? v : [v]).forEach(function (k) {
+        k = Util.str(k);
+        if (!(k in m)) { m[k] = 0; order.push(k); }
+        m[k]++;
+      });
+    });
+    return order.map(function (k) { return { kod: k, label: k ? (group ? Ref.bm(group, k) : k) : '(tidak dinyatakan)', bil: m[k] }; })
+      .sort(function (a, b) { return b.bil - a.bil; });
+  }
+
+  function adminDashboard_(ctx) {
+    requireViewer_(ctx);
+    var all = Db.rows('Permohonan_SSU');
+    var lulus = all.filter(function (r) { return Util.str(r.Status) === 'Diluluskan'; });
+    var aktif = all.filter(function (r) { return AKTIF.indexOf(Util.str(r.Status)) >= 0; });
+    var ahliBelum = Db.rows('Ahli_Pasukan').filter(function (a) {
+      if (Util.str(a.Peranan_Ahli) === 'Pemilik' || Util.str(a.Tarikh_Sah) || !Util.str(a.Token_Pengesahan)) return false;
+      var r = appRow_(Util.str(a.ID_Permohonan));
+      return r && AKTIF.indexOf(Util.str(r.Status)) >= 0;
+    }).length;
+    return {
+      jumlah: all.length, diluluskan: lulus.length,
+      status: kira_(all, function (r) { return Util.str(r.Status); }),
+      tujuan: kira_(all, function (r) { return Util.str(r.Tujuan); }, 'TUJUAN_SSU'),
+      kluster: kira_(lulus, function (r) { return Util.str(r.Kluster); }, 'KLUSTER').slice(0, 8),
+      produk: kira_(lulus, function (r) { return split_(r.Produk); }, 'PRODUK').slice(0, 10),
+      statusSsm: kira_(lulus, function (r) { return Util.str(r.Status_SSM); }, 'STATUS_SSM'),
+      ahliBelumSah: ahliBelum,
+      pensyarahBelumSah: all.filter(function (r) { return Util.str(r.Pensyarah) && Util.str(r.Pensyarah_Disahkan) !== 'Ya' && Util.str(r.Status) !== 'Ditolak'; }).length,
+      dalamProses: aktif.length,
+      bolehUrus: ctx.role === ROLE.ADMIN_PENUH
+    };
+  }
+
+  function csvCell_(v, teks) {
+    var s = v === null || v === undefined ? '' : String(v);
+    if (teks && /^[=+\-@\t\r]/.test(s)) s = "'" + s; // elak suntikan formula apabila dibuka dalam Excel
+    if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  /** Daftar SSU (diluluskan). No. KP hanya untuk Admin Penuh. */
+  function adminCsv_(ctx) {
+    requireViewer_(ctx);
+    var tajuk = ['ID_Permohonan', 'No_Pendaftaran', 'Nama_Perniagaan', 'Tujuan', 'Jenis_SSU', 'Jenis_Permohonan', 'No_Matrik_Pemilik', 'No_KP', 'Nama_Pemilik', 'Fakulti',
+      'Kluster', 'Jenis_Perniagaan', 'Status_SSM', 'No_SSM', 'Bil_Ahli', 'Pensyarah', 'Pensyarah_Disahkan', 'Tarikh_Pendaftaran', 'Tarikh_Tamat', 'Status_SSU'];
+    var lines = [tajuk.join(',')];
+    var rows = Db.rows('Permohonan_SSU').filter(function (r) { return Util.str(r.Status) === 'Diluluskan'; });
+    rows.forEach(function (r) {
+      var m = Util.normMatric(r.No_Matrik_Pemilik), pel = pelajarRow_(m) || {};
+      var per = Util.str(r.ID_Perniagaan) ? perniagaanById_(Util.str(r.ID_Perniagaan)) : null;
+      var rec = [
+        [r.ID_Permohonan, 1], [r.No_Pendaftaran, 1], [r.Nama_Perniagaan, 1], [r.Tujuan ? Ref.bm('TUJUAN_SSU', Util.str(r.Tujuan)) : '', 1], [r.Jenis_SSU, 1], [r.Jenis_Permohonan, 1],
+        [m, 1], [ctx.role === ROLE.ADMIN_PENUH ? Util.str(pel.No_KP_Pasport) : '', 1], [Util.str(pel.Nama_Penuh), 1], [Util.str(pel.Fakulti), 1],
+        [Ref.bm('KLUSTER', Util.str(r.Kluster)), 1], [Ref.bm('JENIS_PERNIAGAAN', Util.str(r.Jenis_Perniagaan)), 1], [Ref.bm('STATUS_SSM', Util.str(r.Status_SSM)), 1], [r.No_SSM, 1],
+        [r.Bil_Ahli, 0], [r.Pensyarah, 1], [Util.str(r.Pensyarah_Disahkan) === 'Ya' ? 'Ya' : (Util.str(r.Pensyarah) ? 'Tidak' : ''), 1],
+        [Util.dateKey(r.Tarikh_Pendaftaran), 0], [Util.dateKey(r.Tarikh_Tamat), 0], [per ? statusPer_(per) : '', 1]
+      ];
+      lines.push(rec.map(function (c) { return csvCell_(c[0], c[1]); }).join(','));
+    });
+    var nama = 'daftar-ssu_' + Util.dateKey(new Date()) + '.csv';
+    Audit.log(ctx, 'SSU_EKSPORT_CSV', 'SSU', nama, '', String(rows.length), '');
+    return { nama: nama, mime: 'text/csv', teks: '﻿' + lines.join('\r\n') + '\r\n', bil: rows.length };
+  }
+
   // ---------- Kerja harian: tamat tempoh dan peringatan pembaharuan ----------
   function jobHarian_() {
     var hasil = { tamat: 0, peringatan: 0 };
@@ -815,6 +1014,8 @@ var Ssu = (function () {
     saya: saya_, dapat: dapat_, hantar: hantar_, fail: fail_,
     adminSenarai: adminSenarai_, adminButiran: adminButiran_, adminKeputusan: adminKeputusan_,
     hantarBagiPihak: hantarBagiPihak_, adminJanaSijil: adminJanaSijil_, adminDaftarSedia: adminDaftarSedia_, lulus: lulus_, butiran: adminButiran_,
+    pensyarah: pensyarahSenarai_, sahkanAhli: sahkanAhli_, adminAhliSah: adminAhliSah_, adminAhliHantarSemula: adminAhliHantarSemula_,
+    adminTambahPensyarah: adminTambahPensyarah_, adminImportPensyarah: adminImportPensyarah_, adminDashboard: adminDashboard_, adminCsv: adminCsv_,
     jobHarian: jobHarian_, check: check_
   };
 })();
